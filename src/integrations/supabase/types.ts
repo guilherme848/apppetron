@@ -16,22 +16,76 @@ export type Database = {
     Tables: {
       accounts: {
         Row: {
+          address_complement: string | null
+          city: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          country: string | null
+          cpf_cnpj: string | null
           created_at: string
           id: string
+          monthly_value: number | null
           name: string
+          neighborhood: string | null
+          niche: string | null
+          postal_code: string | null
+          service_contracted: string | null
+          start_date: string | null
+          state: string | null
           status: string
+          street: string | null
+          street_number: string | null
+          updated_at: string | null
+          website: string | null
         }
         Insert: {
+          address_complement?: string | null
+          city?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          country?: string | null
+          cpf_cnpj?: string | null
           created_at?: string
           id?: string
+          monthly_value?: number | null
           name: string
+          neighborhood?: string | null
+          niche?: string | null
+          postal_code?: string | null
+          service_contracted?: string | null
+          start_date?: string | null
+          state?: string | null
           status?: string
+          street?: string | null
+          street_number?: string | null
+          updated_at?: string | null
+          website?: string | null
         }
         Update: {
+          address_complement?: string | null
+          city?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          country?: string | null
+          cpf_cnpj?: string | null
           created_at?: string
           id?: string
+          monthly_value?: number | null
           name?: string
+          neighborhood?: string | null
+          niche?: string | null
+          postal_code?: string | null
+          service_contracted?: string | null
+          start_date?: string | null
+          state?: string | null
           status?: string
+          street?: string | null
+          street_number?: string | null
+          updated_at?: string | null
+          website?: string | null
         }
         Relationships: []
       }

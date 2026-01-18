@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Loader2, ExternalLink, Phone, Mail, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AccountStatusBadge, ContractStatusBadge, TaskStatusBadge } from '@/components/crm/StatusBadge';
 import { ContractForm } from '@/components/crm/ContractForm';
 import { TaskForm } from '@/components/crm/TaskForm';
+import { AccountForm } from '@/components/crm/AccountForm';
 import { useCrm } from '@/contexts/CrmContext';
-import { Contract, Task, ContractStatus, TaskStatus } from '@/types/crm';
+import { Contract, Task, ContractStatus, TaskStatus, Account } from '@/types/crm';
 
 export default function CrmDetail() {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +20,7 @@ export default function CrmDetail() {
     getAccountById,
     getContractsByAccount,
     getTasksByAccount,
+    updateAccount,
     addContract,
     updateContract,
     deleteContract,
@@ -33,6 +35,7 @@ export default function CrmDetail() {
 
   const [contractFormOpen, setContractFormOpen] = useState(false);
   const [taskFormOpen, setTaskFormOpen] = useState(false);
+  const [accountFormOpen, setAccountFormOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | undefined>();
   const [editingTask, setEditingTask] = useState<Task | undefined>();
 
@@ -55,11 +58,35 @@ export default function CrmDetail() {
     );
   }
 
-  const formatCurrency = (value: number) => {
+  const formatCurrency = (value: number | null | undefined) => {
+    if (value == null) return '-';
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
     }).format(value);
+  };
+
+  const formatDate = (date: string | null | undefined) => {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('pt-BR');
+  };
+
+  const getFullAddress = () => {
+    const parts = [
+      account.street,
+      account.street_number,
+      account.address_complement,
+      account.neighborhood,
+      account.city,
+      account.state,
+      account.postal_code,
+      account.country,
+    ].filter(Boolean);
+    return parts.length > 0 ? parts.join(', ') : null;
+  };
+
+  const handleAccountSubmit = async (data: Partial<Account>) => {
+    await updateAccount(id!, data);
   };
 
   const handleContractSubmit = async (data: { mrr: number; start_date: string; status: ContractStatus; account_id: string }) => {
@@ -90,25 +117,126 @@ export default function CrmDetail() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/crm')}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold">{account.name}</h1>
-          <div className="flex items-center gap-2 mt-1">
-            <AccountStatusBadge status={account.status} />
-            <span className="text-sm text-muted-foreground">
-              Cliente desde {new Date(account.created_at).toLocaleDateString('pt-BR')}
-            </span>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/crm')}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold">{account.name}</h1>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <AccountStatusBadge status={account.status} />
+              {account.niche && <span className="text-sm text-muted-foreground">• {account.niche}</span>}
+              <span className="text-sm text-muted-foreground">
+                • Cliente desde {formatDate(account.created_at)}
+              </span>
+            </div>
           </div>
         </div>
+        <Button onClick={() => setAccountFormOpen(true)}>
+          <Pencil className="h-4 w-4 mr-2" />
+          Editar
+        </Button>
+      </div>
+
+      {/* Cards de Resumo */}
+      <div className="grid gap-4 md:grid-cols-3">
+        {/* Contrato */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Contrato</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div>
+              <p className="text-xs text-muted-foreground">Serviço</p>
+              <p className="font-medium">{account.service_contracted || '-'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Valor Mensal</p>
+              <p className="font-medium text-lg">{formatCurrency(account.monthly_value)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Data de Entrada</p>
+              <p className="font-medium">{formatDate(account.start_date)}</p>
+            </div>
+            {account.cpf_cnpj && (
+              <div>
+                <p className="text-xs text-muted-foreground">CPF/CNPJ</p>
+                <p className="font-medium">{account.cpf_cnpj}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Contato */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Contato</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {account.contact_name && (
+              <div>
+                <p className="text-xs text-muted-foreground">Nome</p>
+                <p className="font-medium">{account.contact_name}</p>
+              </div>
+            )}
+            {account.contact_phone && (
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <a href={`tel:${account.contact_phone}`} className="font-medium hover:underline">
+                  {account.contact_phone}
+                </a>
+              </div>
+            )}
+            {account.contact_email && (
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <a href={`mailto:${account.contact_email}`} className="font-medium hover:underline">
+                  {account.contact_email}
+                </a>
+              </div>
+            )}
+            {account.website && (
+              <div className="flex items-center gap-2">
+                <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                <a
+                  href={account.website.startsWith('http') ? account.website : `https://${account.website}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium hover:underline text-primary"
+                >
+                  {account.website}
+                </a>
+              </div>
+            )}
+            {!account.contact_name && !account.contact_phone && !account.contact_email && !account.website && (
+              <p className="text-muted-foreground text-sm">Nenhum contato cadastrado</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Endereço */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Endereço</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {getFullAddress() ? (
+              <div className="flex items-start gap-2">
+                <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                <p className="font-medium text-sm">{getFullAddress()}</p>
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm">Nenhum endereço cadastrado</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Contratos</CardTitle>
+            <CardTitle>Contratos (MRR)</CardTitle>
             <Button size="sm" onClick={() => setContractFormOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Novo
@@ -131,7 +259,7 @@ export default function CrmDetail() {
                   {contracts.map((contract) => (
                     <TableRow key={contract.id}>
                       <TableCell className="font-medium">{formatCurrency(Number(contract.mrr))}</TableCell>
-                      <TableCell>{new Date(contract.start_date).toLocaleDateString('pt-BR')}</TableCell>
+                      <TableCell>{formatDate(contract.start_date)}</TableCell>
                       <TableCell>
                         <ContractStatusBadge status={contract.status} />
                       </TableCell>
@@ -193,9 +321,7 @@ export default function CrmDetail() {
                         <TaskStatusBadge status={task.status} />
                       </TableCell>
                       <TableCell>
-                        {task.due_date
-                          ? new Date(task.due_date).toLocaleDateString('pt-BR')
-                          : '-'}
+                        {task.due_date ? formatDate(task.due_date) : '-'}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
@@ -226,6 +352,13 @@ export default function CrmDetail() {
           </CardContent>
         </Card>
       </div>
+
+      <AccountForm
+        open={accountFormOpen}
+        onClose={() => setAccountFormOpen(false)}
+        onSubmit={handleAccountSubmit}
+        account={account}
+      />
 
       <ContractForm
         open={contractFormOpen}

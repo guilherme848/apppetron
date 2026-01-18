@@ -19,11 +19,11 @@ export default function CrmList() {
     account.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleSubmit = async (data: { name: string; status: 'lead' | 'active' | 'churned' }) => {
+  const handleSubmit = async (data: Partial<typeof accounts[0]>) => {
     if (editingAccount) {
       await updateAccount(editingAccount.id, data);
     } else {
-      await addAccount(data);
+      await addAccount(data as { name: string; status: 'lead' | 'active' | 'churned' });
     }
     setEditingAccount(undefined);
   };
