@@ -1,38 +1,58 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Eye, Trash2, Loader2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Plus, Eye, Trash2, Loader2, AlertTriangle, Archive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { useContentProduction } from '@/contexts/ContentProductionContext';
-import { BATCH_STATUS_OPTIONS, BatchStatus, POST_STATUS_OPTIONS, CHANNEL_OPTIONS, FORMAT_OPTIONS } from '@/types/contentProduction';
+import { FileUpload } from '@/components/content/FileUpload';
+import { BATCH_STATUS_OPTIONS, BatchStatus, POST_STATUS_OPTIONS, CHANNEL_OPTIONS, FORMAT_OPTIONS, BatchAttachment } from '@/types/contentProduction';
 
 export default function BatchDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { 
     batches, posts, accounts, loading, 
-    updateBatch, deleteBatch, addPost, updatePost, deletePost, fetchPosts 
+    updateBatch, deleteBatch, archiveBatch, addPost, updatePost, deletePost, fetchPosts 
   } = useContentProduction();
 
   const [notes, setNotes] = useState('');
   const [planningDueDate, setPlanningDueDate] = useState('');
+  const [attachments, setAttachments] = useState<BatchAttachment[]>([]);
+  const [loadingAttachments, setLoadingAttachments] = useState(false);
 
   const batch = batches.find((b) => b.id === id);
   const batchPosts = posts.filter((p) => p.batch_id === id);
 
+  const fetchAttachments = useCallback(async () => {
+    if (!id) return;
+    setLoadingAttachments(true);
+    const { data, error } = await supabase
+      .from('batch_attachments')
+      .select('*')
+      .eq('batch_id', id)
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('Error fetching attachments:', error);
+    } else {
+      setAttachments(data || []);
+    }
+    setLoadingAttachments(false);
+  }, [id]);
+
   useEffect(() => {
     if (id) {
       fetchPosts(id);
+      fetchAttachments();
     }
-  }, [id, fetchPosts]);
+  }, [id, fetchPosts, fetchAttachments]);
 
   useEffect(() => {
     if (batch) {
@@ -93,6 +113,12 @@ export default function BatchDetail() {
     navigate('/content/production');
   };
 
+  const handleArchiveBatch = async () => {
+    await archiveBatch(batch.id);
+    toast.success('Pacote finalizado e arquivado');
+    navigate('/content/production');
+  };
+
   const handleNewPost = async () => {
     const newPost = await addPost({ batch_id: batch.id, title: '' });
     if (newPost) {
@@ -110,8 +136,26 @@ export default function BatchDetail() {
     toast.success('Status atualizado');
   };
 
+  const handleFileUploaded = async (file: { file_name: string; file_path: string; file_size: number; file_type: string }) => {
+    const { data, error } = await supabase
+      .from('batch_attachments')
+      .insert([{ batch_id: id, ...file }])
+      .select()
+      .single();
+    if (error) {
+      console.error('Error saving attachment:', error);
+      return;
+    }
+    setAttachments((prev) => [data, ...prev]);
+  };
+
+  const handleFileDeleted = async (fileId: string) => {
+    await supabase.from('batch_attachments').delete().eq('id', fileId);
+    setAttachments((prev) => prev.filter((a) => a.id !== fileId));
+  };
+
   const isOverdue = () => {
-    if (!batch.planning_due_date || batch.status === 'done') return false;
+    if (!batch.planning_due_date || batch.archived) return false;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const dueDate = new Date(batch.planning_due_date);
@@ -122,15 +166,8 @@ export default function BatchDetail() {
     CHANNEL_OPTIONS.find((o) => o.value === value)?.label || value || '-';
   const getFormatLabel = (value: string | null) => 
     FORMAT_OPTIONS.find((o) => o.value === value)?.label || value || '-';
-  const getStatusLabel = (value: string) => 
-    POST_STATUS_OPTIONS.find((o) => o.value === value)?.label || value;
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case 'done': return 'default';
-      case 'doing': return 'secondary';
-      default: return 'outline';
-    }
-  };
+
+  const canArchive = batch.status === 'scheduling';
 
   return (
     <div className="space-y-6">
@@ -164,6 +201,28 @@ export default function BatchDetail() {
               ))}
             </SelectContent>
           </Select>
+          {canArchive && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="default" className="bg-green-600 hover:bg-green-700">
+                  <Archive className="h-4 w-4 mr-2" />
+                  Finalizar
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Finalizar pacote?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    O pacote será arquivado e não aparecerá mais na lista de produção. Esta ação pode ser revertida pelo banco de dados.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleArchiveBatch}>Finalizar</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" size="icon">
@@ -216,6 +275,27 @@ export default function BatchDetail() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Attachments */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Arquivos do Pacote</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loadingAttachments ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <FileUpload
+              files={attachments}
+              folder={`batches/${id}`}
+              onFileUploaded={handleFileUploaded}
+              onFileDeleted={handleFileDeleted}
+            />
+          )}
+        </CardContent>
+      </Card>
 
       {/* Posts */}
       <Card>

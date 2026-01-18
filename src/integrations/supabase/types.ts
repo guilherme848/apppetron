@@ -110,8 +110,47 @@ export type Database = {
           },
         ]
       }
+      batch_attachments: {
+        Row: {
+          batch_id: string
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "batch_attachments_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "content_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_batches: {
         Row: {
+          archived: boolean
           client_id: string | null
           created_at: string
           delivery_date: string | null
@@ -123,6 +162,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          archived?: boolean
           client_id?: string | null
           created_at?: string
           delivery_date?: string | null
@@ -134,6 +174,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          archived?: boolean
           client_id?: string | null
           created_at?: string
           delivery_date?: string | null
@@ -353,6 +394,44 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      post_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          post_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          post_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_attachments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "content_posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       services: {
         Row: {

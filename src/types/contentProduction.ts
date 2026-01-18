@@ -6,8 +6,7 @@ export type BatchStatus =
   | 'to_deliver' 
   | 'delivered' 
   | 'changes' 
-  | 'scheduling' 
-  | 'done';
+  | 'scheduling';
 
 export type PostStatus = 'todo' | 'doing' | 'done';
 
@@ -19,8 +18,29 @@ export interface ContentBatch {
   notes: string | null;
   planning_due_date: string | null;
   delivery_date: string | null;
+  archived: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface BatchAttachment {
+  id: string;
+  batch_id: string;
+  file_name: string;
+  file_path: string;
+  file_size: number | null;
+  file_type: string | null;
+  created_at: string;
+}
+
+export interface PostAttachment {
+  id: string;
+  post_id: string;
+  file_name: string;
+  file_path: string;
+  file_size: number | null;
+  file_type: string | null;
+  created_at: string;
 }
 
 export interface ContentPost {
@@ -46,7 +66,6 @@ export const BATCH_STATUS_OPTIONS: { value: BatchStatus; label: string }[] = [
   { value: 'delivered', label: 'Entregue' },
   { value: 'changes', label: 'Alteração' },
   { value: 'scheduling', label: 'Agendamento' },
-  { value: 'done', label: 'Concluído' },
 ];
 
 export const POST_STATUS_OPTIONS: { value: PostStatus; label: string }[] = [

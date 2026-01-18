@@ -15,6 +15,7 @@ const mapBatch = (data: any): ContentBatch => ({
   notes: data.notes,
   planning_due_date: data.planning_due_date,
   delivery_date: data.delivery_date,
+  archived: data.archived ?? false,
   created_at: data.created_at,
   updated_at: data.updated_at,
 });
@@ -39,17 +40,38 @@ export function useContentProductionData() {
   const [accounts, setAccounts] = useState<SimpleAccount[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchBatches = useCallback(async () => {
-    const { data, error } = await supabase
+  const fetchBatches = useCallback(async (includeArchived = false) => {
+    let query = supabase
       .from('content_batches')
       .select('*')
       .order('month_ref', { ascending: false });
+    
+    if (!includeArchived) {
+      query = query.eq('archived', false);
+    }
+    
+    const { data, error } = await query;
     if (error) {
       console.error('Error fetching batches:', error);
     } else {
       setBatches((data || []).map(mapBatch));
     }
   }, []);
+
+  const archiveBatch = async (id: string) => {
+    const { data, error } = await supabase
+      .from('content_batches')
+      .update({ archived: true })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) {
+      console.error('Error archiving batch:', error);
+      return null;
+    }
+    setBatches((prev) => prev.filter((b) => b.id !== id));
+    return mapBatch(data);
+  };
 
   const fetchAccounts = useCallback(async () => {
     const { data, error } = await supabase
@@ -179,6 +201,7 @@ export function useContentProductionData() {
     addBatch,
     updateBatch,
     deleteBatch,
+    archiveBatch,
     addPost,
     updatePost,
     deletePost,
@@ -186,6 +209,7 @@ export function useContentProductionData() {
     getPostsByBatch,
     getAccountById,
     fetchPosts,
+    fetchBatches,
     refetch: fetchAll,
   };
 }
