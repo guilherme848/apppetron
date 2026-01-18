@@ -19,7 +19,7 @@ export default function BatchDetail() {
   const navigate = useNavigate();
   const { 
     batches, posts, accounts, loading, 
-    updateBatch, deleteBatch, addPost, deletePost, fetchPosts 
+    updateBatch, deleteBatch, addPost, updatePost, deletePost, fetchPosts 
   } = useContentProduction();
 
   const [notes, setNotes] = useState('');
@@ -103,6 +103,11 @@ export default function BatchDetail() {
   const handleDeletePost = async (postId: string) => {
     await deletePost(postId);
     toast.success('Post excluído');
+  };
+
+  const handlePostStatusChange = async (postId: string, status: string) => {
+    await updatePost(postId, { status: status as any });
+    toast.success('Status atualizado');
   };
 
   const isOverdue = () => {
@@ -246,9 +251,18 @@ export default function BatchDetail() {
                     <TableCell>{getChannelLabel(post.channel)}</TableCell>
                     <TableCell>{getFormatLabel(post.format)}</TableCell>
                     <TableCell>
-                      <Badge variant={getStatusVariant(post.status)}>
-                        {getStatusLabel(post.status)}
-                      </Badge>
+                      <Select value={post.status} onValueChange={(v) => handlePostStatusChange(post.id, v)}>
+                        <SelectTrigger className="w-28 h-8 bg-background">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover z-50">
+                          {POST_STATUS_OPTIONS.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
