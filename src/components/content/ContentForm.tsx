@@ -6,14 +6,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ContentItem, ContentStatus, ContentPriority, CONTENT_STATUS_OPTIONS, CONTENT_PRIORITY_OPTIONS, CHANNEL_OPTIONS, FORMAT_OPTIONS } from '@/types/content';
-import { Account } from '@/types/crm';
+
+interface SimpleAccount {
+  id: string;
+  name: string;
+}
 
 interface ContentFormProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (data: Partial<ContentItem>) => Promise<void>;
   content?: ContentItem;
-  accounts: Account[];
+  accounts: SimpleAccount[];
 }
 
 export function ContentForm({ open, onClose, onSubmit, content, accounts }: ContentFormProps) {

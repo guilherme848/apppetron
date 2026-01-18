@@ -3,11 +3,15 @@ import { ContentStatusBadge, ContentPriorityBadge, OverdueBadge } from './Conten
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Eye, Copy, CheckCircle, Send } from 'lucide-react';
-import { Account } from '@/types/crm';
+
+interface SimpleAccount {
+  id: string;
+  name: string;
+}
 
 interface ContentPipelineProps {
   items: ContentItem[];
-  accounts: Account[];
+  accounts: SimpleAccount[];
   onStatusChange: (id: string, status: string) => void;
   onView: (id: string) => void;
   onDuplicate: (id: string) => void;
