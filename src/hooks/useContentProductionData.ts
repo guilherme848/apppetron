@@ -51,6 +51,7 @@ export function useContentProductionData() {
     const { data, error } = await supabase
       .from('accounts')
       .select('id, name')
+      .eq('status', 'active')
       .order('name', { ascending: true });
     if (error) {
       console.error('Error fetching accounts:', error);
