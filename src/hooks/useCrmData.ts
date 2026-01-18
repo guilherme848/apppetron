@@ -8,6 +8,24 @@ const mapAccount = (data: any): Account => ({
   name: data.name,
   status: data.status as AccountStatus,
   created_at: data.created_at,
+  updated_at: data.updated_at,
+  niche: data.niche,
+  website: data.website,
+  cpf_cnpj: data.cpf_cnpj,
+  service_contracted: data.service_contracted,
+  monthly_value: data.monthly_value,
+  start_date: data.start_date,
+  contact_name: data.contact_name,
+  contact_phone: data.contact_phone,
+  contact_email: data.contact_email,
+  country: data.country,
+  postal_code: data.postal_code,
+  state: data.state,
+  city: data.city,
+  neighborhood: data.neighborhood,
+  street: data.street,
+  street_number: data.street_number,
+  address_complement: data.address_complement,
 });
 
 const mapContract = (data: any): Contract => ({
@@ -80,7 +98,7 @@ export function useCrmData() {
     fetchAll();
   }, [fetchAll]);
 
-  const addAccount = async (account: { name: string; status: AccountStatus }) => {
+  const addAccount = async (account: Partial<Account> & { name: string }) => {
     const { data, error } = await supabase
       .from('accounts')
       .insert([account])
@@ -96,15 +114,18 @@ export function useCrmData() {
   };
 
   const updateAccount = async (id: string, updates: Partial<Account>) => {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('accounts')
       .update(updates)
-      .eq('id', id);
+      .eq('id', id)
+      .select()
+      .single();
     if (error) {
       console.error('Error updating account:', error);
       return;
     }
-    setAccounts((prev) => prev.map((a) => (a.id === id ? { ...a, ...updates } : a)));
+    const mapped = mapAccount(data);
+    setAccounts((prev) => prev.map((a) => (a.id === id ? mapped : a)));
   };
 
   const deleteAccount = async (id: string) => {

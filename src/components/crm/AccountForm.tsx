@@ -1,62 +1,411 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
 import { Account, AccountStatus } from '@/types/crm';
 
 interface AccountFormProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: { name: string; status: AccountStatus }) => void;
+  onSubmit: (data: Partial<Account>) => void;
   account?: Account;
 }
 
+const formatCpfCnpj = (value: string) => {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length <= 11) {
+    return digits
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+  }
+  return digits
+    .replace(/(\d{2})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1/$2')
+    .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+};
+
+const formatPostalCode = (value: string) => {
+  const digits = value.replace(/\D/g, '');
+  return digits.replace(/(\d{5})(\d{1,3})$/, '$1-$2');
+};
+
+const formatPhone = (value: string) => {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length <= 10) {
+    return digits
+      .replace(/(\d{2})(\d)/, '($1) $2')
+      .replace(/(\d{4})(\d{1,4})$/, '$1-$2');
+  }
+  return digits
+    .replace(/(\d{2})(\d)/, '($1) $2')
+    .replace(/(\d{5})(\d{1,4})$/, '$1-$2');
+};
+
+const isValidEmail = (email: string) => {
+  if (!email) return true;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
+
 export function AccountForm({ open, onClose, onSubmit, account }: AccountFormProps) {
-  const [name, setName] = useState(account?.name || '');
-  const [status, setStatus] = useState<AccountStatus>(account?.status || 'lead');
+  const [formData, setFormData] = useState({
+    name: '',
+    status: 'lead' as AccountStatus,
+    niche: '',
+    website: '',
+    cpf_cnpj: '',
+    service_contracted: '',
+    monthly_value: '',
+    start_date: '',
+    contact_name: '',
+    contact_phone: '',
+    contact_email: '',
+    country: 'Brasil',
+    postal_code: '',
+    state: '',
+    city: '',
+    neighborhood: '',
+    street: '',
+    street_number: '',
+    address_complement: '',
+  });
+  const [emailError, setEmailError] = useState('');
+
+  useEffect(() => {
+    if (account) {
+      setFormData({
+        name: account.name || '',
+        status: account.status || 'lead',
+        niche: account.niche || '',
+        website: account.website || '',
+        cpf_cnpj: account.cpf_cnpj || '',
+        service_contracted: account.service_contracted || '',
+        monthly_value: account.monthly_value?.toString() || '',
+        start_date: account.start_date || '',
+        contact_name: account.contact_name || '',
+        contact_phone: account.contact_phone || '',
+        contact_email: account.contact_email || '',
+        country: account.country || 'Brasil',
+        postal_code: account.postal_code || '',
+        state: account.state || '',
+        city: account.city || '',
+        neighborhood: account.neighborhood || '',
+        street: account.street || '',
+        street_number: account.street_number || '',
+        address_complement: account.address_complement || '',
+      });
+    } else {
+      setFormData({
+        name: '',
+        status: 'lead',
+        niche: '',
+        website: '',
+        cpf_cnpj: '',
+        service_contracted: '',
+        monthly_value: '',
+        start_date: '',
+        contact_name: '',
+        contact_phone: '',
+        contact_email: '',
+        country: 'Brasil',
+        postal_code: '',
+        state: '',
+        city: '',
+        neighborhood: '',
+        street: '',
+        street_number: '',
+        address_complement: '',
+      });
+    }
+    setEmailError('');
+  }, [account, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim()) {
-      onSubmit({ name: name.trim(), status });
-      setName('');
-      setStatus('lead');
-      onClose();
+    if (!formData.name.trim()) return;
+    
+    if (!isValidEmail(formData.contact_email)) {
+      setEmailError('Email inválido');
+      return;
     }
+
+    onSubmit({
+      name: formData.name.trim(),
+      status: formData.status,
+      niche: formData.niche || null,
+      website: formData.website || null,
+      cpf_cnpj: formData.cpf_cnpj || null,
+      service_contracted: formData.service_contracted || null,
+      monthly_value: formData.monthly_value ? parseFloat(formData.monthly_value) : null,
+      start_date: formData.start_date || null,
+      contact_name: formData.contact_name || null,
+      contact_phone: formData.contact_phone || null,
+      contact_email: formData.contact_email || null,
+      country: formData.country || null,
+      postal_code: formData.postal_code || null,
+      state: formData.state || null,
+      city: formData.city || null,
+      neighborhood: formData.neighborhood || null,
+      street: formData.street || null,
+      street_number: formData.street_number || null,
+      address_complement: formData.address_complement || null,
+    });
+    onClose();
+  };
+
+  const handleCpfCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCpfCnpj(e.target.value);
+    if (formatted.replace(/\D/g, '').length <= 14) {
+      setFormData({ ...formData, cpf_cnpj: formatted });
+    }
+  };
+
+  const handlePostalCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPostalCode(e.target.value);
+    if (formatted.replace(/\D/g, '').length <= 8) {
+      setFormData({ ...formData, postal_code: formatted });
+    }
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhone(e.target.value);
+    if (formatted.replace(/\D/g, '').length <= 11) {
+      setFormData({ ...formData, contact_phone: formatted });
+    }
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, contact_email: e.target.value });
+    if (emailError) setEmailError('');
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{account ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Nome</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Nome da empresa"
-              required
-            />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Dados do Cliente */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Dados do Cliente</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nome do Cliente *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Nome da empresa"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v as AccountStatus })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="lead">Lead</SelectItem>
+                    <SelectItem value="active">Ativo</SelectItem>
+                    <SelectItem value="churned">Churned</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="niche">Nicho</Label>
+                <Input
+                  id="niche"
+                  value={formData.niche}
+                  onChange={(e) => setFormData({ ...formData, niche: e.target.value })}
+                  placeholder="Ex: Tecnologia, Saúde, Varejo"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cpf_cnpj">CPF/CNPJ</Label>
+                <Input
+                  id="cpf_cnpj"
+                  value={formData.cpf_cnpj}
+                  onChange={handleCpfCnpjChange}
+                  placeholder="000.000.000-00 ou 00.000.000/0001-00"
+                />
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="website">Website</Label>
+                <Input
+                  id="website"
+                  value={formData.website}
+                  onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                  placeholder="https://exemplo.com.br"
+                />
+              </div>
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
-            <Select value={status} onValueChange={(v) => setStatus(v as AccountStatus)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="lead">Lead</SelectItem>
-                <SelectItem value="active">Ativo</SelectItem>
-                <SelectItem value="churned">Churned</SelectItem>
-              </SelectContent>
-            </Select>
+
+          <Separator />
+
+          {/* Contrato */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Contrato</h3>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="service_contracted">Serviço Contratado</Label>
+                <Input
+                  id="service_contracted"
+                  value={formData.service_contracted}
+                  onChange={(e) => setFormData({ ...formData, service_contracted: e.target.value })}
+                  placeholder="Ex: Social Media, Tráfego"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="monthly_value">Valor Mensal (R$)</Label>
+                <Input
+                  id="monthly_value"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.monthly_value}
+                  onChange={(e) => setFormData({ ...formData, monthly_value: e.target.value })}
+                  placeholder="0.00"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="start_date">Data de Entrada</Label>
+                <Input
+                  id="start_date"
+                  type="date"
+                  value={formData.start_date}
+                  onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                />
+              </div>
+            </div>
           </div>
+
+          <Separator />
+
+          {/* Contato */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Contato</h3>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="contact_name">Nome do Contato</Label>
+                <Input
+                  id="contact_name"
+                  value={formData.contact_name}
+                  onChange={(e) => setFormData({ ...formData, contact_name: e.target.value })}
+                  placeholder="Nome do contato principal"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="contact_phone">Telefone</Label>
+                <Input
+                  id="contact_phone"
+                  value={formData.contact_phone}
+                  onChange={handlePhoneChange}
+                  placeholder="(00) 00000-0000"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="contact_email">Email</Label>
+                <Input
+                  id="contact_email"
+                  type="email"
+                  value={formData.contact_email}
+                  onChange={handleEmailChange}
+                  placeholder="email@exemplo.com"
+                  className={emailError ? 'border-destructive' : ''}
+                />
+                {emailError && <p className="text-xs text-destructive">{emailError}</p>}
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Endereço */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Endereço</h3>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="country">País</Label>
+                <Input
+                  id="country"
+                  value={formData.country}
+                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                  placeholder="Brasil"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="postal_code">CEP</Label>
+                <Input
+                  id="postal_code"
+                  value={formData.postal_code}
+                  onChange={handlePostalCodeChange}
+                  placeholder="00000-000"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="state">Estado</Label>
+                <Input
+                  id="state"
+                  value={formData.state}
+                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                  placeholder="SP"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="city">Cidade</Label>
+                <Input
+                  id="city"
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  placeholder="São Paulo"
+                />
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="neighborhood">Bairro</Label>
+                <Input
+                  id="neighborhood"
+                  value={formData.neighborhood}
+                  onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
+                  placeholder="Centro"
+                />
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="street">Logradouro</Label>
+                <Input
+                  id="street"
+                  value={formData.street}
+                  onChange={(e) => setFormData({ ...formData, street: e.target.value })}
+                  placeholder="Rua, Avenida, etc."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="street_number">Número</Label>
+                <Input
+                  id="street_number"
+                  value={formData.street_number}
+                  onChange={(e) => setFormData({ ...formData, street_number: e.target.value })}
+                  placeholder="123"
+                />
+              </div>
+              <div className="col-span-3 space-y-2">
+                <Label htmlFor="address_complement">Complemento</Label>
+                <Input
+                  id="address_complement"
+                  value={formData.address_complement}
+                  onChange={(e) => setFormData({ ...formData, address_complement: e.target.value })}
+                  placeholder="Sala, Andar, Bloco, etc."
+                />
+              </div>
+            </div>
+          </div>
+
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar

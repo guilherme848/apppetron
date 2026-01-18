@@ -7,6 +7,32 @@ export interface Account {
   name: string;
   status: AccountStatus;
   created_at: string;
+  updated_at?: string;
+  
+  // Dados do cliente
+  niche?: string | null;
+  website?: string | null;
+  cpf_cnpj?: string | null;
+  
+  // Contrato
+  service_contracted?: string | null;
+  monthly_value?: number | null;
+  start_date?: string | null;
+  
+  // Contato
+  contact_name?: string | null;
+  contact_phone?: string | null;
+  contact_email?: string | null;
+  
+  // Endereço
+  country?: string | null;
+  postal_code?: string | null;
+  state?: string | null;
+  city?: string | null;
+  neighborhood?: string | null;
+  street?: string | null;
+  street_number?: string | null;
+  address_complement?: string | null;
 }
 
 export interface Contract {
