@@ -35,6 +35,100 @@ export type Database = {
         }
         Relationships: []
       }
+      content_items: {
+        Row: {
+          brief: string | null
+          channel: string | null
+          client_id: string | null
+          copy_text: string | null
+          created_at: string
+          creative_notes: string | null
+          due_date: string | null
+          format: string | null
+          id: string
+          owner: string | null
+          priority: string
+          published_at: string | null
+          scheduled_at: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          brief?: string | null
+          channel?: string | null
+          client_id?: string | null
+          copy_text?: string | null
+          created_at?: string
+          creative_notes?: string | null
+          due_date?: string | null
+          format?: string | null
+          id?: string
+          owner?: string | null
+          priority?: string
+          published_at?: string | null
+          scheduled_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          brief?: string | null
+          channel?: string | null
+          client_id?: string | null
+          copy_text?: string | null
+          created_at?: string
+          creative_notes?: string | null
+          due_date?: string | null
+          format?: string | null
+          id?: string
+          owner?: string | null
+          priority?: string
+          published_at?: string | null
+          scheduled_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_items_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_revisions: {
+        Row: {
+          content_id: string
+          created_at: string
+          id: string
+          notes: string
+        }
+        Insert: {
+          content_id: string
+          created_at?: string
+          id?: string
+          notes: string
+        }
+        Update: {
+          content_id?: string
+          created_at?: string
+          id?: string
+          notes?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_revisions_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contracts: {
         Row: {
           account_id: string
