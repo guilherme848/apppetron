@@ -1,0 +1,149 @@
+import { useState } from 'react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { TaskStatusBadge } from '@/components/crm/StatusBadge';
+import { TaskForm } from '@/components/crm/TaskForm';
+import { useCrm } from '@/contexts/CrmContext';
+import { TaskStatus } from '@/types/crm';
+
+export default function TaskList() {
+  const { tasks, accounts, addTask, updateTask, deleteTask, getAccountById } = useCrm();
+  const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all');
+  const [accountFilter, setAccountFilter] = useState<string>('all');
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<typeof tasks[0] | undefined>();
+
+  const filteredTasks = tasks.filter((task) => {
+    const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
+    const matchesAccount =
+      accountFilter === 'all' ||
+      (accountFilter === 'none' && !task.account_id) ||
+      task.account_id === accountFilter;
+    return matchesStatus && matchesAccount;
+  });
+
+  const handleSubmit = (data: any) => {
+    if (editingTask) {
+      updateTask(editingTask.id, data);
+    } else {
+      addTask(data);
+    }
+    setEditingTask(undefined);
+  };
+
+  const handleEdit = (task: typeof tasks[0]) => {
+    setEditingTask(task);
+    setFormOpen(true);
+  };
+
+  const handleClose = () => {
+    setFormOpen(false);
+    setEditingTask(undefined);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Tarefas</h1>
+          <p className="text-muted-foreground">Gerencie suas tarefas</p>
+        </div>
+        <Button onClick={() => setFormOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nova Tarefa
+        </Button>
+      </div>
+
+      <div className="flex items-center gap-4">
+        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as TaskStatus | 'all')}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filtrar por status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os status</SelectItem>
+            <SelectItem value="backlog">Backlog</SelectItem>
+            <SelectItem value="todo">A Fazer</SelectItem>
+            <SelectItem value="doing">Fazendo</SelectItem>
+            <SelectItem value="done">Concluído</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={accountFilter} onValueChange={setAccountFilter}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Filtrar por cliente" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os clientes</SelectItem>
+            <SelectItem value="none">Sem cliente</SelectItem>
+            {accounts.map((account) => (
+              <SelectItem key={account.id} value={account.id}>
+                {account.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="border rounded-lg bg-background">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Título</TableHead>
+              <TableHead>Cliente</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Vencimento</TableHead>
+              <TableHead className="w-[100px]">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredTasks.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  Nenhuma tarefa encontrada
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredTasks.map((task) => {
+                const account = task.account_id ? getAccountById(task.account_id) : null;
+                return (
+                  <TableRow key={task.id}>
+                    <TableCell className="font-medium">{task.title}</TableCell>
+                    <TableCell>{account?.name || '-'}</TableCell>
+                    <TableCell>
+                      <TaskStatusBadge status={task.status} />
+                    </TableCell>
+                    <TableCell>
+                      {task.due_date
+                        ? new Date(task.due_date).toLocaleDateString('pt-BR')
+                        : '-'}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(task)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => deleteTask(task.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      <TaskForm
+        open={formOpen}
+        onClose={handleClose}
+        onSubmit={handleSubmit}
+        task={editingTask}
+        accounts={accounts}
+      />
+    </div>
+  );
+}

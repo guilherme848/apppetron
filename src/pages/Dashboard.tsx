@@ -1,0 +1,44 @@
+import { Users, DollarSign, CheckSquare } from 'lucide-react';
+import { StatsCard } from '@/components/dashboard/StatsCard';
+import { useCrm } from '@/contexts/CrmContext';
+
+export default function Dashboard() {
+  const { activeAccountsCount, totalMrr, openTasksCount } = useCrm();
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <p className="text-muted-foreground">Visão geral do CRM Petron</p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <StatsCard
+          title="Clientes Ativos"
+          value={activeAccountsCount}
+          icon={Users}
+          description="Total de clientes com status ativo"
+        />
+        <StatsCard
+          title="MRR Total"
+          value={formatCurrency(totalMrr)}
+          icon={DollarSign}
+          description="Receita recorrente mensal"
+        />
+        <StatsCard
+          title="Tarefas em Aberto"
+          value={openTasksCount}
+          icon={CheckSquare}
+          description="Tarefas não concluídas"
+        />
+      </div>
+    </div>
+  );
+}
