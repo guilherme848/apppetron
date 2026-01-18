@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Trash2, Loader2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,8 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { useContentProduction } from '@/contexts/ContentProductionContext';
-import { CHANNEL_OPTIONS, FORMAT_OPTIONS, POST_STATUS_OPTIONS, PostStatus } from '@/types/contentProduction';
+import { FileUpload } from '@/components/content/FileUpload';
+import { CHANNEL_OPTIONS, FORMAT_OPTIONS, POST_STATUS_OPTIONS, PostStatus, PostAttachment } from '@/types/contentProduction';
 
 export default function PostDetail() {
   const { batchId, postId } = useParams<{ batchId: string; postId: string }>();
@@ -25,15 +27,39 @@ export default function PostDetail() {
   const [briefing, setBriefing] = useState('');
   const [caption, setCaption] = useState('');
   const [saving, setSaving] = useState(false);
+  const [attachments, setAttachments] = useState<PostAttachment[]>([]);
+  const [loadingAttachments, setLoadingAttachments] = useState(false);
 
   const batch = batches.find((b) => b.id === batchId);
   const post = posts.find((p) => p.id === postId);
+
+  const fetchAttachments = useCallback(async () => {
+    if (!postId) return;
+    setLoadingAttachments(true);
+    const { data, error } = await supabase
+      .from('post_attachments')
+      .select('*')
+      .eq('post_id', postId)
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('Error fetching attachments:', error);
+    } else {
+      setAttachments(data || []);
+    }
+    setLoadingAttachments(false);
+  }, [postId]);
 
   useEffect(() => {
     if (batchId) {
       fetchPosts(batchId);
     }
   }, [batchId, fetchPosts]);
+
+  useEffect(() => {
+    if (postId) {
+      fetchAttachments();
+    }
+  }, [postId, fetchAttachments]);
 
   useEffect(() => {
     if (post) {
@@ -97,6 +123,24 @@ export default function PostDetail() {
     navigate(`/content/production/${batchId}`);
   };
 
+  const handleFileUploaded = async (file: { file_name: string; file_path: string; file_size: number; file_type: string }) => {
+    const { data, error } = await supabase
+      .from('post_attachments')
+      .insert([{ post_id: postId, ...file }])
+      .select()
+      .single();
+    if (error) {
+      console.error('Error saving attachment:', error);
+      return;
+    }
+    setAttachments((prev) => [data, ...prev]);
+  };
+
+  const handleFileDeleted = async (fileId: string) => {
+    await supabase.from('post_attachments').delete().eq('id', fileId);
+    setAttachments((prev) => prev.filter((a) => a.id !== fileId));
+  };
+
   const captionLength = caption.length;
 
   return (
@@ -141,10 +185,11 @@ export default function PostDetail() {
 
       {/* Tabs */}
       <Tabs defaultValue="post" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="post">Post</TabsTrigger>
           <TabsTrigger value="briefing">Briefing</TabsTrigger>
           <TabsTrigger value="caption">Legenda</TabsTrigger>
+          <TabsTrigger value="files">Arquivos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="post">
@@ -249,6 +294,28 @@ export default function PostDetail() {
                   className="resize-y"
                 />
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="files">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Arquivos do Post</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loadingAttachments ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <FileUpload
+                  files={attachments}
+                  folder={`posts/${postId}`}
+                  onFileUploaded={handleFileUploaded}
+                  onFileDeleted={handleFileDeleted}
+                />
+              )}
             </CardContent>
           </Card>
         </TabsContent>

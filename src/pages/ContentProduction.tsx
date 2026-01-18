@@ -27,7 +27,6 @@ export default function ContentProduction() {
       delivered: [],
       changes: [],
       scheduling: [],
-      done: [],
     };
     batches.forEach((batch) => {
       if (groups[batch.status]) {
