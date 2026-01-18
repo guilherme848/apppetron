@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -9,7 +9,7 @@ import { useCrm } from '@/contexts/CrmContext';
 import { TaskStatus } from '@/types/crm';
 
 export default function TaskList() {
-  const { tasks, accounts, addTask, updateTask, deleteTask, getAccountById } = useCrm();
+  const { tasks, accounts, addTask, updateTask, deleteTask, getAccountById, loading } = useCrm();
   const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all');
   const [accountFilter, setAccountFilter] = useState<string>('all');
   const [formOpen, setFormOpen] = useState(false);
@@ -24,11 +24,11 @@ export default function TaskList() {
     return matchesStatus && matchesAccount;
   });
 
-  const handleSubmit = (data: any) => {
+  const handleSubmit = async (data: { title: string; status: TaskStatus; account_id: string | null; due_date: string | null }) => {
     if (editingTask) {
-      updateTask(editingTask.id, data);
+      await updateTask(editingTask.id, data);
     } else {
-      addTask(data);
+      await addTask(data);
     }
     setEditingTask(undefined);
   };
@@ -42,6 +42,18 @@ export default function TaskList() {
     setFormOpen(false);
     setEditingTask(undefined);
   };
+
+  const handleDelete = async (id: string) => {
+    await deleteTask(id);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -124,7 +136,7 @@ export default function TaskList() {
                         <Button variant="ghost" size="icon" onClick={() => handleEdit(task)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => deleteTask(task.id)}>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(task.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

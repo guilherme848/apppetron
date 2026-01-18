@@ -1,9 +1,9 @@
-import { Users, DollarSign, CheckSquare } from 'lucide-react';
+import { Users, DollarSign, CheckSquare, Loader2 } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { useCrm } from '@/contexts/CrmContext';
 
 export default function Dashboard() {
-  const { activeAccountsCount, totalMrr, openTasksCount } = useCrm();
+  const { activeAccountsCount, totalMrr, openTasksCount, loading } = useCrm();
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -11,6 +11,14 @@ export default function Dashboard() {
       currency: 'BRL',
     }).format(value);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
