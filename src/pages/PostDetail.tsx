@@ -1,0 +1,258 @@
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Trash2, Loader2, Save } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
+import { useContentProduction } from '@/contexts/ContentProductionContext';
+import { CHANNEL_OPTIONS, FORMAT_OPTIONS, POST_STATUS_OPTIONS, PostStatus } from '@/types/contentProduction';
+
+export default function PostDetail() {
+  const { batchId, postId } = useParams<{ batchId: string; postId: string }>();
+  const navigate = useNavigate();
+  const { batches, posts, accounts, loading, updatePost, deletePost, fetchPosts } = useContentProduction();
+
+  const [title, setTitle] = useState('');
+  const [channel, setChannel] = useState('');
+  const [format, setFormat] = useState('');
+  const [status, setStatus] = useState<PostStatus>('todo');
+  const [briefing, setBriefing] = useState('');
+  const [caption, setCaption] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const batch = batches.find((b) => b.id === batchId);
+  const post = posts.find((p) => p.id === postId);
+
+  useEffect(() => {
+    if (batchId) {
+      fetchPosts(batchId);
+    }
+  }, [batchId, fetchPosts]);
+
+  useEffect(() => {
+    if (post) {
+      setTitle(post.title || '');
+      setChannel(post.channel || '');
+      setFormat(post.format || '');
+      setStatus(post.status);
+      setBriefing(post.briefing || '');
+      setCaption(post.caption || '');
+    }
+  }, [post]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!batch || !post) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-xl font-semibold mb-2">Post não encontrado</h2>
+        <Button variant="outline" onClick={() => navigate(`/content/production/${batchId}`)}>
+          Voltar ao Pacote
+        </Button>
+      </div>
+    );
+  }
+
+  const clientName = accounts.find((a) => a.id === batch.client_id)?.name || 'Cliente desconhecido';
+  const formatMonthRef = (monthRef: string) => {
+    const [year, month] = monthRef.split('-');
+    const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    return `${months[parseInt(month) - 1]} ${year}`;
+  };
+
+  const handleSave = async () => {
+    if (!title.trim()) {
+      toast.error('Título é obrigatório');
+      return;
+    }
+
+    setSaving(true);
+    await updatePost(post.id, {
+      title: title.trim(),
+      channel: channel || null,
+      format: format || null,
+      status,
+      briefing: briefing || null,
+      caption: caption || null,
+    });
+    setSaving(false);
+    toast.success('Post salvo com sucesso');
+  };
+
+  const handleDelete = async () => {
+    await deletePost(post.id);
+    toast.success('Post excluído');
+    navigate(`/content/production/${batchId}`);
+  };
+
+  const captionLength = caption.length;
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={() => navigate(`/content/production/${batchId}`)}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div className="flex-1">
+          <h1 className="text-xl font-bold">{title || 'Novo Post'}</h1>
+          <p className="text-sm text-muted-foreground">
+            {clientName} • {formatMonthRef(batch.month_ref)}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button onClick={handleSave} disabled={saving}>
+            <Save className="h-4 w-4 mr-2" />
+            {saving ? 'Salvando...' : 'Salvar'}
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="icon">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Excluir post?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta ação não pode ser desfeita.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <Tabs defaultValue="post" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="post">Post</TabsTrigger>
+          <TabsTrigger value="briefing">Briefing</TabsTrigger>
+          <TabsTrigger value="caption">Legenda</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="post">
+          <Card>
+            <CardContent className="pt-6 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">Título do Post *</Label>
+                <Input
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Ex: Reels - Depoimento Cliente"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Canal</Label>
+                  <Select value={channel || '_none_'} onValueChange={(v) => setChannel(v === '_none_' ? '' : v)}>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      <SelectItem value="_none_">Nenhum</SelectItem>
+                      {CHANNEL_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Formato</Label>
+                  <Select value={format || '_none_'} onValueChange={(v) => setFormat(v === '_none_' ? '' : v)}>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      <SelectItem value="_none_">Nenhum</SelectItem>
+                      {FORMAT_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={status} onValueChange={(v) => setStatus(v as PostStatus)}>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-50">
+                    {POST_STATUS_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="briefing">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-2">
+                <Label htmlFor="briefing">Briefing</Label>
+                <Textarea
+                  id="briefing"
+                  value={briefing}
+                  onChange={(e) => setBriefing(e.target.value)}
+                  placeholder="Descreva o briefing do post: objetivo, referências, tom de voz, etc."
+                  rows={12}
+                  className="resize-y"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="caption">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="caption">Legenda</Label>
+                  <span className="text-xs text-muted-foreground">
+                    {captionLength} caracteres
+                  </span>
+                </div>
+                <Textarea
+                  id="caption"
+                  value={caption}
+                  onChange={(e) => setCaption(e.target.value)}
+                  placeholder="Escreva a legenda do post..."
+                  rows={12}
+                  className="resize-y"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}

@@ -16,6 +16,7 @@ import ContentPage from "./pages/ContentPage";
 import ContentDetail from "./pages/ContentDetail";
 import ContentProduction from "./pages/ContentProduction";
 import BatchDetail from "./pages/BatchDetail";
+import PostDetail from "./pages/PostDetail";
 import SettingsServices from "./pages/SettingsServices";
 import SettingsNiches from "./pages/SettingsNiches";
 import NotFound from "./pages/NotFound";
@@ -42,6 +43,7 @@ const App = () => (
                     <Route path="/content/:id" element={<ContentDetail />} />
                     <Route path="/content/production" element={<ContentProduction />} />
                     <Route path="/content/production/:id" element={<BatchDetail />} />
+                    <Route path="/content/production/:batchId/posts/:postId" element={<PostDetail />} />
                     <Route path="/settings/services" element={<SettingsServices />} />
                     <Route path="/settings/niches" element={<SettingsNiches />} />
                     <Route path="*" element={<NotFound />} />

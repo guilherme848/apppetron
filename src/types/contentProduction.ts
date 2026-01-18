@@ -17,6 +17,8 @@ export interface ContentBatch {
   month_ref: string;
   status: BatchStatus;
   notes: string | null;
+  planning_due_date: string | null;
+  delivery_date: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -28,7 +30,9 @@ export interface ContentPost {
   channel: string | null;
   format: string | null;
   status: PostStatus;
-  due_date: string | null;
+  due_date: string | null; // deprecated - kept for compatibility
+  briefing: string | null;
+  caption: string | null;
   created_at: string;
   updated_at: string;
 }
