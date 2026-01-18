@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, CheckSquare, FileText } from 'lucide-react';
+import { LayoutDashboard, Users, CheckSquare, FileText, Settings } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
   Sidebar,
@@ -20,6 +20,11 @@ const crmItems = [
 
 const contentItems = [
   { title: 'Conteúdo', url: '/content', icon: FileText },
+];
+
+const settingsItems = [
+  { title: 'Serviços', url: '/settings/services', icon: Settings },
+  { title: 'Nichos', url: '/settings/niches', icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -61,6 +66,27 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {contentItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to={item.url}
+                      className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors hover:bg-accent"
+                      activeClassName="bg-accent text-accent-foreground font-medium"
+                    >
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.title}</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Configurações</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {settingsItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink

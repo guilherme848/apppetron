@@ -29,8 +29,10 @@ export type Database = {
           name: string
           neighborhood: string | null
           niche: string | null
+          niche_id: string | null
           postal_code: string | null
           service_contracted: string | null
+          service_id: string | null
           start_date: string | null
           state: string | null
           status: string
@@ -53,8 +55,10 @@ export type Database = {
           name: string
           neighborhood?: string | null
           niche?: string | null
+          niche_id?: string | null
           postal_code?: string | null
           service_contracted?: string | null
+          service_id?: string | null
           start_date?: string | null
           state?: string | null
           status?: string
@@ -77,8 +81,10 @@ export type Database = {
           name?: string
           neighborhood?: string | null
           niche?: string | null
+          niche_id?: string | null
           postal_code?: string | null
           service_contracted?: string | null
+          service_id?: string | null
           start_date?: string | null
           state?: string | null
           status?: string
@@ -87,7 +93,22 @@ export type Database = {
           updated_at?: string | null
           website?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "accounts_niche_id_fkey"
+            columns: ["niche_id"]
+            isOneToOne: false
+            referencedRelation: "niches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       content_items: {
         Row: {
@@ -217,6 +238,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      niches: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
       }
       tasks: {
         Row: {
