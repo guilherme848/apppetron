@@ -13,6 +13,8 @@ const mapBatch = (data: any): ContentBatch => ({
   month_ref: data.month_ref,
   status: data.status as BatchStatus,
   notes: data.notes,
+  planning_due_date: data.planning_due_date,
+  delivery_date: data.delivery_date,
   created_at: data.created_at,
   updated_at: data.updated_at,
 });
@@ -25,6 +27,8 @@ const mapPost = (data: any): ContentPost => ({
   format: data.format,
   status: data.status as PostStatus,
   due_date: data.due_date,
+  briefing: data.briefing,
+  caption: data.caption,
   created_at: data.created_at,
   updated_at: data.updated_at,
 });
@@ -123,7 +127,7 @@ export function useContentProductionData() {
     setBatches((prev) => prev.filter((b) => b.id !== id));
   };
 
-  const addPost = async (post: { batch_id: string; title: string; channel?: string; format?: string; status?: PostStatus; due_date?: string }) => {
+  const addPost = async (post: { batch_id: string; title: string; channel?: string; format?: string; status?: PostStatus; briefing?: string; caption?: string }) => {
     const { data, error } = await supabase
       .from('content_posts')
       .insert([{ ...post, status: post.status || 'todo' }])

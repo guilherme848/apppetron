@@ -1,29 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Eye, Trash2, Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { useContentProduction } from '@/contexts/ContentProductionContext';
-import { PostForm } from '@/components/content/PostForm';
-import { BATCH_STATUS_OPTIONS, BatchStatus, POST_STATUS_OPTIONS, CHANNEL_OPTIONS, FORMAT_OPTIONS, ContentPost } from '@/types/contentProduction';
+import { BATCH_STATUS_OPTIONS, BatchStatus, POST_STATUS_OPTIONS, CHANNEL_OPTIONS, FORMAT_OPTIONS } from '@/types/contentProduction';
 
 export default function BatchDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { 
     batches, posts, accounts, loading, 
-    updateBatch, deleteBatch, addPost, updatePost, deletePost, fetchPosts 
+    updateBatch, deleteBatch, addPost, deletePost, fetchPosts 
   } = useContentProduction();
 
-  const [postFormOpen, setPostFormOpen] = useState(false);
-  const [editingPost, setEditingPost] = useState<ContentPost | null>(null);
   const [notes, setNotes] = useState('');
+  const [planningDueDate, setPlanningDueDate] = useState('');
 
   const batch = batches.find((b) => b.id === id);
   const batchPosts = posts.filter((p) => p.batch_id === id);
@@ -37,6 +37,7 @@ export default function BatchDetail() {
   useEffect(() => {
     if (batch) {
       setNotes(batch.notes || '');
+      setPlanningDueDate(batch.planning_due_date || '');
     }
   }, [batch]);
 
@@ -78,19 +79,38 @@ export default function BatchDetail() {
     }
   };
 
+  const handlePlanningDueDateBlur = async () => {
+    const newDate = planningDueDate || null;
+    if (newDate !== batch.planning_due_date) {
+      await updateBatch(batch.id, { planning_due_date: newDate } as any);
+      toast.success('Vencimento do planejamento salvo');
+    }
+  };
+
   const handleDeleteBatch = async () => {
     await deleteBatch(batch.id);
     toast.success('Pacote excluído');
     navigate('/content/production');
   };
 
-  const handlePostSubmit = async (data: any) => {
-    return addPost({ ...data, batch_id: batch.id });
+  const handleNewPost = async () => {
+    const newPost = await addPost({ batch_id: batch.id, title: '' });
+    if (newPost) {
+      navigate(`/content/production/${batch.id}/posts/${newPost.id}`);
+    }
   };
 
   const handleDeletePost = async (postId: string) => {
     await deletePost(postId);
     toast.success('Post excluído');
+  };
+
+  const isOverdue = () => {
+    if (!batch.planning_due_date || batch.status === 'done') return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDate = new Date(batch.planning_due_date);
+    return dueDate < today;
   };
 
   const getChannelLabel = (value: string | null) => 
@@ -109,12 +129,21 @@ export default function BatchDetail() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate('/content/production')}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold">{clientName}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold">{clientName}</h1>
+            {isOverdue() && (
+              <Badge variant="destructive" className="flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3" />
+                ATRASADO
+              </Badge>
+            )}
+          </div>
           <p className="text-muted-foreground">{formatMonthRef(batch.month_ref)}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -152,25 +181,42 @@ export default function BatchDetail() {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Notas do Pacote</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            onBlur={handleNotesBlur}
-            placeholder="Observações sobre este pacote..."
-            rows={3}
-          />
-        </CardContent>
-      </Card>
+      {/* Planning Due Date & Notes */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Vencimento do Planejamento</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Input
+              type="date"
+              value={planningDueDate}
+              onChange={(e) => setPlanningDueDate(e.target.value)}
+              onBlur={handlePlanningDueDateBlur}
+            />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Notas do Pacote</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              onBlur={handleNotesBlur}
+              placeholder="Observações sobre este pacote..."
+              rows={2}
+            />
+          </CardContent>
+        </Card>
+      </div>
 
+      {/* Posts */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base">Posts do Mês ({batchPosts.length})</CardTitle>
-          <Button size="sm" onClick={() => { setEditingPost(null); setPostFormOpen(true); }}>
+          <Button size="sm" onClick={handleNewPost}>
             <Plus className="h-4 w-4 mr-1" />
             Novo Post
           </Button>
@@ -188,14 +234,15 @@ export default function BatchDetail() {
                   <TableHead>Canal</TableHead>
                   <TableHead>Formato</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Data Limite</TableHead>
                   <TableHead className="w-24">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {batchPosts.map((post) => (
                   <TableRow key={post.id}>
-                    <TableCell className="font-medium">{post.title}</TableCell>
+                    <TableCell className="font-medium">
+                      {post.title || <span className="text-muted-foreground italic">Sem título</span>}
+                    </TableCell>
                     <TableCell>{getChannelLabel(post.channel)}</TableCell>
                     <TableCell>{getFormatLabel(post.format)}</TableCell>
                     <TableCell>
@@ -204,16 +251,13 @@ export default function BatchDetail() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {post.due_date ? new Date(post.due_date).toLocaleDateString('pt-BR') : '-'}
-                    </TableCell>
-                    <TableCell>
                       <div className="flex gap-1">
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => { setEditingPost(post); setPostFormOpen(true); }}
+                          onClick={() => navigate(`/content/production/${batch.id}/posts/${post.id}`)}
                         >
-                          <Pencil className="h-4 w-4" />
+                          <Eye className="h-4 w-4" />
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
@@ -245,15 +289,6 @@ export default function BatchDetail() {
           )}
         </CardContent>
       </Card>
-
-      <PostForm
-        open={postFormOpen}
-        onOpenChange={setPostFormOpen}
-        batchId={batch.id}
-        post={editingPost}
-        onSubmit={handlePostSubmit}
-        onUpdate={updatePost}
-      />
     </div>
   );
 }

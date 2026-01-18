@@ -114,27 +114,33 @@ export type Database = {
         Row: {
           client_id: string | null
           created_at: string
+          delivery_date: string | null
           id: string
           month_ref: string
           notes: string | null
+          planning_due_date: string | null
           status: string
           updated_at: string
         }
         Insert: {
           client_id?: string | null
           created_at?: string
+          delivery_date?: string | null
           id?: string
           month_ref: string
           notes?: string | null
+          planning_due_date?: string | null
           status?: string
           updated_at?: string
         }
         Update: {
           client_id?: string | null
           created_at?: string
+          delivery_date?: string | null
           id?: string
           month_ref?: string
           notes?: string | null
+          planning_due_date?: string | null
           status?: string
           updated_at?: string
         }
@@ -216,6 +222,8 @@ export type Database = {
       content_posts: {
         Row: {
           batch_id: string
+          briefing: string | null
+          caption: string | null
           channel: string | null
           created_at: string
           due_date: string | null
@@ -227,6 +235,8 @@ export type Database = {
         }
         Insert: {
           batch_id: string
+          briefing?: string | null
+          caption?: string | null
           channel?: string | null
           created_at?: string
           due_date?: string | null
@@ -238,6 +248,8 @@ export type Database = {
         }
         Update: {
           batch_id?: string
+          briefing?: string | null
+          caption?: string | null
           channel?: string | null
           created_at?: string
           due_date?: string | null
