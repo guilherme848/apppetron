@@ -86,12 +86,12 @@ export function PostForm({ open, onOpenChange, batchId, post, onSubmit, onUpdate
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Canal</Label>
-              <Select value={channel} onValueChange={setChannel}>
+              <Select value={channel || '_none_'} onValueChange={(v) => setChannel(v === '_none_' ? '' : v)}>
                 <SelectTrigger className="bg-background">
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover z-50">
-                  <SelectItem value="">Nenhum</SelectItem>
+                  <SelectItem value="_none_">Nenhum</SelectItem>
                   {CHANNEL_OPTIONS.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}
@@ -102,12 +102,12 @@ export function PostForm({ open, onOpenChange, batchId, post, onSubmit, onUpdate
             </div>
             <div className="space-y-2">
               <Label>Formato</Label>
-              <Select value={format} onValueChange={setFormat}>
+              <Select value={format || '_none_'} onValueChange={(v) => setFormat(v === '_none_' ? '' : v)}>
                 <SelectTrigger className="bg-background">
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover z-50">
-                  <SelectItem value="">Nenhum</SelectItem>
+                  <SelectItem value="_none_">Nenhum</SelectItem>
                   {FORMAT_OPTIONS.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}
