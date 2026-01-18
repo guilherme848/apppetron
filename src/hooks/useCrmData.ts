@@ -1,78 +1,208 @@
-import { useState } from 'react';
-import { Account, Contract, Task } from '@/types/crm';
-import { mockAccounts, mockContracts, mockTasks } from '@/data/mockData';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Account, Contract, Task, AccountStatus, ContractStatus, TaskStatus } from '@/types/crm';
+
+// Helper functions to map Supabase data to typed objects
+const mapAccount = (data: any): Account => ({
+  id: data.id,
+  name: data.name,
+  status: data.status as AccountStatus,
+  created_at: data.created_at,
+});
+
+const mapContract = (data: any): Contract => ({
+  id: data.id,
+  account_id: data.account_id,
+  mrr: data.mrr,
+  start_date: data.start_date,
+  status: data.status as ContractStatus,
+  created_at: data.created_at,
+});
+
+const mapTask = (data: any): Task => ({
+  id: data.id,
+  account_id: data.account_id,
+  title: data.title,
+  status: data.status as TaskStatus,
+  due_date: data.due_date,
+  created_at: data.created_at,
+});
 
 export function useCrmData() {
-  const [accounts, setAccounts] = useState<Account[]>(mockAccounts);
-  const [contracts, setContracts] = useState<Contract[]>(mockContracts);
-  const [tasks, setTasks] = useState<Task[]>(mockTasks);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const addAccount = (account: Omit<Account, 'id' | 'created_at'>) => {
-    const newAccount: Account = {
-      ...account,
-      id: crypto.randomUUID(),
-      created_at: new Date().toISOString().split('T')[0],
-    };
-    setAccounts([...accounts, newAccount]);
-    return newAccount;
+  const fetchAccounts = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('accounts')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('Error fetching accounts:', error);
+    } else {
+      setAccounts((data || []).map(mapAccount));
+    }
+  }, []);
+
+  const fetchContracts = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('contracts')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('Error fetching contracts:', error);
+    } else {
+      setContracts((data || []).map(mapContract));
+    }
+  }, []);
+
+  const fetchTasks = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('Error fetching tasks:', error);
+    } else {
+      setTasks((data || []).map(mapTask));
+    }
+  }, []);
+
+  const fetchAll = useCallback(async () => {
+    setLoading(true);
+    await Promise.all([fetchAccounts(), fetchContracts(), fetchTasks()]);
+    setLoading(false);
+  }, [fetchAccounts, fetchContracts, fetchTasks]);
+
+  useEffect(() => {
+    fetchAll();
+  }, [fetchAll]);
+
+  const addAccount = async (account: { name: string; status: AccountStatus }) => {
+    const { data, error } = await supabase
+      .from('accounts')
+      .insert([account])
+      .select()
+      .single();
+    if (error) {
+      console.error('Error adding account:', error);
+      return null;
+    }
+    const mapped = mapAccount(data);
+    setAccounts((prev) => [mapped, ...prev]);
+    return mapped;
   };
 
-  const updateAccount = (id: string, updates: Partial<Account>) => {
-    setAccounts(accounts.map(a => a.id === id ? { ...a, ...updates } : a));
+  const updateAccount = async (id: string, updates: Partial<Account>) => {
+    const { error } = await supabase
+      .from('accounts')
+      .update(updates)
+      .eq('id', id);
+    if (error) {
+      console.error('Error updating account:', error);
+      return;
+    }
+    setAccounts((prev) => prev.map((a) => (a.id === id ? { ...a, ...updates } : a)));
   };
 
-  const deleteAccount = (id: string) => {
-    setAccounts(accounts.filter(a => a.id !== id));
+  const deleteAccount = async (id: string) => {
+    const { error } = await supabase.from('accounts').delete().eq('id', id);
+    if (error) {
+      console.error('Error deleting account:', error);
+      return;
+    }
+    setAccounts((prev) => prev.filter((a) => a.id !== id));
+    setContracts((prev) => prev.filter((c) => c.account_id !== id));
+    setTasks((prev) => prev.map((t) => (t.account_id === id ? { ...t, account_id: null } : t)));
   };
 
-  const addContract = (contract: Omit<Contract, 'id' | 'created_at'>) => {
-    const newContract: Contract = {
-      ...contract,
-      id: crypto.randomUUID(),
-      created_at: new Date().toISOString().split('T')[0],
-    };
-    setContracts([...contracts, newContract]);
-    return newContract;
+  const addContract = async (contract: { account_id: string; mrr: number; start_date: string; status: ContractStatus }) => {
+    const { data, error } = await supabase
+      .from('contracts')
+      .insert([contract])
+      .select()
+      .single();
+    if (error) {
+      console.error('Error adding contract:', error);
+      return null;
+    }
+    const mapped = mapContract(data);
+    setContracts((prev) => [mapped, ...prev]);
+    return mapped;
   };
 
-  const updateContract = (id: string, updates: Partial<Contract>) => {
-    setContracts(contracts.map(c => c.id === id ? { ...c, ...updates } : c));
+  const updateContract = async (id: string, updates: Partial<Contract>) => {
+    const { error } = await supabase
+      .from('contracts')
+      .update(updates)
+      .eq('id', id);
+    if (error) {
+      console.error('Error updating contract:', error);
+      return;
+    }
+    setContracts((prev) => prev.map((c) => (c.id === id ? { ...c, ...updates } : c)));
   };
 
-  const deleteContract = (id: string) => {
-    setContracts(contracts.filter(c => c.id !== id));
+  const deleteContract = async (id: string) => {
+    const { error } = await supabase.from('contracts').delete().eq('id', id);
+    if (error) {
+      console.error('Error deleting contract:', error);
+      return;
+    }
+    setContracts((prev) => prev.filter((c) => c.id !== id));
   };
 
-  const addTask = (task: Omit<Task, 'id' | 'created_at'>) => {
-    const newTask: Task = {
-      ...task,
-      id: crypto.randomUUID(),
-      created_at: new Date().toISOString().split('T')[0],
-    };
-    setTasks([...tasks, newTask]);
-    return newTask;
+  const addTask = async (task: { title: string; status: TaskStatus; account_id: string | null; due_date: string | null }) => {
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert([task])
+      .select()
+      .single();
+    if (error) {
+      console.error('Error adding task:', error);
+      return null;
+    }
+    const mapped = mapTask(data);
+    setTasks((prev) => [mapped, ...prev]);
+    return mapped;
   };
 
-  const updateTask = (id: string, updates: Partial<Task>) => {
-    setTasks(tasks.map(t => t.id === id ? { ...t, ...updates } : t));
+  const updateTask = async (id: string, updates: Partial<Task>) => {
+    const { error } = await supabase
+      .from('tasks')
+      .update(updates)
+      .eq('id', id);
+    if (error) {
+      console.error('Error updating task:', error);
+      return;
+    }
+    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...updates } : t)));
   };
 
-  const deleteTask = (id: string) => {
-    setTasks(tasks.filter(t => t.id !== id));
+  const deleteTask = async (id: string) => {
+    const { error } = await supabase.from('tasks').delete().eq('id', id);
+    if (error) {
+      console.error('Error deleting task:', error);
+      return;
+    }
+    setTasks((prev) => prev.filter((t) => t.id !== id));
   };
 
-  const getAccountById = (id: string) => accounts.find(a => a.id === id);
-  const getContractsByAccount = (accountId: string) => contracts.filter(c => c.account_id === accountId);
-  const getTasksByAccount = (accountId: string) => tasks.filter(t => t.account_id === accountId);
+  const getAccountById = (id: string) => accounts.find((a) => a.id === id);
+  const getContractsByAccount = (accountId: string) => contracts.filter((c) => c.account_id === accountId);
+  const getTasksByAccount = (accountId: string) => tasks.filter((t) => t.account_id === accountId);
 
-  const activeAccountsCount = accounts.filter(a => a.status === 'active').length;
-  const totalMrr = contracts.filter(c => c.status === 'active').reduce((sum, c) => sum + c.mrr, 0);
-  const openTasksCount = tasks.filter(t => t.status !== 'done').length;
+  const activeAccountsCount = accounts.filter((a) => a.status === 'active').length;
+  const totalMrr = contracts.filter((c) => c.status === 'active').reduce((sum, c) => sum + Number(c.mrr), 0);
+  const openTasksCount = tasks.filter((t) => t.status !== 'done').length;
 
   return {
     accounts,
     contracts,
     tasks,
+    loading,
     addAccount,
     updateAccount,
     deleteAccount,
@@ -88,5 +218,6 @@ export function useCrmData() {
     activeAccountsCount,
     totalMrr,
     openTasksCount,
+    refetch: fetchAll,
   };
 }

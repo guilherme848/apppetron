@@ -14,7 +14,97 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      accounts: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      contracts: {
+        Row: {
+          account_id: string
+          created_at: string
+          id: string
+          mrr: number
+          start_date: string
+          status: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          id?: string
+          mrr?: number
+          start_date: string
+          status?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          id?: string
+          mrr?: number
+          start_date?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          account_id: string | null
+          created_at: string
+          due_date: string | null
+          id: string
+          status: string
+          title: string
+        }
+        Insert: {
+          account_id?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          status?: string
+          title: string
+        }
+        Update: {
+          account_id?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

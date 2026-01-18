@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Pencil, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -8,12 +8,14 @@ import { AccountStatusBadge, ContractStatusBadge, TaskStatusBadge } from '@/comp
 import { ContractForm } from '@/components/crm/ContractForm';
 import { TaskForm } from '@/components/crm/TaskForm';
 import { useCrm } from '@/contexts/CrmContext';
+import { Contract, Task, ContractStatus, TaskStatus } from '@/types/crm';
 
 export default function CrmDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const {
     accounts,
+    loading,
     getAccountById,
     getContractsByAccount,
     getTasksByAccount,
@@ -31,8 +33,16 @@ export default function CrmDetail() {
 
   const [contractFormOpen, setContractFormOpen] = useState(false);
   const [taskFormOpen, setTaskFormOpen] = useState(false);
-  const [editingContract, setEditingContract] = useState<typeof contracts[0] | undefined>();
-  const [editingTask, setEditingTask] = useState<typeof tasks[0] | undefined>();
+  const [editingContract, setEditingContract] = useState<Contract | undefined>();
+  const [editingTask, setEditingTask] = useState<Task | undefined>();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (!account) {
     return (
@@ -52,22 +62,30 @@ export default function CrmDetail() {
     }).format(value);
   };
 
-  const handleContractSubmit = (data: any) => {
+  const handleContractSubmit = async (data: { mrr: number; start_date: string; status: ContractStatus; account_id: string }) => {
     if (editingContract) {
-      updateContract(editingContract.id, data);
+      await updateContract(editingContract.id, data);
     } else {
-      addContract(data);
+      await addContract(data);
     }
     setEditingContract(undefined);
   };
 
-  const handleTaskSubmit = (data: any) => {
+  const handleTaskSubmit = async (data: { title: string; status: TaskStatus; account_id: string | null; due_date: string | null }) => {
     if (editingTask) {
-      updateTask(editingTask.id, data);
+      await updateTask(editingTask.id, data);
     } else {
-      addTask({ ...data, account_id: id });
+      await addTask({ ...data, account_id: id! });
     }
     setEditingTask(undefined);
+  };
+
+  const handleDeleteContract = async (contractId: string) => {
+    await deleteContract(contractId);
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    await deleteTask(taskId);
   };
 
   return (
@@ -112,7 +130,7 @@ export default function CrmDetail() {
                 <TableBody>
                   {contracts.map((contract) => (
                     <TableRow key={contract.id}>
-                      <TableCell className="font-medium">{formatCurrency(contract.mrr)}</TableCell>
+                      <TableCell className="font-medium">{formatCurrency(Number(contract.mrr))}</TableCell>
                       <TableCell>{new Date(contract.start_date).toLocaleDateString('pt-BR')}</TableCell>
                       <TableCell>
                         <ContractStatusBadge status={contract.status} />
@@ -132,7 +150,7 @@ export default function CrmDetail() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => deleteContract(contract.id)}
+                            onClick={() => handleDeleteContract(contract.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -194,7 +212,7 @@ export default function CrmDetail() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => deleteTask(task.id)}
+                            onClick={() => handleDeleteTask(task.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
