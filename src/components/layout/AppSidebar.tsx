@@ -19,8 +19,7 @@ const crmItems = [
 ];
 
 const contentItems = [
-  { title: 'Calendário', url: '/content', icon: FileText },
-  { title: 'Produção', url: '/content/production', icon: Layers },
+  { title: 'Produção de Conteúdo', url: '/content/production', icon: Layers },
 ];
 
 const settingsItems = [
