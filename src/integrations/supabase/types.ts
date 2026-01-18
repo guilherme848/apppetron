@@ -110,6 +110,44 @@ export type Database = {
           },
         ]
       }
+      content_batches: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          id: string
+          month_ref: string
+          notes: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          month_ref: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          month_ref?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_batches_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_items: {
         Row: {
           brief: string | null
@@ -171,6 +209,50 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_posts: {
+        Row: {
+          batch_id: string
+          channel: string | null
+          created_at: string
+          due_date: string | null
+          format: string | null
+          id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          batch_id: string
+          channel?: string | null
+          created_at?: string
+          due_date?: string | null
+          format?: string | null
+          id?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          batch_id?: string
+          channel?: string | null
+          created_at?: string
+          due_date?: string | null
+          format?: string | null
+          id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_posts_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "content_batches"
             referencedColumns: ["id"]
           },
         ]
