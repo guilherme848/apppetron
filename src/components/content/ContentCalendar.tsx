@@ -2,12 +2,16 @@ import { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ContentItem } from '@/types/content';
-import { Account } from '@/types/crm';
 import { ContentStatusBadge, OverdueBadge } from './ContentBadges';
+
+interface SimpleAccount {
+  id: string;
+  name: string;
+}
 
 interface ContentCalendarProps {
   items: ContentItem[];
-  accounts: Account[];
+  accounts: SimpleAccount[];
   onItemClick: (id: string) => void;
 }
 
