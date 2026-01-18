@@ -6,6 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Account, AccountStatus } from '@/types/crm';
+import { useSettings } from '@/contexts/SettingsContext';
+import { Link } from 'react-router-dom';
+import { ExternalLink } from 'lucide-react';
 
 interface AccountFormProps {
   open: boolean;
@@ -52,13 +55,15 @@ const isValidEmail = (email: string) => {
 };
 
 export function AccountForm({ open, onClose, onSubmit, account }: AccountFormProps) {
+  const { activeServices, activeNiches, services, niches, findServiceByName, findNicheByName } = useSettings();
+  
   const [formData, setFormData] = useState({
     name: '',
     status: 'lead' as AccountStatus,
-    niche: '',
+    service_id: '',
+    niche_id: '',
     website: '',
     cpf_cnpj: '',
-    service_contracted: '',
     monthly_value: '',
     start_date: '',
     contact_name: '',
@@ -77,13 +82,27 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
 
   useEffect(() => {
     if (account) {
+      // Try to map legacy text fields to IDs
+      let serviceId = account.service_id || '';
+      let nicheId = account.niche_id || '';
+      
+      // If no ID but has legacy text, try to find matching entry
+      if (!serviceId && account.service_contracted) {
+        const matchingService = findServiceByName(account.service_contracted);
+        if (matchingService) serviceId = matchingService.id;
+      }
+      if (!nicheId && account.niche) {
+        const matchingNiche = findNicheByName(account.niche);
+        if (matchingNiche) nicheId = matchingNiche.id;
+      }
+
       setFormData({
         name: account.name || '',
         status: account.status || 'lead',
-        niche: account.niche || '',
+        service_id: serviceId,
+        niche_id: nicheId,
         website: account.website || '',
         cpf_cnpj: account.cpf_cnpj || '',
-        service_contracted: account.service_contracted || '',
         monthly_value: account.monthly_value?.toString() || '',
         start_date: account.start_date || '',
         contact_name: account.contact_name || '',
@@ -102,10 +121,10 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
       setFormData({
         name: '',
         status: 'lead',
-        niche: '',
+        service_id: '',
+        niche_id: '',
         website: '',
         cpf_cnpj: '',
-        service_contracted: '',
         monthly_value: '',
         start_date: '',
         contact_name: '',
@@ -122,7 +141,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
       });
     }
     setEmailError('');
-  }, [account, open]);
+  }, [account, open, findServiceByName, findNicheByName]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,13 +152,20 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
       return;
     }
 
+    // Get service and niche names for legacy compatibility
+    const selectedService = services.find(s => s.id === formData.service_id);
+    const selectedNiche = niches.find(n => n.id === formData.niche_id);
+
     onSubmit({
       name: formData.name.trim(),
       status: formData.status,
-      niche: formData.niche || null,
+      service_id: formData.service_id || null,
+      niche_id: formData.niche_id || null,
+      // Keep legacy fields in sync
+      service_contracted: selectedService?.name || null,
+      niche: selectedNiche?.name || null,
       website: formData.website || null,
       cpf_cnpj: formData.cpf_cnpj || null,
-      service_contracted: formData.service_contracted || null,
       monthly_value: formData.monthly_value ? parseFloat(formData.monthly_value) : null,
       start_date: formData.start_date || null,
       contact_name: formData.contact_name || null,
@@ -218,13 +244,26 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="niche">Nicho</Label>
-                <Input
-                  id="niche"
-                  value={formData.niche}
-                  onChange={(e) => setFormData({ ...formData, niche: e.target.value })}
-                  placeholder="Ex: Tecnologia, Saúde, Varejo"
-                />
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="niche_id">Nicho</Label>
+                  <Link to="/settings/niches" className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1">
+                    <ExternalLink className="h-3 w-3" />
+                    Gerenciar
+                  </Link>
+                </div>
+                <Select value={formData.niche_id} onValueChange={(v) => setFormData({ ...formData, niche_id: v === 'none' ? '' : v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um nicho" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum</SelectItem>
+                    {activeNiches.map((niche) => (
+                      <SelectItem key={niche.id} value={niche.id}>
+                        {niche.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="cpf_cnpj">CPF/CNPJ</Label>
@@ -254,13 +293,26 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Contrato</h3>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="service_contracted">Serviço Contratado</Label>
-                <Input
-                  id="service_contracted"
-                  value={formData.service_contracted}
-                  onChange={(e) => setFormData({ ...formData, service_contracted: e.target.value })}
-                  placeholder="Ex: Social Media, Tráfego"
-                />
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="service_id">Serviço Contratado</Label>
+                  <Link to="/settings/services" className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1">
+                    <ExternalLink className="h-3 w-3" />
+                    Gerenciar
+                  </Link>
+                </div>
+                <Select value={formData.service_id} onValueChange={(v) => setFormData({ ...formData, service_id: v === 'none' ? '' : v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um serviço" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum</SelectItem>
+                    {activeServices.map((service) => (
+                      <SelectItem key={service.id} value={service.id}>
+                        {service.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="monthly_value">Valor Mensal (R$)</Label>

@@ -14,10 +14,14 @@ export interface Account {
   website?: string | null;
   cpf_cnpj?: string | null;
   
-  // Contrato
+  // Contrato (campos de texto legados)
   service_contracted?: string | null;
   monthly_value?: number | null;
   start_date?: string | null;
+  
+  // Novos campos FK
+  service_id?: string | null;
+  niche_id?: string | null;
   
   // Contato
   contact_name?: string | null;

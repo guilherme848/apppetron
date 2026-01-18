@@ -15,6 +15,8 @@ const mapAccount = (data: any): Account => ({
   service_contracted: data.service_contracted,
   monthly_value: data.monthly_value,
   start_date: data.start_date,
+  service_id: data.service_id,
+  niche_id: data.niche_id,
   contact_name: data.contact_name,
   contact_phone: data.contact_phone,
   contact_email: data.contact_email,
