@@ -15,6 +15,7 @@ const mapAccount = (data: any): Account => ({
   service_contracted: data.service_contracted,
   monthly_value: data.monthly_value,
   start_date: data.start_date,
+  churned_at: data.churned_at,
   service_id: data.service_id,
   niche_id: data.niche_id,
   contact_name: data.contact_name,
@@ -101,9 +102,17 @@ export function useCrmData() {
   }, [fetchAll]);
 
   const addAccount = async (account: Partial<Account> & { name: string }) => {
+    // Handle churned_at based on status
+    const accountData = { ...account };
+    if (accountData.status === 'churned' && !accountData.churned_at) {
+      accountData.churned_at = new Date().toISOString().split('T')[0];
+    } else if (accountData.status !== 'churned') {
+      accountData.churned_at = null;
+    }
+
     const { data, error } = await supabase
       .from('accounts')
-      .insert([account])
+      .insert([accountData])
       .select()
       .single();
     if (error) {
@@ -116,9 +125,23 @@ export function useCrmData() {
   };
 
   const updateAccount = async (id: string, updates: Partial<Account>) => {
+    // Handle churned_at based on status change
+    const currentAccount = accounts.find(a => a.id === id);
+    const accountUpdates = { ...updates };
+    
+    if (updates.status === 'churned' && currentAccount?.status !== 'churned') {
+      // Changing to churned - set churned_at if not already set
+      if (!updates.churned_at) {
+        accountUpdates.churned_at = new Date().toISOString().split('T')[0];
+      }
+    } else if (updates.status && updates.status !== 'churned' && currentAccount?.status === 'churned') {
+      // Changing from churned to another status - clear churned_at
+      accountUpdates.churned_at = null;
+    }
+
     const { data, error } = await supabase
       .from('accounts')
-      .update(updates)
+      .update(accountUpdates)
       .eq('id', id)
       .select()
       .single();

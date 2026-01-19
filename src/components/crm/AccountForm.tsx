@@ -66,6 +66,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
     cpf_cnpj: '',
     monthly_value: '',
     start_date: '',
+    churned_at: '',
     contact_name: '',
     contact_phone: '',
     contact_email: '',
@@ -105,6 +106,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
         cpf_cnpj: account.cpf_cnpj || '',
         monthly_value: account.monthly_value?.toString() || '',
         start_date: account.start_date || '',
+        churned_at: account.churned_at || '',
         contact_name: account.contact_name || '',
         contact_phone: account.contact_phone || '',
         contact_email: account.contact_email || '',
@@ -127,6 +129,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
         cpf_cnpj: '',
         monthly_value: '',
         start_date: '',
+        churned_at: '',
         contact_name: '',
         contact_phone: '',
         contact_email: '',
@@ -335,6 +338,20 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                   onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
                 />
               </div>
+              {formData.status === 'churned' && (
+                <div className="space-y-2">
+                  <Label htmlFor="churned_at">Data de Churn</Label>
+                  <Input
+                    id="churned_at"
+                    type="date"
+                    value={formData.churned_at}
+                    onChange={(e) => setFormData({ ...formData, churned_at: e.target.value })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Preenchido automaticamente ao marcar como Churned
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
