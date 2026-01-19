@@ -1,17 +1,27 @@
-import { Users, DollarSign, CheckSquare, Loader2 } from 'lucide-react';
+import { Users, DollarSign, CheckSquare, Loader2, Receipt, Clock } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { ContentActivitySummary } from '@/components/dashboard/ContentActivitySummary';
 import { ClientEvolutionChart } from '@/components/dashboard/ClientEvolutionChart';
 import { useCrm } from '@/contexts/CrmContext';
 
 export default function Dashboard() {
-  const { activeAccountsCount, totalMrr, openTasksCount, loading } = useCrm();
+  const { activeAccountsCount, totalMrr, openTasksCount, averageTicket, averageLifetimeMonths, loading } = useCrm();
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(value);
+  };
+
+  const formatLifetime = (months: number) => {
+    const years = months / 12;
+    return {
+      months: months.toFixed(1).replace('.', ','),
+      years: years.toFixed(1).replace('.', ','),
+    };
   };
 
   if (loading) {
@@ -29,7 +39,7 @@ export default function Dashboard() {
         <p className="text-muted-foreground">Visão geral do CRM Petron</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <StatsCard
           title="Clientes Ativos"
           value={activeAccountsCount}
@@ -40,7 +50,19 @@ export default function Dashboard() {
           title="MRR Total"
           value={formatCurrency(totalMrr)}
           icon={DollarSign}
-          description="Receita recorrente mensal (valor mensal dos clientes ativos)"
+          description="Receita recorrente mensal"
+        />
+        <StatsCard
+          title="Ticket Médio"
+          value={formatCurrency(averageTicket)}
+          icon={Receipt}
+          description="Média do valor mensal (ativos)"
+        />
+        <StatsCard
+          title="LT Médio"
+          value={`${formatLifetime(averageLifetimeMonths).months} meses`}
+          icon={Clock}
+          description={`≈ ${formatLifetime(averageLifetimeMonths).years} anos`}
         />
         <StatsCard
           title="Tarefas em Aberto"
