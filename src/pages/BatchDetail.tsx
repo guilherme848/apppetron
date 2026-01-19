@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Eye, Trash2, Loader2, AlertTriangle, Archive } from 'lucide-react';
+import { ArrowLeft, Plus, Eye, Trash2, Loader2, AlertTriangle, Archive, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -147,9 +147,21 @@ export default function BatchDetail() {
     toast.success('Status atualizado');
   };
 
-  // Responsible is always the same as planning stage - get it once
+  const handlePostResponsibleChange = async (postId: string, roleId: string) => {
+    await updatePost(postId, { responsible_role_id: roleId === '_none_' ? null : roleId } as any);
+    toast.success('Responsável atualizado');
+  };
+
+  // Stages where responsible is variable (editable per post)
+  const VARIABLE_STAGES = ['production', 'changes'];
+  const isVariableStage = VARIABLE_STAGES.includes(batch.status);
+
+  // Get planning stage responsible for non-variable stages
   const planningResponsibleId = getRoleForStage('planning');
   const planningResponsibleName = planningResponsibleId ? getRoleById(planningResponsibleId)?.name : null;
+
+  // Check if any post is missing responsible
+  const postsWithoutResponsible = batchPosts.filter(p => !p.responsible_role_id).length;
 
   const handleFileUploaded = async (file: { file_name: string; file_path: string; file_size: number; file_type: string }) => {
     const { data, error } = await supabase
@@ -312,10 +324,30 @@ export default function BatchDetail() {
         </CardContent>
       </Card>
 
+      {/* Warning for missing responsible */}
+      {batchPosts.length > 0 && postsWithoutResponsible > 0 && (
+        <div className="flex items-center gap-2 p-3 rounded-md bg-yellow-500/10 border border-yellow-500/30 text-yellow-700 dark:text-yellow-400">
+          <AlertCircle className="h-4 w-4 flex-shrink-0" />
+          <span className="text-sm">
+            {postsWithoutResponsible === batchPosts.length 
+              ? 'Nenhum post possui responsável atribuído.'
+              : `${postsWithoutResponsible} post(s) sem responsável atribuído.`}
+            {!isVariableStage && !planningResponsibleId && ' Configure o responsável na etapa de Planejamento.'}
+          </span>
+        </div>
+      )}
+
       {/* Posts */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Posts do Mês ({batchPosts.length})</CardTitle>
+          <div>
+            <CardTitle className="text-base">Posts do Mês ({batchPosts.length})</CardTitle>
+            {isVariableStage && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Etapa com responsável variável por post
+              </p>
+            )}
+          </div>
           <Button size="sm" onClick={handleNewPost}>
             <Plus className="h-4 w-4 mr-1" />
             Novo Post
@@ -347,10 +379,31 @@ export default function BatchDetail() {
                     <TableCell>{getChannelLabel(post.channel)}</TableCell>
                     <TableCell>{getFormatLabel(post.format)}</TableCell>
                     <TableCell>
-                      {planningResponsibleName ? (
-                        <Badge variant="outline">{planningResponsibleName}</Badge>
+                      {isVariableStage ? (
+                        <Select 
+                          value={post.responsible_role_id || ''} 
+                          onValueChange={(v) => handlePostResponsibleChange(post.id, v)}
+                        >
+                          <SelectTrigger className={`w-32 h-8 bg-background ${!post.responsible_role_id ? 'border-yellow-500' : ''}`}>
+                            <SelectValue placeholder="-" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-popover z-50">
+                            <SelectItem value="_none_">-</SelectItem>
+                            {roles.map((role) => (
+                              <SelectItem key={role.id} value={role.id}>
+                                {role.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       ) : (
-                        <span className="text-muted-foreground">-</span>
+                        post.responsible_role_id ? (
+                          <Badge variant="outline">{getRoleById(post.responsible_role_id)?.name || '-'}</Badge>
+                        ) : planningResponsibleName ? (
+                          <Badge variant="outline">{planningResponsibleName}</Badge>
+                        ) : (
+                          <span className="text-yellow-600 dark:text-yellow-400">Não definido</span>
+                        )
                       )}
                     </TableCell>
                     <TableCell>

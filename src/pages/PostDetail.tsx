@@ -32,7 +32,7 @@ export default function PostDetail() {
   const [briefing, setBriefing] = useState('');
   const [caption, setCaption] = useState('');
   const [itemType, setItemType] = useState<ItemType | ''>('');
-  // Responsible is always tied to planning stage - no longer editable per post
+  const [responsibleRoleId, setResponsibleRoleId] = useState<string>('');
   const [saving, setSaving] = useState(false);
   const [attachments, setAttachments] = useState<PostAttachment[]>([]);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
@@ -77,8 +77,13 @@ export default function PostDetail() {
       setBriefing(post.briefing || '');
       setCaption(post.caption || '');
       setItemType((post.item_type as ItemType) || '');
+      setResponsibleRoleId(post.responsible_role_id || '');
     }
   }, [post]);
+
+  // Stages where responsible is variable (editable per post)
+  const VARIABLE_STAGES = ['production', 'changes'];
+  const isVariableStage = batch ? VARIABLE_STAGES.includes(batch.status) : false;
 
   // Get planning stage responsible
   const planningResponsibleId = getRoleForStage('planning');
@@ -117,6 +122,12 @@ export default function PostDetail() {
     }
 
     setSaving(true);
+    
+    // Use responsible based on stage type
+    const finalResponsible = isVariableStage 
+      ? (responsibleRoleId || null)
+      : (responsibleRoleId || planningResponsibleId || null);
+    
     await updatePost(post.id, {
       title: title.trim(),
       channel: channel || null,
@@ -125,7 +136,7 @@ export default function PostDetail() {
       briefing: briefing || null,
       caption: caption || null,
       item_type: itemType || null,
-      responsible_role_id: planningResponsibleId || null,
+      responsible_role_id: finalResponsible,
     });
     setSaving(false);
     toast.success('Post salvo com sucesso');
@@ -299,13 +310,36 @@ export default function PostDetail() {
                 </div>
                 <div className="space-y-2">
                   <Label>Responsável</Label>
-                  <div className="h-10 flex items-center px-3 border rounded-md bg-muted">
-                    {planningResponsibleName ? (
-                      <Badge variant="outline">{planningResponsibleName}</Badge>
-                    ) : (
-                      <span className="text-muted-foreground">Definido na etapa de Planejamento</span>
-                    )}
-                  </div>
+                  {isVariableStage ? (
+                    <Select value={responsibleRoleId || '_none_'} onValueChange={(v) => setResponsibleRoleId(v === '_none_' ? '' : v)}>
+                      <SelectTrigger className={`bg-background ${!responsibleRoleId ? 'border-yellow-500' : ''}`}>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover z-50">
+                        <SelectItem value="_none_">-</SelectItem>
+                        {roles.map((role) => (
+                          <SelectItem key={role.id} value={role.id}>
+                            {role.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="h-10 flex items-center px-3 border rounded-md bg-muted">
+                      {responsibleRoleId ? (
+                        <Badge variant="outline">{getRoleById(responsibleRoleId)?.name}</Badge>
+                      ) : planningResponsibleName ? (
+                        <Badge variant="outline">{planningResponsibleName}</Badge>
+                      ) : (
+                        <span className="text-yellow-600 dark:text-yellow-400">Não definido</span>
+                      )}
+                    </div>
+                  )}
+                  {!responsibleRoleId && !planningResponsibleId && (
+                    <p className="text-xs text-yellow-600 dark:text-yellow-400">
+                      ⚠️ Post sem responsável atribuído
+                    </p>
+                  )}
                 </div>
               </div>
             </CardContent>
