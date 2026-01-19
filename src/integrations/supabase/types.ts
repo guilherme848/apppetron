@@ -270,6 +270,8 @@ export type Database = {
           due_date: string | null
           format: string | null
           id: string
+          item_type: string | null
+          responsible_role_id: string | null
           status: string
           title: string
           updated_at: string
@@ -283,6 +285,8 @@ export type Database = {
           due_date?: string | null
           format?: string | null
           id?: string
+          item_type?: string | null
+          responsible_role_id?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -296,6 +300,8 @@ export type Database = {
           due_date?: string | null
           format?: string | null
           id?: string
+          item_type?: string | null
+          responsible_role_id?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -306,6 +312,13 @@ export type Database = {
             columns: ["batch_id"]
             isOneToOne: false
             referencedRelation: "content_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_posts_responsible_role_id_fkey"
+            columns: ["responsible_role_id"]
+            isOneToOne: false
+            referencedRelation: "job_roles"
             referencedColumns: ["id"]
           },
         ]
@@ -335,6 +348,35 @@ export type Database = {
             columns: ["content_id"]
             isOneToOne: false
             referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_stage_responsibilities: {
+        Row: {
+          created_at: string
+          id: string
+          role_id: string | null
+          stage_key: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role_id?: string | null
+          stage_key: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role_id?: string | null
+          stage_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_stage_responsibilities_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "job_roles"
             referencedColumns: ["id"]
           },
         ]
@@ -373,6 +415,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      job_roles: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
       }
       niches: {
         Row: {

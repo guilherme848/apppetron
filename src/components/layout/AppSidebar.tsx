@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, CheckSquare, FileText, Settings, Layers } from 'lucide-react';
+import { LayoutDashboard, Users, CheckSquare, FileText, Settings, Layers, Briefcase, GitBranch } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
   Sidebar,
@@ -20,9 +20,11 @@ const crmItems = [
 
 const contentItems = [
   { title: 'Produção de Conteúdo', url: '/content/production', icon: Layers },
+  { title: 'Etapas do Pipeline', url: '/content/settings/stages', icon: GitBranch },
 ];
 
 const settingsItems = [
+  { title: 'Cargos', url: '/settings/roles', icon: Briefcase },
   { title: 'Serviços', url: '/settings/services', icon: Settings },
   { title: 'Nichos', url: '/settings/niches', icon: Settings },
 ];

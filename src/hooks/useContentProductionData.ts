@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ContentBatch, ContentPost, BatchStatus, PostStatus } from '@/types/contentProduction';
+import { ContentBatch, ContentPost, BatchStatus, PostStatus, ItemType } from '@/types/contentProduction';
 
 interface SimpleAccount {
   id: string;
@@ -30,6 +30,8 @@ const mapPost = (data: any): ContentPost => ({
   due_date: data.due_date,
   briefing: data.briefing,
   caption: data.caption,
+  item_type: data.item_type as ItemType | null,
+  responsible_role_id: data.responsible_role_id,
   created_at: data.created_at,
   updated_at: data.updated_at,
 });

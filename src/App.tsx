@@ -19,6 +19,8 @@ import BatchDetail from "./pages/BatchDetail";
 import PostDetail from "./pages/PostDetail";
 import SettingsServices from "./pages/SettingsServices";
 import SettingsNiches from "./pages/SettingsNiches";
+import SettingsRoles from "./pages/SettingsRoles";
+import SettingsStages from "./pages/SettingsStages";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +48,8 @@ const App = () => (
                     <Route path="/content/production/:batchId/posts/:postId" element={<PostDetail />} />
                     <Route path="/settings/services" element={<SettingsServices />} />
                     <Route path="/settings/niches" element={<SettingsNiches />} />
+                    <Route path="/settings/roles" element={<SettingsRoles />} />
+                    <Route path="/content/settings/stages" element={<SettingsStages />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </AppLayout>
