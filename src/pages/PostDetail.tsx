@@ -15,12 +15,15 @@ import { useContentProduction } from '@/contexts/ContentProductionContext';
 import { FileUpload } from '@/components/content/FileUpload';
 import { CHANNEL_OPTIONS, FORMAT_OPTIONS, POST_STATUS_OPTIONS, PostStatus, PostAttachment, ITEM_TYPE_OPTIONS, ItemType } from '@/types/contentProduction';
 import { useJobRoles } from '@/hooks/useJobRoles';
+import { useStageResponsibilities } from '@/hooks/useStageResponsibilities';
+import { Badge } from '@/components/ui/badge';
 
 export default function PostDetail() {
   const { batchId, postId } = useParams<{ batchId: string; postId: string }>();
   const navigate = useNavigate();
   const { batches, posts, accounts, loading, updatePost, deletePost, fetchPosts } = useContentProduction();
-  const { roles, getRoleByName } = useJobRoles();
+  const { roles, getRoleById, getRoleByName } = useJobRoles();
+  const { getRoleForStage } = useStageResponsibilities();
 
   const [title, setTitle] = useState('');
   const [channel, setChannel] = useState('');
@@ -29,7 +32,7 @@ export default function PostDetail() {
   const [briefing, setBriefing] = useState('');
   const [caption, setCaption] = useState('');
   const [itemType, setItemType] = useState<ItemType | ''>('');
-  const [responsibleRoleId, setResponsibleRoleId] = useState<string>('');
+  // Responsible is always tied to planning stage - no longer editable per post
   const [saving, setSaving] = useState(false);
   const [attachments, setAttachments] = useState<PostAttachment[]>([]);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
@@ -74,9 +77,12 @@ export default function PostDetail() {
       setBriefing(post.briefing || '');
       setCaption(post.caption || '');
       setItemType((post.item_type as ItemType) || '');
-      setResponsibleRoleId(post.responsible_role_id || '');
     }
   }, [post]);
+
+  // Get planning stage responsible
+  const planningResponsibleId = getRoleForStage('planning');
+  const planningResponsibleName = planningResponsibleId ? getRoleById(planningResponsibleId)?.name : null;
 
   if (loading) {
     return (
@@ -119,7 +125,7 @@ export default function PostDetail() {
       briefing: briefing || null,
       caption: caption || null,
       item_type: itemType || null,
-      responsible_role_id: responsibleRoleId || null,
+      responsible_role_id: planningResponsibleId || null,
     });
     setSaving(false);
     toast.success('Post salvo com sucesso');
@@ -131,15 +137,6 @@ export default function PostDetail() {
   const handleFormatChange = (value: string) => {
     const newFormat = value === '_none_' ? '' : value;
     setFormat(newFormat);
-    
-    // Auto-fill responsible based on format
-    if (VIDEO_FORMATS.includes(newFormat) && !responsibleRoleId) {
-      const videomakerRole = getRoleByName('Videomaker');
-      if (videomakerRole) setResponsibleRoleId(videomakerRole.id);
-    } else if (DESIGN_FORMATS.includes(newFormat) && !responsibleRoleId) {
-      const designerRole = getRoleByName('Designer');
-      if (designerRole) setResponsibleRoleId(designerRole.id);
-    }
   };
 
   const handleItemTypeChange = (value: string) => {
@@ -302,19 +299,13 @@ export default function PostDetail() {
                 </div>
                 <div className="space-y-2">
                   <Label>Responsável</Label>
-                  <Select value={responsibleRoleId || '_none_'} onValueChange={(v) => setResponsibleRoleId(v === '_none_' ? '' : v)}>
-                    <SelectTrigger className="bg-background">
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover z-50">
-                      <SelectItem value="_none_">Nenhum</SelectItem>
-                      {roles.map((role) => (
-                        <SelectItem key={role.id} value={role.id}>
-                          {role.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="h-10 flex items-center px-3 border rounded-md bg-muted">
+                    {planningResponsibleName ? (
+                      <Badge variant="outline">{planningResponsibleName}</Badge>
+                    ) : (
+                      <span className="text-muted-foreground">Definido na etapa de Planejamento</span>
+                    )}
+                  </div>
                 </div>
               </div>
             </CardContent>
