@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, CheckSquare, Layers, Settings } from 'lucide-react';
+import { LayoutDashboard, Users, CheckSquare, Layers, Settings, ListTodo } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
   Sidebar,
@@ -20,6 +20,7 @@ const crmItems = [
 
 const contentItems = [
   { title: 'Produção de Conteúdo', url: '/content/production', icon: Layers },
+  { title: 'Tarefas (Posts)', url: '/content/tasks', icon: ListTodo },
 ];
 
 const settingsItems = [

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ListTodo, Search, AlertCircle, ExternalLink, Filter } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,11 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2 } from 'lucide-react';
-import { useContentProduction } from '@/contexts/ContentProductionContext';
+import { supabase } from '@/integrations/supabase/client';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { POST_STATUS_OPTIONS, ITEM_TYPE_OPTIONS, BATCH_STATUS_OPTIONS, PostStatus, ItemType } from '@/types/contentProduction';
 import { format, isBefore, startOfDay } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 interface ConsolidatedTask {
   post_id: string;
@@ -29,10 +28,18 @@ interface ConsolidatedTask {
   batch_id: string;
 }
 
+interface AccountOption {
+  id: string;
+  name: string;
+}
+
 export default function ContentTasks() {
   const navigate = useNavigate();
-  const { batches, posts, accounts, loading, fetchPosts } = useContentProduction();
   const { members, loading: loadingMembers, getActiveMembers, getMemberById } = useTeamMembers();
+
+  const [tasks, setTasks] = useState<ConsolidatedTask[]>([]);
+  const [accounts, setAccounts] = useState<AccountOption[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [filterAssignee, setFilterAssignee] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -40,36 +47,86 @@ export default function ContentTasks() {
   const [filterClient, setFilterClient] = useState<string>('all');
   const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    // Fetch all posts
-    fetchPosts();
-  }, [fetchPosts]);
+  const fetchTasks = useCallback(async () => {
+    setLoading(true);
+    
+    // Fetch posts with batch and client data using LEFT JOINs
+    const { data: postsData, error: postsError } = await supabase
+      .from('content_posts')
+      .select(`
+        id,
+        title,
+        status,
+        item_type,
+        assignee_id,
+        batch_id,
+        content_batches!left (
+          id,
+          month_ref,
+          status,
+          planning_due_date,
+          client_id,
+          accounts!left (
+            id,
+            name
+          )
+        )
+      `)
+      .order('created_at', { ascending: false });
 
-  const consolidatedTasks: ConsolidatedTask[] = useMemo(() => {
-    return posts.map((post) => {
-      const batch = batches.find((b) => b.id === post.batch_id);
-      const client = batch?.client_id ? accounts.find((a) => a.id === batch.client_id) : null;
-      const assignee = post.assignee_id ? getMemberById(post.assignee_id) : null;
+    if (postsError) {
+      console.error('Error fetching tasks:', postsError);
+      setLoading(false);
+      return;
+    }
 
+    // Transform data into consolidated tasks
+    const consolidatedTasks: ConsolidatedTask[] = (postsData || []).map((post: any) => {
+      const batch = post.content_batches;
+      const client = batch?.accounts;
+      
       return {
         post_id: post.id,
         post_title: post.title,
-        post_status: post.status,
+        post_status: post.status as PostStatus,
         item_type: post.item_type as ItemType | null,
-        assignee_id: post.assignee_id || null,
-        assignee_name: assignee?.name || null,
+        assignee_id: post.assignee_id,
+        assignee_name: null, // Will be filled from team members
         due_date: batch?.planning_due_date || null,
         client_id: batch?.client_id || null,
-        client_name: client?.name || 'Cliente desconhecido',
+        client_name: client?.name || 'Sem cliente',
         month_ref: batch?.month_ref || '',
         batch_status: batch?.status || '',
         batch_id: post.batch_id,
       };
     });
-  }, [posts, batches, accounts, getMemberById]);
+
+    setTasks(consolidatedTasks);
+
+    // Fetch unique accounts for filter
+    const { data: accountsData } = await supabase
+      .from('accounts')
+      .select('id, name')
+      .order('name', { ascending: true });
+
+    setAccounts(accountsData || []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
+
+  // Add assignee names from team members
+  const tasksWithAssignees = useMemo(() => {
+    return tasks.map((task) => ({
+      ...task,
+      assignee_name: task.assignee_id ? getMemberById(task.assignee_id)?.name || null : null,
+    }));
+  }, [tasks, getMemberById]);
 
   const filteredTasks = useMemo(() => {
-    let result = consolidatedTasks;
+    let result = tasksWithAssignees;
 
     // Filter by assignee
     if (filterAssignee !== 'all') {
@@ -117,7 +174,7 @@ export default function ContentTasks() {
       const statusOrder = { todo: 0, doing: 1, done: 2 };
       return (statusOrder[a.post_status] || 0) - (statusOrder[b.post_status] || 0);
     });
-  }, [consolidatedTasks, filterAssignee, filterStatus, filterItemType, filterClient, search]);
+  }, [tasksWithAssignees, filterAssignee, filterStatus, filterItemType, filterClient, search]);
 
   const isOverdue = (dueDate: string | null, status: PostStatus) => {
     if (!dueDate || status === 'done') return false;
@@ -144,8 +201,6 @@ export default function ContentTasks() {
   const getBatchStatusLabel = (status: string) => {
     return BATCH_STATUS_OPTIONS.find((o) => o.value === status)?.label || status;
   };
-
-  const activeAccounts = accounts.filter((a) => a.status === 'active');
 
   if (loading || loadingMembers) {
     return (
@@ -229,7 +284,7 @@ export default function ContentTasks() {
                 </SelectTrigger>
                 <SelectContent className="bg-popover z-50">
                   <SelectItem value="all">Todos</SelectItem>
-                  {activeAccounts.map((a) => (
+                  {accounts.map((a) => (
                     <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -257,7 +312,9 @@ export default function ContentTasks() {
         <CardContent className="pt-6">
           {filteredTasks.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Nenhuma tarefa encontrada com os filtros aplicados.
+              {tasks.length === 0 
+                ? 'Nenhum post encontrado. Crie posts dentro de um planejamento.'
+                : 'Nenhuma tarefa encontrada com os filtros aplicados.'}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -292,7 +349,11 @@ export default function ContentTasks() {
                         <TableCell>{task.client_name}</TableCell>
                         <TableCell>{formatMonthRef(task.month_ref)}</TableCell>
                         <TableCell>
-                          <Badge variant="secondary">{getBatchStatusLabel(task.batch_status)}</Badge>
+                          {task.batch_status ? (
+                            <Badge variant="secondary">{getBatchStatusLabel(task.batch_status)}</Badge>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
@@ -309,13 +370,13 @@ export default function ContentTasks() {
                                 )}
                               </>
                             ) : (
-                              <span className="text-muted-foreground">-</span>
+                              <span className="text-muted-foreground">—</span>
                             )}
                           </div>
                         </TableCell>
                         <TableCell>
                           {task.assignee_name || (
-                            <span className="text-yellow-600 dark:text-yellow-400">Não atribuído</span>
+                            <span className="text-muted-foreground">—</span>
                           )}
                         </TableCell>
                         <TableCell>{getStatusBadge(task.post_status)}</TableCell>
