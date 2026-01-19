@@ -1,0 +1,83 @@
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { TeamMember } from '@/types/team';
+
+export function useTeamMembers() {
+  const [members, setMembers] = useState<TeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchMembers = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('team_members')
+      .select('*')
+      .order('name', { ascending: true });
+    if (error) {
+      console.error('Error fetching team members:', error);
+    } else {
+      setMembers(data || []);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchMembers();
+  }, [fetchMembers]);
+
+  const addMember = async (member: Omit<TeamMember, 'id' | 'created_at' | 'updated_at'>) => {
+    const { data, error } = await supabase
+      .from('team_members')
+      .insert([member])
+      .select()
+      .single();
+    if (error) {
+      console.error('Error adding member:', error);
+      return { data: null, error };
+    }
+    setMembers((prev) => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)));
+    return { data, error: null };
+  };
+
+  const updateMember = async (id: string, updates: Partial<TeamMember>) => {
+    const { data, error } = await supabase
+      .from('team_members')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) {
+      console.error('Error updating member:', error);
+      return { data: null, error };
+    }
+    setMembers((prev) => prev.map((m) => (m.id === id ? data : m)).sort((a, b) => a.name.localeCompare(b.name)));
+    return { data, error: null };
+  };
+
+  const deleteMember = async (id: string) => {
+    const { error } = await supabase.from('team_members').delete().eq('id', id);
+    if (error) {
+      console.error('Error deleting member:', error);
+      return { error };
+    }
+    setMembers((prev) => prev.filter((m) => m.id !== id));
+    return { error: null };
+  };
+
+  const getMemberById = (id: string | null) => members.find((m) => m.id === id);
+  
+  const getActiveMembers = () => members.filter((m) => m.active);
+
+  const getMembersByRoleId = (roleId: string) => members.filter((m) => m.role_id === roleId && m.active);
+
+  return {
+    members,
+    loading,
+    addMember,
+    updateMember,
+    deleteMember,
+    getMemberById,
+    getActiveMembers,
+    getMembersByRoleId,
+    refetch: fetchMembers,
+  };
+}

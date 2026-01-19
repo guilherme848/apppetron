@@ -15,6 +15,7 @@ import TaskList from "./pages/TaskList";
 import ContentPage from "./pages/ContentPage";
 import ContentDetail from "./pages/ContentDetail";
 import ContentProduction from "./pages/ContentProduction";
+import ContentTasks from "./pages/ContentTasks";
 import BatchDetail from "./pages/BatchDetail";
 import PostDetail from "./pages/PostDetail";
 import Settings from "./pages/Settings";
@@ -43,6 +44,7 @@ const App = () => (
                     <Route path="/content/production" element={<ContentProduction />} />
                     <Route path="/content/production/:id" element={<BatchDetail />} />
                     <Route path="/content/production/:batchId/posts/:postId" element={<PostDetail />} />
+                    <Route path="/content/tasks" element={<ContentTasks />} />
                     <Route path="/settings" element={<Settings />} />
                     {/* Redirects from old routes */}
                     <Route path="/settings/services" element={<Navigate to="/settings?tab=services" replace />} />
