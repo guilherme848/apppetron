@@ -18,7 +18,8 @@ export default function ContentProduction() {
   const [batchFormOpen, setBatchFormOpen] = useState(false);
   const [postFormOpen, setPostFormOpen] = useState(false);
   const [selectedBatchId, setSelectedBatchId] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<BatchStatus | 'archived'>('planning');
+  const [activeTab, setActiveTab] = useState<BatchStatus>('planning');
+  const [showArchived, setShowArchived] = useState(false);
   const [archivedBatches, setArchivedBatches] = useState<ContentBatch[]>([]);
   const [loadingArchived, setLoadingArchived] = useState(false);
 
@@ -49,10 +50,10 @@ export default function ContentProduction() {
   };
 
   useEffect(() => {
-    if (activeTab === 'archived') {
+    if (showArchived && archivedBatches.length === 0) {
       fetchArchivedBatches();
     }
-  }, [activeTab]);
+  }, [showArchived]);
 
   const handleUnarchive = async (batchId: string) => {
     const result = await unarchiveBatch(batchId);
@@ -117,13 +118,24 @@ export default function ContentProduction() {
           <h1 className="text-2xl font-bold">Produção de Conteúdo</h1>
           <p className="text-muted-foreground">Gerencie pacotes mensais de conteúdo por cliente</p>
         </div>
-        <Button onClick={() => setBatchFormOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Novo Pacote
-        </Button>
+        <div className="flex flex-col items-end gap-1">
+          <Button onClick={() => setBatchFormOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Planejamento
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs text-muted-foreground"
+            onClick={() => setShowArchived(!showArchived)}
+          >
+            <Archive className="h-3 w-3 mr-1" />
+            {showArchived ? 'Ocultar arquivados' : `Ver arquivados${archivedBatches.length > 0 ? ` (${archivedBatches.length})` : ''}`}
+          </Button>
+        </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as BatchStatus | 'archived')}>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as BatchStatus)}>
         <TabsList className="flex flex-wrap h-auto gap-1">
           {BATCH_STATUS_OPTIONS.map((status) => (
             <TabsTrigger key={status.value} value={status.value} className="text-xs px-3">
@@ -133,13 +145,6 @@ export default function ContentProduction() {
               )}
             </TabsTrigger>
           ))}
-          <TabsTrigger value="archived" className="text-xs px-3">
-            <Archive className="h-3 w-3 mr-1" />
-            Arquivados
-            {archivedBatches.length > 0 && (
-              <span className="ml-1 text-muted-foreground">({archivedBatches.length})</span>
-            )}
-          </TabsTrigger>
         </TabsList>
 
         {BATCH_STATUS_OPTIONS.map((status) => (
@@ -165,20 +170,26 @@ export default function ContentProduction() {
             )}
           </TabsContent>
         ))}
+      </Tabs>
 
-        <TabsContent value="archived" className="mt-4">
+      {showArchived && (
+        <div className="mt-6 border-t pt-6">
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Archive className="h-4 w-4" />
+            Pacotes Arquivados
+          </h2>
           {loadingArchived ? (
             <div className="flex items-center justify-center h-32">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : archivedBatches.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
+            <div className="text-center py-8 text-muted-foreground">
               Nenhum pacote arquivado
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {archivedBatches.map((batch) => (
-                <Card key={batch.id} className="relative">
+                <Card key={batch.id} className="relative opacity-75 hover:opacity-100 transition-opacity">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium">
                       {getClientName(batch.client_id)}
@@ -204,8 +215,8 @@ export default function ContentProduction() {
               ))}
             </div>
           )}
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
 
       <BatchForm
         open={batchFormOpen}
