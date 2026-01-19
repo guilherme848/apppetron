@@ -73,6 +73,22 @@ export function useContentProductionData() {
     return mapBatch(data);
   };
 
+  const unarchiveBatch = async (id: string) => {
+    const { data, error } = await supabase
+      .from('content_batches')
+      .update({ archived: false, status: 'scheduling' as BatchStatus })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) {
+      console.error('Error unarchiving batch:', error);
+      return null;
+    }
+    const mapped = mapBatch(data);
+    setBatches((prev) => [...prev, mapped]);
+    return mapped;
+  };
+
   const fetchAccounts = useCallback(async () => {
     const { data, error } = await supabase
       .from('accounts')
@@ -202,6 +218,7 @@ export function useContentProductionData() {
     updateBatch,
     deleteBatch,
     archiveBatch,
+    unarchiveBatch,
     addPost,
     updatePost,
     deletePost,
