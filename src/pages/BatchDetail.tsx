@@ -138,6 +138,11 @@ export default function BatchDetail() {
     toast.success('Status atualizado');
   };
 
+  const handlePostResponsibleChange = async (postId: string, roleId: string) => {
+    await updatePost(postId, { responsible_role_id: roleId === '_none_' ? null : roleId } as any);
+    toast.success('Responsável atualizado');
+  };
+
   const handleFileUploaded = async (file: { file_name: string; file_path: string; file_size: number; file_type: string }) => {
     const { data, error } = await supabase
       .from('batch_attachments')
@@ -334,11 +339,22 @@ export default function BatchDetail() {
                     <TableCell>{getChannelLabel(post.channel)}</TableCell>
                     <TableCell>{getFormatLabel(post.format)}</TableCell>
                     <TableCell>
-                      {post.responsible_role_id ? (
-                        <Badge variant="outline">{getRoleById(post.responsible_role_id)?.name || '-'}</Badge>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
+                      <Select 
+                        value={post.responsible_role_id || '_none_'} 
+                        onValueChange={(v) => handlePostResponsibleChange(post.id, v)}
+                      >
+                        <SelectTrigger className="w-32 h-8 bg-background">
+                          <SelectValue placeholder="Selecionar" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover z-50">
+                          <SelectItem value="_none_">Nenhum</SelectItem>
+                          {roles.map((role) => (
+                            <SelectItem key={role.id} value={role.id}>
+                              {role.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell>
                       <Select value={post.status} onValueChange={(v) => handlePostStatusChange(post.id, v)}>
