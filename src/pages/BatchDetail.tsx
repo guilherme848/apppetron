@@ -143,19 +143,13 @@ export default function BatchDetail() {
   };
 
   const handleNewPost = async () => {
-    // Check if current stage has a fixed responsible
-    let initialResponsible: string | undefined;
-    if (!VARIABLE_STAGES.includes(batch.status)) {
-      const stageRoleId = getRoleForStage(batch.status);
-      if (stageRoleId) {
-        initialResponsible = stageRoleId;
-      }
-    }
+    // Always use the planning stage responsible for new posts
+    const planningRoleId = getRoleForStage('planning');
     
     const newPost = await addPost({ 
       batch_id: batch.id, 
       title: '',
-      responsible_role_id: initialResponsible,
+      responsible_role_id: planningRoleId || undefined,
     } as any);
     if (newPost) {
       navigate(`/content/production/${batch.id}/posts/${newPost.id}`);
