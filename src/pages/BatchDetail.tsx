@@ -374,14 +374,14 @@ export default function BatchDetail() {
                     <TableCell>{getFormatLabel(post.format)}</TableCell>
                     <TableCell>
                       <Select 
-                        value={post.responsible_role_id || '_none_'} 
+                        value={post.responsible_role_id || ''} 
                         onValueChange={(v) => handlePostResponsibleChange(post.id, v)}
                       >
                         <SelectTrigger className="w-32 h-8 bg-background">
-                          <SelectValue placeholder="Selecionar" />
+                          <SelectValue placeholder="-" />
                         </SelectTrigger>
                         <SelectContent className="bg-popover z-50">
-                          <SelectItem value="_none_">Nenhum</SelectItem>
+                          <SelectItem value="_none_">-</SelectItem>
                           {roles.map((role) => (
                             <SelectItem key={role.id} value={role.id}>
                               {role.name}
