@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useContentProduction } from '@/contexts/ContentProductionContext';
 import { FileUpload } from '@/components/content/FileUpload';
+import { useJobRoles } from '@/hooks/useJobRoles';
 import { BATCH_STATUS_OPTIONS, BatchStatus, POST_STATUS_OPTIONS, CHANNEL_OPTIONS, FORMAT_OPTIONS, BatchAttachment } from '@/types/contentProduction';
 
 export default function BatchDetail() {
@@ -22,6 +23,7 @@ export default function BatchDetail() {
     batches, posts, accounts, loading, 
     updateBatch, deleteBatch, archiveBatch, addPost, updatePost, deletePost, fetchPosts 
   } = useContentProduction();
+  const { roles, getRoleById } = useJobRoles();
 
   const [notes, setNotes] = useState('');
   const [planningDueDate, setPlanningDueDate] = useState('');
@@ -318,6 +320,7 @@ export default function BatchDetail() {
                   <TableHead>Título</TableHead>
                   <TableHead>Canal</TableHead>
                   <TableHead>Formato</TableHead>
+                  <TableHead>Responsável</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="w-24">Ações</TableHead>
                 </TableRow>
@@ -330,6 +333,13 @@ export default function BatchDetail() {
                     </TableCell>
                     <TableCell>{getChannelLabel(post.channel)}</TableCell>
                     <TableCell>{getFormatLabel(post.format)}</TableCell>
+                    <TableCell>
+                      {post.responsible_role_id ? (
+                        <Badge variant="outline">{getRoleById(post.responsible_role_id)?.name || '-'}</Badge>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <Select value={post.status} onValueChange={(v) => handlePostStatusChange(post.id, v)}>
                         <SelectTrigger className="w-28 h-8 bg-background">
