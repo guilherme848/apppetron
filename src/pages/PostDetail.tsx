@@ -125,18 +125,26 @@ export default function PostDetail() {
     toast.success('Post salvo com sucesso');
   };
 
+  const VIDEO_FORMATS = ['reels', 'shorts', 'video'];
+  const DESIGN_FORMATS = ['carrossel', 'post', 'story'];
+
+  const handleFormatChange = (value: string) => {
+    const newFormat = value === '_none_' ? '' : value;
+    setFormat(newFormat);
+    
+    // Auto-fill responsible based on format
+    if (VIDEO_FORMATS.includes(newFormat) && !responsibleRoleId) {
+      const videomakerRole = getRoleByName('Videomaker');
+      if (videomakerRole) setResponsibleRoleId(videomakerRole.id);
+    } else if (DESIGN_FORMATS.includes(newFormat) && !responsibleRoleId) {
+      const designerRole = getRoleByName('Designer');
+      if (designerRole) setResponsibleRoleId(designerRole.id);
+    }
+  };
+
   const handleItemTypeChange = (value: string) => {
     const newType = value === '_none_' ? '' : value as ItemType;
     setItemType(newType);
-    
-    // Auto-fill responsible based on item type
-    if (newType === 'design' && !responsibleRoleId) {
-      const designerRole = getRoleByName('Designer');
-      if (designerRole) setResponsibleRoleId(designerRole.id);
-    } else if (newType === 'video' && !responsibleRoleId) {
-      const videomakerRole = getRoleByName('Videomaker');
-      if (videomakerRole) setResponsibleRoleId(videomakerRole.id);
-    }
   };
 
   const handleDelete = async () => {
@@ -245,7 +253,7 @@ export default function PostDetail() {
                 </div>
                 <div className="space-y-2">
                   <Label>Formato</Label>
-                  <Select value={format || '_none_'} onValueChange={(v) => setFormat(v === '_none_' ? '' : v)}>
+                  <Select value={format || '_none_'} onValueChange={handleFormatChange}>
                     <SelectTrigger className="bg-background">
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
