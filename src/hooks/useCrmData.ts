@@ -217,12 +217,29 @@ export function useCrmData() {
   const getContractsByAccount = (accountId: string) => contracts.filter((c) => c.account_id === accountId);
   const getTasksByAccount = (accountId: string) => tasks.filter((t) => t.account_id === accountId);
 
-  const activeAccountsCount = accounts.filter((a) => a.status === 'active').length;
+  const activeAccounts = accounts.filter((a) => a.status === 'active');
+  const activeAccountsCount = activeAccounts.length;
+  
   // MRR from accounts.monthly_value where status = 'active'
-  const totalMrr = accounts
-    .filter((a) => a.status === 'active')
-    .reduce((sum, a) => sum + Number(a.monthly_value || 0), 0);
+  const totalMrr = activeAccounts.reduce((sum, a) => sum + Number(a.monthly_value || 0), 0);
   const openTasksCount = tasks.filter((t) => t.status !== 'done').length;
+
+  // Ticket Médio: AVG(monthly_value) for active clients with non-null values
+  const activeWithValue = activeAccounts.filter((a) => a.monthly_value != null && a.monthly_value > 0);
+  const averageTicket = activeWithValue.length > 0
+    ? activeWithValue.reduce((sum, a) => sum + Number(a.monthly_value), 0) / activeWithValue.length
+    : 0;
+
+  // LT Médio: AVG months since start_date for active clients
+  const now = new Date();
+  const activeWithStartDate = activeAccounts.filter((a) => a.start_date);
+  const averageLifetimeMonths = activeWithStartDate.length > 0
+    ? activeWithStartDate.reduce((sum, a) => {
+        const startDate = new Date(a.start_date!);
+        const diffMonths = (now.getFullYear() - startDate.getFullYear()) * 12 + (now.getMonth() - startDate.getMonth());
+        return sum + Math.max(0, diffMonths);
+      }, 0) / activeWithStartDate.length
+    : 0;
 
   return {
     accounts,
@@ -244,6 +261,8 @@ export function useCrmData() {
     activeAccountsCount,
     totalMrr,
     openTasksCount,
+    averageTicket,
+    averageLifetimeMonths,
     refetch: fetchAll,
   };
 }
