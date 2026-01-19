@@ -57,6 +57,7 @@ export interface ContentPost {
   caption: string | null;
   item_type: ItemType | null;
   responsible_role_id: string | null;
+  assignee_id: string | null;
   created_at: string;
   updated_at: string;
 }

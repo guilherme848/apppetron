@@ -16,7 +16,9 @@ import { FileUpload } from '@/components/content/FileUpload';
 import { CHANNEL_OPTIONS, FORMAT_OPTIONS, POST_STATUS_OPTIONS, PostStatus, PostAttachment, ITEM_TYPE_OPTIONS, ItemType } from '@/types/contentProduction';
 import { useJobRoles } from '@/hooks/useJobRoles';
 import { useStageResponsibilities } from '@/hooks/useStageResponsibilities';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { Badge } from '@/components/ui/badge';
+import { format as formatDate } from 'date-fns';
 
 export default function PostDetail() {
   const { batchId, postId } = useParams<{ batchId: string; postId: string }>();
@@ -24,6 +26,7 @@ export default function PostDetail() {
   const { batches, posts, accounts, loading, updatePost, deletePost, fetchPosts } = useContentProduction();
   const { roles, getRoleById, getRoleByName } = useJobRoles();
   const { getRoleForStage } = useStageResponsibilities();
+  const { getActiveMembers, getMemberById } = useTeamMembers();
 
   const [title, setTitle] = useState('');
   const [channel, setChannel] = useState('');
@@ -33,6 +36,7 @@ export default function PostDetail() {
   const [caption, setCaption] = useState('');
   const [itemType, setItemType] = useState<ItemType | ''>('');
   const [responsibleRoleId, setResponsibleRoleId] = useState<string>('');
+  const [assigneeId, setAssigneeId] = useState<string>('');
   const [saving, setSaving] = useState(false);
   const [attachments, setAttachments] = useState<PostAttachment[]>([]);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
@@ -78,6 +82,7 @@ export default function PostDetail() {
       setCaption(post.caption || '');
       setItemType((post.item_type as ItemType) || '');
       setResponsibleRoleId(post.responsible_role_id || '');
+      setAssigneeId(post.assignee_id || '');
     }
   }, [post]);
 
@@ -137,6 +142,7 @@ export default function PostDetail() {
       caption: caption || null,
       item_type: itemType || null,
       responsible_role_id: finalResponsible,
+      assignee_id: assigneeId || null,
     });
     setSaving(false);
     toast.success('Post salvo com sucesso');
@@ -233,6 +239,22 @@ export default function PostDetail() {
         <TabsContent value="post">
           <Card>
             <CardContent className="pt-6 space-y-4">
+              {/* Read-only info */}
+              <div className="grid grid-cols-2 gap-4 p-3 bg-muted/50 rounded-md">
+                <div>
+                  <span className="text-xs text-muted-foreground">Cliente</span>
+                  <p className="font-medium">{clientName}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-muted-foreground">Vencimento do Planejamento</span>
+                  <p className="font-medium">
+                    {batch.planning_due_date 
+                      ? formatDate(new Date(batch.planning_due_date), 'dd/MM/yyyy')
+                      : 'Não definido'}
+                  </p>
+                </div>
+              </div>
+              
               <div className="space-y-2">
                 <Label htmlFor="title">Título do Post *</Label>
                 <Input
@@ -341,6 +363,27 @@ export default function PostDetail() {
                     </p>
                   )}
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Responsável (Usuário)</Label>
+                <Select value={assigneeId || '_none_'} onValueChange={(v) => setAssigneeId(v === '_none_' ? '' : v)}>
+                  <SelectTrigger className={`bg-background ${!assigneeId ? 'border-yellow-500' : ''}`}>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-50">
+                    <SelectItem value="_none_">Sem responsável</SelectItem>
+                    {getActiveMembers().map((member) => (
+                      <SelectItem key={member.id} value={member.id}>
+                        {member.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {!assigneeId && (
+                  <p className="text-xs text-yellow-600 dark:text-yellow-400">
+                    ⚠️ Post sem usuário responsável
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>

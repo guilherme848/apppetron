@@ -2,9 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ContentBatch, ContentPost, BatchStatus, PostStatus, ItemType } from '@/types/contentProduction';
 
-interface SimpleAccount {
+export interface SimpleAccount {
   id: string;
   name: string;
+  status?: string;
 }
 
 const mapBatch = (data: any): ContentBatch => ({
@@ -32,6 +33,7 @@ const mapPost = (data: any): ContentPost => ({
   caption: data.caption,
   item_type: data.item_type as ItemType | null,
   responsible_role_id: data.responsible_role_id,
+  assignee_id: data.assignee_id,
   created_at: data.created_at,
   updated_at: data.updated_at,
 });
@@ -94,7 +96,7 @@ export function useContentProductionData() {
   const fetchAccounts = useCallback(async () => {
     const { data, error } = await supabase
       .from('accounts')
-      .select('id, name')
+      .select('id, name, status')
       .eq('status', 'active')
       .order('name', { ascending: true });
     if (error) {

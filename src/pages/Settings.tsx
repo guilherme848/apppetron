@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings as SettingsIcon, Briefcase, Layers, Target, GitBranch, Plus, Pencil, Trash2, Loader2, Info } from 'lucide-react';
+import { Settings as SettingsIcon, Briefcase, Layers, Target, GitBranch, Plus, Pencil, Trash2, Loader2, Info, Users } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ import { useJobRoles } from '@/hooks/useJobRoles';
 import { useStageResponsibilities } from '@/hooks/useStageResponsibilities';
 import { BATCH_STATUS_OPTIONS } from '@/types/contentProduction';
 import { useSearchParams } from 'react-router-dom';
+import { TeamMembersTab } from '@/components/settings/TeamMembersTab';
 
 const VARIABLE_STAGES = ['production', 'changes'];
 
@@ -39,7 +40,7 @@ export default function Settings() {
         onValueChange={(value) => setSearchParams({ tab: value })}
         className="space-y-4"
       >
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="pipeline" className="flex items-center gap-2">
             <GitBranch className="h-4 w-4" />
             Pipeline
@@ -47,6 +48,10 @@ export default function Settings() {
           <TabsTrigger value="roles" className="flex items-center gap-2">
             <Briefcase className="h-4 w-4" />
             Cargos
+          </TabsTrigger>
+          <TabsTrigger value="users" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Usuários
           </TabsTrigger>
           <TabsTrigger value="services" className="flex items-center gap-2">
             <Layers className="h-4 w-4" />
@@ -64,6 +69,10 @@ export default function Settings() {
 
         <TabsContent value="roles">
           <RolesTab />
+        </TabsContent>
+
+        <TabsContent value="users">
+          <TeamMembersTab />
         </TabsContent>
 
         <TabsContent value="services">
