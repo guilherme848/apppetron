@@ -91,27 +91,8 @@ export default function BatchDetail() {
     return `${months[parseInt(month) - 1]} ${year}`;
   };
 
-  // Stages that have variable responsibility (per post, not fixed)
-  const VARIABLE_STAGES = ['production', 'changes'];
-
   const handleStatusChange = async (status: BatchStatus) => {
     await updateBatch(batch.id, { status });
-    
-    // If the new stage has a fixed responsible, update all posts without a responsible
-    if (!VARIABLE_STAGES.includes(status)) {
-      const stageRoleId = getRoleForStage(status);
-      if (stageRoleId) {
-        // Update all posts that don't have a responsible yet
-        const postsToUpdate = batchPosts.filter(p => !p.responsible_role_id);
-        for (const post of postsToUpdate) {
-          await updatePost(post.id, { responsible_role_id: stageRoleId } as any);
-        }
-        if (postsToUpdate.length > 0) {
-          toast.success(`${postsToUpdate.length} post(s) atribuído(s) ao responsável da etapa`);
-        }
-      }
-    }
-    
     toast.success('Status atualizado');
   };
 
@@ -166,10 +147,9 @@ export default function BatchDetail() {
     toast.success('Status atualizado');
   };
 
-  const handlePostResponsibleChange = async (postId: string, roleId: string) => {
-    await updatePost(postId, { responsible_role_id: roleId === '_none_' ? null : roleId } as any);
-    toast.success('Responsável atualizado');
-  };
+  // Responsible is always the same as planning stage - get it once
+  const planningResponsibleId = getRoleForStage('planning');
+  const planningResponsibleName = planningResponsibleId ? getRoleById(planningResponsibleId)?.name : null;
 
   const handleFileUploaded = async (file: { file_name: string; file_path: string; file_size: number; file_type: string }) => {
     const { data, error } = await supabase
@@ -367,22 +347,11 @@ export default function BatchDetail() {
                     <TableCell>{getChannelLabel(post.channel)}</TableCell>
                     <TableCell>{getFormatLabel(post.format)}</TableCell>
                     <TableCell>
-                      <Select 
-                        value={post.responsible_role_id || ''} 
-                        onValueChange={(v) => handlePostResponsibleChange(post.id, v)}
-                      >
-                        <SelectTrigger className="w-32 h-8 bg-background">
-                          <SelectValue placeholder="-" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-popover z-50">
-                          <SelectItem value="_none_">-</SelectItem>
-                          {roles.map((role) => (
-                            <SelectItem key={role.id} value={role.id}>
-                              {role.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      {planningResponsibleName ? (
+                        <Badge variant="outline">{planningResponsibleName}</Badge>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Select value={post.status} onValueChange={(v) => handlePostStatusChange(post.id, v)}>
