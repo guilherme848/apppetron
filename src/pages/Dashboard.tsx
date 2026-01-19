@@ -2,6 +2,7 @@ import { Users, DollarSign, CheckSquare, Loader2, Receipt, Clock } from 'lucide-
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { ContentActivitySummary } from '@/components/dashboard/ContentActivitySummary';
 import { ClientEvolutionChart } from '@/components/dashboard/ClientEvolutionChart';
+import { ChurnMrrCharts } from '@/components/dashboard/ChurnMrrCharts';
 import { useCrm } from '@/contexts/CrmContext';
 
 export default function Dashboard() {
@@ -71,6 +72,9 @@ export default function Dashboard() {
           description="Tarefas não concluídas"
         />
       </div>
+
+      {/* Churn and MRR Charts */}
+      <ChurnMrrCharts />
 
       {/* Client Evolution Chart */}
       <ClientEvolutionChart />

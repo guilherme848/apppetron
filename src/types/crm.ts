@@ -19,6 +19,9 @@ export interface Account {
   monthly_value?: number | null;
   start_date?: string | null;
   
+  // Churn
+  churned_at?: string | null;
+  
   // Novos campos FK
   service_id?: string | null;
   niche_id?: string | null;

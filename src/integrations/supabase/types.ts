@@ -17,6 +17,7 @@ export type Database = {
       accounts: {
         Row: {
           address_complement: string | null
+          churned_at: string | null
           city: string | null
           contact_email: string | null
           contact_name: string | null
@@ -43,6 +44,7 @@ export type Database = {
         }
         Insert: {
           address_complement?: string | null
+          churned_at?: string | null
           city?: string | null
           contact_email?: string | null
           contact_name?: string | null
@@ -69,6 +71,7 @@ export type Database = {
         }
         Update: {
           address_complement?: string | null
+          churned_at?: string | null
           city?: string | null
           contact_email?: string | null
           contact_name?: string | null
