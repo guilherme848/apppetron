@@ -35,6 +35,11 @@ export default function ContentProduction() {
     return getRoleById(resp.role_id)?.name || null;
   };
 
+  const getStageRoleId = (stageKey: string) => {
+    const resp = getResponsibilityByStage(stageKey);
+    return resp?.role_id || null;
+  };
+
   const fetchArchivedBatches = async () => {
     setLoadingArchived(true);
     const { data, error } = await supabase
@@ -112,7 +117,9 @@ export default function ContentProduction() {
   };
 
   const handleStatusChange = async (batchId: string, status: BatchStatus) => {
-    await updateBatchWithReset(batchId, { status });
+    // Get the responsible for the new stage
+    const stageRoleId = getStageRoleId(status);
+    await updateBatchWithReset(batchId, { status }, stageRoleId);
   };
 
   const handleAddPost = (batchId: string) => {

@@ -93,8 +93,18 @@ export default function BatchDetail() {
   };
 
   const handleStatusChange = async (status: BatchStatus) => {
-    await updateBatchWithReset(batch.id, { status });
-    toast.success('Status atualizado. Todas as atividades foram resetadas para "A fazer".');
+    // Get the responsible for the new stage
+    const stageRoleId = getRoleForStage(status);
+    await updateBatchWithReset(batch.id, { status }, stageRoleId);
+    
+    const VARIABLE_STAGES = ['production', 'changes'];
+    const isVariable = VARIABLE_STAGES.includes(status);
+    
+    if (isVariable) {
+      toast.success('Status atualizado. Atividades resetadas para "A fazer". Responsável mantido (etapa variável).');
+    } else {
+      toast.success('Status atualizado. Atividades resetadas para "A fazer" e responsável atualizado.');
+    }
   };
 
   // Calculate progress

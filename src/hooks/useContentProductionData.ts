@@ -158,26 +158,55 @@ export function useContentProductionData() {
     return mapped;
   };
 
-  // Reset all posts to 'todo' when batch status changes
-  const updateBatchWithReset = async (id: string, updates: Partial<ContentBatch>) => {
+  // Variable stages where responsible is per-item (not updated automatically)
+  const VARIABLE_STAGES = ['production', 'changes'];
+
+  // Reset all posts to 'todo' and update responsible when batch status changes
+  const updateBatchWithReset = async (id: string, updates: Partial<ContentBatch>, stageRoleId?: string | null) => {
     // First update the batch
     const result = await updateBatch(id, updates);
     if (!result) return null;
 
-    // If status changed, reset all posts to 'todo'
+    // If status changed, reset all posts to 'todo' and update responsible
     if (updates.status) {
+      const isVariableStage = VARIABLE_STAGES.includes(updates.status);
+      
+      // Build the update object
+      const postUpdates: Record<string, any> = { 
+        status: 'todo', 
+        updated_at: new Date().toISOString() 
+      };
+      
+      // Only update responsible for fixed stages (not production/changes)
+      if (!isVariableStage && stageRoleId !== undefined) {
+        postUpdates.responsible_role_id = stageRoleId;
+      }
+
       const { error } = await supabase
         .from('content_posts')
-        .update({ status: 'todo', updated_at: new Date().toISOString() })
+        .update(postUpdates)
         .eq('batch_id', id);
       
       if (error) {
         console.error('Error resetting posts:', error);
       } else {
         // Update local state
-        setPosts((prev) => prev.map((p) => 
-          p.batch_id === id ? { ...p, status: 'todo' as PostStatus, updated_at: new Date().toISOString() } : p
-        ));
+        setPosts((prev) => prev.map((p) => {
+          if (p.batch_id !== id) return p;
+          
+          const updated: ContentPost = { 
+            ...p, 
+            status: 'todo' as PostStatus, 
+            updated_at: new Date().toISOString() 
+          };
+          
+          // Update responsible only for fixed stages
+          if (!isVariableStage && stageRoleId !== undefined) {
+            updated.responsible_role_id = stageRoleId;
+          }
+          
+          return updated;
+        }));
       }
     }
     
