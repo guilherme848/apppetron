@@ -18,7 +18,7 @@ const VARIABLE_STAGES = ['production', 'changes'];
 
 export default function ContentProduction() {
   const navigate = useNavigate();
-  const { batches, posts, accounts, loading, addBatch, updateBatch, addPost, unarchiveBatch } = useContentProduction();
+  const { batches, posts, accounts, loading, addBatch, updateBatchWithReset, addPost, unarchiveBatch } = useContentProduction();
   const { roles, getRoleById } = useJobRoles();
   const { responsibilities, getResponsibilityByStage } = useStageResponsibilities();
   const [batchFormOpen, setBatchFormOpen] = useState(false);
@@ -97,13 +97,22 @@ export default function ContentProduction() {
   }, [batches]);
 
   const getPostCount = (batchId: string) => posts.filter((p) => p.batch_id === batchId).length;
+  const getDoneCount = (batchId: string) => posts.filter((p) => p.batch_id === batchId && p.status === 'done').length;
   const getClientName = (clientId: string | null) => {
     if (!clientId) return 'Sem cliente';
     return accounts.find((a) => a.id === clientId)?.name || 'Cliente desconhecido';
   };
 
+  const isOverdue = (batch: ContentBatch) => {
+    if (!batch.planning_due_date || batch.archived) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDate = new Date(batch.planning_due_date);
+    return dueDate < today;
+  };
+
   const handleStatusChange = async (batchId: string, status: BatchStatus) => {
-    await updateBatch(batchId, { status });
+    await updateBatchWithReset(batchId, { status });
   };
 
   const handleAddPost = (batchId: string) => {
@@ -173,8 +182,10 @@ export default function ContentProduction() {
                     batch={batch}
                     clientName={getClientName(batch.client_id)}
                     postCount={getPostCount(batch.id)}
+                    doneCount={getDoneCount(batch.id)}
                     stageRoleName={getStageRoleName(batch.status)}
                     isVariableStage={VARIABLE_STAGES.includes(batch.status)}
+                    isOverdue={isOverdue(batch)}
                     onView={(id) => navigate(`/content/production/${id}`)}
                     onStatusChange={handleStatusChange}
                     onAddPost={handleAddPost}

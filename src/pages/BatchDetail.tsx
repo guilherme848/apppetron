@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useContentProduction } from '@/contexts/ContentProductionContext';
 import { FileUpload } from '@/components/content/FileUpload';
+import { Progress } from '@/components/ui/progress';
 import { useJobRoles } from '@/hooks/useJobRoles';
 import { useStageResponsibilities } from '@/hooks/useStageResponsibilities';
 import { BATCH_STATUS_OPTIONS, BatchStatus, POST_STATUS_OPTIONS, CHANNEL_OPTIONS, FORMAT_OPTIONS, BatchAttachment } from '@/types/contentProduction';
@@ -22,7 +23,7 @@ export default function BatchDetail() {
   const navigate = useNavigate();
   const { 
     batches, posts, accounts, loading, 
-    updateBatch, deleteBatch, archiveBatch, addPost, updatePost, deletePost, fetchPosts 
+    updateBatch, updateBatchWithReset, deleteBatch, archiveBatch, addPost, updatePost, deletePost, fetchPosts 
   } = useContentProduction();
   const { roles, getRoleById } = useJobRoles();
   const { responsibilities, getRoleForStage } = useStageResponsibilities();
@@ -92,9 +93,14 @@ export default function BatchDetail() {
   };
 
   const handleStatusChange = async (status: BatchStatus) => {
-    await updateBatch(batch.id, { status });
-    toast.success('Status atualizado');
+    await updateBatchWithReset(batch.id, { status });
+    toast.success('Status atualizado. Todas as atividades foram resetadas para "A fazer".');
   };
+
+  // Calculate progress
+  const doneCount = batchPosts.filter(p => p.status === 'done').length;
+  const totalCount = batchPosts.length;
+  const progress = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
 
   const handleNotesBlur = async () => {
     if (notes !== batch.notes) {
@@ -214,6 +220,11 @@ export default function BatchDetail() {
             )}
           </div>
           <p className="text-muted-foreground">{formatMonthRef(batch.month_ref)}</p>
+          {/* Progress indicator in header */}
+          <div className="flex items-center gap-2 mt-1">
+            <Progress value={progress} className="h-2 w-32" />
+            <span className="text-xs text-muted-foreground">{doneCount}/{totalCount} concluídos ({progress}%)</span>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Select value={batch.status} onValueChange={handleStatusChange}>

@@ -158,6 +158,32 @@ export function useContentProductionData() {
     return mapped;
   };
 
+  // Reset all posts to 'todo' when batch status changes
+  const updateBatchWithReset = async (id: string, updates: Partial<ContentBatch>) => {
+    // First update the batch
+    const result = await updateBatch(id, updates);
+    if (!result) return null;
+
+    // If status changed, reset all posts to 'todo'
+    if (updates.status) {
+      const { error } = await supabase
+        .from('content_posts')
+        .update({ status: 'todo', updated_at: new Date().toISOString() })
+        .eq('batch_id', id);
+      
+      if (error) {
+        console.error('Error resetting posts:', error);
+      } else {
+        // Update local state
+        setPosts((prev) => prev.map((p) => 
+          p.batch_id === id ? { ...p, status: 'todo' as PostStatus, updated_at: new Date().toISOString() } : p
+        ));
+      }
+    }
+    
+    return result;
+  };
+
   const deleteBatch = async (id: string) => {
     const { error } = await supabase.from('content_batches').delete().eq('id', id);
     if (error) {
@@ -218,6 +244,7 @@ export function useContentProductionData() {
     loading,
     addBatch,
     updateBatch,
+    updateBatchWithReset,
     deleteBatch,
     archiveBatch,
     unarchiveBatch,

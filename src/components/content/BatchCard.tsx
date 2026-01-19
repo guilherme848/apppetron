@@ -2,39 +2,69 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Plus, User } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Eye, Plus, User, AlertTriangle } from 'lucide-react';
 import { ContentBatch, BATCH_STATUS_OPTIONS, BatchStatus } from '@/types/contentProduction';
 
 interface BatchCardProps {
   batch: ContentBatch;
   clientName: string;
   postCount: number;
+  doneCount: number;
   stageRoleName: string | null;
   isVariableStage: boolean;
+  isOverdue: boolean;
   onView: (id: string) => void;
   onStatusChange: (id: string, status: BatchStatus) => void;
   onAddPost: (batchId: string) => void;
 }
 
-export function BatchCard({ batch, clientName, postCount, stageRoleName, isVariableStage, onView, onStatusChange, onAddPost }: BatchCardProps) {
+export function BatchCard({ 
+  batch, 
+  clientName, 
+  postCount, 
+  doneCount,
+  stageRoleName, 
+  isVariableStage, 
+  isOverdue,
+  onView, 
+  onStatusChange, 
+  onAddPost 
+}: BatchCardProps) {
   const formatMonthRef = (monthRef: string) => {
     const [year, month] = monthRef.split('-');
     const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
     return `${months[parseInt(month) - 1]} ${year}`;
   };
 
+  const progress = postCount > 0 ? Math.round((doneCount / postCount) * 100) : 0;
+
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className={`hover:shadow-md transition-shadow ${isOverdue ? 'border-destructive/50' : ''}`}>
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
           <div>
-            <CardTitle className="text-base font-semibold">{clientName}</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-base font-semibold">{clientName}</CardTitle>
+              {isOverdue && (
+                <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                  <AlertTriangle className="h-2.5 w-2.5 mr-0.5" />
+                  ATRASADO
+                </Badge>
+              )}
+            </div>
             <p className="text-sm text-muted-foreground">{formatMonthRef(batch.month_ref)}</p>
           </div>
-          <Badge variant="secondary">{postCount} posts</Badge>
+          <Badge variant="secondary">{doneCount}/{postCount}</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
+        {/* Progress bar */}
+        <div className="space-y-1">
+          <Progress value={progress} className="h-2" />
+          <p className="text-xs text-muted-foreground text-right">{progress}% concluído</p>
+        </div>
+
         <Select
           value={batch.status}
           onValueChange={(value) => onStatusChange(batch.id, value as BatchStatus)}

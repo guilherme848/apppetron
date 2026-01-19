@@ -218,7 +218,10 @@ export function useCrmData() {
   const getTasksByAccount = (accountId: string) => tasks.filter((t) => t.account_id === accountId);
 
   const activeAccountsCount = accounts.filter((a) => a.status === 'active').length;
-  const totalMrr = contracts.filter((c) => c.status === 'active').reduce((sum, c) => sum + Number(c.mrr), 0);
+  // MRR from accounts.monthly_value where status = 'active'
+  const totalMrr = accounts
+    .filter((a) => a.status === 'active')
+    .reduce((sum, a) => sum + Number(a.monthly_value || 0), 0);
   const openTasksCount = tasks.filter((t) => t.status !== 'done').length;
 
   return {
