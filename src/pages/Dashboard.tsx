@@ -1,5 +1,7 @@
 import { Users, DollarSign, CheckSquare, Loader2 } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/StatsCard';
+import { ContentActivitySummary } from '@/components/dashboard/ContentActivitySummary';
+import { ClientEvolutionChart } from '@/components/dashboard/ClientEvolutionChart';
 import { useCrm } from '@/contexts/CrmContext';
 
 export default function Dashboard() {
@@ -38,7 +40,7 @@ export default function Dashboard() {
           title="MRR Total"
           value={formatCurrency(totalMrr)}
           icon={DollarSign}
-          description="Receita recorrente mensal"
+          description="Receita recorrente mensal (valor mensal dos clientes ativos)"
         />
         <StatsCard
           title="Tarefas em Aberto"
@@ -47,6 +49,12 @@ export default function Dashboard() {
           description="Tarefas não concluídas"
         />
       </div>
+
+      {/* Client Evolution Chart */}
+      <ClientEvolutionChart />
+
+      {/* Content Activity Summary */}
+      <ContentActivitySummary />
     </div>
   );
 }
