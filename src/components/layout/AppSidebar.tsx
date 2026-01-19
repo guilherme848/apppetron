@@ -15,12 +15,12 @@ import {
 const crmItems = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
   { title: 'Clientes', url: '/crm', icon: Users },
-  { title: 'Tarefas', url: '/tasks', icon: CheckSquare },
+  { title: 'Tarefas CRM', url: '/tasks', icon: CheckSquare },
+  { title: 'Tarefas Conteúdo', url: '/content/tasks', icon: ListTodo },
 ];
 
 const contentItems = [
   { title: 'Produção de Conteúdo', url: '/content/production', icon: Layers },
-  { title: 'Tarefas (Posts)', url: '/content/tasks', icon: ListTodo },
 ];
 
 const settingsItems = [
