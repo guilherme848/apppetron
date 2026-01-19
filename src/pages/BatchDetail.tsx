@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useContentProduction } from '@/contexts/ContentProductionContext';
 import { FileUpload } from '@/components/content/FileUpload';
 import { useJobRoles } from '@/hooks/useJobRoles';
+import { useStageResponsibilities } from '@/hooks/useStageResponsibilities';
 import { BATCH_STATUS_OPTIONS, BatchStatus, POST_STATUS_OPTIONS, CHANNEL_OPTIONS, FORMAT_OPTIONS, BatchAttachment } from '@/types/contentProduction';
 
 export default function BatchDetail() {
@@ -24,6 +25,7 @@ export default function BatchDetail() {
     updateBatch, deleteBatch, archiveBatch, addPost, updatePost, deletePost, fetchPosts 
   } = useContentProduction();
   const { roles, getRoleById } = useJobRoles();
+  const { responsibilities, getRoleForStage } = useStageResponsibilities();
 
   const [notes, setNotes] = useState('');
   const [planningDueDate, setPlanningDueDate] = useState('');
@@ -89,8 +91,27 @@ export default function BatchDetail() {
     return `${months[parseInt(month) - 1]} ${year}`;
   };
 
+  // Stages that have variable responsibility (per post, not fixed)
+  const VARIABLE_STAGES = ['production', 'changes'];
+
   const handleStatusChange = async (status: BatchStatus) => {
     await updateBatch(batch.id, { status });
+    
+    // If the new stage has a fixed responsible, update all posts without a responsible
+    if (!VARIABLE_STAGES.includes(status)) {
+      const stageRoleId = getRoleForStage(status);
+      if (stageRoleId) {
+        // Update all posts that don't have a responsible yet
+        const postsToUpdate = batchPosts.filter(p => !p.responsible_role_id);
+        for (const post of postsToUpdate) {
+          await updatePost(post.id, { responsible_role_id: stageRoleId } as any);
+        }
+        if (postsToUpdate.length > 0) {
+          toast.success(`${postsToUpdate.length} post(s) atribuído(s) ao responsável da etapa`);
+        }
+      }
+    }
+    
     toast.success('Status atualizado');
   };
 
@@ -122,7 +143,20 @@ export default function BatchDetail() {
   };
 
   const handleNewPost = async () => {
-    const newPost = await addPost({ batch_id: batch.id, title: '' });
+    // Check if current stage has a fixed responsible
+    let initialResponsible: string | undefined;
+    if (!VARIABLE_STAGES.includes(batch.status)) {
+      const stageRoleId = getRoleForStage(batch.status);
+      if (stageRoleId) {
+        initialResponsible = stageRoleId;
+      }
+    }
+    
+    const newPost = await addPost({ 
+      batch_id: batch.id, 
+      title: '',
+      responsible_role_id: initialResponsible,
+    } as any);
     if (newPost) {
       navigate(`/content/production/${batch.id}/posts/${newPost.id}`);
     }
