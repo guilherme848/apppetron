@@ -67,11 +67,17 @@ export function useStageResponsibilities() {
   const getResponsibilityByStage = (stageKey: string) =>
     responsibilities.find((r) => r.stage_key === stageKey);
 
+  const getRoleForStage = (stageKey: string): string | null => {
+    const resp = responsibilities.find((r) => r.stage_key === stageKey);
+    return resp?.role_id || null;
+  };
+
   return {
     responsibilities,
     loading,
     updateResponsibility,
     getResponsibilityByStage,
+    getRoleForStage,
     refetch: fetchResponsibilities,
   };
 }
