@@ -11,10 +11,16 @@ import { BATCH_STATUS_OPTIONS, BatchStatus, ContentBatch } from '@/types/content
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useJobRoles } from '@/hooks/useJobRoles';
+import { useStageResponsibilities } from '@/hooks/useStageResponsibilities';
+
+const VARIABLE_STAGES = ['production', 'changes'];
 
 export default function ContentProduction() {
   const navigate = useNavigate();
   const { batches, posts, accounts, loading, addBatch, updateBatch, addPost, unarchiveBatch } = useContentProduction();
+  const { roles, getRoleById } = useJobRoles();
+  const { responsibilities, getResponsibilityByStage } = useStageResponsibilities();
   const [batchFormOpen, setBatchFormOpen] = useState(false);
   const [postFormOpen, setPostFormOpen] = useState(false);
   const [selectedBatchId, setSelectedBatchId] = useState<string>('');
@@ -22,6 +28,12 @@ export default function ContentProduction() {
   const [showArchived, setShowArchived] = useState(false);
   const [archivedBatches, setArchivedBatches] = useState<ContentBatch[]>([]);
   const [loadingArchived, setLoadingArchived] = useState(false);
+
+  const getStageRoleName = (stageKey: string) => {
+    const resp = getResponsibilityByStage(stageKey);
+    if (!resp?.role_id) return null;
+    return getRoleById(resp.role_id)?.name || null;
+  };
 
   const fetchArchivedBatches = async () => {
     setLoadingArchived(true);
@@ -161,6 +173,8 @@ export default function ContentProduction() {
                     batch={batch}
                     clientName={getClientName(batch.client_id)}
                     postCount={getPostCount(batch.id)}
+                    stageRoleName={getStageRoleName(batch.status)}
+                    isVariableStage={VARIABLE_STAGES.includes(batch.status)}
                     onView={(id) => navigate(`/content/production/${id}`)}
                     onStatusChange={handleStatusChange}
                     onAddPost={handleAddPost}

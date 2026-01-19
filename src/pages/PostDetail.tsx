@@ -13,12 +13,14 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useContentProduction } from '@/contexts/ContentProductionContext';
 import { FileUpload } from '@/components/content/FileUpload';
-import { CHANNEL_OPTIONS, FORMAT_OPTIONS, POST_STATUS_OPTIONS, PostStatus, PostAttachment } from '@/types/contentProduction';
+import { CHANNEL_OPTIONS, FORMAT_OPTIONS, POST_STATUS_OPTIONS, PostStatus, PostAttachment, ITEM_TYPE_OPTIONS, ItemType } from '@/types/contentProduction';
+import { useJobRoles } from '@/hooks/useJobRoles';
 
 export default function PostDetail() {
   const { batchId, postId } = useParams<{ batchId: string; postId: string }>();
   const navigate = useNavigate();
   const { batches, posts, accounts, loading, updatePost, deletePost, fetchPosts } = useContentProduction();
+  const { roles, getRoleByName } = useJobRoles();
 
   const [title, setTitle] = useState('');
   const [channel, setChannel] = useState('');
@@ -26,6 +28,8 @@ export default function PostDetail() {
   const [status, setStatus] = useState<PostStatus>('todo');
   const [briefing, setBriefing] = useState('');
   const [caption, setCaption] = useState('');
+  const [itemType, setItemType] = useState<ItemType | ''>('');
+  const [responsibleRoleId, setResponsibleRoleId] = useState<string>('');
   const [saving, setSaving] = useState(false);
   const [attachments, setAttachments] = useState<PostAttachment[]>([]);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
@@ -69,6 +73,8 @@ export default function PostDetail() {
       setStatus(post.status);
       setBriefing(post.briefing || '');
       setCaption(post.caption || '');
+      setItemType((post.item_type as ItemType) || '');
+      setResponsibleRoleId(post.responsible_role_id || '');
     }
   }, [post]);
 
@@ -112,9 +118,25 @@ export default function PostDetail() {
       status,
       briefing: briefing || null,
       caption: caption || null,
+      item_type: itemType || null,
+      responsible_role_id: responsibleRoleId || null,
     });
     setSaving(false);
     toast.success('Post salvo com sucesso');
+  };
+
+  const handleItemTypeChange = (value: string) => {
+    const newType = value === '_none_' ? '' : value as ItemType;
+    setItemType(newType);
+    
+    // Auto-fill responsible based on item type
+    if (newType === 'design' && !responsibleRoleId) {
+      const designerRole = getRoleByName('Designer');
+      if (designerRole) setResponsibleRoleId(designerRole.id);
+    } else if (newType === 'video' && !responsibleRoleId) {
+      const videomakerRole = getRoleByName('Videomaker');
+      if (videomakerRole) setResponsibleRoleId(videomakerRole.id);
+    }
   };
 
   const handleDelete = async () => {
@@ -252,6 +274,40 @@ export default function PostDetail() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Tipo de Item</Label>
+                  <Select value={itemType || '_none_'} onValueChange={handleItemTypeChange}>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      <SelectItem value="_none_">Nenhum</SelectItem>
+                      {ITEM_TYPE_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Responsável</Label>
+                  <Select value={responsibleRoleId || '_none_'} onValueChange={(v) => setResponsibleRoleId(v === '_none_' ? '' : v)}>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      <SelectItem value="_none_">Nenhum</SelectItem>
+                      {roles.map((role) => (
+                        <SelectItem key={role.id} value={role.id}>
+                          {role.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </CardContent>
           </Card>

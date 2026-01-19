@@ -2,19 +2,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Plus } from 'lucide-react';
+import { Eye, Plus, User } from 'lucide-react';
 import { ContentBatch, BATCH_STATUS_OPTIONS, BatchStatus } from '@/types/contentProduction';
 
 interface BatchCardProps {
   batch: ContentBatch;
   clientName: string;
   postCount: number;
+  stageRoleName: string | null;
+  isVariableStage: boolean;
   onView: (id: string) => void;
   onStatusChange: (id: string, status: BatchStatus) => void;
   onAddPost: (batchId: string) => void;
 }
 
-export function BatchCard({ batch, clientName, postCount, onView, onStatusChange, onAddPost }: BatchCardProps) {
+export function BatchCard({ batch, clientName, postCount, stageRoleName, isVariableStage, onView, onStatusChange, onAddPost }: BatchCardProps) {
   const formatMonthRef = (monthRef: string) => {
     const [year, month] = monthRef.split('-');
     const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -48,6 +50,18 @@ export function BatchCard({ batch, clientName, postCount, onView, onStatusChange
             ))}
           </SelectContent>
         </Select>
+        
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <User className="h-3 w-3" />
+          {isVariableStage ? (
+            <span>Por item (design/vídeo)</span>
+          ) : stageRoleName ? (
+            <span>{stageRoleName}</span>
+          ) : (
+            <span className="italic">Sem responsável</span>
+          )}
+        </div>
+
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="flex-1" onClick={() => onView(batch.id)}>
             <Eye className="h-4 w-4 mr-1" />

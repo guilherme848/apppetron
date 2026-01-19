@@ -43,6 +43,8 @@ export interface PostAttachment {
   created_at: string;
 }
 
+export type ItemType = 'design' | 'video' | 'other';
+
 export interface ContentPost {
   id: string;
   batch_id: string;
@@ -53,9 +55,30 @@ export interface ContentPost {
   due_date: string | null; // deprecated - kept for compatibility
   briefing: string | null;
   caption: string | null;
+  item_type: ItemType | null;
+  responsible_role_id: string | null;
   created_at: string;
   updated_at: string;
 }
+
+export interface JobRole {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
+export interface ContentStageResponsibility {
+  id: string;
+  stage_key: BatchStatus;
+  role_id: string | null;
+  created_at: string;
+}
+
+export const ITEM_TYPE_OPTIONS: { value: ItemType; label: string }[] = [
+  { value: 'design', label: 'Design' },
+  { value: 'video', label: 'Vídeo' },
+  { value: 'other', label: 'Outro' },
+];
 
 export const BATCH_STATUS_OPTIONS: { value: BatchStatus; label: string }[] = [
   { value: 'planning', label: 'Planejamento' },
