@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,8 +7,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Separator } from '@/components/ui/separator';
 import { Account, AccountStatus } from '@/types/crm';
 import { useSettings } from '@/contexts/SettingsContext';
+import { useTraffic } from '@/contexts/TrafficContext';
 import { Link } from 'react-router-dom';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, RefreshCw } from 'lucide-react';
 
 interface AccountFormProps {
   open: boolean;
@@ -56,6 +57,7 @@ const isValidEmail = (email: string) => {
 
 export function AccountForm({ open, onClose, onSubmit, account }: AccountFormProps) {
   const { activeServices, activeNiches, services, niches, findServiceByName, findNicheByName } = useSettings();
+  const { getCycleById } = useTraffic();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -298,7 +300,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="service_id">Serviço Contratado</Label>
-                  <Link to="/settings/services" className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1">
+                  <Link to="/settings/plans/services" className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1">
                     <ExternalLink className="h-3 w-3" />
                     Gerenciar
                   </Link>
@@ -316,6 +318,22 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                     ))}
                   </SelectContent>
                 </Select>
+                {/* Show traffic cycle from selected plan */}
+                {formData.service_id && (() => {
+                  const selectedService = services.find(s => s.id === formData.service_id);
+                  if (selectedService?.traffic_cycle_id) {
+                    const cycle = getCycleById(selectedService.traffic_cycle_id);
+                    if (cycle) {
+                      return (
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                          <RefreshCw className="h-3 w-3" />
+                          <span>Ciclo de Tráfego: <span className="font-medium text-foreground">{cycle.name}</span></span>
+                        </div>
+                      );
+                    }
+                  }
+                  return null;
+                })()}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="monthly_value">Valor Mensal (R$)</Label>

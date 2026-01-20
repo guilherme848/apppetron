@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Settings, Users, Briefcase, Shield, Layers, Package, GitBranch, Target, ChevronDown, ChevronRight, Menu } from 'lucide-react';
+import { Settings, Users, Briefcase, Shield, Layers, Package, GitBranch, Target, ChevronDown, ChevronRight, Menu, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -49,6 +49,7 @@ const SETTINGS_CATEGORIES: SettingsCategory[] = [
     items: [
       { id: 'pipeline', label: 'Pipeline', path: '/settings/general/pipeline' },
       { id: 'niches', label: 'Nichos', path: '/settings/general/niches' },
+      { id: 'traffic-cycles', label: 'Ciclos de Tráfego', path: '/settings/general/traffic-cycles' },
     ],
   },
 ];
@@ -82,6 +83,8 @@ function getItemIcon(itemId: string) {
       return GitBranch;
     case 'niches':
       return Target;
+    case 'traffic-cycles':
+      return RefreshCw;
     default:
       return Settings;
   }

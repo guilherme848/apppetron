@@ -7,25 +7,34 @@ import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useSettings } from '@/contexts/SettingsContext';
+import { useTraffic } from '@/contexts/TrafficContext';
 
 export default function ServicesPage() {
   const { services, loading, addService, updateService, deleteService, toggleServiceActive } = useSettings();
+  const { getActiveCycles, getCycleById } = useTraffic();
+  
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
+  const [trafficCycleId, setTrafficCycleId] = useState<string>('');
   const [showInactive, setShowInactive] = useState(false);
+
+  const activeCycles = getActiveCycles();
 
   const handleOpenNew = () => {
     setEditingId(null);
     setName('');
+    setTrafficCycleId('');
     setFormOpen(true);
   };
 
-  const handleOpenEdit = (id: string, currentName: string) => {
+  const handleOpenEdit = (id: string, currentName: string, currentCycleId: string | null) => {
     setEditingId(id);
     setName(currentName);
+    setTrafficCycleId(currentCycleId || '');
     setFormOpen(true);
   };
 
@@ -34,9 +43,12 @@ export default function ServicesPage() {
     
     let result;
     if (editingId) {
-      result = await updateService(editingId, { name });
+      result = await updateService(editingId, { 
+        name,
+        traffic_cycle_id: trafficCycleId || null 
+      });
     } else {
-      result = await addService(name);
+      result = await addService(name, trafficCycleId || null);
     }
 
     if (result.success) {
@@ -114,40 +126,51 @@ export default function ServicesPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
+                  <TableHead>Ciclo de Tráfego</TableHead>
                   <TableHead className="w-[100px]">Ativo</TableHead>
                   <TableHead className="w-[120px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredServices.map((service) => (
-                  <TableRow key={service.id}>
-                    <TableCell className="font-medium">{service.name}</TableCell>
-                    <TableCell>
-                      <Switch
-                        checked={service.active}
-                        onCheckedChange={() => toggleServiceActive(service.id)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleOpenEdit(service.id, service.name)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(service.id, service.name)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {filteredServices.map((service) => {
+                  const cycle = getCycleById(service.traffic_cycle_id);
+                  return (
+                    <TableRow key={service.id}>
+                      <TableCell className="font-medium">{service.name}</TableCell>
+                      <TableCell>
+                        {cycle ? (
+                          <span className="text-sm">{cycle.name}</span>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">Não definido</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Switch
+                          checked={service.active}
+                          onCheckedChange={() => toggleServiceActive(service.id)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleOpenEdit(service.id, service.name, service.traffic_cycle_id)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(service.id, service.name)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
@@ -169,6 +192,25 @@ export default function ServicesPage() {
                 placeholder="Ex: Social Media, Tráfego Pago"
                 required
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="trafficCycle">Ciclo de Tráfego</Label>
+              <Select value={trafficCycleId} onValueChange={setTrafficCycleId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um ciclo (opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhum</SelectItem>
+                  {activeCycles.map((cycle) => (
+                    <SelectItem key={cycle.id} value={cycle.id}>
+                      {cycle.name} ({cycle.cadence_days} dias)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Ciclo padrão de tráfego para clientes deste plano.
+              </p>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>
