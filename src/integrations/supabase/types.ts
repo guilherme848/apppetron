@@ -45,6 +45,7 @@ export type Database = {
           support_member_id: string | null
           traffic_cycle_id: string | null
           traffic_member_id: string | null
+          traffic_routine_id: string | null
           updated_at: string | null
           videomaker_member_id: string | null
           website: string | null
@@ -79,6 +80,7 @@ export type Database = {
           support_member_id?: string | null
           traffic_cycle_id?: string | null
           traffic_member_id?: string | null
+          traffic_routine_id?: string | null
           updated_at?: string | null
           videomaker_member_id?: string | null
           website?: string | null
@@ -113,6 +115,7 @@ export type Database = {
           support_member_id?: string | null
           traffic_cycle_id?: string | null
           traffic_member_id?: string | null
+          traffic_routine_id?: string | null
           updated_at?: string | null
           videomaker_member_id?: string | null
           website?: string | null
@@ -172,6 +175,13 @@ export type Database = {
             columns: ["traffic_member_id"]
             isOneToOne: false
             referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_traffic_routine_id_fkey"
+            columns: ["traffic_routine_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_routines"
             referencedColumns: ["id"]
           },
           {
@@ -712,6 +722,7 @@ export type Database = {
           id: string
           name: string
           traffic_cycle_id: string | null
+          traffic_routine_id: string | null
         }
         Insert: {
           active?: boolean
@@ -719,6 +730,7 @@ export type Database = {
           id?: string
           name: string
           traffic_cycle_id?: string | null
+          traffic_routine_id?: string | null
         }
         Update: {
           active?: boolean
@@ -726,6 +738,7 @@ export type Database = {
           id?: string
           name?: string
           traffic_cycle_id?: string | null
+          traffic_routine_id?: string | null
         }
         Relationships: [
           {
@@ -733,6 +746,13 @@ export type Database = {
             columns: ["traffic_cycle_id"]
             isOneToOne: false
             referencedRelation: "traffic_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "services_traffic_routine_id_fkey"
+            columns: ["traffic_routine_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_routines"
             referencedColumns: ["id"]
           },
         ]
@@ -976,6 +996,57 @@ export type Database = {
           },
         ]
       }
+      traffic_routine_cycles: {
+        Row: {
+          active: boolean
+          anchor_rule: string | null
+          created_at: string
+          cycle_id: string
+          frequency: string
+          id: string
+          routine_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          anchor_rule?: string | null
+          created_at?: string
+          cycle_id: string
+          frequency: string
+          id?: string
+          routine_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          anchor_rule?: string | null
+          created_at?: string
+          cycle_id?: string
+          frequency?: string
+          id?: string
+          routine_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traffic_routine_cycles_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traffic_routine_cycles_routine_id_fkey"
+            columns: ["routine_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_routines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       traffic_routine_tasks: {
         Row: {
           active: boolean
@@ -1022,6 +1093,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      traffic_routines: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       traffic_tasks: {
         Row: {
