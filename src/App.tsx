@@ -38,8 +38,7 @@ import PipelinePage from "./pages/settings/PipelinePage";
 import NichesPage from "./pages/settings/NichesPage";
 import TrafficCyclesPage from "./pages/settings/TrafficCyclesPage";
 import TrafficCycleTasksPage from "./pages/settings/TrafficCycleTasksPage";
-import TrafficCycleRoutinesPage from "./pages/settings/TrafficCycleRoutinesPage";
-import TrafficRoutineTasksPage from "./pages/settings/TrafficRoutineTasksPage";
+import TrafficRoutinesPage from "./pages/settings/TrafficRoutinesPage";
 
 const queryClient = new QueryClient();
 
@@ -82,10 +81,9 @@ const App = () => (
                         <Route path="plans/deliverables" element={<DeliverablesPage />} />
                         <Route path="general/pipeline" element={<PipelinePage />} />
                         <Route path="general/niches" element={<NichesPage />} />
-                        <Route path="general/traffic-cycles" element={<TrafficCyclesPage />} />
-                        <Route path="traffic/routines" element={<TrafficCycleRoutinesPage />} />
-                        <Route path="traffic/routine-tasks" element={<TrafficRoutineTasksPage />} />
+                        <Route path="traffic/cycles" element={<TrafficCyclesPage />} />
                         <Route path="traffic/cycle-tasks" element={<TrafficCycleTasksPage />} />
+                        <Route path="traffic/routines" element={<TrafficRoutinesPage />} />
                       </Route>
                       
                       {/* Redirects from old routes */}

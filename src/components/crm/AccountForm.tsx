@@ -9,7 +9,7 @@ import { Account, AccountStatus } from '@/types/crm';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useTraffic } from '@/contexts/TrafficContext';
 import { Link } from 'react-router-dom';
-import { ExternalLink, RefreshCw } from 'lucide-react';
+import { ExternalLink, RotateCcw, Undo2 } from 'lucide-react';
 
 interface AccountFormProps {
   open: boolean;
@@ -57,13 +57,16 @@ const isValidEmail = (email: string) => {
 
 export function AccountForm({ open, onClose, onSubmit, account }: AccountFormProps) {
   const { activeServices, activeNiches, services, niches, findServiceByName, findNicheByName } = useSettings();
-  const { getCycleById } = useTraffic();
+  const { trafficRoutines, getTrafficRoutineById } = useTraffic();
+  
+  const activeRoutines = trafficRoutines.filter(r => r.active);
   
   const [formData, setFormData] = useState({
     name: '',
     status: 'lead' as AccountStatus,
     service_id: '',
     niche_id: '',
+    traffic_routine_id: '', // Client-level override
     website: '',
     cpf_cnpj: '',
     monthly_value: '',
@@ -104,6 +107,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
         status: account.status || 'lead',
         service_id: serviceId,
         niche_id: nicheId,
+        traffic_routine_id: (account as any).traffic_routine_id || '',
         website: account.website || '',
         cpf_cnpj: account.cpf_cnpj || '',
         monthly_value: account.monthly_value?.toString() || '',
@@ -127,6 +131,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
         status: 'lead',
         service_id: '',
         niche_id: '',
+        traffic_routine_id: '',
         website: '',
         cpf_cnpj: '',
         monthly_value: '',
@@ -166,6 +171,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
       status: formData.status,
       service_id: formData.service_id || null,
       niche_id: formData.niche_id || null,
+      traffic_routine_id: formData.traffic_routine_id || null,
       // Keep legacy fields in sync
       service_contracted: selectedService?.name || null,
       niche: selectedNiche?.name || null,
@@ -184,7 +190,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
       street: formData.street || null,
       street_number: formData.street_number || null,
       address_complement: formData.address_complement || null,
-    });
+    } as Partial<Account>);
     onClose();
   };
 
@@ -318,21 +324,72 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                     ))}
                   </SelectContent>
                 </Select>
-                {/* Show traffic cycle from selected plan */}
-                {formData.service_id && (() => {
+              </div>
+              
+              {/* Traffic Routine with override */}
+              <div className="col-span-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="traffic_routine_id">Rotina de Tráfego</Label>
+                  <Link to="/settings/traffic/routines" className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1">
+                    <ExternalLink className="h-3 w-3" />
+                    Gerenciar
+                  </Link>
+                </div>
+                {(() => {
                   const selectedService = services.find(s => s.id === formData.service_id);
-                  if (selectedService?.traffic_cycle_id) {
-                    const cycle = getCycleById(selectedService.traffic_cycle_id);
-                    if (cycle) {
-                      return (
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
-                          <RefreshCw className="h-3 w-3" />
-                          <span>Ciclo de Tráfego: <span className="font-medium text-foreground">{cycle.name}</span></span>
+                  const planRoutineId = selectedService?.traffic_routine_id;
+                  const planRoutine = planRoutineId ? getTrafficRoutineById(planRoutineId) : null;
+                  const clientRoutine = formData.traffic_routine_id ? getTrafficRoutineById(formData.traffic_routine_id) : null;
+                  const hasOverride = !!formData.traffic_routine_id && formData.traffic_routine_id !== planRoutineId;
+                  
+                  return (
+                    <>
+                      <Select 
+                        value={formData.traffic_routine_id || 'inherit'} 
+                        onValueChange={(v) => setFormData({ ...formData, traffic_routine_id: v === 'inherit' ? '' : v })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={planRoutine ? `Herdar do plano (${planRoutine.name})` : 'Selecione uma rotina'} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="inherit">
+                            {planRoutine ? `Herdar do plano (${planRoutine.name})` : 'Nenhuma (herdar do plano)'}
+                          </SelectItem>
+                          {activeRoutines.map((routine) => (
+                            <SelectItem key={routine.id} value={routine.id}>
+                              {routine.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      
+                      {planRoutine && !hasOverride && (
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <RotateCcw className="h-3 w-3" />
+                          <span>Usando rotina do plano: <span className="font-medium text-foreground">{planRoutine.name}</span></span>
                         </div>
-                      );
-                    }
-                  }
-                  return null;
+                      )}
+                      
+                      {hasOverride && clientRoutine && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <RotateCcw className="h-3 w-3" />
+                            <span>Override: <span className="font-medium text-foreground">{clientRoutine.name}</span></span>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 text-xs"
+                            onClick={() => setFormData({ ...formData, traffic_routine_id: '' })}
+                          >
+                            <Undo2 className="h-3 w-3 mr-1" />
+                            Usar padrão do plano
+                          </Button>
+                        </div>
+                      )}
+                    </>
+                  );
                 })()}
               </div>
               <div className="space-y-2">

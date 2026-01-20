@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Settings, Users, Briefcase, Shield, Layers, Package, GitBranch, Target, ChevronDown, ChevronRight, Menu, RefreshCw } from 'lucide-react';
+import { Settings, Users, Briefcase, Shield, Layers, Package, GitBranch, Target, ChevronDown, ChevronRight, Menu, RotateCcw, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -50,7 +50,7 @@ const SETTINGS_CATEGORIES: SettingsCategory[] = [
       { id: 'pipeline', label: 'Pipeline', path: '/settings/general/pipeline' },
       { id: 'niches', label: 'Nichos', path: '/settings/general/niches' },
       { id: 'traffic-routines', label: 'Rotinas de Tráfego', path: '/settings/traffic/routines' },
-      { id: 'traffic-cycles', label: 'Ciclos de Tráfego', path: '/settings/general/traffic-cycles' },
+      { id: 'traffic-cycles', label: 'Ciclos de Tráfego', path: '/settings/traffic/cycles' },
     ],
   },
 ];
@@ -85,7 +85,7 @@ function getItemIcon(itemId: string) {
     case 'niches':
       return Target;
     case 'traffic-routines':
-      return RefreshCw;
+      return RotateCcw;
     case 'traffic-cycles':
       return RefreshCw;
     default:

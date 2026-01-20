@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Loader2, Layers } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Layers, RotateCcw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,30 +11,31 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useTraffic } from '@/contexts/TrafficContext';
+import { Link } from 'react-router-dom';
 
 export default function ServicesPage() {
   const { services, loading, addService, updateService, deleteService, toggleServiceActive } = useSettings();
-  const { getActiveCycles, getCycleById } = useTraffic();
+  const { trafficRoutines, getTrafficRoutineById } = useTraffic();
   
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
-  const [trafficCycleId, setTrafficCycleId] = useState<string>('');
+  const [trafficRoutineId, setTrafficRoutineId] = useState<string>('');
   const [showInactive, setShowInactive] = useState(false);
 
-  const activeCycles = getActiveCycles();
+  const activeRoutines = trafficRoutines.filter(r => r.active);
 
   const handleOpenNew = () => {
     setEditingId(null);
     setName('');
-    setTrafficCycleId('');
+    setTrafficRoutineId('');
     setFormOpen(true);
   };
 
-  const handleOpenEdit = (id: string, currentName: string, currentCycleId: string | null) => {
+  const handleOpenEdit = (id: string, currentName: string, currentRoutineId: string | null) => {
     setEditingId(id);
     setName(currentName);
-    setTrafficCycleId(currentCycleId || '');
+    setTrafficRoutineId(currentRoutineId || '');
     setFormOpen(true);
   };
 
@@ -45,10 +46,10 @@ export default function ServicesPage() {
     if (editingId) {
       result = await updateService(editingId, { 
         name,
-        traffic_cycle_id: trafficCycleId || null 
+        traffic_routine_id: trafficRoutineId || null 
       });
     } else {
-      result = await addService(name, trafficCycleId || null);
+      result = await addService(name, undefined, trafficRoutineId || null);
     }
 
     if (result.success) {
@@ -126,22 +127,28 @@ export default function ServicesPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
-                  <TableHead>Ciclo de Tráfego</TableHead>
+                  <TableHead>Rotina de Tráfego</TableHead>
                   <TableHead className="w-[100px]">Ativo</TableHead>
                   <TableHead className="w-[120px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredServices.map((service) => {
-                  const cycle = getCycleById(service.traffic_cycle_id);
+                  const routine = getTrafficRoutineById(service.traffic_routine_id);
                   return (
                     <TableRow key={service.id}>
                       <TableCell className="font-medium">{service.name}</TableCell>
                       <TableCell>
-                        {cycle ? (
-                          <span className="text-sm">{cycle.name}</span>
+                        {routine ? (
+                          <Link 
+                            to={`/settings/traffic/routines?routine=${routine.id}`}
+                            className="text-sm hover:underline flex items-center gap-1"
+                          >
+                            <RotateCcw className="h-3 w-3" />
+                            {routine.name}
+                          </Link>
                         ) : (
-                          <span className="text-sm text-muted-foreground">Não definido</span>
+                          <span className="text-sm text-muted-foreground">Não definida</span>
                         )}
                       </TableCell>
                       <TableCell>
@@ -155,7 +162,7 @@ export default function ServicesPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleOpenEdit(service.id, service.name, service.traffic_cycle_id)}
+                            onClick={() => handleOpenEdit(service.id, service.name, service.traffic_routine_id)}
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -194,22 +201,27 @@ export default function ServicesPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="trafficCycle">Ciclo de Tráfego</Label>
-              <Select value={trafficCycleId} onValueChange={setTrafficCycleId}>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="trafficRoutine">Rotina de Tráfego</Label>
+                <Link to="/settings/traffic/routines" className="text-xs text-muted-foreground hover:text-primary">
+                  Gerenciar rotinas
+                </Link>
+              </div>
+              <Select value={trafficRoutineId} onValueChange={setTrafficRoutineId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione um ciclo (opcional)" />
+                  <SelectValue placeholder="Selecione uma rotina (opcional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Nenhum</SelectItem>
-                  {activeCycles.map((cycle) => (
-                    <SelectItem key={cycle.id} value={cycle.id}>
-                      {cycle.name} ({cycle.cadence_days} dias)
+                  <SelectItem value="none">Nenhuma</SelectItem>
+                  {activeRoutines.map((routine) => (
+                    <SelectItem key={routine.id} value={routine.id}>
+                      {routine.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                Ciclo padrão de tráfego para clientes deste plano.
+                Rotina padrão de tráfego para clientes deste plano.
               </p>
             </div>
             <DialogFooter>
