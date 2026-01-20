@@ -29,6 +29,13 @@ const mapAccount = (data: any): Account => ({
   street: data.street,
   street_number: data.street_number,
   address_complement: data.address_complement,
+  // Team member IDs
+  designer_member_id: data.designer_member_id,
+  videomaker_member_id: data.videomaker_member_id,
+  social_member_id: data.social_member_id,
+  traffic_member_id: data.traffic_member_id,
+  support_member_id: data.support_member_id,
+  cs_member_id: data.cs_member_id,
 });
 
 const mapContract = (data: any): Contract => ({
