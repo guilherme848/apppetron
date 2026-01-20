@@ -33,7 +33,10 @@ const mapPost = (data: any): ContentPost => ({
   caption: data.caption,
   item_type: data.item_type as ItemType | null,
   responsible_role_id: data.responsible_role_id,
+  responsible_role_key: data.responsible_role_key,
   assignee_id: data.assignee_id,
+  started_at: data.started_at,
+  completed_at: data.completed_at,
   created_at: data.created_at,
   updated_at: data.updated_at,
 });
@@ -240,9 +243,28 @@ export function useContentProductionData() {
   };
 
   const updatePost = async (id: string, updates: Partial<ContentPost>) => {
+    // Auto-fill lifecycle timestamps
+    const currentPost = posts.find(p => p.id === id);
+    const enhancedUpdates = { ...updates };
+    
+    // Set started_at when moving to 'doing' (if not already set)
+    if (updates.status === 'doing' && currentPost && !currentPost.started_at) {
+      enhancedUpdates.started_at = new Date().toISOString();
+    }
+    
+    // Set completed_at when moving to 'done' (if not already set)
+    if (updates.status === 'done' && currentPost && !currentPost.completed_at) {
+      enhancedUpdates.completed_at = new Date().toISOString();
+    }
+    
+    // Clear completed_at if moving back from 'done'
+    if (updates.status && updates.status !== 'done' && currentPost?.completed_at) {
+      enhancedUpdates.completed_at = null;
+    }
+    
     const { data, error } = await supabase
       .from('content_posts')
-      .update(updates)
+      .update(enhancedUpdates)
       .eq('id', id)
       .select()
       .single();
