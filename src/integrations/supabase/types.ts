@@ -43,6 +43,7 @@ export type Database = {
           street: string | null
           street_number: string | null
           support_member_id: string | null
+          traffic_cycle_id: string | null
           traffic_member_id: string | null
           updated_at: string | null
           videomaker_member_id: string | null
@@ -76,6 +77,7 @@ export type Database = {
           street?: string | null
           street_number?: string | null
           support_member_id?: string | null
+          traffic_cycle_id?: string | null
           traffic_member_id?: string | null
           updated_at?: string | null
           videomaker_member_id?: string | null
@@ -109,6 +111,7 @@ export type Database = {
           street?: string | null
           street_number?: string | null
           support_member_id?: string | null
+          traffic_cycle_id?: string | null
           traffic_member_id?: string | null
           updated_at?: string | null
           videomaker_member_id?: string | null
@@ -155,6 +158,13 @@ export type Database = {
             columns: ["support_member_id"]
             isOneToOne: false
             referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_traffic_cycle_id_fkey"
+            columns: ["traffic_cycle_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_cycles"
             referencedColumns: ["id"]
           },
           {
@@ -701,20 +711,31 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          traffic_cycle_id: string | null
         }
         Insert: {
           active?: boolean
           created_at?: string
           id?: string
           name: string
+          traffic_cycle_id?: string | null
         }
         Update: {
           active?: boolean
           created_at?: string
           id?: string
           name?: string
+          traffic_cycle_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "services_traffic_cycle_id_fkey"
+            columns: ["traffic_cycle_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_cycles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tasks: {
         Row: {
@@ -785,6 +806,195 @@ export type Database = {
             columns: ["role_id"]
             isOneToOne: false
             referencedRelation: "job_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      traffic_cycle_tasks: {
+        Row: {
+          active: boolean
+          created_at: string
+          cycle_id: string
+          default_priority: string
+          details: string | null
+          due_offset_days: number
+          id: string
+          task_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          cycle_id: string
+          default_priority?: string
+          details?: string | null
+          due_offset_days?: number
+          id?: string
+          task_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          cycle_id?: string
+          default_priority?: string
+          details?: string | null
+          due_offset_days?: number
+          id?: string
+          task_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traffic_cycle_tasks_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_cycles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      traffic_cycles: {
+        Row: {
+          active: boolean
+          cadence_days: number
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          cadence_days: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          cadence_days?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      traffic_periods: {
+        Row: {
+          client_id: string
+          created_at: string
+          cycle_id: string
+          id: string
+          period_end: string
+          period_start: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          cycle_id: string
+          id?: string
+          period_end: string
+          period_start: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          cycle_id?: string
+          id?: string
+          period_end?: string
+          period_start?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traffic_periods_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traffic_periods_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_cycles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      traffic_tasks: {
+        Row: {
+          assignee_id: string | null
+          client_id: string
+          created_at: string
+          details: string | null
+          due_date: string | null
+          id: string
+          period_id: string
+          priority: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          client_id: string
+          created_at?: string
+          details?: string | null
+          due_date?: string | null
+          id?: string
+          period_id: string
+          priority?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string | null
+          client_id?: string
+          created_at?: string
+          details?: string | null
+          due_date?: string | null
+          id?: string
+          period_id?: string
+          priority?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traffic_tasks_assignee_id_fkey"
+            columns: ["assignee_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traffic_tasks_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traffic_tasks_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_periods"
             referencedColumns: ["id"]
           },
         ]

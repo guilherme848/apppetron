@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, CheckSquare, Layers, Settings, ListTodo } from 'lucide-react';
+import { LayoutDashboard, Users, CheckSquare, Layers, Settings, ListTodo, TrendingUp } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
   Sidebar,
@@ -32,6 +32,11 @@ const contentItems: MenuItem[] = [
   { title: 'Produção de Conteúdo', url: '/content/production', icon: Layers, permission: 'view_content' },
 ];
 
+const trafficItems: MenuItem[] = [
+  { title: 'Visão Geral', url: '/traffic', icon: TrendingUp, permission: 'view_traffic' },
+  { title: 'Tarefas de Tráfego', url: '/traffic/tasks', icon: CheckSquare, permission: 'view_traffic' },
+];
+
 const settingsItems: MenuItem[] = [
   { title: 'Configurações', url: '/settings', icon: Settings, permission: 'manage_settings' },
 ];
@@ -45,6 +50,7 @@ export function AppSidebar() {
 
   const visibleCrmItems = filterByPermission(crmItems);
   const visibleContentItems = filterByPermission(contentItems);
+  const visibleTrafficItems = filterByPermission(trafficItems);
   const visibleSettingsItems = filterByPermission(settingsItems);
 
   return (
@@ -88,6 +94,29 @@ export function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu>
                 {visibleContentItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={item.url}
+                        className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors hover:bg-accent"
+                        activeClassName="bg-accent text-accent-foreground font-medium"
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+        {visibleTrafficItems.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Tráfego Pago</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {visibleTrafficItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
                       <NavLink
