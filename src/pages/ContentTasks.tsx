@@ -356,6 +356,7 @@ export default function ContentTasks() {
                     <TableHead>Mês</TableHead>
                     <TableHead>Etapa</TableHead>
                     <TableHead>Vencimento</TableHead>
+                    <TableHead>Cargo</TableHead>
                     <TableHead>Responsável</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="w-[80px]">Ações</TableHead>
@@ -403,6 +404,11 @@ export default function ContentTasks() {
                               <span className="text-muted-foreground">—</span>
                             )}
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          {getRoleLabel(task.responsible_role_key) || (
+                            <span className="text-muted-foreground">—</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           {task.assignee_name || (
