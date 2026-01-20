@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useContentProduction } from '@/contexts/ContentProductionContext';
 import { FileUpload } from '@/components/content/FileUpload';
-import { CHANNEL_OPTIONS, FORMAT_OPTIONS, POST_STATUS_OPTIONS, PostStatus, PostAttachment, ITEM_TYPE_OPTIONS, ItemType } from '@/types/contentProduction';
+import { CHANNEL_OPTIONS, FORMAT_OPTIONS, POST_STATUS_OPTIONS, PostStatus, PostAttachment } from '@/types/contentProduction';
 import { RESPONSIBLE_ROLE_OPTIONS, ResponsibleRoleKey } from '@/types/crm';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { Badge } from '@/components/ui/badge';
@@ -32,7 +32,7 @@ export default function PostDetail() {
   const [status, setStatus] = useState<PostStatus>('todo');
   const [briefing, setBriefing] = useState('');
   const [caption, setCaption] = useState('');
-  const [itemType, setItemType] = useState<ItemType | ''>('');
+  
   const [responsibleRoleKey, setResponsibleRoleKey] = useState<ResponsibleRoleKey>('social');
   const [assigneeId, setAssigneeId] = useState<string>('');
   const [saving, setSaving] = useState(false);
@@ -80,7 +80,7 @@ export default function PostDetail() {
       setStatus(post.status);
       setBriefing(post.briefing || '');
       setCaption(post.caption || '');
-      setItemType((post.item_type as ItemType) || '');
+      
       // Use responsible_role_key from database, fallback to 'social'
       const roleKey = (post as any).responsible_role_key as ResponsibleRoleKey || 'social';
       setResponsibleRoleKey(roleKey);
@@ -163,7 +163,7 @@ export default function PostDetail() {
       status,
       briefing: briefing || null,
       caption: caption || null,
-      item_type: itemType || null,
+      
       responsible_role_key: responsibleRoleKey,
       assignee_id: assigneeId || null,
     } as any); // Using any because responsible_role_key is new
@@ -179,10 +179,6 @@ export default function PostDetail() {
     setFormat(newFormat);
   };
 
-  const handleItemTypeChange = (value: string) => {
-    const newType = value === '_none_' ? '' : value as ItemType;
-    setItemType(newType);
-  };
 
   const handleDelete = async () => {
     await deletePost(post.id);
@@ -336,38 +332,20 @@ export default function PostDetail() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Tipo de Item</Label>
-                  <Select value={itemType || '_none_'} onValueChange={handleItemTypeChange}>
-                    <SelectTrigger className="bg-background">
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover z-50">
-                      <SelectItem value="_none_">Nenhum</SelectItem>
-                      {ITEM_TYPE_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Cargo Responsável</Label>
-                  <Select value={responsibleRoleKey} onValueChange={(v) => handleRoleChange(v as ResponsibleRoleKey)}>
-                    <SelectTrigger className="bg-background">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover z-50">
-                      {RESPONSIBLE_ROLE_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label>Cargo Responsável</Label>
+                <Select value={responsibleRoleKey} onValueChange={(v) => handleRoleChange(v as ResponsibleRoleKey)}>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-50">
+                    {RESPONSIBLE_ROLE_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               
               {showTeamWarning && (
