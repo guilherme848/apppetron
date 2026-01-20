@@ -471,6 +471,45 @@ export type Database = {
         }
         Relationships: []
       }
+      member_permissions: {
+        Row: {
+          allowed: boolean
+          created_at: string
+          id: string
+          member_id: string
+          permission_key: string
+        }
+        Insert: {
+          allowed?: boolean
+          created_at?: string
+          id?: string
+          member_id: string
+          permission_key: string
+        }
+        Update: {
+          allowed?: boolean
+          created_at?: string
+          id?: string
+          member_id?: string
+          permission_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_permissions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_permissions_permission_key_fkey"
+            columns: ["permission_key"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       niches: {
         Row: {
           active: boolean
@@ -489,6 +528,27 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+        }
+        Relationships: []
+      }
+      permissions: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          label: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+          label: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          label?: string
         }
         Relationships: []
       }
