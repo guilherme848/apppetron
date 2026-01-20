@@ -1,4 +1,14 @@
-// Traffic Cycles
+// Traffic Routines (Master container)
+export interface TrafficRoutine {
+  id: string;
+  name: string;
+  description: string | null;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Traffic Cycles (Detailed activities)
 export interface TrafficCycle {
   id: string;
   name: string;
@@ -9,7 +19,20 @@ export interface TrafficCycle {
   updated_at: string;
 }
 
-// Cycle Routines (with frequency)
+// Routine-Cycle junction (Routine contains cycles with frequency)
+export interface TrafficRoutineCycle {
+  id: string;
+  routine_id: string;
+  cycle_id: string;
+  frequency: RoutineFrequency;
+  anchor_rule: string | null;
+  sort_order: number;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Cycle Routines (legacy - kept for backwards compatibility)
 export interface TrafficCycleRoutine {
   id: string;
   cycle_id: string;
@@ -21,7 +44,7 @@ export interface TrafficCycleRoutine {
   updated_at: string;
 }
 
-// Routine Task Templates
+// Routine Task Templates (legacy)
 export interface TrafficRoutineTask {
   id: string;
   routine_id: string;
@@ -35,7 +58,7 @@ export interface TrafficRoutineTask {
   updated_at: string;
 }
 
-// Legacy Cycle Task Templates (kept for backwards compatibility)
+// Cycle Task Templates (detailed tasks within a cycle)
 export interface TrafficCycleTask {
   id: string;
   cycle_id: string;
@@ -106,4 +129,12 @@ export const TRAFFIC_TASK_STATUS_OPTIONS: { value: TrafficTaskStatus; label: str
 export const TRAFFIC_PERIOD_STATUS_OPTIONS: { value: TrafficPeriodStatus; label: string }[] = [
   { value: 'active', label: 'Ativo' },
   { value: 'closed', label: 'Encerrado' },
+];
+
+export const ANCHOR_RULE_OPTIONS: { value: string; label: string; description: string }[] = [
+  { value: '', label: 'Nenhum', description: 'Sem regra específica' },
+  { value: 'weekday:mon', label: 'Segunda-feira', description: 'Todo início de semana (segunda)' },
+  { value: 'day:1', label: 'Dia 1 do mês', description: 'Primeiro dia de cada mês' },
+  { value: 'days:1,15', label: 'Dias 1 e 15', description: 'Quinzenal nos dias 1 e 15' },
+  { value: 'quarter_start', label: 'Início do trimestre', description: 'Primeiro dia do trimestre' },
 ];

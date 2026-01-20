@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import {
+  TrafficRoutine,
   TrafficCycle,
+  TrafficRoutineCycle,
   TrafficCycleRoutine,
   TrafficRoutineTask,
   TrafficCycleTask,
@@ -12,20 +14,44 @@ import {
 } from '@/types/traffic';
 
 export function useTrafficData() {
+  // New model state
+  const [trafficRoutines, setTrafficRoutines] = useState<TrafficRoutine[]>([]);
+  const [routineCycles, setRoutineCycles] = useState<TrafficRoutineCycle[]>([]);
+  
+  // Existing state
   const [cycles, setCycles] = useState<TrafficCycle[]>([]);
-  const [routines, setRoutines] = useState<TrafficCycleRoutine[]>([]);
+  const [routines, setRoutines] = useState<TrafficCycleRoutine[]>([]); // Legacy cycle routines
   const [routineTasks, setRoutineTasks] = useState<TrafficRoutineTask[]>([]);
   const [cycleTasks, setCycleTasks] = useState<TrafficCycleTask[]>([]);
   const [periods, setPeriods] = useState<TrafficPeriod[]>([]);
   const [tasks, setTasks] = useState<TrafficTask[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch functions
+  // Fetch functions - New model
+  const fetchTrafficRoutines = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('traffic_routines')
+      .select('*')
+      .order('name', { ascending: true });
+    if (error) console.error('Error fetching traffic routines:', error);
+    else setTrafficRoutines((data || []) as TrafficRoutine[]);
+  }, []);
+
+  const fetchRoutineCycles = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('traffic_routine_cycles')
+      .select('*')
+      .order('sort_order', { ascending: true });
+    if (error) console.error('Error fetching routine cycles:', error);
+    else setRoutineCycles((data || []) as TrafficRoutineCycle[]);
+  }, []);
+
+  // Fetch functions - Existing model
   const fetchCycles = useCallback(async () => {
     const { data, error } = await supabase
       .from('traffic_cycles')
       .select('*')
-      .order('cadence_days', { ascending: true });
+      .order('name', { ascending: true });
     if (error) console.error('Error fetching traffic cycles:', error);
     else setCycles((data || []) as TrafficCycle[]);
   }, []);
@@ -78,6 +104,8 @@ export function useTrafficData() {
   const fetchAll = useCallback(async () => {
     setLoading(true);
     await Promise.all([
+      fetchTrafficRoutines(),
+      fetchRoutineCycles(),
       fetchCycles(),
       fetchRoutines(),
       fetchRoutineTasks(),
@@ -86,13 +114,115 @@ export function useTrafficData() {
       fetchTasks(),
     ]);
     setLoading(false);
-  }, [fetchCycles, fetchRoutines, fetchRoutineTasks, fetchCycleTasks, fetchPeriods, fetchTasks]);
+  }, [fetchTrafficRoutines, fetchRoutineCycles, fetchCycles, fetchRoutines, fetchRoutineTasks, fetchCycleTasks, fetchPeriods, fetchTasks]);
 
   useEffect(() => {
     fetchAll();
   }, [fetchAll]);
 
-  // CRUD for Cycles
+  // CRUD for Traffic Routines (Master)
+  const addTrafficRoutine = async (routine: { name: string; description?: string }) => {
+    const { data, error } = await supabase
+      .from('traffic_routines')
+      .insert([routine])
+      .select()
+      .single();
+    if (error) {
+      console.error('Error adding traffic routine:', error);
+      return { data: null, error: error.message };
+    }
+    setTrafficRoutines((prev) => [...prev, data as TrafficRoutine].sort((a, b) => a.name.localeCompare(b.name)));
+    return { data: data as TrafficRoutine, error: null };
+  };
+
+  const updateTrafficRoutine = async (id: string, updates: Partial<TrafficRoutine>) => {
+    const { data, error } = await supabase
+      .from('traffic_routines')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) {
+      console.error('Error updating traffic routine:', error);
+      return { data: null, error: error.message };
+    }
+    setTrafficRoutines((prev) =>
+      prev.map((r) => (r.id === id ? (data as TrafficRoutine) : r)).sort((a, b) => a.name.localeCompare(b.name))
+    );
+    return { data: data as TrafficRoutine, error: null };
+  };
+
+  const deleteTrafficRoutine = async (id: string) => {
+    const { error } = await supabase.from('traffic_routines').delete().eq('id', id);
+    if (error) {
+      console.error('Error deleting traffic routine:', error);
+      return { error: error.message };
+    }
+    setTrafficRoutines((prev) => prev.filter((r) => r.id !== id));
+    return { error: null };
+  };
+
+  const toggleTrafficRoutineActive = async (id: string) => {
+    const routine = trafficRoutines.find((r) => r.id === id);
+    if (!routine) return;
+    await updateTrafficRoutine(id, { active: !routine.active });
+  };
+
+  // CRUD for Routine-Cycle junction
+  const addRoutineCycle = async (data: {
+    routine_id: string;
+    cycle_id: string;
+    frequency: RoutineFrequency;
+    anchor_rule?: string;
+    sort_order?: number;
+  }) => {
+    const { data: result, error } = await supabase
+      .from('traffic_routine_cycles')
+      .insert([data])
+      .select()
+      .single();
+    if (error) {
+      console.error('Error adding routine cycle:', error);
+      return { data: null, error: error.message };
+    }
+    setRoutineCycles((prev) => [...prev, result as TrafficRoutineCycle].sort((a, b) => a.sort_order - b.sort_order));
+    return { data: result as TrafficRoutineCycle, error: null };
+  };
+
+  const updateRoutineCycle = async (id: string, updates: Partial<TrafficRoutineCycle>) => {
+    const { data, error } = await supabase
+      .from('traffic_routine_cycles')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) {
+      console.error('Error updating routine cycle:', error);
+      return { data: null, error: error.message };
+    }
+    setRoutineCycles((prev) =>
+      prev.map((rc) => (rc.id === id ? (data as TrafficRoutineCycle) : rc)).sort((a, b) => a.sort_order - b.sort_order)
+    );
+    return { data: data as TrafficRoutineCycle, error: null };
+  };
+
+  const deleteRoutineCycle = async (id: string) => {
+    const { error } = await supabase.from('traffic_routine_cycles').delete().eq('id', id);
+    if (error) {
+      console.error('Error deleting routine cycle:', error);
+      return { error: error.message };
+    }
+    setRoutineCycles((prev) => prev.filter((rc) => rc.id !== id));
+    return { error: null };
+  };
+
+  const toggleRoutineCycleActive = async (id: string) => {
+    const rc = routineCycles.find((r) => r.id === id);
+    if (!rc) return;
+    await updateRoutineCycle(id, { active: !rc.active });
+  };
+
+  // CRUD for Cycles (detailed activities)
   const addCycle = async (cycle: { name: string; cadence_days: number; description?: string }) => {
     const { data, error } = await supabase
       .from('traffic_cycles')
@@ -103,7 +233,7 @@ export function useTrafficData() {
       console.error('Error adding cycle:', error);
       return { data: null, error: error.message };
     }
-    setCycles((prev) => [...prev, data as TrafficCycle].sort((a, b) => a.cadence_days - b.cadence_days));
+    setCycles((prev) => [...prev, data as TrafficCycle].sort((a, b) => a.name.localeCompare(b.name)));
     return { data: data as TrafficCycle, error: null };
   };
 
@@ -119,7 +249,7 @@ export function useTrafficData() {
       return { data: null, error: error.message };
     }
     setCycles((prev) =>
-      prev.map((c) => (c.id === id ? (data as TrafficCycle) : c)).sort((a, b) => a.cadence_days - b.cadence_days)
+      prev.map((c) => (c.id === id ? (data as TrafficCycle) : c)).sort((a, b) => a.name.localeCompare(b.name))
     );
     return { data: data as TrafficCycle, error: null };
   };
@@ -140,7 +270,7 @@ export function useTrafficData() {
     await updateCycle(id, { active: !cycle.active });
   };
 
-  // CRUD for Routines
+  // CRUD for Cycle Routines (legacy)
   const addRoutine = async (routine: {
     cycle_id: string;
     name: string;
@@ -237,7 +367,7 @@ export function useTrafficData() {
     return { error: null };
   };
 
-  // CRUD for Cycle Tasks (legacy)
+  // CRUD for Cycle Tasks
   const addCycleTask = async (
     task: Omit<TrafficCycleTask, 'id' | 'created_at' | 'updated_at'>
   ) => {
@@ -355,7 +485,7 @@ export function useTrafficData() {
     return { error: null };
   };
 
-  // Generate tasks for a client's period
+  // Generate tasks for a client's period (uses the new model)
   const generateCycleTasks = async (clientId: string, cycleId: string, assigneeId: string | null) => {
     const cycle = cycles.find((c) => c.id === cycleId);
     if (!cycle) return { success: false, error: 'Ciclo não encontrado' };
@@ -387,33 +517,7 @@ export function useTrafficData() {
       return { success: false, error: periodResult.error };
     }
 
-    // Get routines for this cycle
-    const cycleRoutines = routines.filter((r) => r.cycle_id === cycleId && r.active);
-
-    // Generate tasks from routine tasks
-    for (const routine of cycleRoutines) {
-      const routineTaskTemplates = routineTasks.filter((t) => t.routine_id === routine.id && t.active);
-
-      for (const template of routineTaskTemplates) {
-        const dueDate = new Date(today.getTime() + template.due_offset_days * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split('T')[0];
-
-        await addTrafficTask({
-          client_id: clientId,
-          period_id: periodResult.data.id,
-          title: template.title,
-          details: template.details,
-          status: 'todo',
-          priority: template.default_priority,
-          due_date: dueDate,
-          assignee_id: assigneeId,
-          routine_id: routine.id,
-        });
-      }
-    }
-
-    // Also generate from legacy cycle tasks (if any)
+    // Generate from cycle tasks
     const cycleTaskTemplates = cycleTasks.filter((t) => t.cycle_id === cycleId && t.active);
     for (const template of cycleTaskTemplates) {
       const dueDate = new Date(today.getTime() + template.due_offset_days * 24 * 60 * 60 * 1000)
@@ -439,7 +543,15 @@ export function useTrafficData() {
     return { success: true, period: periodResult.data };
   };
 
-  // Getters
+  // Getters - New model
+  const getTrafficRoutineById = (id: string | null) => trafficRoutines.find((r) => r.id === id);
+  const getActiveTrafficRoutines = () => trafficRoutines.filter((r) => r.active);
+  const getRoutineCyclesByRoutine = (routineId: string) => 
+    routineCycles.filter((rc) => rc.routine_id === routineId).sort((a, b) => a.sort_order - b.sort_order);
+  const getActiveRoutineCyclesByRoutine = (routineId: string) =>
+    routineCycles.filter((rc) => rc.routine_id === routineId && rc.active).sort((a, b) => a.sort_order - b.sort_order);
+
+  // Getters - Existing model
   const getCycleById = (id: string | null) => cycles.find((c) => c.id === id);
   const getActiveCycles = () => cycles.filter((c) => c.active);
   const getRoutinesByCycle = (cycleId: string) => routines.filter((r) => r.cycle_id === cycleId);
@@ -466,6 +578,10 @@ export function useTrafficData() {
   const activePeriods = periods.filter((p) => p.status === 'active');
 
   return {
+    // New model data
+    trafficRoutines,
+    routineCycles,
+    // Existing model data
     cycles,
     routines,
     routineTasks,
@@ -473,12 +589,22 @@ export function useTrafficData() {
     periods,
     tasks,
     loading,
+    // Traffic Routine CRUD (new master)
+    addTrafficRoutine,
+    updateTrafficRoutine,
+    deleteTrafficRoutine,
+    toggleTrafficRoutineActive,
+    // Routine-Cycle junction CRUD
+    addRoutineCycle,
+    updateRoutineCycle,
+    deleteRoutineCycle,
+    toggleRoutineCycleActive,
     // Cycle CRUD
     addCycle,
     updateCycle,
     deleteCycle,
     toggleCycleActive,
-    // Routine CRUD
+    // Routine CRUD (legacy)
     addRoutine,
     updateRoutine,
     deleteRoutine,
@@ -487,7 +613,7 @@ export function useTrafficData() {
     addRoutineTask,
     updateRoutineTask,
     deleteRoutineTask,
-    // Cycle Task CRUD (legacy)
+    // Cycle Task CRUD
     addCycleTask,
     updateCycleTask,
     deleteCycleTask,
@@ -500,7 +626,12 @@ export function useTrafficData() {
     deleteTrafficTask,
     // Generate
     generateCycleTasks,
-    // Getters
+    // Getters - New model
+    getTrafficRoutineById,
+    getActiveTrafficRoutines,
+    getRoutineCyclesByRoutine,
+    getActiveRoutineCyclesByRoutine,
+    // Getters - Existing model
     getCycleById,
     getActiveCycles,
     getRoutinesByCycle,

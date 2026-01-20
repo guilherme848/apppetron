@@ -49,6 +49,7 @@ const SETTINGS_CATEGORIES: SettingsCategory[] = [
     items: [
       { id: 'pipeline', label: 'Pipeline', path: '/settings/general/pipeline' },
       { id: 'niches', label: 'Nichos', path: '/settings/general/niches' },
+      { id: 'traffic-routines', label: 'Rotinas de Tráfego', path: '/settings/traffic/routines' },
       { id: 'traffic-cycles', label: 'Ciclos de Tráfego', path: '/settings/general/traffic-cycles' },
     ],
   },
@@ -83,6 +84,8 @@ function getItemIcon(itemId: string) {
       return GitBranch;
     case 'niches':
       return Target;
+    case 'traffic-routines':
+      return RefreshCw;
     case 'traffic-cycles':
       return RefreshCw;
     default:
