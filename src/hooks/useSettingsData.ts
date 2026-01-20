@@ -42,7 +42,7 @@ export function useSettingsData() {
   }, [fetchAll]);
 
   // Services CRUD
-  const addService = async (name: string, trafficCycleId?: string | null): Promise<{ success: boolean; error?: string }> => {
+  const addService = async (name: string, trafficCycleId?: string | null, trafficRoutineId?: string | null): Promise<{ success: boolean; error?: string }> => {
     const trimmedName = name.trim();
     if (!trimmedName) return { success: false, error: 'Nome é obrigatório' };
 
@@ -50,9 +50,12 @@ export function useSettingsData() {
     const exists = services.some(s => s.name.toLowerCase() === trimmedName.toLowerCase());
     if (exists) return { success: false, error: 'Serviço já existe' };
 
-    const insertData: { name: string; traffic_cycle_id?: string | null } = { name: trimmedName };
+    const insertData: { name: string; traffic_cycle_id?: string | null; traffic_routine_id?: string | null } = { name: trimmedName };
     if (trafficCycleId !== undefined) {
       insertData.traffic_cycle_id = trafficCycleId;
+    }
+    if (trafficRoutineId !== undefined) {
+      insertData.traffic_routine_id = trafficRoutineId;
     }
 
     const { data, error } = await supabase
