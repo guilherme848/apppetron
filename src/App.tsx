@@ -16,6 +16,7 @@ import TaskList from "./pages/TaskList";
 import ContentPage from "./pages/ContentPage";
 import ContentDetail from "./pages/ContentDetail";
 import ContentProduction from "./pages/ContentProduction";
+import ContentDashboard from "./pages/ContentDashboard";
 import ContentTasks from "./pages/ContentTasks";
 import BatchDetail from "./pages/BatchDetail";
 import PostDetail from "./pages/PostDetail";
@@ -64,6 +65,7 @@ const App = () => (
                       <Route path="/content/production" element={<ContentProduction />} />
                       <Route path="/content/production/:id" element={<BatchDetail />} />
                       <Route path="/content/production/:batchId/posts/:postId" element={<PostDetail />} />
+                      <Route path="/content/dashboard" element={<ContentDashboard />} />
                       <Route path="/content/tasks" element={<ContentTasks />} />
                       
                       {/* Traffic routes */}

@@ -350,6 +350,7 @@ export type Database = {
           briefing: string | null
           caption: string | null
           channel: string | null
+          completed_at: string | null
           created_at: string
           due_date: string | null
           format: string | null
@@ -357,6 +358,7 @@ export type Database = {
           item_type: string | null
           responsible_role_id: string | null
           responsible_role_key: string | null
+          started_at: string | null
           status: string
           title: string
           updated_at: string
@@ -367,6 +369,7 @@ export type Database = {
           briefing?: string | null
           caption?: string | null
           channel?: string | null
+          completed_at?: string | null
           created_at?: string
           due_date?: string | null
           format?: string | null
@@ -374,6 +377,7 @@ export type Database = {
           item_type?: string | null
           responsible_role_id?: string | null
           responsible_role_key?: string | null
+          started_at?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -384,6 +388,7 @@ export type Database = {
           briefing?: string | null
           caption?: string | null
           channel?: string | null
+          completed_at?: string | null
           created_at?: string
           due_date?: string | null
           format?: string | null
@@ -391,6 +396,7 @@ export type Database = {
           item_type?: string | null
           responsible_role_id?: string | null
           responsible_role_key?: string | null
+          started_at?: string | null
           status?: string
           title?: string
           updated_at?: string
