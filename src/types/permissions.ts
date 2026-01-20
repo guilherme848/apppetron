@@ -22,4 +22,7 @@ export type PermissionKey =
   | 'view_tasks'
   | 'edit_tasks'
   | 'manage_settings'
-  | 'view_client_credentials';
+  | 'view_client_credentials'
+  | 'view_traffic'
+  | 'edit_traffic'
+  | 'manage_traffic_cycles';
