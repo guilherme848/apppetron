@@ -117,7 +117,7 @@ export function ChurnMrrCharts() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Variação MRR</CardTitle>
+            <CardTitle className="text-sm font-medium">Variação Receita Mensal</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -221,8 +221,8 @@ export function ChurnMrrCharts() {
       {/* MRR Chart */}
       <Card>
         <CardHeader>
-          <CardTitle>MRR (Últimos 12 meses)</CardTitle>
-          <CardDescription>Receita recorrente mensal ao longo do tempo</CardDescription>
+          <CardTitle>Receita Mensal (Últimos 12 meses)</CardTitle>
+          <CardDescription>Baseado no valor mensal de clientes ativos em cada mês</CardDescription>
         </CardHeader>
         <CardContent>
           {monthlyData.length === 0 ? (
