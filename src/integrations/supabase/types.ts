@@ -810,6 +810,47 @@ export type Database = {
           },
         ]
       }
+      traffic_cycle_routines: {
+        Row: {
+          active: boolean
+          created_at: string
+          cycle_id: string
+          description: string | null
+          frequency: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          cycle_id: string
+          description?: string | null
+          frequency: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          cycle_id?: string
+          description?: string | null
+          frequency?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traffic_cycle_routines_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_cycles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       traffic_cycle_tasks: {
         Row: {
           active: boolean
@@ -935,6 +976,53 @@ export type Database = {
           },
         ]
       }
+      traffic_routine_tasks: {
+        Row: {
+          active: boolean
+          created_at: string
+          default_priority: string
+          details: string | null
+          due_offset_days: number
+          id: string
+          routine_id: string
+          task_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          default_priority?: string
+          details?: string | null
+          due_offset_days?: number
+          id?: string
+          routine_id: string
+          task_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          default_priority?: string
+          details?: string | null
+          due_offset_days?: number
+          id?: string
+          routine_id?: string
+          task_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traffic_routine_tasks_routine_id_fkey"
+            columns: ["routine_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_cycle_routines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       traffic_tasks: {
         Row: {
           assignee_id: string | null
@@ -945,6 +1033,7 @@ export type Database = {
           id: string
           period_id: string
           priority: string
+          routine_id: string | null
           status: string
           title: string
           updated_at: string
@@ -958,6 +1047,7 @@ export type Database = {
           id?: string
           period_id: string
           priority?: string
+          routine_id?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -971,6 +1061,7 @@ export type Database = {
           id?: string
           period_id?: string
           priority?: string
+          routine_id?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -995,6 +1086,13 @@ export type Database = {
             columns: ["period_id"]
             isOneToOne: false
             referencedRelation: "traffic_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traffic_tasks_routine_id_fkey"
+            columns: ["routine_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_cycle_routines"
             referencedColumns: ["id"]
           },
         ]

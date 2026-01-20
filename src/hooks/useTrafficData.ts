@@ -2,16 +2,19 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   TrafficCycle,
+  TrafficCycleRoutine,
+  TrafficRoutineTask,
   TrafficCycleTask,
   TrafficPeriod,
   TrafficTask,
   TrafficPriority,
-  TrafficPeriodStatus,
-  TrafficTaskStatus,
+  RoutineFrequency,
 } from '@/types/traffic';
 
 export function useTrafficData() {
   const [cycles, setCycles] = useState<TrafficCycle[]>([]);
+  const [routines, setRoutines] = useState<TrafficCycleRoutine[]>([]);
+  const [routineTasks, setRoutineTasks] = useState<TrafficRoutineTask[]>([]);
   const [cycleTasks, setCycleTasks] = useState<TrafficCycleTask[]>([]);
   const [periods, setPeriods] = useState<TrafficPeriod[]>([]);
   const [tasks, setTasks] = useState<TrafficTask[]>([]);
@@ -25,6 +28,24 @@ export function useTrafficData() {
       .order('cadence_days', { ascending: true });
     if (error) console.error('Error fetching traffic cycles:', error);
     else setCycles((data || []) as TrafficCycle[]);
+  }, []);
+
+  const fetchRoutines = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('traffic_cycle_routines')
+      .select('*')
+      .order('frequency', { ascending: true });
+    if (error) console.error('Error fetching routines:', error);
+    else setRoutines((data || []) as TrafficCycleRoutine[]);
+  }, []);
+
+  const fetchRoutineTasks = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('traffic_routine_tasks')
+      .select('*')
+      .order('task_order', { ascending: true });
+    if (error) console.error('Error fetching routine tasks:', error);
+    else setRoutineTasks((data || []) as TrafficRoutineTask[]);
   }, []);
 
   const fetchCycleTasks = useCallback(async () => {
@@ -56,9 +77,16 @@ export function useTrafficData() {
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    await Promise.all([fetchCycles(), fetchCycleTasks(), fetchPeriods(), fetchTasks()]);
+    await Promise.all([
+      fetchCycles(),
+      fetchRoutines(),
+      fetchRoutineTasks(),
+      fetchCycleTasks(),
+      fetchPeriods(),
+      fetchTasks(),
+    ]);
     setLoading(false);
-  }, [fetchCycles, fetchCycleTasks, fetchPeriods, fetchTasks]);
+  }, [fetchCycles, fetchRoutines, fetchRoutineTasks, fetchCycleTasks, fetchPeriods, fetchTasks]);
 
   useEffect(() => {
     fetchAll();
@@ -112,7 +140,104 @@ export function useTrafficData() {
     await updateCycle(id, { active: !cycle.active });
   };
 
-  // CRUD for Cycle Tasks (templates)
+  // CRUD for Routines
+  const addRoutine = async (routine: {
+    cycle_id: string;
+    name: string;
+    frequency: RoutineFrequency;
+    description?: string;
+  }) => {
+    const { data, error } = await supabase
+      .from('traffic_cycle_routines')
+      .insert([routine])
+      .select()
+      .single();
+    if (error) {
+      console.error('Error adding routine:', error);
+      return { data: null, error: error.message };
+    }
+    setRoutines((prev) => [...prev, data as TrafficCycleRoutine]);
+    return { data: data as TrafficCycleRoutine, error: null };
+  };
+
+  const updateRoutine = async (id: string, updates: Partial<TrafficCycleRoutine>) => {
+    const { data, error } = await supabase
+      .from('traffic_cycle_routines')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) {
+      console.error('Error updating routine:', error);
+      return { data: null, error: error.message };
+    }
+    setRoutines((prev) => prev.map((r) => (r.id === id ? (data as TrafficCycleRoutine) : r)));
+    return { data: data as TrafficCycleRoutine, error: null };
+  };
+
+  const deleteRoutine = async (id: string) => {
+    const { error } = await supabase.from('traffic_cycle_routines').delete().eq('id', id);
+    if (error) {
+      console.error('Error deleting routine:', error);
+      return { error: error.message };
+    }
+    setRoutines((prev) => prev.filter((r) => r.id !== id));
+    return { error: null };
+  };
+
+  const toggleRoutineActive = async (id: string) => {
+    const routine = routines.find((r) => r.id === id);
+    if (!routine) return;
+    await updateRoutine(id, { active: !routine.active });
+  };
+
+  // CRUD for Routine Tasks
+  const addRoutineTask = async (
+    task: Omit<TrafficRoutineTask, 'id' | 'created_at' | 'updated_at'>
+  ) => {
+    const { data, error } = await supabase
+      .from('traffic_routine_tasks')
+      .insert([task])
+      .select()
+      .single();
+    if (error) {
+      console.error('Error adding routine task:', error);
+      return { data: null, error: error.message };
+    }
+    setRoutineTasks((prev) =>
+      [...prev, data as TrafficRoutineTask].sort((a, b) => a.task_order - b.task_order)
+    );
+    return { data: data as TrafficRoutineTask, error: null };
+  };
+
+  const updateRoutineTask = async (id: string, updates: Partial<TrafficRoutineTask>) => {
+    const { data, error } = await supabase
+      .from('traffic_routine_tasks')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) {
+      console.error('Error updating routine task:', error);
+      return { data: null, error: error.message };
+    }
+    setRoutineTasks((prev) =>
+      prev.map((t) => (t.id === id ? (data as TrafficRoutineTask) : t)).sort((a, b) => a.task_order - b.task_order)
+    );
+    return { data: data as TrafficRoutineTask, error: null };
+  };
+
+  const deleteRoutineTask = async (id: string) => {
+    const { error } = await supabase.from('traffic_routine_tasks').delete().eq('id', id);
+    if (error) {
+      console.error('Error deleting routine task:', error);
+      return { error: error.message };
+    }
+    setRoutineTasks((prev) => prev.filter((t) => t.id !== id));
+    return { error: null };
+  };
+
+  // CRUD for Cycle Tasks (legacy)
   const addCycleTask = async (
     task: Omit<TrafficCycleTask, 'id' | 'created_at' | 'updated_at'>
   ) => {
@@ -262,10 +387,34 @@ export function useTrafficData() {
       return { success: false, error: periodResult.error };
     }
 
-    // Get tasks for this cycle
-    const cycleTaskTemplates = cycleTasks.filter((t) => t.cycle_id === cycleId && t.active);
+    // Get routines for this cycle
+    const cycleRoutines = routines.filter((r) => r.cycle_id === cycleId && r.active);
 
-    // Generate tasks
+    // Generate tasks from routine tasks
+    for (const routine of cycleRoutines) {
+      const routineTaskTemplates = routineTasks.filter((t) => t.routine_id === routine.id && t.active);
+
+      for (const template of routineTaskTemplates) {
+        const dueDate = new Date(today.getTime() + template.due_offset_days * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0];
+
+        await addTrafficTask({
+          client_id: clientId,
+          period_id: periodResult.data.id,
+          title: template.title,
+          details: template.details,
+          status: 'todo',
+          priority: template.default_priority,
+          due_date: dueDate,
+          assignee_id: assigneeId,
+          routine_id: routine.id,
+        });
+      }
+    }
+
+    // Also generate from legacy cycle tasks (if any)
+    const cycleTaskTemplates = cycleTasks.filter((t) => t.cycle_id === cycleId && t.active);
     for (const template of cycleTaskTemplates) {
       const dueDate = new Date(today.getTime() + template.due_offset_days * 24 * 60 * 60 * 1000)
         .toISOString()
@@ -280,6 +429,7 @@ export function useTrafficData() {
         priority: template.default_priority,
         due_date: dueDate,
         assignee_id: assigneeId,
+        routine_id: null,
       });
     }
 
@@ -292,6 +442,12 @@ export function useTrafficData() {
   // Getters
   const getCycleById = (id: string | null) => cycles.find((c) => c.id === id);
   const getActiveCycles = () => cycles.filter((c) => c.active);
+  const getRoutinesByCycle = (cycleId: string) => routines.filter((r) => r.cycle_id === cycleId);
+  const getActiveRoutinesByCycle = (cycleId: string) =>
+    routines.filter((r) => r.cycle_id === cycleId && r.active);
+  const getRoutineById = (id: string | null) => routines.find((r) => r.id === id);
+  const getRoutineTasksByRoutine = (routineId: string) =>
+    routineTasks.filter((t) => t.routine_id === routineId).sort((a, b) => a.task_order - b.task_order);
   const getCycleTasksByCycle = (cycleId: string) =>
     cycleTasks.filter((t) => t.cycle_id === cycleId).sort((a, b) => a.task_order - b.task_order);
   const getPeriodsByClient = (clientId: string) => periods.filter((p) => p.client_id === clientId);
@@ -300,6 +456,7 @@ export function useTrafficData() {
   const getTasksByPeriod = (periodId: string) => tasks.filter((t) => t.period_id === periodId);
   const getTasksByClient = (clientId: string) => tasks.filter((t) => t.client_id === clientId);
   const getTasksByAssignee = (assigneeId: string) => tasks.filter((t) => t.assignee_id === assigneeId);
+  const getTasksByRoutine = (routineId: string) => tasks.filter((t) => t.routine_id === routineId);
 
   // Metrics
   const today = new Date().toISOString().split('T')[0];
@@ -310,6 +467,8 @@ export function useTrafficData() {
 
   return {
     cycles,
+    routines,
+    routineTasks,
     cycleTasks,
     periods,
     tasks,
@@ -319,7 +478,16 @@ export function useTrafficData() {
     updateCycle,
     deleteCycle,
     toggleCycleActive,
-    // Cycle Task CRUD
+    // Routine CRUD
+    addRoutine,
+    updateRoutine,
+    deleteRoutine,
+    toggleRoutineActive,
+    // Routine Task CRUD
+    addRoutineTask,
+    updateRoutineTask,
+    deleteRoutineTask,
+    // Cycle Task CRUD (legacy)
     addCycleTask,
     updateCycleTask,
     deleteCycleTask,
@@ -335,12 +503,17 @@ export function useTrafficData() {
     // Getters
     getCycleById,
     getActiveCycles,
+    getRoutinesByCycle,
+    getActiveRoutinesByCycle,
+    getRoutineById,
+    getRoutineTasksByRoutine,
     getCycleTasksByCycle,
     getPeriodsByClient,
     getActivePeriodByClient,
     getTasksByPeriod,
     getTasksByClient,
     getTasksByAssignee,
+    getTasksByRoutine,
     // Metrics
     overdueTasks,
     todayTasks,
