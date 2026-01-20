@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Loader2, RefreshCw } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, RefreshCw, Layers } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,7 @@ import { useTraffic } from '@/contexts/TrafficContext';
 import { Link } from 'react-router-dom';
 
 export default function TrafficCyclesPage() {
-  const { cycles, loading, addCycle, updateCycle, deleteCycle, toggleCycleActive, getCycleTasksByCycle } = useTraffic();
+  const { cycles, loading, addCycle, updateCycle, deleteCycle, toggleCycleActive, getRoutinesByCycle } = useTraffic();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -89,7 +89,7 @@ export default function TrafficCyclesPage() {
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-base">Lista de Ciclos</CardTitle>
-            <CardDescription>Cada ciclo define a frequência das tarefas de tráfego.</CardDescription>
+            <CardDescription>Cada ciclo contém rotinas com tarefas padronizadas.</CardDescription>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
@@ -118,14 +118,14 @@ export default function TrafficCyclesPage() {
                 <TableRow>
                   <TableHead>Nome</TableHead>
                   <TableHead>Cadência</TableHead>
-                  <TableHead>Tarefas</TableHead>
+                  <TableHead>Rotinas</TableHead>
                   <TableHead className="w-[100px]">Ativo</TableHead>
                   <TableHead className="w-[150px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredCycles.map((cycle) => {
-                  const tasksCount = getCycleTasksByCycle(cycle.id).length;
+                  const routinesCount = getRoutinesByCycle(cycle.id).length;
                   return (
                     <TableRow key={cycle.id}>
                       <TableCell>
@@ -139,10 +139,11 @@ export default function TrafficCyclesPage() {
                       <TableCell>{cycle.cadence_days} dias</TableCell>
                       <TableCell>
                         <Link
-                          to={`/settings/traffic/cycle-tasks?cycle=${cycle.id}`}
-                          className="text-primary hover:underline"
+                          to={`/settings/traffic/routines?cycle=${cycle.id}`}
+                          className="text-primary hover:underline flex items-center gap-1"
                         >
-                          {tasksCount} tarefas
+                          <Layers className="h-3 w-3" />
+                          {routinesCount} rotinas
                         </Link>
                       </TableCell>
                       <TableCell>

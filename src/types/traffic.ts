@@ -9,7 +9,33 @@ export interface TrafficCycle {
   updated_at: string;
 }
 
-// Cycle Task Templates
+// Cycle Routines (with frequency)
+export interface TrafficCycleRoutine {
+  id: string;
+  cycle_id: string;
+  name: string;
+  frequency: RoutineFrequency;
+  description: string | null;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Routine Task Templates
+export interface TrafficRoutineTask {
+  id: string;
+  routine_id: string;
+  title: string;
+  details: string | null;
+  default_priority: TrafficPriority;
+  due_offset_days: number;
+  task_order: number;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Legacy Cycle Task Templates (kept for backwards compatibility)
 export interface TrafficCycleTask {
   id: string;
   cycle_id: string;
@@ -46,13 +72,23 @@ export interface TrafficTask {
   priority: TrafficPriority;
   due_date: string | null;
   assignee_id: string | null;
+  routine_id: string | null;
   created_at: string;
   updated_at: string;
 }
 
+export type RoutineFrequency = 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly';
 export type TrafficPriority = 'low' | 'medium' | 'high' | 'urgent';
 export type TrafficPeriodStatus = 'active' | 'closed';
 export type TrafficTaskStatus = 'todo' | 'doing' | 'done';
+
+export const ROUTINE_FREQUENCY_OPTIONS: { value: RoutineFrequency; label: string }[] = [
+  { value: 'daily', label: 'Diária' },
+  { value: 'weekly', label: 'Semanal' },
+  { value: 'biweekly', label: 'Quinzenal' },
+  { value: 'monthly', label: 'Mensal' },
+  { value: 'quarterly', label: 'Trimestral' },
+];
 
 export const TRAFFIC_PRIORITY_OPTIONS: { value: TrafficPriority; label: string }[] = [
   { value: 'low', label: 'Baixa' },
