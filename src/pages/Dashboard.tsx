@@ -48,10 +48,10 @@ export default function Dashboard() {
           description="Total de clientes com status ativo"
         />
         <StatsCard
-          title="MRR Total"
+          title="Receita Mensal (Ativos)"
           value={formatCurrency(totalMrr)}
           icon={DollarSign}
-          description="Receita recorrente mensal"
+          description="Soma do valor mensal dos clientes ativos"
         />
         <StatsCard
           title="Ticket Médio"
