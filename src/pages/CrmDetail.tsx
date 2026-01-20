@@ -8,9 +8,9 @@ import { AccountStatusBadge, ContractStatusBadge, TaskStatusBadge } from '@/comp
 import { ContractForm } from '@/components/crm/ContractForm';
 import { TaskForm } from '@/components/crm/TaskForm';
 import { AccountForm } from '@/components/crm/AccountForm';
+import { ClientDeliverables } from '@/components/crm/ClientDeliverables';
 import { useCrm } from '@/contexts/CrmContext';
 import { Contract, Task, ContractStatus, TaskStatus, Account } from '@/types/crm';
-
 export default function CrmDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -140,7 +140,7 @@ export default function CrmDetail() {
       </div>
 
       {/* Cards de Resumo */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {/* Contrato */}
         <Card>
           <CardHeader className="pb-2">
@@ -231,6 +231,9 @@ export default function CrmDetail() {
             )}
           </CardContent>
         </Card>
+
+        {/* Entregas do Plano */}
+        <ClientDeliverables serviceId={account.service_id} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

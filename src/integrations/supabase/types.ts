@@ -429,6 +429,30 @@ export type Database = {
           },
         ]
       }
+      deliverables: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          unit: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          unit?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          unit?: string | null
+        }
+        Relationships: []
+      }
       job_roles: {
         Row: {
           created_at: string
@@ -502,6 +526,48 @@ export type Database = {
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "content_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_deliverables: {
+        Row: {
+          created_at: string
+          deliverable_id: string
+          id: string
+          notes: string | null
+          quantity: number
+          service_id: string
+        }
+        Insert: {
+          created_at?: string
+          deliverable_id: string
+          id?: string
+          notes?: string | null
+          quantity?: number
+          service_id: string
+        }
+        Update: {
+          created_at?: string
+          deliverable_id?: string
+          id?: string
+          notes?: string | null
+          quantity?: number
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_deliverables_deliverable_id_fkey"
+            columns: ["deliverable_id"]
+            isOneToOne: false
+            referencedRelation: "deliverables"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_deliverables_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
             referencedColumns: ["id"]
           },
         ]

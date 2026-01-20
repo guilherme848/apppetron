@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings as SettingsIcon, Briefcase, Layers, Target, GitBranch, Plus, Pencil, Trash2, Loader2, Info, Users } from 'lucide-react';
+import { Settings as SettingsIcon, Briefcase, Layers, Target, GitBranch, Plus, Pencil, Trash2, Loader2, Info, Users, Package } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import { useStageResponsibilities } from '@/hooks/useStageResponsibilities';
 import { BATCH_STATUS_OPTIONS } from '@/types/contentProduction';
 import { useSearchParams } from 'react-router-dom';
 import { TeamMembersTab } from '@/components/settings/TeamMembersTab';
+import { DeliverablesTab } from '@/components/settings/DeliverablesTab';
 
 const VARIABLE_STAGES = ['production', 'changes'];
 
@@ -40,7 +41,7 @@ export default function Settings() {
         onValueChange={(value) => setSearchParams({ tab: value })}
         className="space-y-4"
       >
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="pipeline" className="flex items-center gap-2">
             <GitBranch className="h-4 w-4" />
             Pipeline
@@ -60,6 +61,10 @@ export default function Settings() {
           <TabsTrigger value="niches" className="flex items-center gap-2">
             <Target className="h-4 w-4" />
             Nichos
+          </TabsTrigger>
+          <TabsTrigger value="deliverables" className="flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            Entregas
           </TabsTrigger>
         </TabsList>
 
@@ -81,6 +86,10 @@ export default function Settings() {
 
         <TabsContent value="niches">
           <NichesTab />
+        </TabsContent>
+
+        <TabsContent value="deliverables">
+          <DeliverablesTab />
         </TabsContent>
       </Tabs>
     </div>
