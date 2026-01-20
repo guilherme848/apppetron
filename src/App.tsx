@@ -18,8 +18,18 @@ import ContentProduction from "./pages/ContentProduction";
 import ContentTasks from "./pages/ContentTasks";
 import BatchDetail from "./pages/BatchDetail";
 import PostDetail from "./pages/PostDetail";
-import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+
+// Settings pages
+import { SettingsLayout } from "./pages/settings/SettingsLayout";
+import SettingsHome from "./pages/settings/SettingsHome";
+import RolesPage from "./pages/settings/RolesPage";
+import UsersPage from "./pages/settings/UsersPage";
+import PermissionsPage from "./pages/settings/PermissionsPage";
+import ServicesPage from "./pages/settings/ServicesPage";
+import DeliverablesPage from "./pages/settings/DeliverablesPage";
+import PipelinePage from "./pages/settings/PipelinePage";
+import NichesPage from "./pages/settings/NichesPage";
 
 const queryClient = new QueryClient();
 
@@ -45,12 +55,25 @@ const App = () => (
                     <Route path="/content/production/:id" element={<BatchDetail />} />
                     <Route path="/content/production/:batchId/posts/:postId" element={<PostDetail />} />
                     <Route path="/content/tasks" element={<ContentTasks />} />
-                    <Route path="/settings" element={<Settings />} />
+                    
+                    {/* Settings with nested routes */}
+                    <Route path="/settings" element={<SettingsLayout />}>
+                      <Route index element={<SettingsHome />} />
+                      <Route path="access/roles" element={<RolesPage />} />
+                      <Route path="access/users" element={<UsersPage />} />
+                      <Route path="access/permissions" element={<PermissionsPage />} />
+                      <Route path="plans/services" element={<ServicesPage />} />
+                      <Route path="plans/deliverables" element={<DeliverablesPage />} />
+                      <Route path="general/pipeline" element={<PipelinePage />} />
+                      <Route path="general/niches" element={<NichesPage />} />
+                    </Route>
+                    
                     {/* Redirects from old routes */}
-                    <Route path="/settings/services" element={<Navigate to="/settings?tab=services" replace />} />
-                    <Route path="/settings/niches" element={<Navigate to="/settings?tab=niches" replace />} />
-                    <Route path="/settings/roles" element={<Navigate to="/settings?tab=roles" replace />} />
-                    <Route path="/content/settings/stages" element={<Navigate to="/settings?tab=pipeline" replace />} />
+                    <Route path="/settings/services" element={<Navigate to="/settings/plans/services" replace />} />
+                    <Route path="/settings/niches" element={<Navigate to="/settings/general/niches" replace />} />
+                    <Route path="/settings/roles" element={<Navigate to="/settings/access/roles" replace />} />
+                    <Route path="/content/settings/stages" element={<Navigate to="/settings/general/pipeline" replace />} />
+                    
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </AppLayout>
