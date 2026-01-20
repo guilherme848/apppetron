@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2, Loader2, Save } from 'lucide-react';
+import { ArrowLeft, Trash2, Loader2, Save, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,18 +14,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { useContentProduction } from '@/contexts/ContentProductionContext';
 import { FileUpload } from '@/components/content/FileUpload';
 import { CHANNEL_OPTIONS, FORMAT_OPTIONS, POST_STATUS_OPTIONS, PostStatus, PostAttachment, ITEM_TYPE_OPTIONS, ItemType } from '@/types/contentProduction';
-import { useJobRoles } from '@/hooks/useJobRoles';
-import { useStageResponsibilities } from '@/hooks/useStageResponsibilities';
+import { RESPONSIBLE_ROLE_OPTIONS, ResponsibleRoleKey } from '@/types/crm';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { Badge } from '@/components/ui/badge';
 import { format as formatDate } from 'date-fns';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function PostDetail() {
   const { batchId, postId } = useParams<{ batchId: string; postId: string }>();
   const navigate = useNavigate();
   const { batches, posts, accounts, loading, updatePost, deletePost, fetchPosts } = useContentProduction();
-  const { roles, getRoleById, getRoleByName } = useJobRoles();
-  const { getRoleForStage } = useStageResponsibilities();
   const { getActiveMembers, getMemberById } = useTeamMembers();
 
   const [title, setTitle] = useState('');
@@ -35,14 +33,16 @@ export default function PostDetail() {
   const [briefing, setBriefing] = useState('');
   const [caption, setCaption] = useState('');
   const [itemType, setItemType] = useState<ItemType | ''>('');
-  const [responsibleRoleId, setResponsibleRoleId] = useState<string>('');
+  const [responsibleRoleKey, setResponsibleRoleKey] = useState<ResponsibleRoleKey>('social');
   const [assigneeId, setAssigneeId] = useState<string>('');
   const [saving, setSaving] = useState(false);
   const [attachments, setAttachments] = useState<PostAttachment[]>([]);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
+  const [showTeamWarning, setShowTeamWarning] = useState(false);
 
   const batch = batches.find((b) => b.id === batchId);
   const post = posts.find((p) => p.id === postId);
+  const client = batch ? accounts.find((a) => a.id === batch.client_id) : null;
 
   const fetchAttachments = useCallback(async () => {
     if (!postId) return;
@@ -81,18 +81,46 @@ export default function PostDetail() {
       setBriefing(post.briefing || '');
       setCaption(post.caption || '');
       setItemType((post.item_type as ItemType) || '');
-      setResponsibleRoleId(post.responsible_role_id || '');
+      // Use responsible_role_key from database, fallback to 'social'
+      const roleKey = (post as any).responsible_role_key as ResponsibleRoleKey || 'social';
+      setResponsibleRoleKey(roleKey);
       setAssigneeId(post.assignee_id || '');
     }
   }, [post]);
 
-  // Stages where responsible is variable (editable per post)
-  const VARIABLE_STAGES = ['production', 'changes'];
-  const isVariableStage = batch ? VARIABLE_STAGES.includes(batch.status) : false;
+  // Auto-assign based on role when post loads without assignee or when role changes
+  const getAssigneeFromRole = useCallback((roleKey: ResponsibleRoleKey): string | null => {
+    if (!client) return null;
+    const roleOption = RESPONSIBLE_ROLE_OPTIONS.find(o => o.value === roleKey);
+    if (!roleOption) return null;
+    const memberId = (client as any)[roleOption.field] as string | null;
+    return memberId || null;
+  }, [client]);
 
-  // Get planning stage responsible
-  const planningResponsibleId = getRoleForStage('planning');
-  const planningResponsibleName = planningResponsibleId ? getRoleById(planningResponsibleId)?.name : null;
+  // Auto-assign when role changes
+  const handleRoleChange = (newRoleKey: ResponsibleRoleKey) => {
+    setResponsibleRoleKey(newRoleKey);
+    const autoAssignee = getAssigneeFromRole(newRoleKey);
+    if (autoAssignee) {
+      setAssigneeId(autoAssignee);
+      setShowTeamWarning(false);
+    } else {
+      setShowTeamWarning(true);
+    }
+  };
+
+  // Re-apply auto-assignment
+  const handleReapplyAssignment = () => {
+    const autoAssignee = getAssigneeFromRole(responsibleRoleKey);
+    if (autoAssignee) {
+      setAssigneeId(autoAssignee);
+      setShowTeamWarning(false);
+      toast.success('Responsável atribuído automaticamente');
+    } else {
+      setShowTeamWarning(true);
+      toast.warning('Configure o Time da Conta para este cargo');
+    }
+  };
 
   if (loading) {
     return (
@@ -128,11 +156,6 @@ export default function PostDetail() {
 
     setSaving(true);
     
-    // Use responsible based on stage type
-    const finalResponsible = isVariableStage 
-      ? (responsibleRoleId || null)
-      : (responsibleRoleId || planningResponsibleId || null);
-    
     await updatePost(post.id, {
       title: title.trim(),
       channel: channel || null,
@@ -141,9 +164,9 @@ export default function PostDetail() {
       briefing: briefing || null,
       caption: caption || null,
       item_type: itemType || null,
-      responsible_role_id: finalResponsible,
+      responsible_role_key: responsibleRoleKey,
       assignee_id: assigneeId || null,
-    });
+    } as any); // Using any because responsible_role_key is new
     setSaving(false);
     toast.success('Post salvo com sucesso');
   };
@@ -331,43 +354,46 @@ export default function PostDetail() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Responsável</Label>
-                  {isVariableStage ? (
-                    <Select value={responsibleRoleId || '_none_'} onValueChange={(v) => setResponsibleRoleId(v === '_none_' ? '' : v)}>
-                      <SelectTrigger className={`bg-background ${!responsibleRoleId ? 'border-yellow-500' : ''}`}>
-                        <SelectValue placeholder="Selecione" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover z-50">
-                        <SelectItem value="_none_">-</SelectItem>
-                        {roles.map((role) => (
-                          <SelectItem key={role.id} value={role.id}>
-                            {role.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <div className="h-10 flex items-center px-3 border rounded-md bg-muted">
-                      {responsibleRoleId ? (
-                        <Badge variant="outline">{getRoleById(responsibleRoleId)?.name}</Badge>
-                      ) : planningResponsibleName ? (
-                        <Badge variant="outline">{planningResponsibleName}</Badge>
-                      ) : (
-                        <span className="text-yellow-600 dark:text-yellow-400">Não definido</span>
-                      )}
-                    </div>
-                  )}
-                  {!responsibleRoleId && !planningResponsibleId && (
-                    <p className="text-xs text-yellow-600 dark:text-yellow-400">
-                      ⚠️ Post sem responsável atribuído
-                    </p>
-                  )}
+                  <Label>Cargo Responsável</Label>
+                  <Select value={responsibleRoleKey} onValueChange={(v) => handleRoleChange(v as ResponsibleRoleKey)}>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      {RESPONSIBLE_ROLE_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
+              
+              {showTeamWarning && (
+                <Alert variant="destructive" className="py-2">
+                  <AlertDescription className="text-sm">
+                    ⚠️ O cargo "{RESPONSIBLE_ROLE_OPTIONS.find(o => o.value === responsibleRoleKey)?.label}" não está configurado no Time da Conta deste cliente.
+                  </AlertDescription>
+                </Alert>
+              )}
+              
               <div className="space-y-2">
-                <Label>Responsável (Usuário)</Label>
+                <div className="flex items-center justify-between">
+                  <Label>Responsável (Usuário)</Label>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleReapplyAssignment}
+                    className="h-6 text-xs"
+                  >
+                    <RefreshCw className="h-3 w-3 mr-1" />
+                    Reaplicar pelo cargo
+                  </Button>
+                </div>
                 <Select value={assigneeId || '_none_'} onValueChange={(v) => setAssigneeId(v === '_none_' ? '' : v)}>
-                  <SelectTrigger className={`bg-background ${!assigneeId ? 'border-yellow-500' : ''}`}>
+                  <SelectTrigger className={`bg-background ${!assigneeId ? 'border-warning' : ''}`}>
                     <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
                   <SelectContent className="bg-popover z-50">
@@ -380,7 +406,7 @@ export default function PostDetail() {
                   </SelectContent>
                 </Select>
                 {!assigneeId && (
-                  <p className="text-xs text-yellow-600 dark:text-yellow-400">
+                  <p className="text-xs text-muted-foreground">
                     ⚠️ Post sem usuário responsável
                   </p>
                 )}
