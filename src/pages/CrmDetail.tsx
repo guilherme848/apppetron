@@ -9,6 +9,7 @@ import { ContractForm } from '@/components/crm/ContractForm';
 import { TaskForm } from '@/components/crm/TaskForm';
 import { AccountForm } from '@/components/crm/AccountForm';
 import { ClientDeliverables } from '@/components/crm/ClientDeliverables';
+import { AccountTeamCard } from '@/components/crm/AccountTeamCard';
 import { useCrm } from '@/contexts/CrmContext';
 import { Contract, Task, ContractStatus, TaskStatus, Account } from '@/types/crm';
 export default function CrmDetail() {
@@ -89,6 +90,10 @@ export default function CrmDetail() {
     await updateAccount(id!, data);
   };
 
+  const handleTeamUpdate = async (field: keyof Account, value: string | null) => {
+    await updateAccount(id!, { [field]: value });
+  };
+
   const handleContractSubmit = async (data: { mrr: number; start_date: string; status: ContractStatus; account_id: string }) => {
     if (editingContract) {
       await updateContract(editingContract.id, data);
@@ -140,7 +145,9 @@ export default function CrmDetail() {
       </div>
 
       {/* Cards de Resumo */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* Time da Conta */}
+        <AccountTeamCard account={account} onUpdate={handleTeamUpdate} />
         {/* Contrato */}
         <Card>
           <CardHeader className="pb-2">

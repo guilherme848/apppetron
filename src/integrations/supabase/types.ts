@@ -25,6 +25,8 @@ export type Database = {
           country: string | null
           cpf_cnpj: string | null
           created_at: string
+          cs_member_id: string | null
+          designer_member_id: string | null
           id: string
           monthly_value: number | null
           name: string
@@ -34,12 +36,16 @@ export type Database = {
           postal_code: string | null
           service_contracted: string | null
           service_id: string | null
+          social_member_id: string | null
           start_date: string | null
           state: string | null
           status: string
           street: string | null
           street_number: string | null
+          support_member_id: string | null
+          traffic_member_id: string | null
           updated_at: string | null
+          videomaker_member_id: string | null
           website: string | null
         }
         Insert: {
@@ -52,6 +58,8 @@ export type Database = {
           country?: string | null
           cpf_cnpj?: string | null
           created_at?: string
+          cs_member_id?: string | null
+          designer_member_id?: string | null
           id?: string
           monthly_value?: number | null
           name: string
@@ -61,12 +69,16 @@ export type Database = {
           postal_code?: string | null
           service_contracted?: string | null
           service_id?: string | null
+          social_member_id?: string | null
           start_date?: string | null
           state?: string | null
           status?: string
           street?: string | null
           street_number?: string | null
+          support_member_id?: string | null
+          traffic_member_id?: string | null
           updated_at?: string | null
+          videomaker_member_id?: string | null
           website?: string | null
         }
         Update: {
@@ -79,6 +91,8 @@ export type Database = {
           country?: string | null
           cpf_cnpj?: string | null
           created_at?: string
+          cs_member_id?: string | null
+          designer_member_id?: string | null
           id?: string
           monthly_value?: number | null
           name?: string
@@ -88,15 +102,33 @@ export type Database = {
           postal_code?: string | null
           service_contracted?: string | null
           service_id?: string | null
+          social_member_id?: string | null
           start_date?: string | null
           state?: string | null
           status?: string
           street?: string | null
           street_number?: string | null
+          support_member_id?: string | null
+          traffic_member_id?: string | null
           updated_at?: string | null
+          videomaker_member_id?: string | null
           website?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "accounts_cs_member_id_fkey"
+            columns: ["cs_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_designer_member_id_fkey"
+            columns: ["designer_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "accounts_niche_id_fkey"
             columns: ["niche_id"]
@@ -109,6 +141,34 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_social_member_id_fkey"
+            columns: ["social_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_support_member_id_fkey"
+            columns: ["support_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_traffic_member_id_fkey"
+            columns: ["traffic_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_videomaker_member_id_fkey"
+            columns: ["videomaker_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
             referencedColumns: ["id"]
           },
         ]
@@ -276,6 +336,7 @@ export type Database = {
           id: string
           item_type: string | null
           responsible_role_id: string | null
+          responsible_role_key: string | null
           status: string
           title: string
           updated_at: string
@@ -292,6 +353,7 @@ export type Database = {
           id?: string
           item_type?: string | null
           responsible_role_id?: string | null
+          responsible_role_key?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -308,6 +370,7 @@ export type Database = {
           id?: string
           item_type?: string | null
           responsible_role_id?: string | null
+          responsible_role_key?: string | null
           status?: string
           title?: string
           updated_at?: string

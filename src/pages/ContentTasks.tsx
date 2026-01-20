@@ -11,6 +11,7 @@ import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { POST_STATUS_OPTIONS, ITEM_TYPE_OPTIONS, BATCH_STATUS_OPTIONS, PostStatus, ItemType } from '@/types/contentProduction';
+import { RESPONSIBLE_ROLE_OPTIONS, ResponsibleRoleKey } from '@/types/crm';
 import { format, isBefore, startOfDay } from 'date-fns';
 
 interface ConsolidatedTask {
@@ -18,6 +19,7 @@ interface ConsolidatedTask {
   post_title: string;
   post_status: PostStatus;
   item_type: ItemType | null;
+  responsible_role_key: ResponsibleRoleKey | null;
   assignee_id: string | null;
   assignee_name: string | null;
   due_date: string | null;
@@ -45,6 +47,7 @@ export default function ContentTasks() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterItemType, setFilterItemType] = useState<string>('all');
   const [filterClient, setFilterClient] = useState<string>('all');
+  const [filterRoleKey, setFilterRoleKey] = useState<string>('all');
   const [search, setSearch] = useState('');
 
   const fetchTasks = useCallback(async () => {
@@ -58,6 +61,7 @@ export default function ContentTasks() {
         title,
         status,
         item_type,
+        responsible_role_key,
         assignee_id,
         batch_id,
         content_batches!left (
@@ -90,6 +94,7 @@ export default function ContentTasks() {
         post_title: post.title,
         post_status: post.status as PostStatus,
         item_type: post.item_type as ItemType | null,
+        responsible_role_key: post.responsible_role_key as ResponsibleRoleKey | null,
         assignee_id: post.assignee_id,
         assignee_name: null, // Will be filled from team members
         due_date: batch?.planning_due_date || null,
@@ -152,6 +157,11 @@ export default function ContentTasks() {
       result = result.filter((t) => t.client_id === filterClient);
     }
 
+    // Filter by role key
+    if (filterRoleKey !== 'all') {
+      result = result.filter((t) => t.responsible_role_key === filterRoleKey);
+    }
+
     // Filter by search
     if (search.trim()) {
       const searchLower = search.toLowerCase();
@@ -174,7 +184,12 @@ export default function ContentTasks() {
       const statusOrder = { todo: 0, doing: 1, done: 2 };
       return (statusOrder[a.post_status] || 0) - (statusOrder[b.post_status] || 0);
     });
-  }, [tasksWithAssignees, filterAssignee, filterStatus, filterItemType, filterClient, search]);
+  }, [tasksWithAssignees, filterAssignee, filterStatus, filterItemType, filterClient, filterRoleKey, search]);
+
+  const getRoleLabel = (roleKey: ResponsibleRoleKey | null) => {
+    if (!roleKey) return null;
+    return RESPONSIBLE_ROLE_OPTIONS.find(o => o.value === roleKey)?.label || roleKey;
+  };
 
   const isOverdue = (dueDate: string | null, status: PostStatus) => {
     if (!dueDate || status === 'done') return false;
@@ -229,7 +244,22 @@ export default function ContentTasks() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Cargo</label>
+              <Select value={filterRoleKey} onValueChange={setFilterRoleKey}>
+                <SelectTrigger className="bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50">
+                  <SelectItem value="all">Todos</SelectItem>
+                  {RESPONSIBLE_ROLE_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-1">
               <label className="text-xs font-medium text-muted-foreground">Responsável</label>
               <Select value={filterAssignee} onValueChange={setFilterAssignee}>
@@ -296,7 +326,7 @@ export default function ContentTasks() {
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar por título..."
+                  placeholder="Buscar..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-8"
