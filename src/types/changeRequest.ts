@@ -1,3 +1,6 @@
+import type { BadgeVariant } from '@/components/ui/badge';
+import { getChangeRequestStatusVariant } from '@/lib/badgeMaps';
+
 export type ChangeRequestStatus = 'open' | 'in_progress' | 'done' | 'canceled';
 
 export interface ContentChangeRequest {
@@ -14,9 +17,9 @@ export interface ContentChangeRequest {
   updated_at: string;
 }
 
-export const CHANGE_REQUEST_STATUS_OPTIONS: { value: ChangeRequestStatus; label: string; color: string }[] = [
-  { value: 'open', label: 'Aberta', color: 'bg-yellow-500' },
-  { value: 'in_progress', label: 'Em andamento', color: 'bg-blue-500' },
-  { value: 'done', label: 'Concluída', color: 'bg-green-500' },
-  { value: 'canceled', label: 'Cancelada', color: 'bg-gray-500' },
+export const CHANGE_REQUEST_STATUS_OPTIONS: { value: ChangeRequestStatus; label: string; variant: BadgeVariant }[] = [
+  { value: 'open', label: 'Aberta', variant: getChangeRequestStatusVariant('open') },
+  { value: 'in_progress', label: 'Em andamento', variant: getChangeRequestStatusVariant('in_progress') },
+  { value: 'done', label: 'Concluída', variant: getChangeRequestStatusVariant('done') },
+  { value: 'canceled', label: 'Cancelada', variant: getChangeRequestStatusVariant('canceled') },
 ];

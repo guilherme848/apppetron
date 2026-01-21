@@ -121,7 +121,7 @@ export function ChangeRequestsTab({
             <TabsTrigger value="list" className="flex items-center gap-1">
               Solicitações
               {openCount > 0 && (
-                <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">
+                <Badge variant="attention" className="ml-1 h-5 px-1.5 text-xs">
                   {openCount}
                 </Badge>
               )}
@@ -139,7 +139,7 @@ export function ChangeRequestsTab({
               </div>
             ) : requests.length === 0 ? (
               <div className="text-center py-8 border border-dashed rounded-lg">
-                <CheckCircle className="h-8 w-8 mx-auto text-green-500 mb-2" />
+                <CheckCircle className="h-8 w-8 mx-auto text-primary mb-2" />
                 <p className="text-sm text-muted-foreground">
                   Nenhuma solicitação de alteração
                 </p>
@@ -282,7 +282,7 @@ export function ChangeRequestsTab({
                 {selectedRequest.status === 'done' && selectedRequest.resolution_note_rich && (
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Nota de resolução:</Label>
-                    <div className="border rounded-lg bg-green-50 dark:bg-green-950">
+                    <div className="border rounded-lg bg-muted/50">
                       <RichTextViewer content={selectedRequest.resolution_note_rich} />
                     </div>
                   </div>

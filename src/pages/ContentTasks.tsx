@@ -13,6 +13,7 @@ import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { POST_STATUS_OPTIONS, ITEM_TYPE_OPTIONS, BATCH_STATUS_OPTIONS, PostStatus, ItemType } from '@/types/contentProduction';
 import { RESPONSIBLE_ROLE_OPTIONS, ResponsibleRoleKey } from '@/types/crm';
 import { EXTRA_REQUEST_STATUS_LABELS, ExtraRequestStatus } from '@/types/extraRequests';
+import { getRequestStatusVariant, getTaskStatusVariant } from '@/lib/badgeMaps';
 import { format, isBefore, startOfDay } from 'date-fns';
 
 type TaskType = 'post' | 'extra';
@@ -251,21 +252,12 @@ export default function ContentTasks() {
   const getStatusBadge = (status: string, type: TaskType) => {
     if (type === 'extra') {
       const label = EXTRA_REQUEST_STATUS_LABELS[status as ExtraRequestStatus] || status;
-      const variants: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
-        open: 'secondary',
-        in_progress: 'default',
-        done: 'outline',
-        canceled: 'outline',
-      };
-      return <Badge variant={variants[status] || 'secondary'}>{label}</Badge>;
+      const variant = getRequestStatusVariant(status);
+      return <Badge variant={variant}>{label}</Badge>;
     }
-    const variants: Record<PostStatus, 'default' | 'secondary' | 'outline'> = {
-      todo: 'secondary',
-      doing: 'default',
-      done: 'outline',
-    };
     const label = POST_STATUS_OPTIONS.find((o) => o.value === status)?.label || status;
-    return <Badge variant={variants[status as PostStatus] || 'secondary'}>{label}</Badge>;
+    const variant = getTaskStatusVariant(status);
+    return <Badge variant={variant}>{label}</Badge>;
   };
 
   const getBatchStatusLabel = (status: string) => {

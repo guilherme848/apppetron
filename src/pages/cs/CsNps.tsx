@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useCsNps } from '@/hooks/useCsData';
 import { CS_NPS_CLASSIFICATION_LABELS } from '@/types/cs';
+import { getNpsClassificationVariant } from '@/lib/badgeMaps';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -17,13 +18,8 @@ export default function CsNps() {
     );
   }
 
-  const getClassificationColor = (classification: string) => {
-    switch (classification) {
-      case 'promoter': return 'bg-green-500';
-      case 'passive': return 'bg-yellow-500';
-      case 'detractor': return 'bg-red-500';
-      default: return 'bg-muted';
-    }
+  const getClassificationVariant = (classification: string) => {
+    return getNpsClassificationVariant(classification);
   };
 
   return (
@@ -68,9 +64,12 @@ export default function CsNps() {
               {responses.map((response) => (
                 <div key={response.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${getClassificationColor(response.classification)}`}>
+                    <Badge 
+                      variant={getClassificationVariant(response.classification)} 
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
+                    >
                       {response.score}
-                    </div>
+                    </Badge>
                     <div>
                       <p className="font-medium">{response.client_name}</p>
                       <p className="text-sm text-muted-foreground">
@@ -78,7 +77,7 @@ export default function CsNps() {
                       </p>
                     </div>
                   </div>
-                  <Badge variant="outline">
+                  <Badge variant={getClassificationVariant(response.classification)}>
                     {CS_NPS_CLASSIFICATION_LABELS[response.classification]}
                   </Badge>
                 </div>

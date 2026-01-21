@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { useCreativeRequests } from '@/hooks/useCreativeRequests';
 import { useCrmData } from '@/hooks/useCrmData';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
+import { getRequestStatusVariant, getPriorityVariant } from '@/lib/badgeMaps';
 import {
   CREATIVE_REQUEST_STATUS_LABELS,
   CREATIVE_REQUEST_STATUS_OPTIONS,
@@ -74,25 +75,13 @@ export default function CreativeRequestsList() {
   });
 
   const getStatusBadge = (status: CreativeRequestStatus) => {
-    const variants: Record<CreativeRequestStatus, 'default' | 'secondary' | 'outline' | 'destructive'> = {
-      open: 'secondary',
-      in_progress: 'default',
-      ready_for_review: 'default',
-      approved: 'default',
-      done: 'outline',
-      canceled: 'outline',
-    };
-    return <Badge variant={variants[status]}>{CREATIVE_REQUEST_STATUS_LABELS[status]}</Badge>;
+    const variant = getRequestStatusVariant(status);
+    return <Badge variant={variant}>{CREATIVE_REQUEST_STATUS_LABELS[status]}</Badge>;
   };
 
   const getPriorityBadge = (priority: CreativeRequestPriority) => {
-    const classes: Record<CreativeRequestPriority, string> = {
-      low: 'bg-gray-400 text-white',
-      medium: 'bg-yellow-500 text-black',
-      high: 'bg-orange-500 text-white',
-      urgent: 'bg-red-500 text-white',
-    };
-    return <Badge className={classes[priority]}>{CREATIVE_REQUEST_PRIORITY_LABELS[priority]}</Badge>;
+    const variant = getPriorityVariant(priority);
+    return <Badge variant={variant}>{CREATIVE_REQUEST_PRIORITY_LABELS[priority]}</Badge>;
   };
 
   const formatDate = (date: string | null) => {
