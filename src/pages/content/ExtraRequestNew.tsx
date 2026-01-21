@@ -163,12 +163,12 @@ export default function ExtraRequestNew() {
 
               <div className="space-y-2">
                 <Label>Solicitado por (Usuário)</Label>
-                <Select value={requestedByMemberId} onValueChange={setRequestedByMemberId}>
+                <Select value={requestedByMemberId || 'none'} onValueChange={(v) => setRequestedByMemberId(v === 'none' ? '' : v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhum</SelectItem>
+                    <SelectItem value="none">Nenhum</SelectItem>
                     {activeMembers.map(m => (
                       <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
                     ))}
@@ -180,12 +180,12 @@ export default function ExtraRequestNew() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Cargo Responsável</Label>
-                <Select value={responsibleRoleKey} onValueChange={(v) => setResponsibleRoleKey(v as ExtraResponsibleRole)}>
+                <Select value={responsibleRoleKey || 'none'} onValueChange={(v) => setResponsibleRoleKey(v === 'none' ? '' : v as ExtraResponsibleRole)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o cargo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhum</SelectItem>
+                    <SelectItem value="none">Nenhum</SelectItem>
                     {Object.entries(EXTRA_RESPONSIBLE_ROLE_LABELS).map(([k, v]) => (
                       <SelectItem key={k} value={k}>{v}</SelectItem>
                     ))}
@@ -195,12 +195,12 @@ export default function ExtraRequestNew() {
 
               <div className="space-y-2">
                 <Label>Responsável</Label>
-                <Select value={assigneeId} onValueChange={setAssigneeId}>
+                <Select value={assigneeId || 'none'} onValueChange={(v) => setAssigneeId(v === 'none' ? '' : v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhum</SelectItem>
+                    <SelectItem value="none">Nenhum</SelectItem>
                     {activeMembers.map(m => (
                       <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
                     ))}
