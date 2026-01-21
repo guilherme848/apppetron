@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, CheckSquare, Layers, Settings, ListTodo, TrendingUp, BarChart3, HeartHandshake } from 'lucide-react';
+import { LayoutDashboard, Users, CheckSquare, Layers, Settings, ListTodo, TrendingUp, BarChart3, HeartHandshake, FileText } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
   Sidebar,
@@ -32,6 +32,7 @@ const crmItems: MenuItem[] = [
 const contentItems: MenuItem[] = [
   { title: 'Dashboard Produção', url: '/content/dashboard', icon: BarChart3, permission: 'view_content' },
   { title: 'Produção de Conteúdo', url: '/content/production', icon: Layers, permission: 'view_content' },
+  { title: 'Solicitações Extras', url: '/content/extra-requests', icon: FileText, permission: 'view_content' },
 ];
 
 const trafficItems: MenuItem[] = [

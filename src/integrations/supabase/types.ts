@@ -342,6 +342,123 @@ export type Database = {
           },
         ]
       }
+      content_extra_request_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          public_url: string | null
+          request_id: string
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          public_url?: string | null
+          request_id: string
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          public_url?: string | null
+          request_id?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_extra_request_files_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "content_extra_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_extra_requests: {
+        Row: {
+          assignee_id: string | null
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          due_date: string | null
+          id: string
+          month_ref: string
+          priority: string
+          request_rich: string | null
+          requested_by_member_id: string | null
+          requested_by_role_key: string
+          responsible_role_key: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          client_id: string
+          completed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          month_ref: string
+          priority?: string
+          request_rich?: string | null
+          requested_by_member_id?: string | null
+          requested_by_role_key: string
+          responsible_role_key?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string | null
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          month_ref?: string
+          priority?: string
+          request_rich?: string | null
+          requested_by_member_id?: string | null
+          requested_by_role_key?: string
+          responsible_role_key?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_extra_requests_assignee_id_fkey"
+            columns: ["assignee_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_extra_requests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_extra_requests_requested_by_member_id_fkey"
+            columns: ["requested_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_items: {
         Row: {
           brief: string | null
