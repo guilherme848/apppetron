@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Loader2, AlertTriangle, Archive, AlertCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,8 @@ import { Progress } from '@/components/ui/progress';
 import { useJobRoles } from '@/hooks/useJobRoles';
 import { useStageResponsibilities } from '@/hooks/useStageResponsibilities';
 import { SortablePostList } from '@/components/content/SortablePostList';
+import { SaveStatus } from '@/components/ui/save-status';
+import { useAutoSave, useAutoSaveNavigation } from '@/hooks/useAutoSave';
 import { BATCH_STATUS_OPTIONS, BatchStatus, BatchAttachment, ContentPost } from '@/types/contentProduction';
 
 export default function BatchDetail() {
@@ -28,6 +30,7 @@ export default function BatchDetail() {
   const { roles, getRoleById } = useJobRoles();
   const { responsibilities, getRoleForStage } = useStageResponsibilities();
 
+  const initialLoadComplete = useRef(false);
   const [notes, setNotes] = useState('');
   const [planningDueDate, setPlanningDueDate] = useState('');
   const [attachments, setAttachments] = useState<BatchAttachment[]>([]);
@@ -44,6 +47,21 @@ export default function BatchDetail() {
         return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       });
   }, [posts, id]);
+
+  // AutoSave setup
+  const handleSaveBatch = useCallback(async (data: Record<string, any>) => {
+    if (!batch) return;
+    await updateBatch(batch.id, data);
+  }, [batch, updateBatch]);
+
+  const { status: saveStatus, saveNow, saveDebounced, flush } = useAutoSave({
+    onSave: handleSaveBatch,
+    debounceMs: 600,
+    showToasts: false,
+  });
+
+  // Flush on navigation
+  useAutoSaveNavigation(flush);
 
   const fetchAttachments = useCallback(async () => {
     if (!id) return;
@@ -72,6 +90,9 @@ export default function BatchDetail() {
     if (batch) {
       setNotes(batch.notes || '');
       setPlanningDueDate(batch.planning_due_date || '');
+      setTimeout(() => {
+        initialLoadComplete.current = true;
+      }, 100);
     }
   }, [batch]);
 
@@ -121,18 +142,24 @@ export default function BatchDetail() {
   const totalCount = batchPosts.length;
   const progress = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
 
-  const handleNotesBlur = async () => {
-    if (notes !== batch.notes) {
-      await updateBatch(batch.id, { notes });
-      toast.success('Notas salvas');
+  // Autosave handlers
+  const handleNotesChange = (value: string) => {
+    setNotes(value);
+    if (initialLoadComplete.current) {
+      saveDebounced({ notes: value || null });
     }
   };
 
-  const handlePlanningDueDateBlur = async () => {
-    const newDate = planningDueDate || null;
-    if (newDate !== batch.planning_due_date) {
-      await updateBatch(batch.id, { planning_due_date: newDate } as any);
-      toast.success('Vencimento do planejamento salvo');
+  const handleNotesBlur = () => {
+    if (initialLoadComplete.current) {
+      saveNow({ notes: notes || null });
+    }
+  };
+
+  const handlePlanningDueDateChange = (value: string) => {
+    setPlanningDueDate(value);
+    if (initialLoadComplete.current) {
+      saveNow({ planning_due_date: value || null });
     }
   };
 
@@ -241,7 +268,8 @@ export default function BatchDetail() {
             <span className="text-xs text-muted-foreground">{doneCount}/{totalCount} concluídos ({progress}%)</span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <SaveStatus status={saveStatus} size="sm" onRetry={() => flush()} />
           <Select value={batch.status} onValueChange={handleStatusChange}>
             <SelectTrigger className="w-48 bg-background">
               <SelectValue />
@@ -308,8 +336,7 @@ export default function BatchDetail() {
             <Input
               type="date"
               value={planningDueDate}
-              onChange={(e) => setPlanningDueDate(e.target.value)}
-              onBlur={handlePlanningDueDateBlur}
+              onChange={(e) => handlePlanningDueDateChange(e.target.value)}
             />
           </CardContent>
         </Card>
@@ -320,7 +347,7 @@ export default function BatchDetail() {
           <CardContent>
             <Textarea
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={(e) => handleNotesChange(e.target.value)}
               onBlur={handleNotesBlur}
               placeholder="Observações sobre este pacote..."
               rows={2}

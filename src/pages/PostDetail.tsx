@@ -1,11 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2, Loader2, Save, RefreshCw, FileText, Paperclip, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Trash2, Loader2, RefreshCw, FileText, Paperclip, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -16,6 +15,8 @@ import { FileUpload } from '@/components/content/FileUpload';
 import { RichTextEditor } from '@/components/content/RichTextEditor';
 import { ContentFileUpload } from '@/components/content/ContentFileUpload';
 import { ChangeRequestsTab } from '@/components/content/ChangeRequestsTab';
+import { SaveStatus } from '@/components/ui/save-status';
+import { useAutoSave, useAutoSaveNavigation } from '@/hooks/useAutoSave';
 import { CHANNEL_OPTIONS, FORMAT_OPTIONS, POST_STATUS_OPTIONS, PostStatus, PostAttachment, ContentPostFile } from '@/types/contentProduction';
 import { RESPONSIBLE_ROLE_OPTIONS, ResponsibleRoleKey } from '@/types/crm';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
@@ -40,6 +41,9 @@ export default function PostDetail() {
     totalCount: totalChangeRequestsCount,
   } = useChangeRequests(postId);
 
+  // Track initial data load to avoid triggering saves on mount
+  const initialLoadComplete = useRef(false);
+
   // Basic post fields
   const [title, setTitle] = useState('');
   const [channel, setChannel] = useState('');
@@ -53,7 +57,6 @@ export default function PostDetail() {
   
   const [responsibleRoleKey, setResponsibleRoleKey] = useState<ResponsibleRoleKey>('social');
   const [assigneeId, setAssigneeId] = useState<string>('');
-  const [saving, setSaving] = useState(false);
   
   // Legacy post_attachments
   const [attachments, setAttachments] = useState<PostAttachment[]>([]);
@@ -68,6 +71,21 @@ export default function PostDetail() {
   const batch = batches.find((b) => b.id === batchId);
   const post = posts.find((p) => p.id === postId);
   const client = batch ? accounts.find((a) => a.id === batch.client_id) : null;
+
+  // AutoSave setup
+  const handleSavePost = useCallback(async (data: Record<string, any>) => {
+    if (!post) return;
+    await updatePost(post.id, data);
+  }, [post, updatePost]);
+
+  const { status: saveStatus, saveNow, saveDebounced, flush } = useAutoSave({
+    onSave: handleSavePost,
+    debounceMs: 600,
+    showToasts: false,
+  });
+
+  // Flush on navigation
+  useAutoSaveNavigation(flush);
 
   // Fetch legacy attachments
   const fetchAttachments = useCallback(async () => {
@@ -135,6 +153,11 @@ export default function PostDetail() {
       const roleKey = (post as any).responsible_role_key as ResponsibleRoleKey || 'social';
       setResponsibleRoleKey(roleKey);
       setAssigneeId(post.assignee_id || '');
+      
+      // Mark initial load complete after a short delay
+      setTimeout(() => {
+        initialLoadComplete.current = true;
+      }, 100);
     }
   }, [post]);
 
@@ -147,14 +170,66 @@ export default function PostDetail() {
     return memberId || null;
   }, [client]);
 
+  // Field change handlers with autosave
+  const handleTitleChange = (value: string) => {
+    setTitle(value);
+    if (initialLoadComplete.current) {
+      saveDebounced({ title: value.trim() });
+    }
+  };
+
+  const handleTitleBlur = () => {
+    if (initialLoadComplete.current && title.trim()) {
+      saveNow({ title: title.trim() });
+    }
+  };
+
+  const handleChannelChange = (value: string) => {
+    const newChannel = value === '_none_' ? '' : value;
+    setChannel(newChannel);
+    if (initialLoadComplete.current) {
+      saveNow({ channel: newChannel || null });
+    }
+  };
+
+  const handleFormatChange = (value: string) => {
+    const newFormat = value === '_none_' ? '' : value;
+    setFormat(newFormat);
+    if (initialLoadComplete.current) {
+      saveNow({ format: newFormat || null });
+    }
+  };
+
+  const handleStatusChange = (newStatus: PostStatus) => {
+    setStatus(newStatus);
+    if (initialLoadComplete.current) {
+      saveNow({ status: newStatus });
+    }
+  };
+
   const handleRoleChange = (newRoleKey: ResponsibleRoleKey) => {
     setResponsibleRoleKey(newRoleKey);
     const autoAssignee = getAssigneeFromRole(newRoleKey);
+    
     if (autoAssignee) {
       setAssigneeId(autoAssignee);
       setShowTeamWarning(false);
+      if (initialLoadComplete.current) {
+        saveNow({ responsible_role_key: newRoleKey, assignee_id: autoAssignee });
+      }
     } else {
       setShowTeamWarning(true);
+      if (initialLoadComplete.current) {
+        saveNow({ responsible_role_key: newRoleKey });
+      }
+    }
+  };
+
+  const handleAssigneeChange = (value: string) => {
+    const newAssigneeId = value === '_none_' ? '' : value;
+    setAssigneeId(newAssigneeId);
+    if (initialLoadComplete.current) {
+      saveNow({ assignee_id: newAssigneeId || null });
     }
   };
 
@@ -163,10 +238,40 @@ export default function PostDetail() {
     if (autoAssignee) {
       setAssigneeId(autoAssignee);
       setShowTeamWarning(false);
+      saveNow({ assignee_id: autoAssignee });
       toast.success('Responsável atribuído automaticamente');
     } else {
       setShowTeamWarning(true);
       toast.warning('Configure o Time da Conta para este cargo');
+    }
+  };
+
+  // Briefing handlers with debounce
+  const handleBriefingTitleChange = (value: string) => {
+    setBriefingTitle(value);
+    if (initialLoadComplete.current) {
+      saveDebounced({ briefing_title: value || null });
+    }
+  };
+
+  const handleBriefingTitleBlur = () => {
+    if (initialLoadComplete.current) {
+      saveNow({ briefing_title: briefingTitle || null });
+    }
+  };
+
+  const handleBriefingRichChange = (value: string) => {
+    setBriefingRich(value);
+    if (initialLoadComplete.current) {
+      // Longer debounce for rich text
+      saveDebounced({ briefing_rich: value || null, briefing: value || null }, 1200);
+    }
+  };
+
+  const handleCaptionChange = (value: string) => {
+    setCaption(value);
+    if (initialLoadComplete.current) {
+      saveDebounced({ caption: value || null }, 1200);
     }
   };
 
@@ -194,35 +299,6 @@ export default function PostDetail() {
     const [year, month] = monthRef.split('-');
     const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
     return `${months[parseInt(month) - 1]} ${year}`;
-  };
-
-  const handleSave = async () => {
-    if (!title.trim()) {
-      toast.error('Título é obrigatório');
-      return;
-    }
-
-    setSaving(true);
-    
-    await updatePost(post.id, {
-      title: title.trim(),
-      channel: channel || null,
-      format: format || null,
-      status,
-      briefing: briefingRich || null,
-      briefing_title: briefingTitle || null,
-      briefing_rich: briefingRich || null,
-      caption: caption || null,
-      responsible_role_key: responsibleRoleKey,
-      assignee_id: assigneeId || null,
-    } as any);
-    setSaving(false);
-    toast.success('Post salvo com sucesso');
-  };
-
-  const handleFormatChange = (value: string) => {
-    const newFormat = value === '_none_' ? '' : value;
-    setFormat(newFormat);
   };
 
   const handleDelete = async () => {
@@ -288,11 +364,6 @@ export default function PostDetail() {
     return updateRequestStatus(id, newStatus, undefined, resolutionNote);
   };
 
-  const handlePostStatusChange = async (newStatus: PostStatus) => {
-    setStatus(newStatus);
-    await updatePost(post.id, { status: newStatus } as any);
-  };
-
   const captionLength = caption.length;
   
   // Check if sections have content for badges
@@ -332,11 +403,8 @@ export default function PostDetail() {
             {clientName} • {formatMonthRef(batch.month_ref)}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={handleSave} disabled={saving}>
-            <Save className="h-4 w-4 mr-2" />
-            {saving ? 'Salvando...' : 'Salvar'}
-          </Button>
+        <div className="flex items-center gap-3">
+          <SaveStatus status={saveStatus} size="sm" onRetry={() => flush()} />
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" size="icon">
@@ -403,14 +471,15 @@ export default function PostDetail() {
                 <Input
                   id="title"
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={(e) => handleTitleChange(e.target.value)}
+                  onBlur={handleTitleBlur}
                   placeholder="Ex: Reels - Depoimento Cliente"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Canal</Label>
-                  <Select value={channel || '_none_'} onValueChange={(v) => setChannel(v === '_none_' ? '' : v)}>
+                  <Select value={channel || '_none_'} onValueChange={handleChannelChange}>
                     <SelectTrigger className="bg-background">
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
@@ -443,7 +512,7 @@ export default function PostDetail() {
               </div>
               <div className="space-y-2">
                 <Label>Status</Label>
-                <Select value={status} onValueChange={(v) => setStatus(v as PostStatus)}>
+                <Select value={status} onValueChange={(v) => handleStatusChange(v as PostStatus)}>
                   <SelectTrigger className="bg-background">
                     <SelectValue />
                   </SelectTrigger>
@@ -494,7 +563,7 @@ export default function PostDetail() {
                     Reaplicar pelo cargo
                   </Button>
                 </div>
-                <Select value={assigneeId || '_none_'} onValueChange={(v) => setAssigneeId(v === '_none_' ? '' : v)}>
+                <Select value={assigneeId || '_none_'} onValueChange={handleAssigneeChange}>
                   <SelectTrigger className={`bg-background ${!assigneeId ? 'border-warning' : ''}`}>
                     <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
@@ -544,7 +613,8 @@ export default function PostDetail() {
                     <Input
                       id="briefing-title"
                       value={briefingTitle}
-                      onChange={(e) => setBriefingTitle(e.target.value)}
+                      onChange={(e) => handleBriefingTitleChange(e.target.value)}
+                      onBlur={handleBriefingTitleBlur}
                       placeholder="Ex: Briefing para Reels de Depoimento"
                     />
                   </div>
@@ -552,11 +622,11 @@ export default function PostDetail() {
                     <Label>Conteúdo do Briefing</Label>
                     <RichTextEditor
                       content={briefingRich}
-                      onChange={setBriefingRich}
+                      onChange={handleBriefingRichChange}
                       placeholder="Descreva o briefing do post: objetivo, referências, tom de voz, etc."
                     />
                     <p className="text-xs text-muted-foreground">
-                      Use a barra de ferramentas para formatar o texto. Links serão clicáveis automaticamente.
+                      Salvamento automático. Use a barra de ferramentas para formatar o texto.
                     </p>
                   </div>
                 </TabsContent>
@@ -583,7 +653,7 @@ export default function PostDetail() {
             onAddRequest={handleAddChangeRequest}
             onUpdateStatus={handleUpdateChangeRequestStatus}
             onDelete={deleteChangeRequest}
-            onPostStatusChange={handlePostStatusChange}
+            onPostStatusChange={(newStatus) => handleStatusChange(newStatus)}
             currentPostStatus={status}
           />
         </TabsContent>
@@ -595,11 +665,11 @@ export default function PostDetail() {
                 <Label>Legenda</Label>
                 <RichTextEditor
                   content={caption}
-                  onChange={setCaption}
+                  onChange={handleCaptionChange}
                   placeholder="Escreva a legenda do post: texto, hashtags, links..."
                 />
                 <p className="text-xs text-muted-foreground">
-                  Use a barra de ferramentas para formatar o texto. Links serão clicáveis automaticamente.
+                  Salvamento automático. Use a barra de ferramentas para formatar o texto.
                 </p>
               </div>
             </CardContent>
