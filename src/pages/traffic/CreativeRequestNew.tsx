@@ -91,8 +91,7 @@ export default function CreativeRequestNew() {
       priority,
       due_date: dueDate || null,
       requested_by_member_id: currentMemberId || null,
-      responsible_role_key: responsibleRoleKey as CreativeResponsibleRole,
-      assignee_id: resolvedAssigneeId, // Will be overridden by trigger anyway
+      responsible_role_key: responsibleRoleKey as CreativeResponsibleRole, // Trigger auto-assigns
       reviewer_member_id: reviewerId || null,
     });
 

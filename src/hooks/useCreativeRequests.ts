@@ -21,8 +21,7 @@ interface CreateCreativeRequestInput {
   priority: CreativeRequestPriority;
   due_date?: string | null;
   requested_by_member_id?: string | null;
-  responsible_role_key?: CreativeResponsibleRole | null;
-  assignee_id?: string | null;
+  responsible_role_key: CreativeResponsibleRole; // Required - auto-assigns assignee
   reviewer_member_id?: string | null;
 }
 
@@ -35,8 +34,7 @@ interface UpdateCreativeRequestInput {
   priority?: CreativeRequestPriority;
   status?: CreativeRequestStatus;
   due_date?: string | null;
-  responsible_role_key?: CreativeResponsibleRole | null;
-  assignee_id?: string | null;
+  responsible_role_key?: CreativeResponsibleRole; // When changed, trigger auto-assigns assignee
   reviewer_member_id?: string | null;
   completed_at?: string | null;
 }
@@ -99,8 +97,7 @@ export function useCreativeRequests() {
         due_date: input.due_date || null,
         requested_by_member_id: input.requested_by_member_id || null,
         requested_by_role_key: 'traffic',
-        responsible_role_key: input.responsible_role_key || null,
-        assignee_id: input.assignee_id || null,
+        responsible_role_key: input.responsible_role_key, // Required - trigger auto-assigns
         reviewer_member_id: input.reviewer_member_id || null,
       })
       .select()
