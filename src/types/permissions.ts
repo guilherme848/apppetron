@@ -25,4 +25,8 @@ export type PermissionKey =
   | 'view_client_credentials'
   | 'view_traffic'
   | 'edit_traffic'
-  | 'manage_traffic_cycles';
+  | 'manage_traffic_cycles'
+  | 'view_cs'
+  | 'edit_cs'
+  | 'manage_cs_settings'
+  | 'view_sensitive_cs';

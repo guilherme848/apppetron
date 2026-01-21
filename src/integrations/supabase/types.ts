@@ -641,6 +641,850 @@ export type Database = {
           },
         ]
       }
+      cs_audit_log: {
+        Row: {
+          action: string
+          changed_by_member_id: string | null
+          changes_json: Json | null
+          client_id: string | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+        }
+        Insert: {
+          action: string
+          changed_by_member_id?: string | null
+          changes_json?: Json | null
+          client_id?: string | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          changed_by_member_id?: string | null
+          changes_json?: Json | null
+          client_id?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_audit_log_changed_by_member_id_fkey"
+            columns: ["changed_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_audit_log_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_cancellation_reason_links: {
+        Row: {
+          cancellation_id: string
+          created_at: string
+          id: string
+          reason_id: string
+        }
+        Insert: {
+          cancellation_id: string
+          created_at?: string
+          id?: string
+          reason_id: string
+        }
+        Update: {
+          cancellation_id?: string
+          created_at?: string
+          id?: string
+          reason_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_cancellation_reason_links_cancellation_id_fkey"
+            columns: ["cancellation_id"]
+            isOneToOne: false
+            referencedRelation: "cs_cancellations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_cancellation_reason_links_reason_id_fkey"
+            columns: ["reason_id"]
+            isOneToOne: false
+            referencedRelation: "cs_cancellation_reasons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_cancellation_reasons: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      cs_cancellations: {
+        Row: {
+          client_id: string
+          created_at: string
+          effective_cancel_date: string
+          id: string
+          notes_rich: string | null
+          offer_applied: string | null
+          retention_attempted: boolean
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          effective_cancel_date: string
+          id?: string
+          notes_rich?: string | null
+          offer_applied?: string | null
+          retention_attempted?: boolean
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          effective_cancel_date?: string
+          id?: string
+          notes_rich?: string | null
+          offer_applied?: string | null
+          retention_attempted?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_cancellations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_client_onboarding: {
+        Row: {
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          expected_end_at: string | null
+          flow_id: string
+          id: string
+          started_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          completed_at?: string | null
+          created_at?: string
+          expected_end_at?: string | null
+          flow_id: string
+          id?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string
+          expected_end_at?: string | null
+          flow_id?: string
+          id?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_client_onboarding_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_client_onboarding_flow_id_fkey"
+            columns: ["flow_id"]
+            isOneToOne: false
+            referencedRelation: "cs_onboarding_flows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_client_onboarding_tasks: {
+        Row: {
+          client_onboarding_id: string
+          completed_at: string | null
+          created_at: string
+          description_rich: string | null
+          due_at: string | null
+          id: string
+          notes_rich: string | null
+          required: boolean
+          responsible_member_id: string | null
+          sort_order: number
+          status: string
+          template_task_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          client_onboarding_id: string
+          completed_at?: string | null
+          created_at?: string
+          description_rich?: string | null
+          due_at?: string | null
+          id?: string
+          notes_rich?: string | null
+          required?: boolean
+          responsible_member_id?: string | null
+          sort_order?: number
+          status?: string
+          template_task_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          client_onboarding_id?: string
+          completed_at?: string | null
+          created_at?: string
+          description_rich?: string | null
+          due_at?: string | null
+          id?: string
+          notes_rich?: string | null
+          required?: boolean
+          responsible_member_id?: string | null
+          sort_order?: number
+          status?: string
+          template_task_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_client_onboarding_tasks_client_onboarding_id_fkey"
+            columns: ["client_onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "cs_client_onboarding"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_client_onboarding_tasks_responsible_member_id_fkey"
+            columns: ["responsible_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_client_onboarding_tasks_template_task_id_fkey"
+            columns: ["template_task_id"]
+            isOneToOne: false
+            referencedRelation: "cs_onboarding_flow_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_meeting_actions: {
+        Row: {
+          assignee_member_id: string | null
+          created_at: string
+          details_rich: string | null
+          due_at: string | null
+          id: string
+          meeting_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_member_id?: string | null
+          created_at?: string
+          details_rich?: string | null
+          due_at?: string | null
+          id?: string
+          meeting_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_member_id?: string | null
+          created_at?: string
+          details_rich?: string | null
+          due_at?: string | null
+          id?: string
+          meeting_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_meeting_actions_assignee_member_id_fkey"
+            columns: ["assignee_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_meeting_actions_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "cs_meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_meetings: {
+        Row: {
+          client_id: string
+          created_at: string
+          decisions_rich: string | null
+          id: string
+          meeting_date: string
+          objective_rich: string | null
+          perception: string | null
+          responsible_member_id: string | null
+          status: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          decisions_rich?: string | null
+          id?: string
+          meeting_date: string
+          objective_rich?: string | null
+          perception?: string | null
+          responsible_member_id?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          decisions_rich?: string | null
+          id?: string
+          meeting_date?: string
+          objective_rich?: string | null
+          perception?: string | null
+          responsible_member_id?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_meetings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_meetings_responsible_member_id_fkey"
+            columns: ["responsible_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_nps_response_tags: {
+        Row: {
+          created_at: string
+          id: string
+          response_id: string
+          tag_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          response_id: string
+          tag_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          response_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_nps_response_tags_response_id_fkey"
+            columns: ["response_id"]
+            isOneToOne: false
+            referencedRelation: "cs_nps_responses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_nps_response_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "cs_nps_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_nps_responses: {
+        Row: {
+          classification: string
+          client_id: string
+          comment_rich: string | null
+          created_at: string
+          id: string
+          score: number
+          survey_id: string | null
+        }
+        Insert: {
+          classification: string
+          client_id: string
+          comment_rich?: string | null
+          created_at?: string
+          id?: string
+          score: number
+          survey_id?: string | null
+        }
+        Update: {
+          classification?: string
+          client_id?: string
+          comment_rich?: string | null
+          created_at?: string
+          id?: string
+          score?: number
+          survey_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_nps_responses_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_nps_responses_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "cs_nps_surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_nps_surveys: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          trigger_type: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          trigger_type: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          trigger_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      cs_nps_tags: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      cs_onboarding_flow_rules: {
+        Row: {
+          active: boolean
+          client_type: string | null
+          created_at: string
+          flow_id: string
+          id: string
+          priority: number
+          service_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          client_type?: string | null
+          created_at?: string
+          flow_id: string
+          id?: string
+          priority?: number
+          service_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          client_type?: string | null
+          created_at?: string
+          flow_id?: string
+          id?: string
+          priority?: number
+          service_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_onboarding_flow_rules_flow_id_fkey"
+            columns: ["flow_id"]
+            isOneToOne: false
+            referencedRelation: "cs_onboarding_flows"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_onboarding_flow_rules_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_onboarding_flow_tasks: {
+        Row: {
+          active: boolean
+          created_at: string
+          default_due_days: number
+          default_responsible_role_key: string | null
+          description_rich: string | null
+          flow_id: string
+          id: string
+          required: boolean
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          default_due_days?: number
+          default_responsible_role_key?: string | null
+          description_rich?: string | null
+          flow_id: string
+          id?: string
+          required?: boolean
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          default_due_days?: number
+          default_responsible_role_key?: string | null
+          description_rich?: string | null
+          flow_id?: string
+          id?: string
+          required?: boolean
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_onboarding_flow_tasks_flow_id_fkey"
+            columns: ["flow_id"]
+            isOneToOne: false
+            referencedRelation: "cs_onboarding_flows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_onboarding_flows: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      cs_onboarding_task_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          onboarding_task_id: string
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          onboarding_task_id: string
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          onboarding_task_id?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_onboarding_task_files_onboarding_task_id_fkey"
+            columns: ["onboarding_task_id"]
+            isOneToOne: false
+            referencedRelation: "cs_client_onboarding_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_onboarding_task_history: {
+        Row: {
+          action: string
+          changed_by_member_id: string | null
+          created_at: string
+          from_value: string | null
+          id: string
+          onboarding_task_id: string
+          to_value: string | null
+        }
+        Insert: {
+          action: string
+          changed_by_member_id?: string | null
+          created_at?: string
+          from_value?: string | null
+          id?: string
+          onboarding_task_id: string
+          to_value?: string | null
+        }
+        Update: {
+          action?: string
+          changed_by_member_id?: string | null
+          created_at?: string
+          from_value?: string | null
+          id?: string
+          onboarding_task_id?: string
+          to_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_onboarding_task_history_changed_by_member_id_fkey"
+            columns: ["changed_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_onboarding_task_history_onboarding_task_id_fkey"
+            columns: ["onboarding_task_id"]
+            isOneToOne: false
+            referencedRelation: "cs_client_onboarding_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_risk_action_items: {
+        Row: {
+          assignee_member_id: string | null
+          created_at: string
+          details_rich: string | null
+          due_at: string | null
+          id: string
+          risk_case_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_member_id?: string | null
+          created_at?: string
+          details_rich?: string | null
+          due_at?: string | null
+          id?: string
+          risk_case_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_member_id?: string | null
+          created_at?: string
+          details_rich?: string | null
+          due_at?: string | null
+          id?: string
+          risk_case_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_risk_action_items_assignee_member_id_fkey"
+            columns: ["assignee_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_risk_action_items_risk_case_id_fkey"
+            columns: ["risk_case_id"]
+            isOneToOne: false
+            referencedRelation: "cs_risk_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_risk_cases: {
+        Row: {
+          client_id: string
+          created_at: string
+          details_rich: string | null
+          due_at: string | null
+          id: string
+          level: string
+          owner_member_id: string | null
+          reason: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          details_rich?: string | null
+          due_at?: string | null
+          id?: string
+          level?: string
+          owner_member_id?: string | null
+          reason: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          details_rich?: string | null
+          due_at?: string | null
+          id?: string
+          level?: string
+          owner_member_id?: string | null
+          reason?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_risk_cases_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_risk_cases_owner_member_id_fkey"
+            columns: ["owner_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: []
+      }
       deliverables: {
         Row: {
           active: boolean
