@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,8 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { useTraffic } from '@/contexts/TrafficContext';
 import { Link } from 'react-router-dom';
 import { ExternalLink, RotateCcw, Undo2 } from 'lucide-react';
+import { useAutoSave, useAutoSaveNavigation } from '@/hooks/useAutoSave';
+import { SaveStatus } from '@/components/ui/save-status';
 
 interface AccountFormProps {
   open: boolean;
@@ -60,13 +62,15 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
   const { trafficRoutines, getTrafficRoutineById } = useTraffic();
   
   const activeRoutines = trafficRoutines.filter(r => r.active);
+  const isEditing = !!account;
+  const skipAutoSave = useRef(false);
   
   const [formData, setFormData] = useState({
     name: '',
     status: 'lead' as AccountStatus,
     service_id: '',
     niche_id: '',
-    traffic_routine_id: '', // Client-level override
+    traffic_routine_id: '',
     website: '',
     cpf_cnpj: '',
     monthly_value: '',
@@ -86,13 +90,60 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
   });
   const [emailError, setEmailError] = useState('');
 
+  // Build the data object for saving
+  const buildSaveData = useCallback((data: typeof formData): Partial<Account> => {
+    const selectedService = services.find(s => s.id === data.service_id);
+    const selectedNiche = niches.find(n => n.id === data.niche_id);
+
+    return {
+      name: data.name.trim(),
+      status: data.status,
+      service_id: data.service_id || null,
+      niche_id: data.niche_id || null,
+      traffic_routine_id: data.traffic_routine_id || null,
+      service_contracted: selectedService?.name || null,
+      niche: selectedNiche?.name || null,
+      website: data.website || null,
+      cpf_cnpj: data.cpf_cnpj || null,
+      monthly_value: data.monthly_value ? parseFloat(data.monthly_value) : null,
+      start_date: data.start_date || null,
+      contact_name: data.contact_name || null,
+      contact_phone: data.contact_phone || null,
+      contact_email: data.contact_email || null,
+      country: data.country || null,
+      postal_code: data.postal_code || null,
+      state: data.state || null,
+      city: data.city || null,
+      neighborhood: data.neighborhood || null,
+      street: data.street || null,
+      street_number: data.street_number || null,
+      address_complement: data.address_complement || null,
+    } as Partial<Account>;
+  }, [services, niches]);
+
+  // AutoSave hook - only used when editing existing account
+  const { status: saveStatus, saveNow, saveDebounced, flush } = useAutoSave({
+    onSave: async (patch) => {
+      if (!isEditing || !account) return;
+      // We need to send the full data with the patch applied
+      const currentData = { ...formData, ...patch };
+      const saveData = buildSaveData(currentData);
+      await onSubmit(saveData);
+    },
+    debounceMs: 600,
+  });
+
+  // Flush on dialog close
+  const handleClose = useCallback(() => {
+    flush();
+    onClose();
+  }, [flush, onClose]);
+
   useEffect(() => {
     if (account) {
-      // Try to map legacy text fields to IDs
       let serviceId = account.service_id || '';
       let nicheId = account.niche_id || '';
       
-      // If no ID but has legacy text, try to find matching entry
       if (!serviceId && account.service_contracted) {
         const matchingService = findServiceByName(account.service_contracted);
         if (matchingService) serviceId = matchingService.id;
@@ -102,6 +153,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
         if (matchingNiche) nicheId = matchingNiche.id;
       }
 
+      skipAutoSave.current = true;
       setFormData({
         name: account.name || '',
         status: account.status || 'lead',
@@ -125,7 +177,9 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
         street_number: account.street_number || '',
         address_complement: account.address_complement || '',
       });
+      setTimeout(() => { skipAutoSave.current = false; }, 100);
     } else {
+      skipAutoSave.current = true;
       setFormData({
         name: '',
         status: 'lead',
@@ -149,10 +203,12 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
         street_number: '',
         address_complement: '',
       });
+      setTimeout(() => { skipAutoSave.current = false; }, 100);
     }
     setEmailError('');
   }, [account, open, findServiceByName, findNicheByName]);
 
+  // For new accounts, use submit button. For existing, use autosave
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) return;
@@ -162,69 +218,87 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
       return;
     }
 
-    // Get service and niche names for legacy compatibility
-    const selectedService = services.find(s => s.id === formData.service_id);
-    const selectedNiche = niches.find(n => n.id === formData.niche_id);
-
-    onSubmit({
-      name: formData.name.trim(),
-      status: formData.status,
-      service_id: formData.service_id || null,
-      niche_id: formData.niche_id || null,
-      traffic_routine_id: formData.traffic_routine_id || null,
-      // Keep legacy fields in sync
-      service_contracted: selectedService?.name || null,
-      niche: selectedNiche?.name || null,
-      website: formData.website || null,
-      cpf_cnpj: formData.cpf_cnpj || null,
-      monthly_value: formData.monthly_value ? parseFloat(formData.monthly_value) : null,
-      start_date: formData.start_date || null,
-      contact_name: formData.contact_name || null,
-      contact_phone: formData.contact_phone || null,
-      contact_email: formData.contact_email || null,
-      country: formData.country || null,
-      postal_code: formData.postal_code || null,
-      state: formData.state || null,
-      city: formData.city || null,
-      neighborhood: formData.neighborhood || null,
-      street: formData.street || null,
-      street_number: formData.street_number || null,
-      address_complement: formData.address_complement || null,
-    } as Partial<Account>);
-    onClose();
+    if (!isEditing) {
+      // New account - submit and close
+      onSubmit(buildSaveData(formData));
+      onClose();
+    } else {
+      // Editing - just close (autosave handles it)
+      handleClose();
+    }
   };
 
+  // Text field handlers with debounced autosave
+  const handleTextChange = (field: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (isEditing && !skipAutoSave.current) {
+      saveDebounced({ [field]: value });
+    }
+  };
+
+  const handleTextBlur = (field: keyof typeof formData) => () => {
+    if (isEditing && !skipAutoSave.current) {
+      flush();
+    }
+  };
+
+  // Select handlers with immediate save
+  const handleSelectChange = (field: keyof typeof formData) => (value: string) => {
+    const actualValue = value === 'none' || value === 'inherit' ? '' : value;
+    setFormData(prev => ({ ...prev, [field]: actualValue }));
+    if (isEditing && !skipAutoSave.current) {
+      saveNow({ [field]: actualValue });
+    }
+  };
+
+  // Special formatted inputs
   const handleCpfCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatCpfCnpj(e.target.value);
     if (formatted.replace(/\D/g, '').length <= 14) {
-      setFormData({ ...formData, cpf_cnpj: formatted });
+      setFormData(prev => ({ ...prev, cpf_cnpj: formatted }));
+      if (isEditing && !skipAutoSave.current) {
+        saveDebounced({ cpf_cnpj: formatted });
+      }
     }
   };
 
   const handlePostalCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatPostalCode(e.target.value);
     if (formatted.replace(/\D/g, '').length <= 8) {
-      setFormData({ ...formData, postal_code: formatted });
+      setFormData(prev => ({ ...prev, postal_code: formatted }));
+      if (isEditing && !skipAutoSave.current) {
+        saveDebounced({ postal_code: formatted });
+      }
     }
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatPhone(e.target.value);
     if (formatted.replace(/\D/g, '').length <= 11) {
-      setFormData({ ...formData, contact_phone: formatted });
+      setFormData(prev => ({ ...prev, contact_phone: formatted }));
+      if (isEditing && !skipAutoSave.current) {
+        saveDebounced({ contact_phone: formatted });
+      }
     }
   };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, contact_email: e.target.value });
+    setFormData(prev => ({ ...prev, contact_email: e.target.value }));
     if (emailError) setEmailError('');
+    if (isEditing && !skipAutoSave.current && isValidEmail(e.target.value)) {
+      saveDebounced({ contact_email: e.target.value });
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{account ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle>{account ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
+            {isEditing && <SaveStatus status={saveStatus} />}
+          </div>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Dados do Cliente */}
@@ -236,14 +310,15 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={handleTextChange('name')}
+                  onBlur={handleTextBlur('name')}
                   placeholder="Nome da empresa"
                   required
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
-                <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v as AccountStatus })}>
+                <Select value={formData.status} onValueChange={handleSelectChange('status')}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -262,7 +337,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                     Gerenciar
                   </Link>
                 </div>
-                <Select value={formData.niche_id} onValueChange={(v) => setFormData({ ...formData, niche_id: v === 'none' ? '' : v })}>
+                <Select value={formData.niche_id || 'none'} onValueChange={handleSelectChange('niche_id')}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um nicho" />
                   </SelectTrigger>
@@ -282,6 +357,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                   id="cpf_cnpj"
                   value={formData.cpf_cnpj}
                   onChange={handleCpfCnpjChange}
+                  onBlur={handleTextBlur('cpf_cnpj')}
                   placeholder="000.000.000-00 ou 00.000.000/0001-00"
                 />
               </div>
@@ -290,7 +366,8 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                 <Input
                   id="website"
                   value={formData.website}
-                  onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                  onChange={handleTextChange('website')}
+                  onBlur={handleTextBlur('website')}
                   placeholder="https://exemplo.com.br"
                 />
               </div>
@@ -311,7 +388,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                     Gerenciar
                   </Link>
                 </div>
-                <Select value={formData.service_id} onValueChange={(v) => setFormData({ ...formData, service_id: v === 'none' ? '' : v })}>
+                <Select value={formData.service_id || 'none'} onValueChange={handleSelectChange('service_id')}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um serviço" />
                   </SelectTrigger>
@@ -346,7 +423,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                     <>
                       <Select 
                         value={formData.traffic_routine_id || 'inherit'} 
-                        onValueChange={(v) => setFormData({ ...formData, traffic_routine_id: v === 'inherit' ? '' : v })}
+                        onValueChange={handleSelectChange('traffic_routine_id')}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder={planRoutine ? `Herdar do plano (${planRoutine.name})` : 'Selecione uma rotina'} />
@@ -381,7 +458,12 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                             variant="ghost"
                             size="sm"
                             className="h-6 text-xs"
-                            onClick={() => setFormData({ ...formData, traffic_routine_id: '' })}
+                            onClick={() => {
+                              setFormData(prev => ({ ...prev, traffic_routine_id: '' }));
+                              if (isEditing && !skipAutoSave.current) {
+                                saveNow({ traffic_routine_id: '' });
+                              }
+                            }}
                           >
                             <Undo2 className="h-3 w-3 mr-1" />
                             Usar padrão do plano
@@ -400,7 +482,8 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                   step="0.01"
                   min="0"
                   value={formData.monthly_value}
-                  onChange={(e) => setFormData({ ...formData, monthly_value: e.target.value })}
+                  onChange={handleTextChange('monthly_value')}
+                  onBlur={handleTextBlur('monthly_value')}
                   placeholder="0.00"
                 />
               </div>
@@ -410,7 +493,12 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                   id="start_date"
                   type="date"
                   value={formData.start_date}
-                  onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, start_date: e.target.value }));
+                    if (isEditing && !skipAutoSave.current) {
+                      saveNow({ start_date: e.target.value });
+                    }
+                  }}
                 />
               </div>
               {formData.status === 'churned' && (
@@ -420,7 +508,12 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                     id="churned_at"
                     type="date"
                     value={formData.churned_at}
-                    onChange={(e) => setFormData({ ...formData, churned_at: e.target.value })}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, churned_at: e.target.value }));
+                      if (isEditing && !skipAutoSave.current) {
+                        saveNow({ churned_at: e.target.value });
+                      }
+                    }}
                   />
                   <p className="text-xs text-muted-foreground">
                     Preenchido automaticamente ao marcar como Churned
@@ -441,7 +534,8 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                 <Input
                   id="contact_name"
                   value={formData.contact_name}
-                  onChange={(e) => setFormData({ ...formData, contact_name: e.target.value })}
+                  onChange={handleTextChange('contact_name')}
+                  onBlur={handleTextBlur('contact_name')}
                   placeholder="Nome do contato principal"
                 />
               </div>
@@ -451,6 +545,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                   id="contact_phone"
                   value={formData.contact_phone}
                   onChange={handlePhoneChange}
+                  onBlur={handleTextBlur('contact_phone')}
                   placeholder="(00) 00000-0000"
                 />
               </div>
@@ -461,6 +556,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                   type="email"
                   value={formData.contact_email}
                   onChange={handleEmailChange}
+                  onBlur={handleTextBlur('contact_email')}
                   placeholder="email@exemplo.com"
                   className={emailError ? 'border-destructive' : ''}
                 />
@@ -480,7 +576,8 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                 <Input
                   id="country"
                   value={formData.country}
-                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                  onChange={handleTextChange('country')}
+                  onBlur={handleTextBlur('country')}
                   placeholder="Brasil"
                 />
               </div>
@@ -490,6 +587,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                   id="postal_code"
                   value={formData.postal_code}
                   onChange={handlePostalCodeChange}
+                  onBlur={handleTextBlur('postal_code')}
                   placeholder="00000-000"
                 />
               </div>
@@ -498,7 +596,8 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                 <Input
                   id="state"
                   value={formData.state}
-                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                  onChange={handleTextChange('state')}
+                  onBlur={handleTextBlur('state')}
                   placeholder="SP"
                 />
               </div>
@@ -507,7 +606,8 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                 <Input
                   id="city"
                   value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  onChange={handleTextChange('city')}
+                  onBlur={handleTextBlur('city')}
                   placeholder="São Paulo"
                 />
               </div>
@@ -516,7 +616,8 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                 <Input
                   id="neighborhood"
                   value={formData.neighborhood}
-                  onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
+                  onChange={handleTextChange('neighborhood')}
+                  onBlur={handleTextBlur('neighborhood')}
                   placeholder="Centro"
                 />
               </div>
@@ -525,7 +626,8 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                 <Input
                   id="street"
                   value={formData.street}
-                  onChange={(e) => setFormData({ ...formData, street: e.target.value })}
+                  onChange={handleTextChange('street')}
+                  onBlur={handleTextBlur('street')}
                   placeholder="Rua, Avenida, etc."
                 />
               </div>
@@ -534,7 +636,8 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                 <Input
                   id="street_number"
                   value={formData.street_number}
-                  onChange={(e) => setFormData({ ...formData, street_number: e.target.value })}
+                  onChange={handleTextChange('street_number')}
+                  onBlur={handleTextBlur('street_number')}
                   placeholder="123"
                 />
               </div>
@@ -543,7 +646,8 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                 <Input
                   id="address_complement"
                   value={formData.address_complement}
-                  onChange={(e) => setFormData({ ...formData, address_complement: e.target.value })}
+                  onChange={handleTextChange('address_complement')}
+                  onBlur={handleTextBlur('address_complement')}
                   placeholder="Sala, Andar, Bloco, etc."
                 />
               </div>
@@ -551,10 +655,10 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancelar
+            <Button type="button" variant="outline" onClick={handleClose}>
+              {isEditing ? 'Fechar' : 'Cancelar'}
             </Button>
-            <Button type="submit">Salvar</Button>
+            {!isEditing && <Button type="submit">Salvar</Button>}
           </DialogFooter>
         </form>
       </DialogContent>
