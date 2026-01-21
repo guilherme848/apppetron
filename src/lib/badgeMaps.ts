@@ -17,9 +17,9 @@ export type TaskStatusKey =
 export const TASK_STATUS_VARIANT: Record<TaskStatusKey, BadgeVariant> = {
   todo: 'neutral',
   not_started: 'neutral',
-  backlog: 'neutral',
-  doing: 'info',
-  in_progress: 'info',
+  backlog: 'muted',
+  doing: 'attention',
+  in_progress: 'attention',
   done: 'strong',
   completed: 'strong',
   canceled: 'muted',
