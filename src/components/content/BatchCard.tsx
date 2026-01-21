@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Eye, Plus, User, AlertTriangle } from 'lucide-react';
 import { ContentBatch, BATCH_STATUS_OPTIONS, BatchStatus } from '@/types/contentProduction';
+import { getBatchStatusVariant } from '@/lib/badgeMaps';
 
 interface BatchCardProps {
   batch: ContentBatch;
@@ -46,16 +47,16 @@ export function BatchCard({
           <div>
             <div className="flex items-center gap-2">
               <CardTitle className="text-base font-semibold">{clientName}</CardTitle>
-              {isOverdue && (
-                <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
-                  <AlertTriangle className="h-2.5 w-2.5 mr-0.5" />
+             {isOverdue && (
+                <Badge variant="attention" className="text-[10px] px-1.5 py-0 flex items-center gap-0.5">
+                  <AlertTriangle className="h-2.5 w-2.5" />
                   ATRASADO
                 </Badge>
               )}
             </div>
             <p className="text-sm text-muted-foreground">{formatMonthRef(batch.month_ref)}</p>
           </div>
-          <Badge variant="secondary">{doneCount}/{postCount}</Badge>
+          <Badge variant="info">{doneCount}/{postCount}</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -70,12 +71,16 @@ export function BatchCard({
           onValueChange={(value) => onStatusChange(batch.id, value as BatchStatus)}
         >
           <SelectTrigger className="w-full bg-background">
-            <SelectValue />
+            <Badge variant={getBatchStatusVariant(batch.status)} className="text-xs w-full justify-center">
+              {BATCH_STATUS_OPTIONS.find(o => o.value === batch.status)?.label || batch.status}
+            </Badge>
           </SelectTrigger>
           <SelectContent className="bg-popover z-50">
             {BATCH_STATUS_OPTIONS.map((option) => (
               <SelectItem key={option.value} value={option.value}>
-                {option.label}
+                <Badge variant={getBatchStatusVariant(option.value)} className="text-xs">
+                  {option.label}
+                </Badge>
               </SelectItem>
             ))}
           </SelectContent>
