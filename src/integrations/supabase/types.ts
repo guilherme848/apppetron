@@ -278,6 +278,70 @@ export type Database = {
           },
         ]
       }
+      content_change_requests: {
+        Row: {
+          comment_rich: string
+          created_at: string
+          id: string
+          post_id: string
+          requested_at: string
+          requested_by_member_id: string | null
+          resolution_note_rich: string | null
+          resolved_at: string | null
+          resolved_by_member_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          comment_rich: string
+          created_at?: string
+          id?: string
+          post_id: string
+          requested_at?: string
+          requested_by_member_id?: string | null
+          resolution_note_rich?: string | null
+          resolved_at?: string | null
+          resolved_by_member_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          comment_rich?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          requested_at?: string
+          requested_by_member_id?: string | null
+          resolution_note_rich?: string | null
+          resolved_at?: string | null
+          resolved_by_member_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_change_requests_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "content_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_change_requests_requested_by_member_id_fkey"
+            columns: ["requested_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_change_requests_resolved_by_member_id_fkey"
+            columns: ["resolved_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_items: {
         Row: {
           brief: string | null

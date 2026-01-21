@@ -58,11 +58,20 @@ export interface DashboardFilters {
 
 const ROLE_KEYS = ['designer', 'videomaker', 'social', 'traffic', 'support', 'cs'];
 
+export interface ChangeRequestData {
+  id: string;
+  post_id: string;
+  requested_at: string;
+  status: string;
+  resolved_at: string | null;
+}
+
 export function useContentDashboardData() {
   const [posts, setPosts] = useState<DashboardPost[]>([]);
   const [batches, setBatches] = useState<DashboardBatch[]>([]);
   const [accounts, setAccounts] = useState<DashboardAccount[]>([]);
   const [teamMembers, setTeamMembers] = useState<DashboardTeamMember[]>([]);
+  const [changeRequests, setChangeRequests] = useState<ChangeRequestData[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [filters, setFilters] = useState<DashboardFilters>({
@@ -79,17 +88,19 @@ export function useContentDashboardData() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const [postsRes, batchesRes, accountsRes, membersRes] = await Promise.all([
+    const [postsRes, batchesRes, accountsRes, membersRes, changeRequestsRes] = await Promise.all([
       supabase.from('content_posts').select('id, batch_id, title, status, responsible_role_key, assignee_id, started_at, completed_at, created_at, updated_at'),
       supabase.from('content_batches').select('id, client_id, month_ref, status, planning_due_date, archived, created_at').eq('archived', false),
       supabase.from('accounts').select('id, name, designer_member_id, videomaker_member_id, social_member_id, traffic_member_id, support_member_id, cs_member_id').eq('status', 'active'),
       supabase.from('team_members').select('id, name, role_id, active').eq('active', true),
+      supabase.from('content_change_requests').select('id, post_id, requested_at, status, resolved_at'),
     ]);
 
     if (postsRes.data) setPosts(postsRes.data as DashboardPost[]);
     if (batchesRes.data) setBatches(batchesRes.data as DashboardBatch[]);
     if (accountsRes.data) setAccounts(accountsRes.data as DashboardAccount[]);
     if (membersRes.data) setTeamMembers(membersRes.data as DashboardTeamMember[]);
+    if (changeRequestsRes.data) setChangeRequests(changeRequestsRes.data as ChangeRequestData[]);
     setLoading(false);
   }, []);
 
@@ -445,6 +456,33 @@ export function useContentDashboardData() {
     }));
   }, [filteredPosts]);
 
+  // Change request metrics
+  const changeRequestMetrics = useMemo(() => {
+    const postIdSet = new Set(filteredPosts.map(p => p.id));
+    const relevantRequests = changeRequests.filter(cr => postIdSet.has(cr.post_id));
+    
+    const postsWithChanges = new Set(relevantRequests.map(cr => cr.post_id)).size;
+    const totalPosts = filteredPosts.length;
+    const reworkRate = totalPosts > 0 ? (postsWithChanges / totalPosts) * 100 : 0;
+    
+    const resolvedRequests = relevantRequests.filter(cr => cr.status === 'done' && cr.resolved_at);
+    const avgResolutionMs = resolvedRequests.length > 0
+      ? resolvedRequests.reduce((sum, cr) => {
+          const diff = new Date(cr.resolved_at!).getTime() - new Date(cr.requested_at).getTime();
+          return sum + diff;
+        }, 0) / resolvedRequests.length
+      : 0;
+    const avgResolutionHours = avgResolutionMs / (1000 * 60 * 60);
+    
+    return {
+      totalRequests: relevantRequests.length,
+      openRequests: relevantRequests.filter(cr => cr.status === 'open' || cr.status === 'in_progress').length,
+      postsWithChanges,
+      reworkRate,
+      avgResolutionHours,
+    };
+  }, [filteredPosts, changeRequests]);
+
   return {
     loading,
     filters,
@@ -458,6 +496,7 @@ export function useContentDashboardData() {
     accounts,
     teamMembers,
     monthRefs,
+    changeRequests,
     // Metrics
     metrics,
     completedByDay,
@@ -467,6 +506,7 @@ export function useContentDashboardData() {
     accountsByProfessionalByRole,
     batchProgress,
     postReport,
+    changeRequestMetrics,
     // Actions
     refetch: fetchData,
   };
