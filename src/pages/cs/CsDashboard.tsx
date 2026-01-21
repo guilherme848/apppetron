@@ -22,11 +22,14 @@ export default function CsDashboard() {
     renewal_soon: 'Renovação Próxima',
   };
 
-  const alertTypeColors = {
-    onboarding_delayed: 'bg-yellow-500',
-    no_meeting: 'bg-orange-500',
-    detractor_no_followup: 'bg-red-500',
-    renewal_soon: 'bg-blue-500',
+  const getAlertTypeVariant = (type: string) => {
+    const variants: Record<string, 'neutral' | 'info' | 'attention' | 'strong'> = {
+      onboarding_delayed: 'attention',
+      no_meeting: 'attention',
+      detractor_no_followup: 'strong',
+      renewal_soon: 'info',
+    };
+    return variants[type] || 'neutral';
   };
 
   return (
@@ -124,7 +127,7 @@ export default function CsDashboard() {
               {alerts.slice(0, 10).map((alert, idx) => (
                 <div key={idx} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${alertTypeColors[alert.type]}`} />
+                    <Badge variant={getAlertTypeVariant(alert.type)} className="w-2 h-2 p-0 rounded-full" />
                     <div>
                       <Link 
                         to={`/cs/client/${alert.clientId}`}
@@ -135,7 +138,7 @@ export default function CsDashboard() {
                       <p className="text-sm text-muted-foreground">{alert.details}</p>
                     </div>
                   </div>
-                  <Badge variant="outline">{alertTypeLabels[alert.type]}</Badge>
+                  <Badge variant={getAlertTypeVariant(alert.type)}>{alertTypeLabels[alert.type]}</Badge>
                 </div>
               ))}
             </div>

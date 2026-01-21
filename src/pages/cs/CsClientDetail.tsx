@@ -98,15 +98,15 @@ export default function CsClientDetail() {
 
   const getStatusBadge = () => {
     if (clientCancellations.length > 0) {
-      return <Badge variant="destructive">Cancelado</Badge>;
+      return <Badge variant="muted">Cancelado</Badge>;
     }
     if (clientRisks.some(r => r.status !== 'resolved')) {
-      return <Badge variant="secondary" className="bg-yellow-500 text-white">Em Risco</Badge>;
+      return <Badge variant="attention">Em Risco</Badge>;
     }
     if (clientOnboarding && clientOnboarding.status !== 'completed') {
-      return <Badge variant="outline">Em Onboarding</Badge>;
+      return <Badge variant="info">Em Onboarding</Badge>;
     }
-    return <Badge variant="default" className="bg-green-500">Ativo</Badge>;
+    return <Badge variant="strong">Ativo</Badge>;
   };
 
   // Timeline events
@@ -291,9 +291,9 @@ export default function CsClientDetail() {
                   {onboardingTasks.map((task) => (
                     <div key={task.id} className="flex items-center gap-3 p-3 border rounded-lg">
                       {task.status === 'done' ? (
-                        <CheckCircle className="h-5 w-5 text-green-500" />
+                        <CheckCircle className="h-5 w-5 text-primary" />
                       ) : task.status === 'in_progress' ? (
-                        <Clock className="h-5 w-5 text-blue-500" />
+                        <Clock className="h-5 w-5 text-secondary" />
                       ) : (
                         <div className="h-5 w-5 rounded-full border-2" />
                       )}

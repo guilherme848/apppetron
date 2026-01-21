@@ -254,7 +254,7 @@ export default function BatchDetail() {
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold">{clientName}</h1>
             {isOverdue() && (
-              <Badge variant="destructive" className="flex items-center gap-1">
+              <Badge variant="attention" className="flex items-center gap-1">
                 <AlertTriangle className="h-3 w-3" />
                 ATRASADO
               </Badge>
@@ -284,7 +284,7 @@ export default function BatchDetail() {
           {canArchive && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="default" className="bg-green-600 hover:bg-green-700">
+                <Button variant="default">
                   <Archive className="h-4 w-4 mr-2" />
                   Finalizar
                 </Button>
@@ -378,7 +378,7 @@ export default function BatchDetail() {
 
       {/* Warning for missing responsible */}
       {batchPosts.length > 0 && postsWithoutResponsible > 0 && (
-        <div className="flex items-center gap-2 p-3 rounded-md bg-yellow-500/10 border border-yellow-500/30 text-yellow-700 dark:text-yellow-400">
+        <div className="flex items-center gap-2 p-3 rounded-md bg-accent/10 border border-accent/30 text-accent-foreground">
           <AlertCircle className="h-4 w-4 flex-shrink-0" />
           <span className="text-sm">
             {postsWithoutResponsible === batchPosts.length 

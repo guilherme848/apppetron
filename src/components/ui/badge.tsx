@@ -8,10 +8,18 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
+        // Legacy variants (kept for backward compatibility)
         default: "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
         secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
         destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
         outline: "text-foreground",
+        
+        // Petron Palette variants
+        neutral: "badge-neutral",
+        info: "badge-info",
+        attention: "badge-attention",
+        strong: "badge-strong",
+        muted: "badge-muted",
       },
     },
     defaultVariants: {
@@ -19,6 +27,8 @@ const badgeVariants = cva(
     },
   },
 );
+
+export type BadgeVariant = "default" | "secondary" | "destructive" | "outline" | "neutral" | "info" | "attention" | "strong" | "muted";
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeVariants> {}
 

@@ -1,36 +1,44 @@
-import { Badge } from '@/components/ui/badge';
+import { Badge, type BadgeVariant } from '@/components/ui/badge';
 import { AccountStatus, ContractStatus, TaskStatus } from '@/types/crm';
+import { 
+  getAccountStatusVariant, 
+  getContractStatusVariant, 
+  getTaskStatusVariant 
+} from '@/lib/badgeMaps';
 
-const accountStatusConfig: Record<AccountStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' }> = {
-  lead: { label: 'Lead', variant: 'secondary' },
-  active: { label: 'Ativo', variant: 'default' },
-  churned: { label: 'Churned', variant: 'destructive' },
+const accountStatusLabels: Record<AccountStatus, string> = {
+  lead: 'Lead',
+  active: 'Ativo',
+  churned: 'Churned',
 };
 
-const contractStatusConfig: Record<ContractStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' }> = {
-  active: { label: 'Ativo', variant: 'default' },
-  paused: { label: 'Pausado', variant: 'secondary' },
-  canceled: { label: 'Cancelado', variant: 'destructive' },
+const contractStatusLabels: Record<ContractStatus, string> = {
+  active: 'Ativo',
+  paused: 'Pausado',
+  canceled: 'Cancelado',
 };
 
-const taskStatusConfig: Record<TaskStatus, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
-  backlog: { label: 'Backlog', variant: 'outline' },
-  todo: { label: 'A Fazer', variant: 'secondary' },
-  doing: { label: 'Fazendo', variant: 'default' },
-  done: { label: 'Concluído', variant: 'default' },
+const taskStatusLabels: Record<TaskStatus, string> = {
+  backlog: 'Backlog',
+  todo: 'A Fazer',
+  doing: 'Fazendo',
+  done: 'Concluído',
 };
 
 export function AccountStatusBadge({ status }: { status: AccountStatus }) {
-  const config = accountStatusConfig[status];
-  return <Badge variant={config.variant}>{config.label}</Badge>;
+  const variant = getAccountStatusVariant(status);
+  const label = accountStatusLabels[status] || status;
+  return <Badge variant={variant}>{label}</Badge>;
 }
 
 export function ContractStatusBadge({ status }: { status: ContractStatus }) {
-  const config = contractStatusConfig[status];
-  return <Badge variant={config.variant}>{config.label}</Badge>;
+  const variant = getContractStatusVariant(status);
+  const label = contractStatusLabels[status] || status;
+  return <Badge variant={variant}>{label}</Badge>;
 }
 
 export function TaskStatusBadge({ status }: { status: TaskStatus }) {
-  const config = taskStatusConfig[status];
-  return <Badge variant={config.variant}>{config.label}</Badge>;
+  const variant = getTaskStatusVariant(status);
+  const label = taskStatusLabels[status] || status;
+  return <Badge variant={variant}>{label}</Badge>;
 }
