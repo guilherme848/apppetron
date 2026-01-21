@@ -2,95 +2,141 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* 
+ * Petron Design System
+ * All colors in HSL format
+ * 
+ * Brand Colors:
+ * - Azul Principal: #253746 → hsl(201, 30%, 21%)
+ * - Laranja Acento: #F4762D → hsl(21, 90%, 57%)
+ * - Azul Secundário: #2B5B6C → hsl(193, 42%, 30%)
+ */
 
 @layer base {
   :root {
+    /* Background & Foreground */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 201 30% 21%;
 
+    /* Cards */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 201 30% 21%;
 
+    /* Popovers */
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 201 30% 21%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary - Azul Principal Petron */
+    --primary: 201 30% 21%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary - Azul Secundário Petron */
+    --secondary: 193 42% 30%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted - Cinza claro neutro */
+    --muted: 210 20% 96%;
+    --muted-foreground: 201 15% 40%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent - Laranja Petron */
+    --accent: 21 90% 57%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Destructive */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Borders & Inputs */
+    --border: 210 20% 90%;
+    --input: 210 20% 90%;
+    --ring: 21 90% 57%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* Sidebar - Light */
+    --sidebar-background: 201 30% 21%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 21 90% 57%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 193 42% 30%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 201 30% 30%;
+    --sidebar-ring: 21 90% 57%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    /* Chart colors */
+    --chart-1: 201 30% 21%;
+    --chart-2: 193 42% 30%;
+    --chart-3: 21 90% 57%;
+    --chart-4: 210 20% 60%;
+    --chart-5: 0 84% 60%;
 
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Success & Warning states */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Background & Foreground */
+    --background: 201 35% 8%;
+    --foreground: 0 0% 100%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    /* Cards */
+    --card: 201 32% 11%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    /* Popovers */
+    --popover: 201 32% 11%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    /* Primary - Azul Secundário no dark para melhor contraste */
+    --primary: 193 42% 40%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    /* Secondary - Azul Principal como secundário no dark */
+    --secondary: 201 30% 25%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    /* Muted */
+    --muted: 201 25% 15%;
+    --muted-foreground: 210 15% 75%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    /* Accent - Laranja Petron (mantém a marca) */
+    --accent: 21 90% 57%;
+    --accent-foreground: 201 35% 8%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    /* Destructive */
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    /* Borders & Inputs */
+    --border: 201 25% 20%;
+    --input: 201 25% 20%;
+    --ring: 21 90% 57%;
+
+    /* Sidebar - Dark */
+    --sidebar-background: 201 35% 6%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 21 90% 57%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 193 42% 35%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 201 25% 18%;
+    --sidebar-ring: 21 90% 57%;
+
+    /* Chart colors - Dark adjusted */
+    --chart-1: 193 42% 50%;
+    --chart-2: 201 30% 40%;
+    --chart-3: 21 90% 57%;
+    --chart-4: 210 20% 50%;
+    --chart-5: 0 62% 50%;
+
+    /* Success & Warning states */
+    --success: 142 70% 40%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 90% 55%;
+    --warning-foreground: 0 0% 0%;
   }
 }
 
@@ -156,7 +202,7 @@ All colors MUST be HSL.
 }
 
 .ProseMirror a {
-  color: hsl(var(--primary));
+  color: hsl(var(--accent));
   text-decoration: underline;
   cursor: pointer;
 }
