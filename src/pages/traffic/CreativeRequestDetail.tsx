@@ -128,18 +128,15 @@ export default function CreativeRequestDetail() {
   };
 
   const handleRoleKeyChange = async (value: string) => {
-    const val = value === 'none' ? null : (value as CreativeResponsibleRole);
-    setResponsibleRoleKey(val || '');
+    const val = value as CreativeResponsibleRole;
+    setResponsibleRoleKey(val);
     await flush();
+    // The database trigger will automatically resolve the assignee based on the role
     updateField({ responsible_role_key: val });
   };
 
-  const handleAssigneeChange = async (value: string) => {
-    const val = value === 'none' ? null : value;
-    setAssigneeId(val || '');
-    await flush();
-    updateField({ assignee_id: val });
-  };
+  // Assignee is now read-only - automatically set by account team based on role
+  // Removed handleAssigneeChange - assignment comes from database trigger
 
   const handleReviewerChange = async (value: string) => {
     const val = value === 'none' ? null : value;
@@ -266,17 +263,14 @@ export default function CreativeRequestDetail() {
 
             <div className="space-y-2">
               <Label>Responsável</Label>
-              <Select value={assigneeId || 'none'} onValueChange={handleAssigneeChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhum</SelectItem>
-                  {activeMembers.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                value={activeMembers.find((m) => m.id === assigneeId)?.name || 'Definido pelo cargo'}
+                disabled
+                className="bg-muted"
+              />
+              <p className="text-xs text-muted-foreground">
+                Atribuído automaticamente pelo Time da Conta
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -326,18 +320,20 @@ export default function CreativeRequestDetail() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Cargo Responsável</Label>
-                  <Select value={responsibleRoleKey || 'none'} onValueChange={handleRoleKeyChange}>
+                  <Label>Cargo Responsável *</Label>
+                  <Select value={responsibleRoleKey || ''} onValueChange={handleRoleKeyChange}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
+                      <SelectValue placeholder="Selecione o cargo" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">Nenhum</SelectItem>
                       {CREATIVE_RESPONSIBLE_ROLE_OPTIONS.map((o) => (
                         <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Define quem será o responsável pela tarefa
+                  </p>
                 </div>
               </div>
 
