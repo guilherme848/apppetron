@@ -367,6 +367,8 @@ export default function PostDetail() {
             Briefing
             {hasBriefing && <Badge variant="secondary" className="h-4 w-4 p-0 text-[10px] rounded-full">•</Badge>}
           </TabsTrigger>
+          <TabsTrigger value="caption">Legenda</TabsTrigger>
+          <TabsTrigger value="files">Arquivos</TabsTrigger>
           <TabsTrigger value="changes" className="flex items-center gap-1">
             Alterações
             {openChangeRequestsCount > 0 && (
@@ -375,8 +377,6 @@ export default function PostDetail() {
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="caption">Legenda</TabsTrigger>
-          <TabsTrigger value="files">Arquivos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="post">
