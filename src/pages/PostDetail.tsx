@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2, Loader2, Save, RefreshCw, FileText, Paperclip } from 'lucide-react';
+import { ArrowLeft, Trash2, Loader2, Save, RefreshCw, FileText, Paperclip, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -15,9 +15,11 @@ import { useContentProduction } from '@/contexts/ContentProductionContext';
 import { FileUpload } from '@/components/content/FileUpload';
 import { RichTextEditor } from '@/components/content/RichTextEditor';
 import { ContentFileUpload } from '@/components/content/ContentFileUpload';
+import { ChangeRequestsTab } from '@/components/content/ChangeRequestsTab';
 import { CHANNEL_OPTIONS, FORMAT_OPTIONS, POST_STATUS_OPTIONS, PostStatus, PostAttachment, ContentPostFile } from '@/types/contentProduction';
 import { RESPONSIBLE_ROLE_OPTIONS, ResponsibleRoleKey } from '@/types/crm';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
+import { useChangeRequests } from '@/hooks/useChangeRequests';
 import { Badge } from '@/components/ui/badge';
 import { format as formatDate } from 'date-fns';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -26,7 +28,17 @@ export default function PostDetail() {
   const { batchId, postId } = useParams<{ batchId: string; postId: string }>();
   const navigate = useNavigate();
   const { batches, posts, accounts, loading, updatePost, deletePost, fetchPosts } = useContentProduction();
-  const { getActiveMembers, getMemberById } = useTeamMembers();
+  const { getActiveMembers } = useTeamMembers();
+  const { 
+    requests: changeRequests, 
+    loading: loadingChangeRequests, 
+    fetchRequests: fetchChangeRequests,
+    addRequest: addChangeRequest,
+    updateRequestStatus,
+    deleteRequest: deleteChangeRequest,
+    openCount: openChangeRequestsCount,
+    totalCount: totalChangeRequestsCount,
+  } = useChangeRequests(postId);
 
   // Basic post fields
   const [title, setTitle] = useState('');
@@ -39,10 +51,6 @@ export default function PostDetail() {
   const [briefingTitle, setBriefingTitle] = useState('');
   const [briefingRich, setBriefingRich] = useState('');
   
-  // Changes fields
-  const [changesTitle, setChangesTitle] = useState('');
-  const [changesRich, setChangesRich] = useState('');
-  
   const [responsibleRoleKey, setResponsibleRoleKey] = useState<ResponsibleRoleKey>('social');
   const [assigneeId, setAssigneeId] = useState<string>('');
   const [saving, setSaving] = useState(false);
@@ -51,9 +59,8 @@ export default function PostDetail() {
   const [attachments, setAttachments] = useState<PostAttachment[]>([]);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
   
-  // New content_post_files
+  // New content_post_files (only for briefing now)
   const [briefingFiles, setBriefingFiles] = useState<ContentPostFile[]>([]);
-  const [changesFiles, setChangesFiles] = useState<ContentPostFile[]>([]);
   const [loadingFiles, setLoadingFiles] = useState(false);
   
   const [showTeamWarning, setShowTeamWarning] = useState(false);
@@ -93,7 +100,6 @@ export default function PostDetail() {
     } else {
       const files = (data || []) as ContentPostFile[];
       setBriefingFiles(files.filter(f => f.context === 'briefing'));
-      setChangesFiles(files.filter(f => f.context === 'changes'));
     }
     setLoadingFiles(false);
   }, [postId]);
@@ -108,8 +114,9 @@ export default function PostDetail() {
     if (postId) {
       fetchAttachments();
       fetchContentFiles();
+      fetchChangeRequests();
     }
-  }, [postId, fetchAttachments, fetchContentFiles]);
+  }, [postId, fetchAttachments, fetchContentFiles, fetchChangeRequests]);
 
   useEffect(() => {
     if (post) {
@@ -121,13 +128,9 @@ export default function PostDetail() {
       
       // Rich content fields
       setBriefingTitle((post as any).briefing_title || '');
-      // If briefing_rich is empty but briefing has content, use briefing (migration)
       const richContent = (post as any).briefing_rich || '';
       const legacyBriefing = post.briefing || '';
       setBriefingRich(richContent || legacyBriefing);
-      
-      setChangesTitle((post as any).changes_title || '');
-      setChangesRich((post as any).changes_rich || '');
       
       const roleKey = (post as any).responsible_role_key as ResponsibleRoleKey || 'social';
       setResponsibleRoleKey(roleKey);
@@ -206,12 +209,10 @@ export default function PostDetail() {
       channel: channel || null,
       format: format || null,
       status,
-      briefing: briefingRich || null, // Keep legacy field updated
+      briefing: briefingRich || null,
       briefing_title: briefingTitle || null,
       briefing_rich: briefingRich || null,
       caption: caption || null,
-      changes_title: changesTitle || null,
-      changes_rich: changesRich || null,
       responsible_role_key: responsibleRoleKey,
       assignee_id: assigneeId || null,
     } as any);
@@ -249,7 +250,7 @@ export default function PostDetail() {
     setAttachments((prev) => prev.filter((a) => a.id !== fileId));
   };
 
-  // New content file handlers
+  // Briefing file handlers
   const handleBriefingFileUploaded = async (file: {
     file_name: string;
     storage_path: string;
@@ -278,41 +279,25 @@ export default function PostDetail() {
     setBriefingFiles((prev) => prev.filter((f) => f.id !== fileId));
   };
 
-  const handleChangesFileUploaded = async (file: {
-    file_name: string;
-    storage_path: string;
-    file_size: number;
-    file_type: string;
-    public_url: string;
-  }) => {
-    const { data, error } = await supabase
-      .from('content_post_files')
-      .insert([{ 
-        post_id: postId, 
-        context: 'changes',
-        ...file 
-      }])
-      .select()
-      .single();
-    if (error) {
-      console.error('Error saving changes file:', error);
-      return;
-    }
-    setChangesFiles((prev) => [data as ContentPostFile, ...prev]);
+  // Change request handlers
+  const handleAddChangeRequest = async (commentRich: string) => {
+    return addChangeRequest(commentRich);
   };
 
-  const handleChangesFileDeleted = async (fileId: string) => {
-    await supabase.from('content_post_files').delete().eq('id', fileId);
-    setChangesFiles((prev) => prev.filter((f) => f.id !== fileId));
+  const handleUpdateChangeRequestStatus = async (id: string, newStatus: 'open' | 'in_progress' | 'done' | 'canceled', resolutionNote?: string) => {
+    return updateRequestStatus(id, newStatus, undefined, resolutionNote);
+  };
+
+  const handlePostStatusChange = async (newStatus: PostStatus) => {
+    setStatus(newStatus);
+    await updatePost(post.id, { status: newStatus } as any);
   };
 
   const captionLength = caption.length;
   
   // Check if sections have content for badges
   const hasBriefing = briefingTitle || briefingRich;
-  const hasChanges = changesTitle || changesRich;
   const briefingFileCount = briefingFiles.length;
-  const changesFileCount = changesFiles.length;
 
   return (
     <div className="space-y-6">
@@ -327,13 +312,19 @@ export default function PostDetail() {
             {hasBriefing && (
               <Badge variant="secondary" className="text-xs">B</Badge>
             )}
-            {hasChanges && (
-              <Badge variant="outline" className="text-xs">A</Badge>
+            {totalChangeRequestsCount > 0 && (
+              <Badge 
+                variant={openChangeRequestsCount > 0 ? "destructive" : "outline"} 
+                className="text-xs"
+              >
+                <AlertTriangle className="h-3 w-3 mr-1" />
+                {openChangeRequestsCount}/{totalChangeRequestsCount}
+              </Badge>
             )}
-            {(briefingFileCount + changesFileCount + attachments.length) > 0 && (
+            {(briefingFileCount + attachments.length) > 0 && (
               <Badge variant="outline" className="text-xs">
                 <Paperclip className="h-3 w-3 mr-1" />
-                {briefingFileCount + changesFileCount + attachments.length}
+                {briefingFileCount + attachments.length}
               </Badge>
             )}
           </div>
@@ -378,7 +369,11 @@ export default function PostDetail() {
           </TabsTrigger>
           <TabsTrigger value="changes" className="flex items-center gap-1">
             Alterações
-            {hasChanges && <Badge variant="secondary" className="h-4 w-4 p-0 text-[10px] rounded-full">•</Badge>}
+            {openChangeRequestsCount > 0 && (
+              <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">
+                {openChangeRequestsCount}
+              </Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger value="caption">Legenda</TabsTrigger>
           <TabsTrigger value="files">Arquivos</TabsTrigger>
@@ -580,62 +575,17 @@ export default function PostDetail() {
           </Card>
         </TabsContent>
 
-        {/* Changes Tab with nested tabs */}
+        {/* Change Requests Tab */}
         <TabsContent value="changes">
-          <Card>
-            <CardContent className="pt-6">
-              <Tabs defaultValue="content" className="w-full">
-                <TabsList className="mb-4">
-                  <TabsTrigger value="content" className="flex items-center gap-1">
-                    <FileText className="h-4 w-4" />
-                    Conteúdo
-                  </TabsTrigger>
-                  <TabsTrigger value="files" className="flex items-center gap-1">
-                    <Paperclip className="h-4 w-4" />
-                    Arquivos
-                    {changesFileCount > 0 && (
-                      <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
-                        {changesFileCount}
-                      </Badge>
-                    )}
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="content" className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="changes-title">Título da Alteração</Label>
-                    <Input
-                      id="changes-title"
-                      value={changesTitle}
-                      onChange={(e) => setChangesTitle(e.target.value)}
-                      placeholder="Ex: Revisão 1 - Ajustes no texto"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Conteúdo da Alteração</Label>
-                    <RichTextEditor
-                      content={changesRich}
-                      onChange={setChangesRich}
-                      placeholder="Descreva as alterações solicitadas..."
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Use a barra de ferramentas para formatar o texto. Links serão clicáveis automaticamente.
-                    </p>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="files">
-                  <ContentFileUpload
-                    files={changesFiles}
-                    postId={postId!}
-                    context="changes"
-                    onFileUploaded={handleChangesFileUploaded}
-                    onFileDeleted={handleChangesFileDeleted}
-                  />
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
+          <ChangeRequestsTab
+            requests={changeRequests}
+            loading={loadingChangeRequests}
+            onAddRequest={handleAddChangeRequest}
+            onUpdateStatus={handleUpdateChangeRequestStatus}
+            onDelete={deleteChangeRequest}
+            onPostStatusChange={handlePostStatusChange}
+            currentPostStatus={status}
+          />
         </TabsContent>
 
         <TabsContent value="caption">
@@ -664,9 +614,9 @@ export default function PostDetail() {
         <TabsContent value="files">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Arquivos do Post (Legado)</CardTitle>
+              <CardTitle className="text-base">Arquivos do Post</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Arquivos gerais do post. Para anexos específicos, use as abas de Briefing ou Alterações.
+                Arquivos gerais do post. Para anexos de referência, use a aba Briefing.
               </p>
             </CardHeader>
             <CardContent>
