@@ -1920,6 +1920,142 @@ export type Database = {
           },
         ]
       }
+      traffic_creative_request_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          public_url: string | null
+          request_id: string
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          public_url?: string | null
+          request_id: string
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          public_url?: string | null
+          request_id?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traffic_creative_request_files_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_creative_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      traffic_creative_requests: {
+        Row: {
+          assignee_id: string | null
+          brief_rich: string | null
+          brief_title: string | null
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          due_date: string | null
+          format: string
+          id: string
+          month_ref: string
+          objective: string | null
+          priority: string
+          requested_by_member_id: string | null
+          requested_by_role_key: string
+          responsible_role_key: string | null
+          reviewer_member_id: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          brief_rich?: string | null
+          brief_title?: string | null
+          client_id: string
+          completed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          format?: string
+          id?: string
+          month_ref: string
+          objective?: string | null
+          priority?: string
+          requested_by_member_id?: string | null
+          requested_by_role_key?: string
+          responsible_role_key?: string | null
+          reviewer_member_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string | null
+          brief_rich?: string | null
+          brief_title?: string | null
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          format?: string
+          id?: string
+          month_ref?: string
+          objective?: string | null
+          priority?: string
+          requested_by_member_id?: string | null
+          requested_by_role_key?: string
+          responsible_role_key?: string | null
+          reviewer_member_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traffic_creative_requests_assignee_id_fkey"
+            columns: ["assignee_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traffic_creative_requests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traffic_creative_requests_requested_by_member_id_fkey"
+            columns: ["requested_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traffic_creative_requests_reviewer_member_id_fkey"
+            columns: ["reviewer_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       traffic_cycle_routines: {
         Row: {
           active: boolean
