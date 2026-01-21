@@ -54,7 +54,11 @@ export interface ContentPost {
   status: PostStatus;
   due_date: string | null; // deprecated - kept for compatibility
   briefing: string | null;
+  briefing_title: string | null;
+  briefing_rich: string | null;
   caption: string | null;
+  changes_title: string | null;
+  changes_rich: string | null;
   item_type: ItemType | null;
   responsible_role_id: string | null;
   responsible_role_key: string | null;
@@ -63,6 +67,18 @@ export interface ContentPost {
   completed_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface ContentPostFile {
+  id: string;
+  post_id: string;
+  context: 'briefing' | 'changes';
+  file_name: string;
+  file_type: string | null;
+  file_size: number | null;
+  storage_path: string;
+  public_url: string | null;
+  created_at: string;
 }
 
 export interface JobRole {
