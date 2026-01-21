@@ -27,6 +27,14 @@ import TrafficDashboard from "./pages/traffic/TrafficDashboard";
 import TrafficTasks from "./pages/traffic/TrafficTasks";
 import TrafficClientDetail from "./pages/traffic/TrafficClientDetail";
 
+// CS pages
+import CsDashboard from "./pages/cs/CsDashboard";
+import CsOnboarding from "./pages/cs/CsOnboarding";
+import CsMeetings from "./pages/cs/CsMeetings";
+import CsNps from "./pages/cs/CsNps";
+import CsRisk from "./pages/cs/CsRisk";
+import CsClientDetail from "./pages/cs/CsClientDetail";
+
 // Settings pages
 import { SettingsLayout } from "./pages/settings/SettingsLayout";
 import SettingsHome from "./pages/settings/SettingsHome";
@@ -72,6 +80,14 @@ const App = () => (
                       <Route path="/traffic" element={<TrafficDashboard />} />
                       <Route path="/traffic/tasks" element={<TrafficTasks />} />
                       <Route path="/traffic/clients/:id" element={<TrafficClientDetail />} />
+                      
+                      {/* CS routes */}
+                      <Route path="/cs" element={<CsDashboard />} />
+                      <Route path="/cs/onboarding" element={<CsOnboarding />} />
+                      <Route path="/cs/meetings" element={<CsMeetings />} />
+                      <Route path="/cs/nps" element={<CsNps />} />
+                      <Route path="/cs/risk" element={<CsRisk />} />
+                      <Route path="/cs/client/:clientId" element={<CsClientDetail />} />
                       
                       {/* Settings with nested routes */}
                       <Route path="/settings" element={<SettingsLayout />}>
