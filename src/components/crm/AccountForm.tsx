@@ -122,7 +122,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
   }, [services, niches]);
 
   // AutoSave hook - only used when editing existing account
-  const { status: saveStatus, saveNow, saveDebounced, flush } = useAutoSave({
+  const { status: saveStatus, saveNow, queueChange, flush } = useAutoSave({
     onSave: async (patch) => {
       if (!isEditing || !account) return;
       // We need to send the full data with the patch applied
@@ -130,7 +130,6 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
       const saveData = buildSaveData(currentData);
       await onSubmit(saveData);
     },
-    debounceMs: 600,
   });
 
   // Flush on dialog close
@@ -228,18 +227,18 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
     }
   };
 
-  // Text field handlers with debounced autosave
+  // Text field handlers with commit-based autosave (queue on change, flush on blur)
   const handleTextChange = (field: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setFormData(prev => ({ ...prev, [field]: value }));
     if (isEditing && !skipAutoSave.current) {
-      saveDebounced({ [field]: value });
+      queueChange({ [field]: value });
     }
   };
 
-  const handleTextBlur = (field: keyof typeof formData) => () => {
+  const handleTextBlur = (field: keyof typeof formData) => async () => {
     if (isEditing && !skipAutoSave.current) {
-      flush();
+      await flush();
     }
   };
 
@@ -252,13 +251,13 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
     }
   };
 
-  // Special formatted inputs
+  // Special formatted inputs - queue on change, flush on blur
   const handleCpfCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatCpfCnpj(e.target.value);
     if (formatted.replace(/\D/g, '').length <= 14) {
       setFormData(prev => ({ ...prev, cpf_cnpj: formatted }));
       if (isEditing && !skipAutoSave.current) {
-        saveDebounced({ cpf_cnpj: formatted });
+        queueChange({ cpf_cnpj: formatted });
       }
     }
   };
@@ -268,7 +267,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
     if (formatted.replace(/\D/g, '').length <= 8) {
       setFormData(prev => ({ ...prev, postal_code: formatted }));
       if (isEditing && !skipAutoSave.current) {
-        saveDebounced({ postal_code: formatted });
+        queueChange({ postal_code: formatted });
       }
     }
   };
@@ -278,7 +277,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
     if (formatted.replace(/\D/g, '').length <= 11) {
       setFormData(prev => ({ ...prev, contact_phone: formatted }));
       if (isEditing && !skipAutoSave.current) {
-        saveDebounced({ contact_phone: formatted });
+        queueChange({ contact_phone: formatted });
       }
     }
   };
@@ -287,7 +286,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
     setFormData(prev => ({ ...prev, contact_email: e.target.value }));
     if (emailError) setEmailError('');
     if (isEditing && !skipAutoSave.current && isValidEmail(e.target.value)) {
-      saveDebounced({ contact_email: e.target.value });
+      queueChange({ contact_email: e.target.value });
     }
   };
 

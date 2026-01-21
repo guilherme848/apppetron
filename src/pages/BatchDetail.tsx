@@ -54,14 +54,13 @@ export default function BatchDetail() {
     await updateBatch(batch.id, data);
   }, [batch, updateBatch]);
 
-  const { status: saveStatus, saveNow, saveDebounced, flush } = useAutoSave({
+  const { status: saveStatus, saveNow, queueChange, flush, hasPendingChanges } = useAutoSave({
     onSave: handleSaveBatch,
-    debounceMs: 600,
     showToasts: false,
   });
 
   // Flush on navigation
-  useAutoSaveNavigation(flush);
+  useAutoSaveNavigation(flush, hasPendingChanges);
 
   const fetchAttachments = useCallback(async () => {
     if (!id) return;
@@ -142,17 +141,17 @@ export default function BatchDetail() {
   const totalCount = batchPosts.length;
   const progress = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
 
-  // Autosave handlers
+  // Autosave handlers - commit-based (queue on change, flush on blur)
   const handleNotesChange = (value: string) => {
     setNotes(value);
     if (initialLoadComplete.current) {
-      saveDebounced({ notes: value || null });
+      queueChange({ notes: value || null });
     }
   };
 
-  const handleNotesBlur = () => {
+  const handleNotesBlur = async () => {
     if (initialLoadComplete.current) {
-      saveNow({ notes: notes || null });
+      await flush();
     }
   };
 

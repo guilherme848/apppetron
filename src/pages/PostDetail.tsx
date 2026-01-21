@@ -78,14 +78,13 @@ export default function PostDetail() {
     await updatePost(post.id, data);
   }, [post, updatePost]);
 
-  const { status: saveStatus, saveNow, saveDebounced, flush } = useAutoSave({
+  const { status: saveStatus, saveNow, queueChange, flush, hasPendingChanges } = useAutoSave({
     onSave: handleSavePost,
-    debounceMs: 600,
     showToasts: false,
   });
 
   // Flush on navigation
-  useAutoSaveNavigation(flush);
+  useAutoSaveNavigation(flush, hasPendingChanges);
 
   // Fetch legacy attachments
   const fetchAttachments = useCallback(async () => {
@@ -170,17 +169,18 @@ export default function PostDetail() {
     return memberId || null;
   }, [client]);
 
-  // Field change handlers with autosave
+  // Field change handlers with commit-based autosave
+  // Text fields: queue changes on change, flush on blur
   const handleTitleChange = (value: string) => {
     setTitle(value);
     if (initialLoadComplete.current) {
-      saveDebounced({ title: value.trim() });
+      queueChange({ title: value.trim() });
     }
   };
 
-  const handleTitleBlur = () => {
-    if (initialLoadComplete.current && title.trim()) {
-      saveNow({ title: title.trim() });
+  const handleTitleBlur = async () => {
+    if (initialLoadComplete.current) {
+      await flush();
     }
   };
 
@@ -246,32 +246,43 @@ export default function PostDetail() {
     }
   };
 
-  // Briefing handlers with debounce
+  // Briefing handlers - commit-based (queue on change, flush on blur)
   const handleBriefingTitleChange = (value: string) => {
     setBriefingTitle(value);
     if (initialLoadComplete.current) {
-      saveDebounced({ briefing_title: value || null });
+      queueChange({ briefing_title: value || null });
     }
   };
 
-  const handleBriefingTitleBlur = () => {
+  const handleBriefingTitleBlur = async () => {
     if (initialLoadComplete.current) {
-      saveNow({ briefing_title: briefingTitle || null });
+      await flush();
     }
   };
 
   const handleBriefingRichChange = (value: string) => {
     setBriefingRich(value);
     if (initialLoadComplete.current) {
-      // Longer debounce for rich text
-      saveDebounced({ briefing_rich: value || null, briefing: value || null }, 1200);
+      queueChange({ briefing_rich: value || null, briefing: value || null });
+    }
+  };
+
+  const handleBriefingRichBlur = async () => {
+    if (initialLoadComplete.current) {
+      await flush();
     }
   };
 
   const handleCaptionChange = (value: string) => {
     setCaption(value);
     if (initialLoadComplete.current) {
-      saveDebounced({ caption: value || null }, 1200);
+      queueChange({ caption: value || null });
+    }
+  };
+
+  const handleCaptionBlur = async () => {
+    if (initialLoadComplete.current) {
+      await flush();
     }
   };
 
@@ -623,6 +634,7 @@ export default function PostDetail() {
                     <RichTextEditor
                       content={briefingRich}
                       onChange={handleBriefingRichChange}
+                      onBlur={handleBriefingRichBlur}
                       placeholder="Descreva o briefing do post: objetivo, referências, tom de voz, etc."
                     />
                     <p className="text-xs text-muted-foreground">
@@ -666,6 +678,7 @@ export default function PostDetail() {
                 <RichTextEditor
                   content={caption}
                   onChange={handleCaptionChange}
+                  onBlur={handleCaptionBlur}
                   placeholder="Escreva a legenda do post: texto, hashtags, links..."
                 />
                 <p className="text-xs text-muted-foreground">

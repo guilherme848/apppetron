@@ -77,27 +77,28 @@ export default function CreativeRequestDetail() {
     [updateField, toast]
   );
 
-  const { status: saveStatus, saveDebounced, flush } = useAutoSave({ onSave: handleSave });
+  const { status: saveStatus, saveNow, queueChange, flush } = useAutoSave({ onSave: handleSave });
 
-  // Debounced text fields
+  // Commit-based text fields: queue on change, flush on blur
   const handleTitleChange = (value: string) => {
     setTitle(value);
-    saveDebounced({ title: value });
+    queueChange({ title: value });
   };
 
   const handleBriefTitleChange = (value: string) => {
     setBriefTitle(value);
-    saveDebounced({ brief_title: value || null });
+    queueChange({ brief_title: value || null });
   };
 
   const handleBriefRichChange = (value: string) => {
     setBriefRich(value);
-    saveDebounced({ brief_rich: value || null });
+    queueChange({ brief_rich: value || null });
   };
 
   const handleDueDateChange = (value: string) => {
     setDueDate(value);
-    saveDebounced({ due_date: value || null });
+    // Date pickers save immediately
+    saveNow({ due_date: value || null });
   };
 
   // Instant save fields
@@ -303,6 +304,7 @@ export default function CreativeRequestDetail() {
                 <Input
                   value={title}
                   onChange={(e) => handleTitleChange(e.target.value)}
+                  onBlur={flush}
                   placeholder="Título da solicitação"
                 />
               </div>
@@ -366,6 +368,7 @@ export default function CreativeRequestDetail() {
                 <Input
                   value={briefTitle}
                   onChange={(e) => handleBriefTitleChange(e.target.value)}
+                  onBlur={flush}
                   placeholder="Resumo ou título do briefing"
                 />
               </div>
@@ -374,6 +377,7 @@ export default function CreativeRequestDetail() {
                 <RichTextEditor
                   content={briefRich}
                   onChange={handleBriefRichChange}
+                  onBlur={flush}
                   placeholder="Descreva o criativo desejado..."
                 />
               </div>

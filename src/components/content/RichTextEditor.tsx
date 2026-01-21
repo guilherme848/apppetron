@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 interface RichTextEditorProps {
   content: string;
   onChange: (content: string) => void;
+  onBlur?: () => void;
   placeholder?: string;
   className?: string;
 }
@@ -154,7 +155,7 @@ function MenuBar({ editor }: { editor: Editor | null }) {
   );
 }
 
-export function RichTextEditor({ content, onChange, placeholder, className }: RichTextEditorProps) {
+export function RichTextEditor({ content, onChange, onBlur, placeholder, className }: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -181,6 +182,9 @@ export function RichTextEditor({ content, onChange, placeholder, className }: Ri
     },
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
+    },
+    onBlur: () => {
+      onBlur?.();
     },
   });
 

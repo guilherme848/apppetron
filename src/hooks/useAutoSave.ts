@@ -1,11 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 
-export type AutoSaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+export type AutoSaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'error';
 
 interface AutoSaveOptions {
   onSave: (data: Record<string, any>) => Promise<void>;
-  debounceMs?: number;
   maxRetries?: number;
   retryDelayMs?: number;
   showToasts?: boolean;
@@ -14,16 +13,24 @@ interface AutoSaveOptions {
 interface UseAutoSaveReturn {
   status: AutoSaveStatus;
   saveNow: (patch: Record<string, any>) => Promise<void>;
-  saveDebounced: (patch: Record<string, any>, delayMs?: number) => void;
+  queueChange: (patch: Record<string, any>) => void;
   flush: () => Promise<void>;
   hasPendingChanges: boolean;
   retryCount: number;
   lastError: Error | null;
 }
 
+/**
+ * Commit-based autosave hook.
+ * 
+ * - queueChange: Queue changes without triggering save (for onChange during typing)
+ * - saveNow: Save immediately (for selects, toggles, date pickers)
+ * - flush: Save all pending changes (for onBlur, tab change, navigation)
+ * 
+ * No debounce - saves only happen on explicit commit actions.
+ */
 export function useAutoSave({
   onSave,
-  debounceMs = 600,
   maxRetries = 3,
   retryDelayMs = 1000,
   showToasts = false,
@@ -33,7 +40,6 @@ export function useAutoSave({
   const [lastError, setLastError] = useState<Error | null>(null);
   
   const pendingChanges = useRef<Record<string, any>>({});
-  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
   const saveInProgress = useRef(false);
   const isMounted = useRef(true);
 
@@ -65,8 +71,13 @@ export function useAutoSave({
         
         // Reset to idle after showing "saved" briefly
         setTimeout(() => {
-          if (isMounted.current && !hasPendingChanges) {
-            setStatus('idle');
+          if (isMounted.current) {
+            // Check if there are new pending changes
+            if (Object.keys(pendingChanges.current).length > 0) {
+              setStatus('pending');
+            } else {
+              setStatus('idle');
+            }
           }
         }, 1500);
 
@@ -101,15 +112,26 @@ export function useAutoSave({
     } finally {
       saveInProgress.current = false;
     }
-  }, [onSave, maxRetries, retryDelayMs, showToasts, hasPendingChanges]);
+  }, [onSave, maxRetries, retryDelayMs, showToasts]);
 
-  const saveNow = useCallback(async (patch: Record<string, any>): Promise<void> => {
-    // Clear any pending debounced saves
-    if (debounceTimeout.current) {
-      clearTimeout(debounceTimeout.current);
-      debounceTimeout.current = null;
+  /**
+   * Queue changes without triggering a save.
+   * Use this for onChange events during typing.
+   * Changes will be saved on flush() or saveNow().
+   */
+  const queueChange = useCallback((patch: Record<string, any>): void => {
+    pendingChanges.current = { ...pendingChanges.current, ...patch };
+    
+    if (isMounted.current && Object.keys(pendingChanges.current).length > 0) {
+      setStatus('pending');
     }
+  }, []);
 
+  /**
+   * Save immediately, merging with any pending changes.
+   * Use this for selects, toggles, date pickers, and other instant-commit actions.
+   */
+  const saveNow = useCallback(async (patch: Record<string, any>): Promise<void> => {
     // Merge with pending changes
     const allChanges = { ...pendingChanges.current, ...patch };
     pendingChanges.current = {};
@@ -117,35 +139,11 @@ export function useAutoSave({
     await performSave(allChanges);
   }, [performSave]);
 
-  const saveDebounced = useCallback((patch: Record<string, any>, delayMs?: number): void => {
-    // Merge with existing pending changes
-    pendingChanges.current = { ...pendingChanges.current, ...patch };
-
-    // Clear existing timeout
-    if (debounceTimeout.current) {
-      clearTimeout(debounceTimeout.current);
-    }
-
-    // Set new debounced save
-    const delay = delayMs ?? debounceMs;
-    debounceTimeout.current = setTimeout(async () => {
-      const changes = { ...pendingChanges.current };
-      pendingChanges.current = {};
-      debounceTimeout.current = null;
-      
-      if (Object.keys(changes).length > 0) {
-        await performSave(changes);
-      }
-    }, delay);
-  }, [debounceMs, performSave]);
-
+  /**
+   * Flush all pending changes immediately.
+   * Use this for onBlur, tab changes, and navigation.
+   */
   const flush = useCallback(async (): Promise<void> => {
-    // Clear debounce timer
-    if (debounceTimeout.current) {
-      clearTimeout(debounceTimeout.current);
-      debounceTimeout.current = null;
-    }
-
     // Save any pending changes immediately
     if (Object.keys(pendingChanges.current).length > 0) {
       const changes = { ...pendingChanges.current };
@@ -154,19 +152,10 @@ export function useAutoSave({
     }
   }, [performSave]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (debounceTimeout.current) {
-        clearTimeout(debounceTimeout.current);
-      }
-    };
-  }, []);
-
   return {
     status,
     saveNow,
-    saveDebounced,
+    queueChange,
     flush,
     hasPendingChanges,
     retryCount,
@@ -174,16 +163,21 @@ export function useAutoSave({
   };
 }
 
-// Hook for handling navigation with pending changes
-export function useAutoSaveNavigation(flush: () => Promise<void>) {
+/**
+ * Hook for handling navigation with pending changes.
+ * Flushes changes before page unload or component unmount.
+ */
+export function useAutoSaveNavigation(flush: () => Promise<void>, hasPendingChanges?: boolean) {
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       // Trigger flush before page unload
       flush();
       
       // Show browser confirmation if there are pending changes
-      e.preventDefault();
-      e.returnValue = '';
+      if (hasPendingChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -193,5 +187,5 @@ export function useAutoSaveNavigation(flush: () => Promise<void>) {
       // Flush on component unmount (navigation)
       flush();
     };
-  }, [flush]);
+  }, [flush, hasPendingChanges]);
 }
