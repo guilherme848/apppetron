@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/sidebar';
 import { useCurrentUserPermissions } from '@/hooks/usePermissions';
 import { PermissionKey } from '@/types/permissions';
+import petronLogo from '@/assets/petron-logo.png';
 
 interface MenuItem {
   title: string;
@@ -56,12 +57,13 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b border-border p-4">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">P</span>
-          </div>
-          <span className="font-semibold text-lg">Petron</span>
+      <SidebarHeader className="border-b border-sidebar-border p-4">
+        <div className="flex items-center gap-3">
+          <img 
+            src={petronLogo} 
+            alt="Petron Logo" 
+            className="h-8 w-auto"
+          />
         </div>
       </SidebarHeader>
       <SidebarContent>
