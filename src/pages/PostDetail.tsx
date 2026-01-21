@@ -592,20 +592,15 @@ export default function PostDetail() {
           <Card>
             <CardContent className="pt-6">
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="caption">Legenda</Label>
-                  <span className="text-xs text-muted-foreground">
-                    {captionLength} caracteres
-                  </span>
-                </div>
-                <Textarea
-                  id="caption"
-                  value={caption}
-                  onChange={(e) => setCaption(e.target.value)}
-                  placeholder="Escreva a legenda do post..."
-                  rows={12}
-                  className="resize-y"
+                <Label>Legenda</Label>
+                <RichTextEditor
+                  content={caption}
+                  onChange={setCaption}
+                  placeholder="Escreva a legenda do post: texto, hashtags, links..."
                 />
+                <p className="text-xs text-muted-foreground">
+                  Use a barra de ferramentas para formatar o texto. Links serão clicáveis automaticamente.
+                </p>
               </div>
             </CardContent>
           </Card>
