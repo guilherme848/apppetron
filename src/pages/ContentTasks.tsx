@@ -12,12 +12,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { POST_STATUS_OPTIONS, ITEM_TYPE_OPTIONS, BATCH_STATUS_OPTIONS, PostStatus, ItemType } from '@/types/contentProduction';
 import { RESPONSIBLE_ROLE_OPTIONS, ResponsibleRoleKey } from '@/types/crm';
+import { EXTRA_REQUEST_STATUS_LABELS, ExtraRequestStatus } from '@/types/extraRequests';
 import { format, isBefore, startOfDay } from 'date-fns';
 
+type TaskType = 'post' | 'extra';
+
 interface ConsolidatedTask {
-  post_id: string;
-  post_title: string;
-  post_status: PostStatus;
+  id: string;
+  type: TaskType;
+  title: string;
+  status: string;
   item_type: ItemType | null;
   responsible_role_key: ResponsibleRoleKey | null;
   assignee_id: string | null;
@@ -27,7 +31,7 @@ interface ConsolidatedTask {
   client_name: string;
   month_ref: string;
   batch_status: string;
-  batch_id: string;
+  batch_id: string | null;
 }
 
 interface AccountOption {
@@ -48,6 +52,7 @@ export default function ContentTasks() {
   const [filterItemType, setFilterItemType] = useState<string>('all');
   const [filterClient, setFilterClient] = useState<string>('all');
   const [filterRoleKey, setFilterRoleKey] = useState<string>('all');
+  const [filterTaskType, setFilterTaskType] = useState<string>('all');
   const [search, setSearch] = useState('');
 
   const fetchTasks = useCallback(async () => {
@@ -78,25 +83,42 @@ export default function ContentTasks() {
       `)
       .order('created_at', { ascending: false });
 
-    if (postsError) {
-      console.error('Error fetching tasks:', postsError);
+    // Fetch extra requests
+    const { data: extrasData, error: extrasError } = await supabase
+      .from('content_extra_requests')
+      .select(`
+        id,
+        title,
+        status,
+        responsible_role_key,
+        assignee_id,
+        due_date,
+        month_ref,
+        client_id,
+        accounts:client_id (name)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (postsError || extrasError) {
+      console.error('Error fetching tasks:', postsError || extrasError);
       setLoading(false);
       return;
     }
 
-    // Transform data into consolidated tasks
-    const consolidatedTasks: ConsolidatedTask[] = (postsData || []).map((post: any) => {
+    // Transform posts into consolidated tasks
+    const postTasks: ConsolidatedTask[] = (postsData || []).map((post: any) => {
       const batch = post.content_batches;
       const client = batch?.accounts;
       
       return {
-        post_id: post.id,
-        post_title: post.title,
-        post_status: post.status as PostStatus,
+        id: post.id,
+        type: 'post' as TaskType,
+        title: post.title,
+        status: post.status,
         item_type: post.item_type as ItemType | null,
         responsible_role_key: post.responsible_role_key as ResponsibleRoleKey | null,
         assignee_id: post.assignee_id,
-        assignee_name: null, // Will be filled from team members
+        assignee_name: null,
         due_date: batch?.planning_due_date || null,
         client_id: batch?.client_id || null,
         client_name: client?.name || 'Sem cliente',
@@ -106,7 +128,25 @@ export default function ContentTasks() {
       };
     });
 
-    setTasks(consolidatedTasks);
+    // Transform extras into consolidated tasks
+    const extraTasks: ConsolidatedTask[] = (extrasData || []).map((extra: any) => ({
+      id: extra.id,
+      type: 'extra' as TaskType,
+      title: extra.title,
+      status: extra.status,
+      item_type: null,
+      responsible_role_key: extra.responsible_role_key as ResponsibleRoleKey | null,
+      assignee_id: extra.assignee_id,
+      assignee_name: null,
+      due_date: extra.due_date || null,
+      client_id: extra.client_id,
+      client_name: extra.accounts?.name || 'Sem cliente',
+      month_ref: extra.month_ref || '',
+      batch_status: '',
+      batch_id: null,
+    }));
+
+    setTasks([...postTasks, ...extraTasks]);
 
     // Fetch unique accounts for filter
     const { data: accountsData } = await supabase
@@ -133,6 +173,11 @@ export default function ContentTasks() {
   const filteredTasks = useMemo(() => {
     let result = tasksWithAssignees;
 
+    // Filter by task type
+    if (filterTaskType !== 'all') {
+      result = result.filter((t) => t.type === filterTaskType);
+    }
+
     // Filter by assignee
     if (filterAssignee !== 'all') {
       if (filterAssignee === 'unassigned') {
@@ -144,10 +189,10 @@ export default function ContentTasks() {
 
     // Filter by status
     if (filterStatus !== 'all') {
-      result = result.filter((t) => t.post_status === filterStatus);
+      result = result.filter((t) => t.status === filterStatus);
     }
 
-    // Filter by item type
+    // Filter by item type (only for posts)
     if (filterItemType !== 'all') {
       result = result.filter((t) => t.item_type === filterItemType);
     }
@@ -165,7 +210,7 @@ export default function ContentTasks() {
     // Filter by search
     if (search.trim()) {
       const searchLower = search.toLowerCase();
-      result = result.filter((t) => t.post_title.toLowerCase().includes(searchLower));
+      result = result.filter((t) => t.title.toLowerCase().includes(searchLower));
     }
 
     // Sort: due_date ascending (nulls last), then status (todo first)
@@ -180,18 +225,18 @@ export default function ContentTasks() {
         return 1;
       }
 
-      // Then by status priority (todo > doing > done)
-      const statusOrder = { todo: 0, doing: 1, done: 2 };
-      return (statusOrder[a.post_status] || 0) - (statusOrder[b.post_status] || 0);
+      // Then by status priority (todo/open > doing/in_progress > done)
+      const statusOrder: Record<string, number> = { todo: 0, open: 0, doing: 1, in_progress: 1, done: 2, canceled: 3 };
+      return (statusOrder[a.status] ?? 9) - (statusOrder[b.status] ?? 9);
     });
-  }, [tasksWithAssignees, filterAssignee, filterStatus, filterItemType, filterClient, filterRoleKey, search]);
+  }, [tasksWithAssignees, filterAssignee, filterStatus, filterItemType, filterClient, filterRoleKey, filterTaskType, search]);
 
   const getRoleLabel = (roleKey: ResponsibleRoleKey | null) => {
     if (!roleKey) return null;
     return RESPONSIBLE_ROLE_OPTIONS.find(o => o.value === roleKey)?.label || roleKey;
   };
 
-  const isOverdue = (dueDate: string | null, status: PostStatus) => {
+  const isOverdue = (dueDate: string | null, status: string) => {
     if (!dueDate || status === 'done') return false;
     return isBefore(new Date(dueDate), startOfDay(new Date()));
   };
@@ -203,18 +248,36 @@ export default function ContentTasks() {
     return `${months[parseInt(month) - 1]}/${year}`;
   };
 
-  const getStatusBadge = (status: PostStatus) => {
+  const getStatusBadge = (status: string, type: TaskType) => {
+    if (type === 'extra') {
+      const label = EXTRA_REQUEST_STATUS_LABELS[status as ExtraRequestStatus] || status;
+      const variants: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
+        open: 'secondary',
+        in_progress: 'default',
+        done: 'outline',
+        canceled: 'outline',
+      };
+      return <Badge variant={variants[status] || 'secondary'}>{label}</Badge>;
+    }
     const variants: Record<PostStatus, 'default' | 'secondary' | 'outline'> = {
       todo: 'secondary',
       doing: 'default',
       done: 'outline',
     };
     const label = POST_STATUS_OPTIONS.find((o) => o.value === status)?.label || status;
-    return <Badge variant={variants[status]}>{label}</Badge>;
+    return <Badge variant={variants[status as PostStatus] || 'secondary'}>{label}</Badge>;
   };
 
   const getBatchStatusLabel = (status: string) => {
     return BATCH_STATUS_OPTIONS.find((o) => o.value === status)?.label || status;
+  };
+
+  const handleOpenTask = (task: ConsolidatedTask) => {
+    if (task.type === 'extra') {
+      navigate(`/content/extra-requests/${task.id}`);
+    } else {
+      navigate(`/content/production/${task.batch_id}/posts/${task.id}`);
+    }
   };
 
   if (loading || loadingMembers) {
@@ -230,9 +293,9 @@ export default function ContentTasks() {
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <ListTodo className="h-6 w-6" />
-          Tarefas (Posts)
+          Tarefas de Conteúdo
         </h1>
-        <p className="text-muted-foreground">Visão consolidada de todos os posts com filtros</p>
+        <p className="text-muted-foreground">Posts e Solicitações Extras</p>
       </div>
 
       {/* Filters */}
@@ -244,7 +307,21 @@ export default function ContentTasks() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Tipo</label>
+              <Select value={filterTaskType} onValueChange={setFilterTaskType}>
+                <SelectTrigger className="bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50">
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="post">Posts</SelectItem>
+                  <SelectItem value="extra">Extras</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-1">
               <label className="text-xs font-medium text-muted-foreground">Cargo</label>
               <Select value={filterRoleKey} onValueChange={setFilterRoleKey}>
@@ -343,7 +420,7 @@ export default function ContentTasks() {
           {filteredTasks.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               {tasks.length === 0 
-                ? 'Nenhum post encontrado. Crie posts dentro de um planejamento.'
+                ? 'Nenhuma tarefa encontrada. Crie posts ou solicitações extras.'
                 : 'Nenhuma tarefa encontrada com os filtros aplicados.'}
             </div>
           ) : (
@@ -351,7 +428,8 @@ export default function ContentTasks() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Post</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Título</TableHead>
                     <TableHead>Cliente</TableHead>
                     <TableHead>Mês</TableHead>
                     <TableHead>Etapa</TableHead>
@@ -364,12 +442,17 @@ export default function ContentTasks() {
                 </TableHeader>
                 <TableBody>
                   {filteredTasks.map((task) => {
-                    const overdue = isOverdue(task.due_date, task.post_status);
+                    const overdue = isOverdue(task.due_date, task.status);
                     return (
-                      <TableRow key={task.post_id} className={overdue ? 'bg-destructive/5' : ''}>
+                      <TableRow key={`${task.type}-${task.id}`} className={overdue ? 'bg-destructive/5' : ''}>
+                        <TableCell>
+                          <Badge variant={task.type === 'extra' ? 'default' : 'outline'} className="text-xs">
+                            {task.type === 'extra' ? 'Extra' : 'Post'}
+                          </Badge>
+                        </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <span className="font-medium">{task.post_title}</span>
+                            <span className="font-medium">{task.title}</span>
                             {task.item_type && (
                               <Badge variant="outline" className="text-xs">
                                 {ITEM_TYPE_OPTIONS.find((o) => o.value === task.item_type)?.label}
@@ -415,12 +498,12 @@ export default function ContentTasks() {
                             <span className="text-muted-foreground">—</span>
                           )}
                         </TableCell>
-                        <TableCell>{getStatusBadge(task.post_status)}</TableCell>
+                        <TableCell>{getStatusBadge(task.status, task.type)}</TableCell>
                         <TableCell>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => navigate(`/content/production/${task.batch_id}/posts/${task.post_id}`)}
+                            onClick={() => handleOpenTask(task)}
                           >
                             <ExternalLink className="h-4 w-4" />
                           </Button>
