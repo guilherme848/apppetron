@@ -1,13 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Eye, Trash2, Loader2, AlertTriangle, Archive, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Loader2, AlertTriangle, Archive, AlertCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,14 +15,15 @@ import { FileUpload } from '@/components/content/FileUpload';
 import { Progress } from '@/components/ui/progress';
 import { useJobRoles } from '@/hooks/useJobRoles';
 import { useStageResponsibilities } from '@/hooks/useStageResponsibilities';
-import { BATCH_STATUS_OPTIONS, BatchStatus, POST_STATUS_OPTIONS, CHANNEL_OPTIONS, FORMAT_OPTIONS, BatchAttachment } from '@/types/contentProduction';
+import { SortablePostList } from '@/components/content/SortablePostList';
+import { BATCH_STATUS_OPTIONS, BatchStatus, BatchAttachment, ContentPost } from '@/types/contentProduction';
 
 export default function BatchDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { 
     batches, posts, accounts, loading, 
-    updateBatch, updateBatchWithReset, deleteBatch, archiveBatch, addPost, updatePost, deletePost, fetchPosts 
+    updateBatch, updateBatchWithReset, deleteBatch, archiveBatch, addPost, updatePost, deletePost, fetchPosts, updatePostsOrder 
   } = useContentProduction();
   const { roles, getRoleById } = useJobRoles();
   const { responsibilities, getRoleForStage } = useStageResponsibilities();
@@ -34,7 +34,16 @@ export default function BatchDetail() {
   const [loadingAttachments, setLoadingAttachments] = useState(false);
 
   const batch = batches.find((b) => b.id === id);
-  const batchPosts = posts.filter((p) => p.batch_id === id);
+  
+  // Sort posts by sort_order, then by created_at
+  const batchPosts = useMemo(() => {
+    return posts
+      .filter((p) => p.batch_id === id)
+      .sort((a, b) => {
+        if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order;
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      });
+  }, [posts, id]);
 
   const fetchAttachments = useCallback(async () => {
     if (!id) return;
@@ -205,10 +214,6 @@ export default function BatchDetail() {
     return dueDate < today;
   };
 
-  const getChannelLabel = (value: string | null) => 
-    CHANNEL_OPTIONS.find((o) => o.value === value)?.label || value || '-';
-  const getFormatLabel = (value: string | null) => 
-    FORMAT_OPTIONS.find((o) => o.value === value)?.label || value || '-';
 
   const canArchive = batch.status === 'scheduling';
 
@@ -380,103 +385,18 @@ export default function BatchDetail() {
               Nenhum post cadastrado
             </p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Título</TableHead>
-                  <TableHead>Canal</TableHead>
-                  <TableHead>Formato</TableHead>
-                  <TableHead>Responsável</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-24">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {batchPosts.map((post) => (
-                  <TableRow key={post.id}>
-                    <TableCell className="font-medium">
-                      {post.title || <span className="text-muted-foreground italic">Sem título</span>}
-                    </TableCell>
-                    <TableCell>{getChannelLabel(post.channel)}</TableCell>
-                    <TableCell>{getFormatLabel(post.format)}</TableCell>
-                    <TableCell>
-                      {isVariableStage ? (
-                        <Select 
-                          value={post.responsible_role_id || ''} 
-                          onValueChange={(v) => handlePostResponsibleChange(post.id, v)}
-                        >
-                          <SelectTrigger className={`w-32 h-8 bg-background ${!post.responsible_role_id ? 'border-yellow-500' : ''}`}>
-                            <SelectValue placeholder="-" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-popover z-50">
-                            <SelectItem value="_none_">-</SelectItem>
-                            {roles.map((role) => (
-                              <SelectItem key={role.id} value={role.id}>
-                                {role.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        post.responsible_role_id ? (
-                          <Badge variant="outline">{getRoleById(post.responsible_role_id)?.name || '-'}</Badge>
-                        ) : planningResponsibleName ? (
-                          <Badge variant="outline">{planningResponsibleName}</Badge>
-                        ) : (
-                          <span className="text-yellow-600 dark:text-yellow-400">Não definido</span>
-                        )
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Select value={post.status} onValueChange={(v) => handlePostStatusChange(post.id, v)}>
-                        <SelectTrigger className="w-28 h-8 bg-background">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-popover z-50">
-                          {POST_STATUS_OPTIONS.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => navigate(`/content/production/${batch.id}/posts/${post.id}`)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Excluir post?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Esta ação não pode ser desfeita.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeletePost(post.id)}>
-                                Excluir
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <SortablePostList
+              posts={batchPosts}
+              batchId={batch.id}
+              isVariableStage={isVariableStage}
+              planningResponsibleName={planningResponsibleName}
+              roles={roles}
+              getRoleById={getRoleById}
+              onPostStatusChange={handlePostStatusChange}
+              onPostResponsibleChange={handlePostResponsibleChange}
+              onDeletePost={handleDeletePost}
+              onOrderChange={updatePostsOrder}
+            />
           )}
         </CardContent>
       </Card>
