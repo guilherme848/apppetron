@@ -343,12 +343,60 @@ export type Database = {
           },
         ]
       }
+      content_post_files: {
+        Row: {
+          context: string
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          post_id: string
+          public_url: string | null
+          storage_path: string
+        }
+        Insert: {
+          context: string
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          post_id: string
+          public_url?: string | null
+          storage_path: string
+        }
+        Update: {
+          context?: string
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          post_id?: string
+          public_url?: string | null
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_post_files_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "content_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_posts: {
         Row: {
           assignee_id: string | null
           batch_id: string
           briefing: string | null
+          briefing_rich: string | null
+          briefing_title: string | null
           caption: string | null
+          changes_rich: string | null
+          changes_title: string | null
           channel: string | null
           completed_at: string | null
           created_at: string
@@ -367,7 +415,11 @@ export type Database = {
           assignee_id?: string | null
           batch_id: string
           briefing?: string | null
+          briefing_rich?: string | null
+          briefing_title?: string | null
           caption?: string | null
+          changes_rich?: string | null
+          changes_title?: string | null
           channel?: string | null
           completed_at?: string | null
           created_at?: string
@@ -386,7 +438,11 @@ export type Database = {
           assignee_id?: string | null
           batch_id?: string
           briefing?: string | null
+          briefing_rich?: string | null
+          briefing_title?: string | null
           caption?: string | null
+          changes_rich?: string | null
+          changes_title?: string | null
           channel?: string | null
           completed_at?: string | null
           created_at?: string
