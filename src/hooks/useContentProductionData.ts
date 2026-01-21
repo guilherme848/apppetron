@@ -41,6 +41,7 @@ const mapPost = (data: any): ContentPost => ({
   assignee_id: data.assignee_id,
   started_at: data.started_at,
   completed_at: data.completed_at,
+  sort_order: data.sort_order ?? 0,
   created_at: data.created_at,
   updated_at: data.updated_at,
 });
@@ -114,7 +115,11 @@ export function useContentProductionData() {
   }, []);
 
   const fetchPosts = useCallback(async (batchId?: string) => {
-    let query = supabase.from('content_posts').select('*').order('created_at', { ascending: true });
+    let query = supabase
+      .from('content_posts')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true });
     if (batchId) {
       query = query.eq('batch_id', batchId);
     }
@@ -231,10 +236,21 @@ export function useContentProductionData() {
     setBatches((prev) => prev.filter((b) => b.id !== id));
   };
 
-  const addPost = async (post: { batch_id: string; title: string; channel?: string; format?: string; status?: PostStatus; briefing?: string; caption?: string }) => {
+  const addPost = async (post: { batch_id: string; title: string; channel?: string; format?: string; status?: PostStatus; briefing?: string; caption?: string; responsible_role_id?: string }) => {
+    // Get max sort_order for this batch
+    const { data: maxOrderData } = await supabase
+      .from('content_posts')
+      .select('sort_order')
+      .eq('batch_id', post.batch_id)
+      .order('sort_order', { ascending: false })
+      .limit(1)
+      .single();
+    
+    const nextSortOrder = (maxOrderData?.sort_order ?? -1) + 1;
+    
     const { data, error } = await supabase
       .from('content_posts')
-      .insert([{ ...post, status: post.status || 'todo' }])
+      .insert([{ ...post, status: post.status || 'todo', sort_order: nextSortOrder }])
       .select()
       .single();
     if (error) {
@@ -294,6 +310,14 @@ export function useContentProductionData() {
   const getPostsByBatch = (batchId: string) => posts.filter((p) => p.batch_id === batchId);
   const getAccountById = (id: string) => accounts.find((a) => a.id === id);
 
+  // Update posts order locally (for drag-and-drop)
+  const updatePostsOrder = (reorderedPosts: ContentPost[]) => {
+    setPosts((prev) => {
+      const otherPosts = prev.filter((p) => !reorderedPosts.some((rp) => rp.id === p.id));
+      return [...otherPosts, ...reorderedPosts];
+    });
+  };
+
   return {
     batches,
     posts,
@@ -313,6 +337,7 @@ export function useContentProductionData() {
     getAccountById,
     fetchPosts,
     fetchBatches,
+    updatePostsOrder,
     refetch: fetchAll,
   };
 }

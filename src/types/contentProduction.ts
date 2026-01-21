@@ -65,6 +65,7 @@ export interface ContentPost {
   assignee_id: string | null;
   started_at: string | null;
   completed_at: string | null;
+  sort_order: number;
   created_at: string;
   updated_at: string;
 }

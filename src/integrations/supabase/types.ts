@@ -470,6 +470,7 @@ export type Database = {
           item_type: string | null
           responsible_role_id: string | null
           responsible_role_key: string | null
+          sort_order: number
           started_at: string | null
           status: string
           title: string
@@ -493,6 +494,7 @@ export type Database = {
           item_type?: string | null
           responsible_role_id?: string | null
           responsible_role_key?: string | null
+          sort_order?: number
           started_at?: string | null
           status?: string
           title: string
@@ -516,6 +518,7 @@ export type Database = {
           item_type?: string | null
           responsible_role_id?: string | null
           responsible_role_key?: string | null
+          sort_order?: number
           started_at?: string | null
           status?: string
           title?: string
