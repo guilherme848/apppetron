@@ -127,72 +127,72 @@ export default function ExtraRequestsList() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-            <Select value={filterMonth} onValueChange={setFilterMonth}>
+            <Select value={filterMonth || "all"} onValueChange={(v) => setFilterMonth(v === "all" ? "" : v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Mês" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os meses</SelectItem>
+                <SelectItem value="all">Todos os meses</SelectItem>
                 {availableMonths.map(m => (
                   <SelectItem key={m} value={m}>{m}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <Select value={filterClient} onValueChange={setFilterClient}>
+            <Select value={filterClient || "all"} onValueChange={(v) => setFilterClient(v === "all" ? "" : v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Cliente" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os clientes</SelectItem>
+                <SelectItem value="all">Todos os clientes</SelectItem>
                 {accounts.map(a => (
                   <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <Select value={filterStatus || "all"} onValueChange={(v) => setFilterStatus(v === "all" ? "" : v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os status</SelectItem>
+                <SelectItem value="all">Todos os status</SelectItem>
                 {Object.entries(EXTRA_REQUEST_STATUS_LABELS).map(([k, v]) => (
                   <SelectItem key={k} value={k}>{v}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <Select value={filterPriority} onValueChange={setFilterPriority}>
+            <Select value={filterPriority || "all"} onValueChange={(v) => setFilterPriority(v === "all" ? "" : v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Prioridade" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas</SelectItem>
+                <SelectItem value="all">Todas</SelectItem>
                 {Object.entries(EXTRA_REQUEST_PRIORITY_LABELS).map(([k, v]) => (
                   <SelectItem key={k} value={k}>{v}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <Select value={filterResponsibleRole} onValueChange={setFilterResponsibleRole}>
+            <Select value={filterResponsibleRole || "all"} onValueChange={(v) => setFilterResponsibleRole(v === "all" ? "" : v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Cargo Resp." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os cargos</SelectItem>
+                <SelectItem value="all">Todos os cargos</SelectItem>
                 {Object.entries(EXTRA_RESPONSIBLE_ROLE_LABELS).map(([k, v]) => (
                   <SelectItem key={k} value={k}>{v}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <Select value={filterAssignee} onValueChange={setFilterAssignee}>
+            <Select value={filterAssignee || "all"} onValueChange={(v) => setFilterAssignee(v === "all" ? "" : v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Responsável" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 {members.filter(m => m.active).map(m => (
                   <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
                 ))}

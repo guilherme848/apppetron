@@ -19,6 +19,8 @@ export type PermissionKey =
   | 'edit_crm'
   | 'view_content'
   | 'edit_content'
+  | 'view_content_extras'
+  | 'edit_content_extras'
   | 'view_tasks'
   | 'edit_tasks'
   | 'manage_settings'

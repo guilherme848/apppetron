@@ -3,7 +3,7 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { 
   BarChart3, TrendingUp, Users, Calendar, FileText, AlertTriangle, 
-  CheckCircle2, Clock, Loader2, Download, ExternalLink, Filter
+  CheckCircle2, Clock, Loader2, Download, ExternalLink, Filter, FileQuestion
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,7 @@ import {
 import { Link } from 'react-router-dom';
 import { useContentDashboardData } from '@/hooks/useContentDashboardData';
 import { BATCH_STATUS_OPTIONS, POST_STATUS_OPTIONS } from '@/types/contentProduction';
+import { ExtraRequestsMetrics } from '@/components/dashboard/ExtraRequestsMetrics';
 
 const ROLE_LABELS: Record<string, string> = {
   designer: 'Designer',
@@ -278,11 +279,12 @@ export default function ContentDashboard() {
 
       {/* Tabs for sections */}
       <Tabs defaultValue="executive" className="space-y-4">
-        <TabsList className="grid grid-cols-5 w-full max-w-2xl">
+        <TabsList className="grid grid-cols-6 w-full max-w-3xl">
           <TabsTrigger value="executive">Executivo</TabsTrigger>
           <TabsTrigger value="productivity">Produtividade</TabsTrigger>
           <TabsTrigger value="workload">Carga</TabsTrigger>
           <TabsTrigger value="batches">Planejamentos</TabsTrigger>
+          <TabsTrigger value="extras">Extras</TabsTrigger>
           <TabsTrigger value="report">Relatório</TabsTrigger>
         </TabsList>
 
@@ -694,6 +696,21 @@ export default function ContentDashboard() {
                   </p>
                 )}
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Extras View */}
+        <TabsContent value="extras" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <FileQuestion className="h-5 w-5" />
+                Solicitações Extras
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ExtraRequestsMetrics />
             </CardContent>
           </Card>
         </TabsContent>
