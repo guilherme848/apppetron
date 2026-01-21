@@ -27,6 +27,7 @@ import { ContentPost, POST_STATUS_OPTIONS, CHANNEL_OPTIONS, FORMAT_OPTIONS } fro
 import { JobRole } from '@/types/contentProduction';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { getTaskStatusVariant, getChannelVariant, getContentFormatVariant } from '@/lib/badgeMaps';
 
 interface SortablePostListProps {
   posts: ContentPost[];
@@ -58,9 +59,11 @@ interface SortableRowProps {
 }
 
 const getChannelLabel = (value: string | null) =>
-  CHANNEL_OPTIONS.find((o) => o.value === value)?.label || value || '-';
+  CHANNEL_OPTIONS.find((o) => o.value === value)?.label || value || null;
 const getFormatLabel = (value: string | null) =>
-  FORMAT_OPTIONS.find((o) => o.value === value)?.label || value || '-';
+  FORMAT_OPTIONS.find((o) => o.value === value)?.label || value || null;
+const getStatusLabel = (value: string) =>
+  POST_STATUS_OPTIONS.find((o) => o.value === value)?.label || value;
 
 function SortableRow({
   post,
@@ -132,8 +135,24 @@ function SortableRow({
       <TableCell className="font-medium">
         {post.title || <span className="text-muted-foreground italic">Sem título</span>}
       </TableCell>
-      <TableCell>{getChannelLabel(post.channel)}</TableCell>
-      <TableCell>{getFormatLabel(post.format)}</TableCell>
+      <TableCell>
+        {getChannelLabel(post.channel) ? (
+          <Badge variant={getChannelVariant(post.channel || '')} className="text-xs">
+            {getChannelLabel(post.channel)}
+          </Badge>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        )}
+      </TableCell>
+      <TableCell>
+        {getFormatLabel(post.format) ? (
+          <Badge variant={getContentFormatVariant(post.format || '')} className="text-xs">
+            {getFormatLabel(post.format)}
+          </Badge>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        )}
+      </TableCell>
       <TableCell>
         {isVariableStage ? (
           <Select
@@ -141,7 +160,7 @@ function SortableRow({
             onValueChange={(v) => onPostResponsibleChange(post.id, v)}
           >
             <SelectTrigger
-              className={`w-32 h-8 bg-background ${!post.responsible_role_id ? 'border-yellow-500' : ''}`}
+              className={`w-32 h-8 bg-background ${!post.responsible_role_id ? 'border-accent' : ''}`}
             >
               <SelectValue placeholder="-" />
             </SelectTrigger>
@@ -155,22 +174,26 @@ function SortableRow({
             </SelectContent>
           </Select>
         ) : post.responsible_role_id ? (
-          <Badge variant="outline">{getRoleById(post.responsible_role_id)?.name || '-'}</Badge>
+          <Badge variant="neutral">{getRoleById(post.responsible_role_id)?.name || '-'}</Badge>
         ) : planningResponsibleName ? (
-          <Badge variant="outline">{planningResponsibleName}</Badge>
+          <Badge variant="neutral">{planningResponsibleName}</Badge>
         ) : (
-          <span className="text-yellow-600 dark:text-yellow-400">Não definido</span>
+          <Badge variant="attention" className="text-xs">Não definido</Badge>
         )}
       </TableCell>
       <TableCell>
         <Select value={post.status} onValueChange={(v) => onPostStatusChange(post.id, v)}>
           <SelectTrigger className="w-28 h-8 bg-background">
-            <SelectValue />
+            <Badge variant={getTaskStatusVariant(post.status)} className="text-xs w-full justify-center">
+              {getStatusLabel(post.status)}
+            </Badge>
           </SelectTrigger>
           <SelectContent className="bg-popover z-50">
             {POST_STATUS_OPTIONS.map((opt) => (
               <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
+                <Badge variant={getTaskStatusVariant(opt.value)} className="text-xs">
+                  {opt.label}
+                </Badge>
               </SelectItem>
             ))}
           </SelectContent>
