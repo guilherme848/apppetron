@@ -62,7 +62,7 @@ export function AppSidebar() {
           <img 
             src={petronLogo} 
             alt="Petron Logo" 
-            className="h-20 w-auto"
+            className="h-[7.5rem] w-auto"
           />
         </div>
       </SidebarHeader>
