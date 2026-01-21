@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,12 +13,11 @@ import { useCrmData } from '@/hooks/useCrmData';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useCurrentMember } from '@/hooks/usePermissions';
 import { RichTextEditor } from '@/components/content/RichTextEditor';
+import { resolveAssigneeFromAccountTeam, ROLE_OPTIONS, ROLE_KEY_LABELS, RoleKey } from '@/lib/accountTeam';
 import {
   CREATIVE_REQUEST_PRIORITY_OPTIONS,
   CREATIVE_REQUEST_FORMAT_OPTIONS,
   CREATIVE_REQUEST_OBJECTIVE_OPTIONS,
-  CREATIVE_RESPONSIBLE_ROLE_OPTIONS,
-  CREATIVE_ROLE_KEY_TO_ACCOUNT_FIELD,
   CreativeRequestPriority,
   CreativeRequestFormat,
   CreativeRequestObjective,
@@ -42,35 +41,42 @@ export default function CreativeRequestNew() {
   const [objective, setObjective] = useState<CreativeRequestObjective | ''>('');
   const [priority, setPriority] = useState<CreativeRequestPriority>('medium');
   const [dueDate, setDueDate] = useState('');
-  const [responsibleRoleKey, setResponsibleRoleKey] = useState<CreativeResponsibleRole | ''>('designer');
-  const [assigneeId, setAssigneeId] = useState<string>('');
+  const [responsibleRoleKey, setResponsibleRoleKey] = useState<RoleKey>('designer');
   const [reviewerId, setReviewerId] = useState<string>('');
-  const [autoAssignWarning, setAutoAssignWarning] = useState<string>('');
 
-  // Auto-assign based on responsible_role_key and client
-  useEffect(() => {
-    if (responsibleRoleKey && clientId) {
-      const account = accounts.find((a) => a.id === clientId);
-      if (account) {
-        const field = CREATIVE_ROLE_KEY_TO_ACCOUNT_FIELD[responsibleRoleKey];
-        const memberId = (account as any)[field];
-        if (memberId) {
-          setAssigneeId(memberId);
-          setAutoAssignWarning('');
-        } else {
-          setAssigneeId('');
-          setAutoAssignWarning(`O cliente não possui ${CREATIVE_RESPONSIBLE_ROLE_OPTIONS.find(o => o.value === responsibleRoleKey)?.label} definido. Defina o Time da Conta para autoatribuição.`);
-        }
-      }
-    } else {
-      setAutoAssignWarning('');
-    }
-  }, [responsibleRoleKey, clientId, accounts]);
+  // Get selected account
+  const selectedAccount = useMemo(() => 
+    accounts.find(a => a.id === clientId) || null
+  , [accounts, clientId]);
+
+  // Auto-resolve assignee based on role and account team
+  const resolvedAssigneeId = useMemo(() => 
+    resolveAssigneeFromAccountTeam(selectedAccount, responsibleRoleKey)
+  , [selectedAccount, responsibleRoleKey]);
+
+  // Get assignee name for display
+  const assigneeName = useMemo(() => {
+    if (!resolvedAssigneeId) return null;
+    return members.find(m => m.id === resolvedAssigneeId)?.name || null;
+  }, [resolvedAssigneeId, members]);
+
+  // Check if role is missing from account team
+  const isRoleMissing = clientId && responsibleRoleKey && !resolvedAssigneeId;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!clientId || !title) {
+    
+    if (!clientId || !title || !responsibleRoleKey) {
       toast({ title: 'Erro', description: 'Preencha os campos obrigatórios', variant: 'destructive' });
+      return;
+    }
+
+    if (!resolvedAssigneeId) {
+      toast({ 
+        title: 'Erro', 
+        description: `Defina o responsável do cargo "${ROLE_KEY_LABELS[responsibleRoleKey]}" no Time da Conta do cliente.`, 
+        variant: 'destructive' 
+      });
       return;
     }
 
@@ -85,8 +91,8 @@ export default function CreativeRequestNew() {
       priority,
       due_date: dueDate || null,
       requested_by_member_id: currentMemberId || null,
-      responsible_role_key: responsibleRoleKey || null,
-      assignee_id: assigneeId || null,
+      responsible_role_key: responsibleRoleKey as CreativeResponsibleRole,
+      assignee_id: resolvedAssigneeId, // Will be overridden by trigger anyway
       reviewer_member_id: reviewerId || null,
     });
 
@@ -194,17 +200,16 @@ export default function CreativeRequestNew() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Cargo Responsável</Label>
+                <Label>Cargo Responsável *</Label>
                 <Select 
-                  value={responsibleRoleKey || 'none'} 
-                  onValueChange={(v) => setResponsibleRoleKey(v === 'none' ? '' : v as CreativeResponsibleRole)}
+                  value={responsibleRoleKey} 
+                  onValueChange={(v) => setResponsibleRoleKey(v as RoleKey)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o cargo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Nenhum</SelectItem>
-                    {CREATIVE_RESPONSIBLE_ROLE_OPTIONS.map((o) => (
+                    {ROLE_OPTIONS.map((o) => (
                       <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                     ))}
                   </SelectContent>
@@ -212,28 +217,36 @@ export default function CreativeRequestNew() {
               </div>
 
               <div className="space-y-2">
-                <Label>Responsável</Label>
-                <Select 
-                  value={assigneeId || 'none'} 
-                  onValueChange={(v) => setAssigneeId(v === 'none' ? '' : v)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Nenhum</SelectItem>
-                    {activeMembers.map((m) => (
-                      <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Responsável (atribuição automática)</Label>
+                <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/50 min-h-[40px]">
+                  <span className="text-sm">
+                    {assigneeName || (clientId ? 'Não definido no Time da Conta' : 'Selecione um cliente')}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  O responsável é atribuído automaticamente pelo Time da Conta do cliente.
+                </p>
               </div>
             </div>
 
-            {autoAssignWarning && (
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{autoAssignWarning}</AlertDescription>
+            {isRoleMissing && (
+              <Alert variant="destructive">
+                <AlertDescription className="flex items-center justify-between gap-2">
+                  <span>
+                    O cargo "{ROLE_KEY_LABELS[responsibleRoleKey]}" não está definido no Time da Conta do cliente. 
+                    Defina o responsável para criar esta solicitação.
+                  </span>
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => navigate(`/crm/${clientId}?tab=team`)}
+                    className="whitespace-nowrap"
+                  >
+                    <ExternalLink className="h-3 w-3 mr-1" />
+                    Definir Time
+                  </Button>
+                </AlertDescription>
               </Alert>
             )}
 
@@ -285,7 +298,7 @@ export default function CreativeRequestNew() {
               <Button type="button" variant="outline" onClick={() => navigate('/traffic/creatives')}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={saving}>
+              <Button type="submit" disabled={saving || isRoleMissing}>
                 {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
                 Criar Solicitação
               </Button>
