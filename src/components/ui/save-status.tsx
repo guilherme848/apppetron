@@ -1,4 +1,4 @@
-import { Check, Cloud, CloudOff, Loader2, RefreshCcw } from 'lucide-react';
+import { Check, Cloud, CloudOff, Loader2, RefreshCcw, Edit3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { AutoSaveStatus } from '@/hooks/useAutoSave';
@@ -38,6 +38,13 @@ export function SaveStatus({
         <>
           <Cloud className={cn(iconSize, 'text-muted-foreground')} />
           <span className="text-muted-foreground">Sincronizado</span>
+        </>
+      )}
+
+      {status === 'pending' && (
+        <>
+          <Edit3 className={cn(iconSize, 'text-amber-500')} />
+          <span className="text-amber-500">Alterações pendentes</span>
         </>
       )}
       
@@ -89,12 +96,14 @@ export function SaveStatusInline({ status, className }: SaveStatusInlineProps) {
     <span 
       className={cn(
         'inline-flex items-center gap-1 text-xs',
+        status === 'pending' && 'text-amber-500',
         status === 'saving' && 'text-muted-foreground',
         status === 'saved' && 'text-green-600 dark:text-green-500',
         status === 'error' && 'text-destructive',
         className
       )}
     >
+      {status === 'pending' && <Edit3 className="h-3 w-3" />}
       {status === 'saving' && <Loader2 className="h-3 w-3 animate-spin" />}
       {status === 'saved' && <Check className="h-3 w-3" />}
       {status === 'error' && <CloudOff className="h-3 w-3" />}

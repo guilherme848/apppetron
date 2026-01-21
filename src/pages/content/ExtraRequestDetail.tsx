@@ -68,11 +68,11 @@ export default function ExtraRequestDetail() {
     await updateRequest(id, data);
   }, [id, updateRequest]);
 
-  const { status: saveStatus, saveNow, saveDebounced, flush } = useAutoSave({
+  const { status: saveStatus, saveNow, queueChange, flush, hasPendingChanges } = useAutoSave({
     onSave: handleSave,
   });
 
-  useAutoSaveNavigation(flush);
+  useAutoSaveNavigation(flush, hasPendingChanges);
 
   // Auto-assign when responsible_role_key changes
   useEffect(() => {
@@ -176,7 +176,7 @@ export default function ExtraRequestDetail() {
                   <Input
                     id="title"
                     value={title}
-                    onChange={(e) => { setTitle(e.target.value); saveDebounced({ title: e.target.value }); }}
+                    onChange={(e) => { setTitle(e.target.value); queueChange({ title: e.target.value }); }}
                     onBlur={flush}
                   />
                 </div>
@@ -200,7 +200,8 @@ export default function ExtraRequestDetail() {
                 <Label>Pedido / Descrição</Label>
                 <RichTextEditor
                   content={requestRich}
-                  onChange={(v) => { setRequestRich(v); saveDebounced({ request_rich: v }); }}
+                  onChange={(v) => { setRequestRich(v); queueChange({ request_rich: v }); }}
+                  onBlur={flush}
                   placeholder="Descreva a solicitação..."
                 />
               </div>
