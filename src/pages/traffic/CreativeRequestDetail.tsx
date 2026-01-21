@@ -97,53 +97,53 @@ export default function CreativeRequestDetail() {
 
   const handleDueDateChange = (value: string) => {
     setDueDate(value);
-    queueChange({ due_date: value || null });
+    saveDebounced({ due_date: value || null });
   };
 
   // Instant save fields
-  const handleStatusChange = (value: CreativeRequestStatus) => {
+  const handleStatusChange = async (value: CreativeRequestStatus) => {
     setStatus(value);
-    flushChanges();
+    await flush();
     updateField({ status: value });
   };
 
-  const handlePriorityChange = (value: CreativeRequestPriority) => {
+  const handlePriorityChange = async (value: CreativeRequestPriority) => {
     setPriority(value);
-    flushChanges();
+    await flush();
     updateField({ priority: value });
   };
 
-  const handleFormatChange = (value: CreativeRequestFormat) => {
+  const handleFormatChange = async (value: CreativeRequestFormat) => {
     setFormat(value);
-    flushChanges();
+    await flush();
     updateField({ format: value });
   };
 
-  const handleObjectiveChange = (value: string) => {
+  const handleObjectiveChange = async (value: string) => {
     const val = value === 'none' ? null : (value as CreativeRequestObjective);
     setObjective(val || '');
-    flushChanges();
+    await flush();
     updateField({ objective: val });
   };
 
-  const handleRoleKeyChange = (value: string) => {
+  const handleRoleKeyChange = async (value: string) => {
     const val = value === 'none' ? null : (value as CreativeResponsibleRole);
     setResponsibleRoleKey(val || '');
-    flushChanges();
+    await flush();
     updateField({ responsible_role_key: val });
   };
 
-  const handleAssigneeChange = (value: string) => {
+  const handleAssigneeChange = async (value: string) => {
     const val = value === 'none' ? null : value;
     setAssigneeId(val || '');
-    flushChanges();
+    await flush();
     updateField({ assignee_id: val });
   };
 
-  const handleReviewerChange = (value: string) => {
+  const handleReviewerChange = async (value: string) => {
     const val = value === 'none' ? null : value;
     setReviewerId(val || '');
-    flushChanges();
+    await flush();
     updateField({ reviewer_member_id: val });
   };
 
