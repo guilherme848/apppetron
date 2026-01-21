@@ -555,8 +555,18 @@ export default function PostDetail() {
               
               {showTeamWarning && (
                 <Alert variant="destructive" className="py-2">
-                  <AlertDescription className="text-sm">
-                    ⚠️ O cargo "{RESPONSIBLE_ROLE_OPTIONS.find(o => o.value === responsibleRoleKey)?.label}" não está configurado no Time da Conta deste cliente.
+                  <AlertDescription className="text-sm flex items-center justify-between gap-2">
+                    <span>⚠️ O cargo "{RESPONSIBLE_ROLE_OPTIONS.find(o => o.value === responsibleRoleKey)?.label}" não está configurado no Time da Conta deste cliente.</span>
+                    {client && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => navigate(`/crm/${client.id}?tab=team`)}
+                        className="whitespace-nowrap"
+                      >
+                        Definir Time
+                      </Button>
+                    )}
                   </AlertDescription>
                 </Alert>
               )}
@@ -575,24 +585,23 @@ export default function PostDetail() {
                     Reaplicar pelo cargo
                   </Button>
                 </div>
-                <Select value={assigneeId || '_none_'} onValueChange={handleAssigneeChange}>
-                  <SelectTrigger className={`bg-background ${!assigneeId ? 'border-warning' : ''}`}>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover z-50">
-                    <SelectItem value="_none_">Sem responsável</SelectItem>
-                    {getActiveMembers().map((member) => (
-                      <SelectItem key={member.id} value={member.id}>
-                        {member.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {!assigneeId && (
-                  <p className="text-xs text-muted-foreground">
-                    ⚠️ Post sem usuário responsável
-                  </p>
-                )}
+                {/* Read-only assignee display - assignment is automatic based on role */}
+                <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
+                  <span className="text-sm">
+                    {assigneeId 
+                      ? getActiveMembers().find(m => m.id === assigneeId)?.name || 'Membro não encontrado'
+                      : 'Nenhum responsável definido'
+                    }
+                  </span>
+                  {!assigneeId && (
+                    <span className="text-xs text-destructive">
+                      (Configure o Time da Conta)
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  O responsável é atribuído automaticamente pelo Time da Conta do cliente.
+                </p>
               </div>
             </CardContent>
           </Card>

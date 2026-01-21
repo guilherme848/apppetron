@@ -222,20 +222,20 @@ export default function ExtraRequestDetail() {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Responsável</Label>
-                  <Select value={assigneeId} onValueChange={(v) => { setAssigneeId(v); saveNow({ assignee_id: v || null }); }}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">Nenhum</SelectItem>
-                      {activeMembers.map(m => (
-                        <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              <div className="space-y-2">
+                <Label>Responsável (atribuição automática)</Label>
+                <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/50 min-h-[40px]">
+                  <span className="text-sm">
+                    {assigneeId 
+                      ? activeMembers.find(m => m.id === assigneeId)?.name || 'Membro não encontrado'
+                      : 'Não definido no Time da Conta'
+                    }
+                  </span>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  O responsável é atribuído automaticamente pelo Time da Conta do cliente.
+                </p>
+              </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">

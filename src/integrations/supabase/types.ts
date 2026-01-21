@@ -396,7 +396,7 @@ export type Database = {
           request_rich: string | null
           requested_by_member_id: string | null
           requested_by_role_key: string
-          responsible_role_key: string | null
+          responsible_role_key: string
           status: string
           title: string
           updated_at: string
@@ -413,7 +413,7 @@ export type Database = {
           request_rich?: string | null
           requested_by_member_id?: string | null
           requested_by_role_key: string
-          responsible_role_key?: string | null
+          responsible_role_key?: string
           status?: string
           title: string
           updated_at?: string
@@ -430,7 +430,7 @@ export type Database = {
           request_rich?: string | null
           requested_by_member_id?: string | null
           requested_by_role_key?: string
-          responsible_role_key?: string | null
+          responsible_role_key?: string
           status?: string
           title?: string
           updated_at?: string
@@ -586,7 +586,7 @@ export type Database = {
           id: string
           item_type: string | null
           responsible_role_id: string | null
-          responsible_role_key: string | null
+          responsible_role_key: string
           sort_order: number
           started_at: string | null
           status: string
@@ -610,7 +610,7 @@ export type Database = {
           id?: string
           item_type?: string | null
           responsible_role_id?: string | null
-          responsible_role_key?: string | null
+          responsible_role_key?: string
           sort_order?: number
           started_at?: string | null
           status?: string
@@ -634,7 +634,7 @@ export type Database = {
           id?: string
           item_type?: string | null
           responsible_role_id?: string | null
-          responsible_role_key?: string | null
+          responsible_role_key?: string
           sort_order?: number
           started_at?: string | null
           status?: string
@@ -963,6 +963,7 @@ export type Database = {
           notes_rich: string | null
           required: boolean
           responsible_member_id: string | null
+          responsible_role_key: string
           sort_order: number
           status: string
           template_task_id: string | null
@@ -979,6 +980,7 @@ export type Database = {
           notes_rich?: string | null
           required?: boolean
           responsible_member_id?: string | null
+          responsible_role_key?: string
           sort_order?: number
           status?: string
           template_task_id?: string | null
@@ -995,6 +997,7 @@ export type Database = {
           notes_rich?: string | null
           required?: boolean
           responsible_member_id?: string | null
+          responsible_role_key?: string
           sort_order?: number
           status?: string
           template_task_id?: string | null
@@ -1033,6 +1036,7 @@ export type Database = {
           due_at: string | null
           id: string
           meeting_id: string
+          responsible_role_key: string
           status: string
           title: string
           updated_at: string
@@ -1044,6 +1048,7 @@ export type Database = {
           due_at?: string | null
           id?: string
           meeting_id: string
+          responsible_role_key?: string
           status?: string
           title: string
           updated_at?: string
@@ -1055,6 +1060,7 @@ export type Database = {
           due_at?: string | null
           id?: string
           meeting_id?: string
+          responsible_role_key?: string
           status?: string
           title?: string
           updated_at?: string
@@ -1477,6 +1483,7 @@ export type Database = {
           details_rich: string | null
           due_at: string | null
           id: string
+          responsible_role_key: string
           risk_case_id: string
           status: string
           title: string
@@ -1488,6 +1495,7 @@ export type Database = {
           details_rich?: string | null
           due_at?: string | null
           id?: string
+          responsible_role_key?: string
           risk_case_id: string
           status?: string
           title: string
@@ -1499,6 +1507,7 @@ export type Database = {
           details_rich?: string | null
           due_at?: string | null
           id?: string
+          responsible_role_key?: string
           risk_case_id?: string
           status?: string
           title?: string
@@ -1977,7 +1986,7 @@ export type Database = {
           priority: string
           requested_by_member_id: string | null
           requested_by_role_key: string
-          responsible_role_key: string | null
+          responsible_role_key: string
           reviewer_member_id: string | null
           status: string
           title: string
@@ -1998,7 +2007,7 @@ export type Database = {
           priority?: string
           requested_by_member_id?: string | null
           requested_by_role_key?: string
-          responsible_role_key?: string | null
+          responsible_role_key?: string
           reviewer_member_id?: string | null
           status?: string
           title: string
@@ -2019,7 +2028,7 @@ export type Database = {
           priority?: string
           requested_by_member_id?: string | null
           requested_by_role_key?: string
-          responsible_role_key?: string | null
+          responsible_role_key?: string
           reviewer_member_id?: string | null
           status?: string
           title?: string
@@ -2426,7 +2435,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_client_id_from_batch: {
+        Args: { p_batch_id: string }
+        Returns: string
+      }
+      get_client_id_from_meeting: {
+        Args: { p_meeting_id: string }
+        Returns: string
+      }
+      get_client_id_from_onboarding: {
+        Args: { p_onboarding_id: string }
+        Returns: string
+      }
+      get_client_id_from_risk_case: {
+        Args: { p_risk_case_id: string }
+        Returns: string
+      }
+      resolve_assignee_from_account_team: {
+        Args: { p_client_id: string; p_responsible_role_key: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
