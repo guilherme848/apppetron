@@ -1,4 +1,4 @@
-import { useState, useEffect, forwardRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -16,7 +16,7 @@ interface PostFormProps {
   onUpdate?: (id: string, data: Partial<ContentPost>) => Promise<any>;
 }
 
-export const PostForm = forwardRef<HTMLDivElement, PostFormProps>(function PostForm({ open, onOpenChange, batchId, post, onSubmit, onUpdate }, ref) {
+export function PostForm({ open, onOpenChange, batchId, post, onSubmit, onUpdate }: PostFormProps) {
   const [title, setTitle] = useState('');
   const [channel, setChannel] = useState('');
   const [format, setFormat] = useState('');
@@ -69,7 +69,7 @@ export const PostForm = forwardRef<HTMLDivElement, PostFormProps>(function PostF
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent ref={ref} className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{post ? 'Editar Post' : 'Novo Post'}</DialogTitle>
         </DialogHeader>
@@ -154,4 +154,4 @@ export const PostForm = forwardRef<HTMLDivElement, PostFormProps>(function PostF
       </DialogContent>
     </Dialog>
   );
-});
+}
