@@ -260,29 +260,30 @@ export default function PostDetail() {
     }
   };
 
+  // Rich text: only update local state on change, save on blur
   const handleBriefingRichChange = (value: string) => {
     setBriefingRich(value);
-    if (initialLoadComplete.current) {
-      queueChange({ briefing_rich: value || null, briefing: value || null });
-    }
   };
 
   const handleBriefingRichBlur = async () => {
-    if (initialLoadComplete.current) {
-      await flush();
+    if (initialLoadComplete.current && post) {
+      const currentValue = (post as any).briefing_rich || '';
+      if (briefingRich !== currentValue) {
+        await saveNow({ briefing_rich: briefingRich || null, briefing: briefingRich || null });
+      }
     }
   };
 
   const handleCaptionChange = (value: string) => {
     setCaption(value);
-    if (initialLoadComplete.current) {
-      queueChange({ caption: value || null });
-    }
   };
 
   const handleCaptionBlur = async () => {
-    if (initialLoadComplete.current) {
-      await flush();
+    if (initialLoadComplete.current && post) {
+      const currentValue = post.caption || '';
+      if (caption !== currentValue) {
+        await saveNow({ caption: caption || null });
+      }
     }
   };
 
