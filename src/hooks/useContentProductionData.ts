@@ -6,6 +6,12 @@ export interface SimpleAccount {
   id: string;
   name: string;
   status?: string;
+  designer_member_id?: string | null;
+  videomaker_member_id?: string | null;
+  social_member_id?: string | null;
+  traffic_member_id?: string | null;
+  support_member_id?: string | null;
+  cs_member_id?: string | null;
 }
 
 const mapBatch = (data: any): ContentBatch => ({
@@ -104,7 +110,7 @@ export function useContentProductionData() {
   const fetchAccounts = useCallback(async () => {
     const { data, error } = await supabase
       .from('accounts')
-      .select('id, name, status')
+      .select('id, name, status, designer_member_id, videomaker_member_id, social_member_id, traffic_member_id, support_member_id, cs_member_id')
       .eq('status', 'active')
       .order('name', { ascending: true });
     if (error) {
