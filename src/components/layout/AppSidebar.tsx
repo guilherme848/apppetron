@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, CheckSquare, Layers, Settings, ListTodo, TrendingUp, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Users, CheckSquare, Layers, Settings, ListTodo, TrendingUp, BarChart3, HeartHandshake } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
   Sidebar,
@@ -39,6 +39,14 @@ const trafficItems: MenuItem[] = [
   { title: 'Tarefas de Tráfego', url: '/traffic/tasks', icon: CheckSquare, permission: 'view_traffic' },
 ];
 
+const csItems: MenuItem[] = [
+  { title: 'Visão Geral', url: '/cs', icon: HeartHandshake, permission: 'view_cs' },
+  { title: 'Onboarding', url: '/cs/onboarding', icon: Users, permission: 'view_cs' },
+  { title: 'Reuniões', url: '/cs/meetings', icon: LayoutDashboard, permission: 'view_cs' },
+  { title: 'NPS', url: '/cs/nps', icon: BarChart3, permission: 'view_cs' },
+  { title: 'Risco', url: '/cs/risk', icon: TrendingUp, permission: 'view_cs' },
+];
+
 const settingsItems: MenuItem[] = [
   { title: 'Configurações', url: '/settings', icon: Settings, permission: 'manage_settings' },
 ];
@@ -53,6 +61,7 @@ export function AppSidebar() {
   const visibleCrmItems = filterByPermission(crmItems);
   const visibleContentItems = filterByPermission(contentItems);
   const visibleTrafficItems = filterByPermission(trafficItems);
+  const visibleCsItems = filterByPermission(csItems);
   const visibleSettingsItems = filterByPermission(settingsItems);
 
   return (
@@ -114,12 +123,12 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         )}
-        {visibleTrafficItems.length > 0 && (
+        {visibleCsItems.length > 0 && (
           <SidebarGroup>
-            <SidebarGroupLabel>Tráfego Pago</SidebarGroupLabel>
+            <SidebarGroupLabel>Customer Success</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {visibleTrafficItems.map((item) => (
+                {visibleCsItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
                       <NavLink
