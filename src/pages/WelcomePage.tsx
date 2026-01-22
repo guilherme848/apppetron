@@ -2,6 +2,7 @@ import { Loader2 } from 'lucide-react';
 import { useWelcomeData } from '@/hooks/useWelcomeData';
 import { useMyTasks } from '@/hooks/useMyTasks';
 import { WelcomeHeader } from '@/components/welcome/WelcomeHeader';
+import { DailyQuoteCard } from '@/components/welcome/DailyQuoteCard';
 import { NextStepCard } from '@/components/welcome/NextStepCard';
 import { DailyRoutinePanel } from '@/components/welcome/DailyRoutinePanel';
 import { BirthdayCard } from '@/components/welcome/BirthdayCard';
@@ -47,6 +48,9 @@ export default function WelcomePage() {
           contextualMessage={contextualMessage}
           isUserBirthdayToday={isUserBirthdayToday}
         />
+
+        {/* Daily Quote */}
+        <DailyQuoteCard />
 
         {/* Task Counters */}
         <TaskCounterCards counts={counts} loading={false} />
