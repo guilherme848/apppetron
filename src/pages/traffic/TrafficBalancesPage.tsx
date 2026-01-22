@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useMetaAds } from '@/hooks/useMetaAds';
 import { useCrm } from '@/contexts/CrmContext';
-import { AdPaymentMethod } from '@/types/crm';
+import { AdPaymentMethod, AdPaymentFrequency } from '@/types/crm';
 import { cn } from '@/lib/utils';
 
 // Low balance threshold (R$ 500)
@@ -18,6 +18,13 @@ const PAYMENT_METHOD_LABELS: Record<AdPaymentMethod, string> = {
   pix: 'Pix',
   boleto: 'Boleto',
   cartao: 'Cartão',
+};
+
+// Payment frequency display labels
+const PAYMENT_FREQUENCY_LABELS: Record<AdPaymentFrequency, string> = {
+  weekly: 'Semanal',
+  biweekly: 'Quinzenal',
+  monthly: 'Mensal',
 };
 
 export default function TrafficBalancesPage() {
@@ -71,6 +78,8 @@ export default function TrafficBalancesPage() {
         currency: adAccount.currency || 'BRL',
         displayedBalance,
         paymentMethod,
+        monthlyBudget: client.ad_monthly_budget ?? null,
+        paymentFrequency: client.ad_payment_frequency as AdPaymentFrequency | null,
         hasSnapshot: !!snapshot,
         isLowBalance,
       };
@@ -83,6 +92,8 @@ export default function TrafficBalancesPage() {
       currency: string;
       displayedBalance: number | null;
       paymentMethod: AdPaymentMethod | null;
+      monthlyBudget: number | null;
+      paymentFrequency: AdPaymentFrequency | null;
       hasSnapshot: boolean;
       isLowBalance: boolean;
     }[];
@@ -241,6 +252,8 @@ export default function TrafficBalancesPage() {
                   <TableHead>Cliente</TableHead>
                   <TableHead>Conta de Anúncio</TableHead>
                   <TableHead className="text-right">Saldo</TableHead>
+                  <TableHead className="text-right">Verba Mensal</TableHead>
+                  <TableHead>Frequência</TableHead>
                   <TableHead>Método</TableHead>
                 </TableRow>
               </TableHeader>
@@ -283,6 +296,24 @@ export default function TrafficBalancesPage() {
                         </div>
                       ) : (
                         <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {row.monthlyBudget !== null ? (
+                        <span className="font-medium">
+                          {formatCurrency(row.monthlyBudget, row.currency)}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">Não definida</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {row.paymentFrequency ? (
+                        <Badge variant="outline">
+                          {PAYMENT_FREQUENCY_LABELS[row.paymentFrequency]}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">—</span>
                       )}
                     </TableCell>
                     <TableCell>
