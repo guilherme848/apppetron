@@ -1,4 +1,4 @@
-import { FileText, Users, BarChart3 } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RoutineMetrics } from '@/hooks/useWelcomeData';
 
@@ -39,7 +39,7 @@ export function DailyRoutinePanel({ metrics }: DailyRoutinePanelProps) {
           Sua rotina de hoje
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent>
         {/* Pendências */}
         <MetricBlock
           icon={<FileText className="h-4 w-4" />}
@@ -48,19 +48,6 @@ export function DailyRoutinePanel({ metrics }: DailyRoutinePanelProps) {
             { label: 'A fazer', value: metrics.pendencias.aFazer },
             { label: 'Em andamento', value: metrics.pendencias.emAndamento },
             { label: 'Delegado', value: metrics.pendencias.delegado },
-          ]}
-        />
-
-        <div className="border-t border-border" />
-
-        {/* Customer Success */}
-        <MetricBlock
-          icon={<Users className="h-4 w-4" />}
-          title="Customer Success"
-          items={[
-            { label: 'Onboardings', value: metrics.cs.onboardingsAtivos },
-            { label: 'Atrasados', value: metrics.cs.acompanhamentosAtrasados },
-            { label: 'NPS pendente', value: metrics.nps.pesquisasPendentes },
           ]}
         />
       </CardContent>
