@@ -26,6 +26,31 @@ interface MetaApiResponse {
   };
 }
 
+async function fetchAllPages(baseUrl: string, accessToken: string): Promise<MetaAdAccount[]> {
+  const allAccounts: MetaAdAccount[] = [];
+  let nextUrl: string | null = `${baseUrl}&access_token=${accessToken}&limit=200`;
+
+  while (nextUrl) {
+    console.log(`Fetching page... (${allAccounts.length} accounts so far)`);
+    const response = await fetch(nextUrl);
+    const data: MetaApiResponse = await response.json();
+
+    if (data.error) {
+      console.error('Meta API error:', data.error);
+      throw new Error(data.error.message);
+    }
+
+    if (data.data && data.data.length > 0) {
+      allAccounts.push(...data.data);
+    }
+
+    // Check for next page
+    nextUrl = data.paging?.next || null;
+  }
+
+  return allAccounts;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -63,34 +88,40 @@ serve(async (req) => {
 
     const accessToken = connection.access_token_encrypted;
 
-    // Fetch ALL ad accounts using pagination
     console.log('Fetching all ad accounts from BM:', businessId);
     
-    const allAdAccounts: MetaAdAccount[] = [];
-    let nextUrl: string | null = `https://graph.facebook.com/v19.0/${businessId}/owned_ad_accounts?fields=id,name,account_id,currency&access_token=${accessToken}&limit=200`;
+    // Fetch BOTH owned and client ad accounts
+    const [ownedAccounts, clientAccounts] = await Promise.all([
+      fetchAllPages(
+        `https://graph.facebook.com/v19.0/${businessId}/owned_ad_accounts?fields=id,name,account_id,currency`,
+        accessToken
+      ).catch(err => {
+        console.error('Error fetching owned_ad_accounts:', err);
+        return [];
+      }),
+      fetchAllPages(
+        `https://graph.facebook.com/v19.0/${businessId}/client_ad_accounts?fields=id,name,account_id,currency`,
+        accessToken
+      ).catch(err => {
+        console.error('Error fetching client_ad_accounts:', err);
+        return [];
+      }),
+    ]);
 
-    while (nextUrl) {
-      console.log(`Fetching page... (${allAdAccounts.length} accounts so far)`);
-      const response = await fetch(nextUrl);
-      const data: MetaApiResponse = await response.json();
+    console.log(`Found ${ownedAccounts.length} owned accounts and ${clientAccounts.length} client accounts`);
 
-      if (data.error) {
-        console.error('Meta API error:', data.error);
-        return new Response(
-          JSON.stringify({ error: data.error.message }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+    // Merge and deduplicate by account_id
+    const allAccountsMap = new Map<string, MetaAdAccount>();
+    
+    for (const account of [...ownedAccounts, ...clientAccounts]) {
+      const adAccountId = account.id.startsWith('act_') ? account.id : `act_${account.account_id}`;
+      if (!allAccountsMap.has(adAccountId)) {
+        allAccountsMap.set(adAccountId, { ...account, id: adAccountId });
       }
-
-      if (data.data && data.data.length > 0) {
-        allAdAccounts.push(...data.data);
-      }
-
-      // Check for next page
-      nextUrl = data.paging?.next || null;
     }
 
-    console.log(`Found ${allAdAccounts.length} total ad accounts`);
+    const allAdAccounts = Array.from(allAccountsMap.values());
+    console.log(`Total unique ad accounts: ${allAdAccounts.length}`);
 
     // Upsert each ad account
     for (const account of allAdAccounts) {
@@ -124,6 +155,8 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         count: allAdAccounts.length,
+        owned: ownedAccounts.length,
+        client: clientAccounts.length,
         accounts: savedAccounts 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
