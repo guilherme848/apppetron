@@ -1859,6 +1859,44 @@ export type Database = {
         }
         Relationships: []
       }
+      personal_notes: {
+        Row: {
+          completed: boolean
+          content: string
+          created_at: string
+          id: string
+          member_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          completed?: boolean
+          content: string
+          created_at?: string
+          id?: string
+          member_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          completed?: boolean
+          content?: string
+          created_at?: string
+          id?: string
+          member_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_notes_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_attachments: {
         Row: {
           created_at: string
