@@ -53,6 +53,15 @@ const SETTINGS_CATEGORIES: SettingsCategory[] = [
       { id: 'traffic-cycles', label: 'Ciclos de Tráfego', path: '/settings/traffic/cycles' },
     ],
   },
+  {
+    id: 'integrations',
+    label: 'Integrações',
+    description: 'Conecte com serviços externos como Meta Ads.',
+    icon: Settings,
+    items: [
+      { id: 'meta-ads', label: 'Meta Ads', path: '/settings/integrations/meta' },
+    ],
+  },
 ];
 
 function getCategoryIcon(categoryId: string) {
