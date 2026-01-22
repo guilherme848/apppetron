@@ -31,4 +31,5 @@ export type PermissionKey =
   | 'view_cs'
   | 'edit_cs'
   | 'manage_cs_settings'
-  | 'view_sensitive_cs';
+  | 'view_sensitive_cs'
+  | 'edit_admission_date';

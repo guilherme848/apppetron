@@ -1,4 +1,5 @@
-import { User, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useCurrentMember } from '@/hooks/usePermissions';
+import { MemberAvatar } from '@/components/common/MemberAvatar';
 
 export function UserSelector() {
   const { members, loading } = useTeamMembers();
@@ -21,7 +23,7 @@ export function UserSelector() {
   if (loading) {
     return (
       <Button variant="ghost" size="sm" disabled>
-        <User className="h-4 w-4 mr-2" />
+        <MemberAvatar name={null} photoPath={null} size="xs" className="mr-2" />
         Carregando...
       </Button>
     );
@@ -31,14 +33,18 @@ export function UserSelector() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
-          <User className="h-4 w-4" />
+          <MemberAvatar
+            name={currentMember?.full_name || currentMember?.name || null}
+            photoPath={currentMember?.profile_photo_path || null}
+            size="xs"
+          />
           <span className="max-w-[120px] truncate">
-            {currentMember ? currentMember.name : 'Administrador'}
+            {currentMember ? (currentMember.full_name || currentMember.name) : 'Administrador'}
           </span>
           <ChevronDown className="h-3 w-3 opacity-50" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuLabel className="text-xs text-muted-foreground">
           Usando como:
         </DropdownMenuLabel>
@@ -47,9 +53,9 @@ export function UserSelector() {
           onClick={() => setCurrentMemberId(null)}
           className={!currentMemberId ? 'bg-accent' : ''}
         >
-          <User className="h-4 w-4 mr-2" />
-          Administrador
-          <span className="ml-auto text-xs text-muted-foreground">Acesso total</span>
+          <MemberAvatar name={null} photoPath={null} size="xs" className="mr-2" />
+          <span className="flex-1">Administrador</span>
+          <span className="text-xs text-muted-foreground">Acesso total</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         {activeMembers.map((member) => (
@@ -58,14 +64,29 @@ export function UserSelector() {
             onClick={() => setCurrentMemberId(member.id)}
             className={currentMemberId === member.id ? 'bg-accent' : ''}
           >
-            <User className="h-4 w-4 mr-2" />
-            {member.name}
+            <MemberAvatar
+              name={member.full_name || member.name}
+              photoPath={member.profile_photo_path}
+              size="xs"
+              className="mr-2"
+            />
+            <span className="truncate">{member.full_name || member.name}</span>
           </DropdownMenuItem>
         ))}
         {activeMembers.length === 0 && (
           <DropdownMenuItem disabled>
             Nenhum usuário cadastrado
           </DropdownMenuItem>
+        )}
+        {currentMemberId && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link to="/profile" className="cursor-pointer">
+                Meu Perfil
+              </Link>
+            </DropdownMenuItem>
+          </>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
