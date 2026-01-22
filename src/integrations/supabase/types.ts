@@ -231,6 +231,38 @@ export type Database = {
           },
         ]
       }
+      client_meta_ad_accounts: {
+        Row: {
+          active: boolean
+          ad_account_id: string
+          client_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          active?: boolean
+          ad_account_id: string
+          client_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          active?: boolean
+          ad_account_id?: string
+          client_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_meta_ad_accounts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_batches: {
         Row: {
           archived: boolean
@@ -1691,6 +1723,90 @@ export type Database = {
             referencedColumns: ["key"]
           },
         ]
+      }
+      meta_ad_account_snapshots: {
+        Row: {
+          ad_account_id: string
+          amount_spent: number | null
+          available_balance: number | null
+          fetched_at: string
+          id: string
+          raw_json: Json | null
+          spend_cap: number | null
+        }
+        Insert: {
+          ad_account_id: string
+          amount_spent?: number | null
+          available_balance?: number | null
+          fetched_at?: string
+          id?: string
+          raw_json?: Json | null
+          spend_cap?: number | null
+        }
+        Update: {
+          ad_account_id?: string
+          amount_spent?: number | null
+          available_balance?: number | null
+          fetched_at?: string
+          id?: string
+          raw_json?: Json | null
+          spend_cap?: number | null
+        }
+        Relationships: []
+      }
+      meta_bm_ad_accounts: {
+        Row: {
+          ad_account_id: string
+          created_at: string
+          currency: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          ad_account_id: string
+          created_at?: string
+          currency?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          ad_account_id?: string
+          created_at?: string
+          currency?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      meta_bm_connection: {
+        Row: {
+          access_token_encrypted: string
+          business_id: string
+          created_at: string
+          id: string
+          token_expires_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token_encrypted: string
+          business_id: string
+          created_at?: string
+          id?: string
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token_encrypted?: string
+          business_id?: string
+          created_at?: string
+          id?: string
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       niches: {
         Row: {

@@ -51,6 +51,13 @@ import NichesPage from "./pages/settings/NichesPage";
 import TrafficCyclesPage from "./pages/settings/TrafficCyclesPage";
 import TrafficCycleTasksPage from "./pages/settings/TrafficCycleTasksPage";
 import TrafficRoutinesPage from "./pages/settings/TrafficRoutinesPage";
+import MetaIntegrationPage from "./pages/settings/MetaIntegrationPage";
+import TrafficBalancesPage from "./pages/traffic/TrafficBalancesPage";
+
+// Traffic Creative Requests
+import CreativeRequestsList from "./pages/traffic/CreativeRequestsList";
+import CreativeRequestNew from "./pages/traffic/CreativeRequestNew";
+import CreativeRequestDetail from "./pages/traffic/CreativeRequestDetail";
 
 const queryClient = new QueryClient();
 
@@ -86,6 +93,7 @@ const App = () => (
                       <Route path="/traffic" element={<TrafficDashboard />} />
                       <Route path="/traffic/tasks" element={<TrafficTasks />} />
                       <Route path="/traffic/clients/:id" element={<TrafficClientDetail />} />
+                      <Route path="/traffic/balances" element={<TrafficBalancesPage />} />
                       
                       {/* CS routes */}
                       <Route path="/cs" element={<CsDashboard />} />
@@ -108,7 +116,13 @@ const App = () => (
                         <Route path="traffic/cycles" element={<TrafficCyclesPage />} />
                         <Route path="traffic/cycle-tasks" element={<TrafficCycleTasksPage />} />
                         <Route path="traffic/routines" element={<TrafficRoutinesPage />} />
+                        <Route path="integrations/meta" element={<MetaIntegrationPage />} />
                       </Route>
+                      
+                      {/* Traffic Creative Requests */}
+                      <Route path="/traffic/creative-requests" element={<CreativeRequestsList />} />
+                      <Route path="/traffic/creative-requests/new" element={<CreativeRequestNew />} />
+                      <Route path="/traffic/creative-requests/:id" element={<CreativeRequestDetail />} />
                       
                       {/* Redirects from old routes */}
                       <Route path="/settings/services" element={<Navigate to="/settings/plans/services" replace />} />
