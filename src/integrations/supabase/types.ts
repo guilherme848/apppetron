@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       accounts: {
         Row: {
+          ad_payment_method: string | null
           address_complement: string | null
           churned_at: string | null
           city: string | null
@@ -51,6 +52,7 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          ad_payment_method?: string | null
           address_complement?: string | null
           churned_at?: string | null
           city?: string | null
@@ -86,6 +88,7 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          ad_payment_method?: string | null
           address_complement?: string | null
           churned_at?: string | null
           city?: string | null

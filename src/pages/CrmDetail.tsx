@@ -10,6 +10,7 @@ import { TaskForm } from '@/components/crm/TaskForm';
 import { AccountForm } from '@/components/crm/AccountForm';
 import { ClientDeliverables } from '@/components/crm/ClientDeliverables';
 import { AccountTeamCard } from '@/components/crm/AccountTeamCard';
+import { ClientTrafficSection } from '@/components/crm/ClientTrafficSection';
 import { useCrm } from '@/contexts/CrmContext';
 import { Contract, Task, ContractStatus, TaskStatus, Account } from '@/types/crm';
 export default function CrmDetail() {
@@ -241,6 +242,9 @@ export default function CrmDetail() {
 
         {/* Entregas do Plano */}
         <ClientDeliverables serviceId={account.service_id} />
+        
+        {/* Tráfego Pago */}
+        <ClientTrafficSection account={account} onUpdate={handleTeamUpdate} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

@@ -7,6 +7,14 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useMetaAds } from '@/hooks/useMetaAds';
 import { useCrm } from '@/contexts/CrmContext';
+import { AdPaymentMethod } from '@/types/crm';
+
+// Payment method display labels
+const PAYMENT_METHOD_LABELS: Record<AdPaymentMethod, string> = {
+  pix: 'Pix',
+  boleto: 'Boleto',
+  cartao: 'Cartão',
+};
 
 export default function TrafficBalancesPage() {
   const {
@@ -34,16 +42,27 @@ export default function TrafficBalancesPage() {
       
       if (!client || !adAccount) return null;
       
+      const paymentMethod = client.ad_payment_method as AdPaymentMethod | null;
+      
+      // Calculate displayed balance based on payment method rules
+      let displayedBalance: number | null = null;
+      if (paymentMethod === 'cartao') {
+        // Card always shows 0
+        displayedBalance = 0;
+      } else if (snapshot?.available_balance != null) {
+        // For pix/boleto, show max(balance, 0)
+        displayedBalance = Math.max(snapshot.available_balance, 0);
+      }
+      
       return {
         clientId: client.id,
         clientName: client.name,
         adAccountId: adAccount.ad_account_id,
         adAccountName: adAccount.name,
         currency: adAccount.currency || 'BRL',
-        amountSpent: snapshot?.amount_spent ?? null,
-        spendCap: snapshot?.spend_cap ?? null,
-        availableBalance: snapshot?.available_balance ?? null,
-        fetchedAt: snapshot?.fetched_at ?? null,
+        displayedBalance,
+        paymentMethod,
+        hasSnapshot: !!snapshot,
       };
     })
     .filter(Boolean) as {
@@ -52,10 +71,9 @@ export default function TrafficBalancesPage() {
       adAccountId: string;
       adAccountName: string;
       currency: string;
-      amountSpent: number | null;
-      spendCap: number | null;
-      availableBalance: number | null;
-      fetchedAt: string | null;
+      displayedBalance: number | null;
+      paymentMethod: AdPaymentMethod | null;
+      hasSnapshot: boolean;
     }[];
 
   // Filter by search term
@@ -64,14 +82,10 @@ export default function TrafficBalancesPage() {
     row.adAccountName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Sort: low balance first, then by client name
-  const sortedRows = [...filteredRows].sort((a, b) => {
-    const aLow = a.spendCap !== null && a.availableBalance !== null && a.availableBalance < a.spendCap * 0.1;
-    const bLow = b.spendCap !== null && b.availableBalance !== null && b.availableBalance < b.spendCap * 0.1;
-    if (aLow && !bLow) return -1;
-    if (!aLow && bLow) return 1;
-    return a.clientName.localeCompare(b.clientName);
-  });
+  // Sort by client name A-Z
+  const sortedRows = [...filteredRows].sort((a, b) =>
+    a.clientName.localeCompare(b.clientName)
+  );
 
   const handleRefreshAll = async () => {
     const allAccountIds = [...new Set(clientLinks.filter(l => l.active).map(l => l.ad_account_id))];
@@ -82,24 +96,15 @@ export default function TrafficBalancesPage() {
   };
 
   const formatCurrency = (value: number | null, currency: string) => {
-    if (value === null) return '-';
+    if (value === null) return '—';
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency,
     }).format(value);
   };
 
-  const formatDate = (date: string | null) => {
-    if (!date) return '-';
-    return new Date(date).toLocaleString('pt-BR');
-  };
-
-  // Count low balance alerts
-  const lowBalanceCount = sortedRows.filter(row =>
-    row.spendCap !== null &&
-    row.availableBalance !== null &&
-    row.availableBalance < row.spendCap * 0.1
-  ).length;
+  // Count accounts without payment method defined
+  const missingPaymentMethodCount = sortedRows.filter(row => !row.paymentMethod).length;
 
   if (loading) {
     return (
@@ -115,7 +120,7 @@ export default function TrafficBalancesPage() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <DollarSign className="h-6 w-6" />
-            Saldos de Anúncio
+            Saldo de Contas de Anúncio
           </h1>
           <p className="text-muted-foreground">
             Acompanhe os saldos disponíveis das contas de anúncio dos clientes.
@@ -138,7 +143,7 @@ export default function TrafficBalancesPage() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <DollarSign className="h-6 w-6" />
-            Saldos de Anúncio
+            Saldo de Contas de Anúncio
           </h1>
           <p className="text-muted-foreground">
             Acompanhe os saldos disponíveis das contas de anúncio dos clientes.
@@ -154,18 +159,18 @@ export default function TrafficBalancesPage() {
         </Button>
       </div>
 
-      {/* Alerts Summary */}
-      {lowBalanceCount > 0 && (
-        <Card className="border-destructive/50 bg-destructive/5">
+      {/* Warning for missing payment methods */}
+      {missingPaymentMethodCount > 0 && (
+        <Card className="border-amber-500/50 bg-amber-500/5">
           <CardContent className="py-4">
             <div className="flex items-center gap-3">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
               <div>
-                <p className="font-medium text-destructive">
-                  {lowBalanceCount} conta{lowBalanceCount > 1 ? 's' : ''} com saldo baixo
+                <p className="font-medium text-amber-600 dark:text-amber-400">
+                  {missingPaymentMethodCount} cliente{missingPaymentMethodCount > 1 ? 's' : ''} sem método de pagamento definido
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Saldo disponível abaixo de 10% do spend cap
+                  Configure o método de pagamento no cadastro do cliente para cálculo correto do saldo.
                 </p>
               </div>
             </div>
@@ -202,59 +207,44 @@ export default function TrafficBalancesPage() {
                 <TableRow>
                   <TableHead>Cliente</TableHead>
                   <TableHead>Conta de Anúncio</TableHead>
-                  <TableHead>Moeda</TableHead>
-                  <TableHead className="text-right">Gasto</TableHead>
-                  <TableHead className="text-right">Spend Cap</TableHead>
-                  <TableHead className="text-right">Saldo Disponível</TableHead>
-                  <TableHead>Última Atualização</TableHead>
+                  <TableHead className="text-right">Saldo</TableHead>
+                  <TableHead>Método</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedRows.map((row, idx) => {
-                  const hasSpendCap = row.spendCap !== null;
-                  const isLowBalance = hasSpendCap &&
-                    row.availableBalance !== null &&
-                    row.availableBalance < row.spendCap * 0.1;
-
-                  return (
-                    <TableRow key={`${row.clientId}-${row.adAccountId}-${idx}`} className={isLowBalance ? 'bg-destructive/5' : ''}>
-                      <TableCell className="font-medium">{row.clientName}</TableCell>
-                      <TableCell>
-                        <div>
-                          <p>{row.adAccountName}</p>
-                          <p className="text-xs text-muted-foreground font-mono">{row.adAccountId}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{row.currency}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(row.amountSpent, row.currency)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {row.spendCap !== null ? (
-                          formatCurrency(row.spendCap, row.currency)
-                        ) : (
-                          <span className="text-muted-foreground">Sem limite</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {hasSpendCap ? (
-                          <span className={isLowBalance ? 'text-destructive font-medium' : 'text-green-600 dark:text-green-400'}>
-                            {formatCurrency(row.availableBalance, row.currency)}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm text-muted-foreground">
-                          {formatDate(row.fetchedAt)}
+                {sortedRows.map((row, idx) => (
+                  <TableRow key={`${row.clientId}-${row.adAccountId}-${idx}`}>
+                    <TableCell className="font-medium">{row.clientName}</TableCell>
+                    <TableCell>
+                      <div>
+                        <p>{row.adAccountName}</p>
+                        <p className="text-xs text-muted-foreground font-mono">{row.adAccountId}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {row.paymentMethod === 'cartao' ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : row.displayedBalance !== null ? (
+                        <span className={row.displayedBalance === 0 ? 'text-destructive font-medium' : 'text-green-600 dark:text-green-400'}>
+                          {formatCurrency(row.displayedBalance, row.currency)}
                         </span>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {row.paymentMethod ? (
+                        <Badge variant={row.paymentMethod === 'cartao' ? 'secondary' : 'outline'}>
+                          {PAYMENT_METHOD_LABELS[row.paymentMethod]}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-amber-600 border-amber-500/50">
+                          Não definido
+                        </Badge>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           )}

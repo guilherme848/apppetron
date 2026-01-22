@@ -36,6 +36,8 @@ const mapAccount = (data: any): Account => ({
   traffic_member_id: data.traffic_member_id,
   support_member_id: data.support_member_id,
   cs_member_id: data.cs_member_id,
+  // Tráfego Pago
+  ad_payment_method: data.ad_payment_method,
 });
 
 const mapContract = (data: any): Contract => ({
