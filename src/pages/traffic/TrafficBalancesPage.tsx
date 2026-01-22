@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import { DollarSign, RefreshCw, Loader2, AlertTriangle, TrendingDown } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { DollarSign, RefreshCw, Loader2, AlertTriangle, TrendingDown, Clock } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -42,6 +44,25 @@ export default function TrafficBalancesPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const loading = metaLoading || crmLoading;
+
+  // Find the latest snapshot timestamp across all linked accounts
+  const latestUpdateTimestamp = useMemo(() => {
+    const activeAdAccountIds = clientLinks
+      .filter(l => l.active)
+      .map(l => l.ad_account_id);
+    
+    let latest: Date | null = null;
+    for (const adAccountId of activeAdAccountIds) {
+      const snapshot = getLatestSnapshot(adAccountId);
+      if (snapshot?.fetched_at) {
+        const snapshotDate = new Date(snapshot.fetched_at);
+        if (!latest || snapshotDate > latest) {
+          latest = snapshotDate;
+        }
+      }
+    }
+    return latest;
+  }, [clientLinks, getLatestSnapshot]);
 
   // Build a list of all client-ad-account combinations with data
   const balanceRows = clientLinks
@@ -174,14 +195,24 @@ export default function TrafficBalancesPage() {
             Acompanhe os saldos disponíveis das contas de anúncio dos clientes.
           </p>
         </div>
-        <Button onClick={handleRefreshAll} disabled={fetchingFinance || sortedRows.length === 0}>
-          {fetchingFinance ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <RefreshCw className="h-4 w-4 mr-2" />
+        <div className="flex flex-col items-end gap-2">
+          <Button onClick={handleRefreshAll} disabled={fetchingFinance || sortedRows.length === 0}>
+            {fetchingFinance ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4 mr-2" />
+            )}
+            Atualizar Todos
+          </Button>
+          {latestUpdateTimestamp && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Clock className="h-3 w-3" />
+              <span>
+                Última atualização: {formatDistanceToNow(latestUpdateTimestamp, { addSuffix: true, locale: ptBR })}
+              </span>
+            </div>
           )}
-          Atualizar Todos
-        </Button>
+        </div>
       </div>
 
       {/* Alert for low balance accounts */}
