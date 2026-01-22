@@ -24,18 +24,18 @@ export function useTeamMembers() {
     fetchMembers();
   }, [fetchMembers]);
 
-  const addMember = async (member: Omit<TeamMember, 'id' | 'created_at' | 'updated_at'>) => {
+  const addMember = async (member: Partial<Omit<TeamMember, 'id' | 'created_at' | 'updated_at'>> & { name: string }) => {
     const { data, error } = await supabase
       .from('team_members')
-      .insert([member])
+      .insert([{ ...member, full_name: member.full_name || member.name }])
       .select()
       .single();
     if (error) {
       console.error('Error adding member:', error);
       return { data: null, error };
     }
-    setMembers((prev) => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)));
-    return { data, error: null };
+    setMembers((prev) => [...prev, data as TeamMember].sort((a, b) => a.name.localeCompare(b.name)));
+    return { data: data as TeamMember, error: null };
   };
 
   const updateMember = async (id: string, updates: Partial<TeamMember>) => {

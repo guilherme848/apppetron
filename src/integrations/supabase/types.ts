@@ -2019,28 +2019,43 @@ export type Database = {
       team_members: {
         Row: {
           active: boolean
+          admission_date: string | null
+          birth_date: string | null
           created_at: string
           email: string | null
+          full_name: string | null
           id: string
           name: string
+          profile_completed_at: string | null
+          profile_photo_path: string | null
           role_id: string | null
           updated_at: string
         }
         Insert: {
           active?: boolean
+          admission_date?: string | null
+          birth_date?: string | null
           created_at?: string
           email?: string | null
+          full_name?: string | null
           id?: string
           name: string
+          profile_completed_at?: string | null
+          profile_photo_path?: string | null
           role_id?: string | null
           updated_at?: string
         }
         Update: {
           active?: boolean
+          admission_date?: string | null
+          birth_date?: string | null
           created_at?: string
           email?: string | null
+          full_name?: string | null
           id?: string
           name?: string
+          profile_completed_at?: string | null
+          profile_photo_path?: string | null
           role_id?: string | null
           updated_at?: string
         }

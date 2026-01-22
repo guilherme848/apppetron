@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Plus, Pencil, Trash2, Loader2, Camera } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,18 +13,43 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from 'sonner';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useJobRoles } from '@/hooks/useJobRoles';
+import { useCurrentUserPermissions } from '@/hooks/usePermissions';
+import { useProfilePhoto } from '@/hooks/useProfilePhoto';
+import { MemberAvatar } from '@/components/common/MemberAvatar';
+import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export function TeamMembersTab() {
-  const { members, loading, addMember, updateMember, deleteMember } = useTeamMembers();
+  const { members, loading, addMember, updateMember, deleteMember, refetch } = useTeamMembers();
   const { roles, getRoleById } = useJobRoles();
+  const { can, isAdmin } = useCurrentUserPermissions();
+  const { uploadPhoto, uploading } = useProfilePhoto();
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingMember, setEditingMember] = useState<{ id: string; name: string; role_id: string | null; email: string | null; active: boolean } | null>(null);
+  const [editingMember, setEditingMember] = useState<{ 
+    id: string; 
+    name: string; 
+    full_name: string | null;
+    role_id: string | null; 
+    email: string | null; 
+    active: boolean;
+    birth_date: string | null;
+    admission_date: string | null;
+    profile_photo_path: string | null;
+  } | null>(null);
   const [name, setName] = useState('');
   const [roleId, setRoleId] = useState<string>('');
   const [email, setEmail] = useState('');
   const [active, setActive] = useState(true);
+  const [birthDate, setBirthDate] = useState('');
+  const [admissionDate, setAdmissionDate] = useState('');
+  const [photoPath, setPhotoPath] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [showInactive, setShowInactive] = useState(false);
+
+  const canEditAdmission = isAdmin || can('edit_admission_date');
 
   const handleOpenCreate = () => {
     setEditingMember(null);
@@ -32,17 +57,36 @@ export function TeamMembersTab() {
     setRoleId('');
     setEmail('');
     setActive(true);
+    setBirthDate('');
+    setAdmissionDate('');
+    setPhotoPath(null);
     setDialogOpen(true);
   };
 
   const handleOpenEdit = (member: typeof editingMember) => {
     if (!member) return;
     setEditingMember(member);
-    setName(member.name);
+    setName(member.full_name || member.name);
     setRoleId(member.role_id || '');
     setEmail(member.email || '');
     setActive(member.active);
+    setBirthDate(member.birth_date || '');
+    setAdmissionDate(member.admission_date || '');
+    setPhotoPath(member.profile_photo_path);
     setDialogOpen(true);
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingMember) return;
+    
+    const path = await uploadPhoto(editingMember.id, file);
+    if (path) {
+      setPhotoPath(path);
+      await updateMember(editingMember.id, { profile_photo_path: path });
+      toast.success('Foto atualizada!');
+      refetch();
+    }
   };
 
   const handleSave = async () => {
@@ -52,12 +96,20 @@ export function TeamMembersTab() {
     }
 
     setSaving(true);
-    const memberData = {
+    const memberData: Record<string, unknown> = {
       name: name.trim(),
+      full_name: name.trim(),
       role_id: roleId || null,
       email: email.trim() || null,
       active,
+      birth_date: birthDate || null,
+      profile_photo_path: photoPath,
     };
+
+    // Only include admission_date if user can edit it
+    if (canEditAdmission) {
+      memberData.admission_date = admissionDate || null;
+    }
 
     if (editingMember) {
       const { error } = await updateMember(editingMember.id, memberData);
@@ -68,7 +120,7 @@ export function TeamMembersTab() {
         setDialogOpen(false);
       }
     } else {
-      const { error } = await addMember(memberData);
+      const { error } = await addMember(memberData as { name: string });
       if (error) {
         toast.error('Erro ao criar usuário');
       } else {
@@ -146,9 +198,11 @@ export function TeamMembersTab() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[50px]"></TableHead>
                   <TableHead>Nome</TableHead>
                   <TableHead>Cargo</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>Admissão</TableHead>
                   <TableHead className="w-[100px]">Ativo</TableHead>
                   <TableHead className="w-[120px]">Ações</TableHead>
                 </TableRow>
@@ -156,7 +210,14 @@ export function TeamMembersTab() {
               <TableBody>
                 {filteredMembers.map((member) => (
                   <TableRow key={member.id}>
-                    <TableCell className="font-medium">{member.name}</TableCell>
+                    <TableCell>
+                      <MemberAvatar
+                        name={member.full_name || member.name}
+                        photoPath={member.profile_photo_path}
+                        size="sm"
+                      />
+                    </TableCell>
+                    <TableCell className="font-medium">{member.full_name || member.name}</TableCell>
                     <TableCell>
                       {member.role_id ? (
                         <Badge variant="outline">{getRoleById(member.role_id)?.name || '-'}</Badge>
@@ -166,6 +227,13 @@ export function TeamMembersTab() {
                     </TableCell>
                     <TableCell>
                       {member.email || <span className="text-muted-foreground">-</span>}
+                    </TableCell>
+                    <TableCell>
+                      {member.admission_date ? (
+                        format(parseISO(member.admission_date), 'dd/MM/yyyy')
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Switch
@@ -197,7 +265,7 @@ export function TeamMembersTab() {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(member.id, member.name)}>
+                              <AlertDialogAction onClick={() => handleDelete(member.id, member.full_name || member.name)}>
                                 Excluir
                               </AlertDialogAction>
                             </AlertDialogFooter>
@@ -214,13 +282,49 @@ export function TeamMembersTab() {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>{editingMember ? 'Editar Usuário' : 'Novo Usuário'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            {/* Photo section (only for editing) */}
+            {editingMember && (
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <MemberAvatar
+                    name={name}
+                    photoPath={photoPath}
+                    size="lg"
+                  />
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="absolute bottom-0 right-0 rounded-full h-6 w-6"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    {uploading ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Camera className="h-3 w-3" />
+                    )}
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={handlePhotoUpload}
+                  />
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  Clique para alterar a foto
+                </span>
+              </div>
+            )}
+
             <div className="space-y-2">
-              <Label htmlFor="memberName">Nome *</Label>
+              <Label htmlFor="memberName">Nome Completo *</Label>
               <Input
                 id="memberName"
                 value={name}
@@ -254,6 +358,32 @@ export function TeamMembersTab() {
                 placeholder="email@exemplo.com"
               />
             </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="memberBirthDate">Data de Nascimento</Label>
+                <Input
+                  id="memberBirthDate"
+                  type="date"
+                  value={birthDate}
+                  onChange={(e) => setBirthDate(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="memberAdmissionDate">
+                  Data de Admissão
+                  {!canEditAdmission && <span className="text-muted-foreground ml-1">(somente admin)</span>}
+                </Label>
+                <Input
+                  id="memberAdmissionDate"
+                  type="date"
+                  value={admissionDate}
+                  onChange={(e) => setAdmissionDate(e.target.value)}
+                  disabled={!canEditAdmission}
+                />
+              </div>
+            </div>
+
             <div className="flex items-center gap-2">
               <Switch
                 id="memberActive"
