@@ -11,6 +11,7 @@ import { TrafficProvider } from "@/contexts/TrafficContext";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProfileGuard } from "@/components/common/ProfileGuard";
 import Dashboard from "./pages/Dashboard";
+import WelcomePage from "./pages/WelcomePage";
 import CrmList from "./pages/CrmList";
 import CrmDetail from "./pages/CrmDetail";
 import TaskList from "./pages/TaskList";
@@ -84,7 +85,8 @@ const App = () => (
                       <AppLayout>
                         <ProfileGuard>
                           <Routes>
-                            <Route path="/" element={<Dashboard />} />
+                            <Route path="/" element={<WelcomePage />} />
+                            <Route path="/dashboard" element={<Dashboard />} />
                             <Route path="/profile" element={<ProfilePage />} />
                             <Route path="/crm" element={<CrmList />} />
                             <Route path="/crm/:id" element={<CrmDetail />} />
