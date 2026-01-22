@@ -192,7 +192,7 @@ export default function MetaIntegrationPage() {
                           {formatCurrency(snapshot?.amount_spent ?? null, account.currency)}
                         </TableCell>
                         <TableCell className="text-right">
-                          {snapshot?.spend_cap !== null ? (
+                          {snapshot?.spend_cap != null ? (
                             formatCurrency(snapshot.spend_cap, account.currency)
                           ) : (
                             <span className="text-muted-foreground">Sem limite</span>
