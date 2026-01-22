@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { User, Camera, Calendar, Briefcase, Loader2, Check } from 'lucide-react';
+import { User, Camera, Calendar, Briefcase, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,7 +15,7 @@ import { ptBR } from 'date-fns/locale';
 export default function ProfilePage() {
   const { members, loading, updateMember, refetch } = useTeamMembers();
   const { currentMemberId } = useCurrentMember();
-  const { uploadPhoto, getPhotoUrl, uploading } = useProfilePhoto();
+  const { uploadPhoto, uploading } = useProfilePhoto();
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -42,21 +42,14 @@ export default function ProfilePage() {
 
   if (!currentMemberId || !currentMember) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-2xl mx-auto">
         <div className="mb-6">
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <User className="h-6 w-6" />
             Meu Perfil
           </h1>
-          <p className="text-muted-foreground">Selecione um usuário no seletor acima para editar seu perfil.</p>
+          <p className="text-muted-foreground">Selecione um usuário no seletor acima.</p>
         </div>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground py-8">
-              Você está no modo Administrador. Para editar um perfil, selecione um usuário no menu superior.
-            </p>
-          </CardContent>
-        </Card>
       </div>
     );
   }
@@ -83,12 +76,10 @@ export default function ProfilePage() {
     setSaving(field);
     const updates: Record<string, string> = { [field]: value };
     
-    // Also update 'name' when full_name changes for backward compatibility
     if (field === 'full_name') {
       updates.name = value;
     }
     
-    // Check if profile is now complete
     const willBeComplete = field === 'full_name' 
       ? (value && currentMember.birth_date)
       : (currentMember.full_name && value);
@@ -139,11 +130,7 @@ export default function ProfilePage() {
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
             >
-              {uploading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Camera className="h-4 w-4" />
-              )}
+              {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
             </Button>
             <input
               ref={fileInputRef}
@@ -209,12 +196,8 @@ export default function ProfilePage() {
               <Briefcase className="h-4 w-4" />
               Data de Admissão
             </Label>
-            <p className="text-sm py-2 px-3 bg-muted rounded-md">
-              {formattedAdmissionDate}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Esta informação só pode ser alterada pelo administrador.
-            </p>
+            <p className="text-sm py-2 px-3 bg-muted rounded-md">{formattedAdmissionDate}</p>
+            <p className="text-xs text-muted-foreground">Esta informação só pode ser alterada pelo administrador.</p>
           </div>
         </CardContent>
       </Card>

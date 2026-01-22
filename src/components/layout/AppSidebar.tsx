@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, CheckSquare, Layers, Settings, ListTodo, TrendingUp, BarChart3, HeartHandshake, FileText, Home } from 'lucide-react';
+import { LayoutDashboard, Users, CheckSquare, Layers, Settings, ListTodo, TrendingUp, BarChart3, HeartHandshake, FileText, Home, User } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
   Sidebar,
@@ -24,6 +24,7 @@ interface MenuItem {
 
 const mainItems: MenuItem[] = [
   { title: 'Início', url: '/', icon: Home },
+  { title: 'Minha Área', url: '/me', icon: User },
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard, permission: 'view_dashboard' },
 ];
 

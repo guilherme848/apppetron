@@ -26,6 +26,7 @@ import ExtraRequestsList from "./pages/content/ExtraRequestsList";
 import ExtraRequestNew from "./pages/content/ExtraRequestNew";
 import ExtraRequestDetail from "./pages/content/ExtraRequestDetail";
 import NotFound from "./pages/NotFound";
+import MyAreaPage from "./pages/MyAreaPage";
 
 // Profile pages
 import ProfilePage from "./pages/profile/ProfilePage";
@@ -86,6 +87,7 @@ const App = () => (
                         <ProfileGuard>
                           <Routes>
                             <Route path="/" element={<WelcomePage />} />
+                            <Route path="/me" element={<MyAreaPage />} />
                             <Route path="/dashboard" element={<Dashboard />} />
                             <Route path="/profile" element={<ProfilePage />} />
                             <Route path="/crm" element={<CrmList />} />
