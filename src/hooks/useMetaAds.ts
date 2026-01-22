@@ -124,12 +124,18 @@ export function useMetaAds() {
     }
   };
 
-  const syncAdAccounts = async () => {
+  const syncAdAccounts = async (alsoFetchFinance = true) => {
     try {
       const { data, error } = await supabase.functions.invoke('meta-fetch-ad-accounts');
       if (error) throw error;
       toast.success(`${data.count} contas sincronizadas`);
       await fetchAdAccounts();
+      
+      // Also fetch finance data for all accounts
+      if (alsoFetchFinance && data.count > 0) {
+        toast.info('Buscando saldos financeiros...');
+        await fetchFinanceData();
+      }
     } catch (error: any) {
       console.error('Sync error:', error);
       toast.error('Erro ao sincronizar: ' + error.message);
