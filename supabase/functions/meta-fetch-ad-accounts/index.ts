@@ -6,6 +6,26 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+interface MetaAdAccount {
+  id: string;
+  name: string;
+  account_id: string;
+  currency: string;
+}
+
+interface MetaApiResponse {
+  data: MetaAdAccount[];
+  paging?: {
+    next?: string;
+    cursors?: {
+      after?: string;
+    };
+  };
+  error?: {
+    message: string;
+  };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -43,26 +63,37 @@ serve(async (req) => {
 
     const accessToken = connection.access_token_encrypted;
 
-    // Fetch ad accounts from Meta Graph API
-    console.log('Fetching ad accounts from BM:', businessId);
-    const graphUrl = `https://graph.facebook.com/v19.0/${businessId}/owned_ad_accounts?fields=id,name,account_id,currency&access_token=${accessToken}&limit=500`;
+    // Fetch ALL ad accounts using pagination
+    console.log('Fetching all ad accounts from BM:', businessId);
+    
+    const allAdAccounts: MetaAdAccount[] = [];
+    let nextUrl: string | null = `https://graph.facebook.com/v19.0/${businessId}/owned_ad_accounts?fields=id,name,account_id,currency&access_token=${accessToken}&limit=200`;
 
-    const response = await fetch(graphUrl);
-    const data = await response.json();
+    while (nextUrl) {
+      console.log(`Fetching page... (${allAdAccounts.length} accounts so far)`);
+      const response = await fetch(nextUrl);
+      const data: MetaApiResponse = await response.json();
 
-    if (data.error) {
-      console.error('Meta API error:', data.error);
-      return new Response(
-        JSON.stringify({ error: data.error.message }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      if (data.error) {
+        console.error('Meta API error:', data.error);
+        return new Response(
+          JSON.stringify({ error: data.error.message }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      if (data.data && data.data.length > 0) {
+        allAdAccounts.push(...data.data);
+      }
+
+      // Check for next page
+      nextUrl = data.paging?.next || null;
     }
 
-    const adAccounts = data.data || [];
-    console.log(`Found ${adAccounts.length} ad accounts`);
+    console.log(`Found ${allAdAccounts.length} total ad accounts`);
 
     // Upsert each ad account
-    for (const account of adAccounts) {
+    for (const account of allAdAccounts) {
       const adAccountId = account.id.startsWith('act_') ? account.id : `act_${account.account_id}`;
       
       const { error: upsertError } = await supabase
@@ -87,10 +118,12 @@ serve(async (req) => {
       .select('*')
       .order('name');
 
+    console.log(`Sync complete. ${allAdAccounts.length} accounts synced.`);
+
     return new Response(
       JSON.stringify({ 
         success: true, 
-        count: adAccounts.length,
+        count: allAdAccounts.length,
         accounts: savedAccounts 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
