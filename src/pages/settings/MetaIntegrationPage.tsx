@@ -176,10 +176,10 @@ export default function MetaIntegrationPage() {
                 <TableBody>
                   {adAccounts.map((account) => {
                     const snapshot = getLatestSnapshot(account.ad_account_id);
-                    const hasSpendCap = snapshot?.spend_cap !== null;
+                    const hasSpendCap = snapshot?.spend_cap != null;
                     const isLowBalance = hasSpendCap && 
-                      snapshot?.available_balance !== null && 
-                      snapshot.available_balance < (snapshot.spend_cap || 0) * 0.1;
+                      snapshot?.available_balance != null && 
+                      (snapshot?.available_balance ?? 0) < ((snapshot?.spend_cap ?? 0) * 0.1);
 
                     return (
                       <TableRow key={account.id}>
