@@ -1,8 +1,8 @@
 export type AccountStatus = 'lead' | 'active' | 'churned';
 export type ContractStatus = 'active' | 'paused' | 'canceled';
 export type TaskStatus = 'backlog' | 'todo' | 'doing' | 'done';
-
 export type AdPaymentMethod = 'pix' | 'boleto' | 'cartao';
+export type AdPaymentFrequency = 'weekly' | 'biweekly' | 'monthly';
 
 export interface Account {
   id: string;
@@ -53,6 +53,8 @@ export interface Account {
   
   // Tráfego Pago
   ad_payment_method?: AdPaymentMethod | null;
+  ad_monthly_budget?: number | null;
+  ad_payment_frequency?: AdPaymentFrequency | null;
 }
 
 // Tipos de cargo responsável para posts

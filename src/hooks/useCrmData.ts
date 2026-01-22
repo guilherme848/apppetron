@@ -38,6 +38,8 @@ const mapAccount = (data: any): Account => ({
   cs_member_id: data.cs_member_id,
   // Tráfego Pago
   ad_payment_method: data.ad_payment_method,
+  ad_monthly_budget: data.ad_monthly_budget,
+  ad_payment_frequency: data.ad_payment_frequency,
 });
 
 const mapContract = (data: any): Contract => ({

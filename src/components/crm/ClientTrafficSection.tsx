@@ -1,24 +1,31 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { X, Plus, AlertTriangle, Megaphone, CreditCard, Check, ChevronsUpDown } from 'lucide-react';
+import { X, Plus, AlertTriangle, Megaphone, CreditCard, Check, ChevronsUpDown, DollarSign, CalendarClock } from 'lucide-react';
 import { useMetaAds } from '@/hooks/useMetaAds';
-import { Account, AdPaymentMethod } from '@/types/crm';
+import { Account, AdPaymentMethod, AdPaymentFrequency } from '@/types/crm';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 
 interface ClientTrafficSectionProps {
   account: Account;
-  onUpdate: (field: keyof Account, value: string | null) => Promise<void>;
+  onUpdate: (field: keyof Account, value: string | number | null) => Promise<void>;
 }
 
 const PAYMENT_METHOD_OPTIONS: { value: AdPaymentMethod; label: string }[] = [
   { value: 'pix', label: 'Pix' },
   { value: 'boleto', label: 'Boleto' },
   { value: 'cartao', label: 'Cartão' },
+];
+
+const PAYMENT_FREQUENCY_OPTIONS: { value: AdPaymentFrequency; label: string }[] = [
+  { value: 'weekly', label: 'Semanal' },
+  { value: 'biweekly', label: 'Quinzenal' },
+  { value: 'monthly', label: 'Mensal' },
 ];
 
 export function ClientTrafficSection({ account, onUpdate }: ClientTrafficSectionProps) {
@@ -33,6 +40,10 @@ export function ClientTrafficSection({ account, onUpdate }: ClientTrafficSection
 
   const [selectedAccountId, setSelectedAccountId] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<string>(account.ad_payment_method || '');
+  const [monthlyBudget, setMonthlyBudget] = useState<string>(
+    account.ad_monthly_budget != null ? String(account.ad_monthly_budget) : ''
+  );
+  const [paymentFrequency, setPaymentFrequency] = useState<string>(account.ad_payment_frequency || '');
   const [open, setOpen] = useState(false);
 
   const clientAdAccounts = getClientAdAccounts(account.id);
@@ -41,7 +52,9 @@ export function ClientTrafficSection({ account, onUpdate }: ClientTrafficSection
 
   useEffect(() => {
     setPaymentMethod(account.ad_payment_method || '');
-  }, [account.ad_payment_method]);
+    setMonthlyBudget(account.ad_monthly_budget != null ? String(account.ad_monthly_budget) : '');
+    setPaymentFrequency(account.ad_payment_frequency || '');
+  }, [account.ad_payment_method, account.ad_monthly_budget, account.ad_payment_frequency]);
 
   const handleAddAccount = async () => {
     if (!selectedAccountId) return;
@@ -58,6 +71,28 @@ export function ClientTrafficSection({ account, onUpdate }: ClientTrafficSection
     setPaymentMethod(value);
     await onUpdate('ad_payment_method' as keyof Account, actualValue);
   };
+
+  const handleMonthlyBudgetBlur = useCallback(async () => {
+    const numericValue = monthlyBudget ? parseFloat(monthlyBudget.replace(',', '.')) : null;
+    if (numericValue !== null && (isNaN(numericValue) || numericValue < 0)) {
+      return; // Invalid value, do not save
+    }
+    const currentValue = account.ad_monthly_budget ?? null;
+    if (numericValue !== currentValue) {
+      await onUpdate('ad_monthly_budget' as keyof Account, numericValue);
+    }
+  }, [monthlyBudget, account.ad_monthly_budget, onUpdate]);
+
+  const handlePaymentFrequencyChange = async (value: string) => {
+    const actualValue = value === 'none' ? null : value;
+    setPaymentFrequency(value);
+    await onUpdate('ad_payment_frequency' as keyof Account, actualValue);
+  };
+
+  // Check if we should show the budget warning
+  const needsBudgetWarning = 
+    (paymentMethod === 'pix' || paymentMethod === 'boleto') && 
+    !monthlyBudget;
 
   if (!connection) {
     return (
@@ -111,6 +146,51 @@ export function ClientTrafficSection({ account, onUpdate }: ClientTrafficSection
               Defina o método de pagamento para calcular saldo corretamente.
             </div>
           )}
+        </div>
+
+        {/* Monthly Budget */}
+        <div className="space-y-2">
+          <Label htmlFor="ad_monthly_budget" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Verba Mensal Definida (R$)
+          </Label>
+          <Input
+            id="ad_monthly_budget"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="Ex: 5000.00"
+            value={monthlyBudget}
+            onChange={(e) => setMonthlyBudget(e.target.value)}
+            onBlur={handleMonthlyBudgetBlur}
+          />
+          {needsBudgetWarning && (
+            <div className="flex items-center gap-2 text-xs text-attention">
+              <AlertTriangle className="h-3 w-3" />
+              Defina a verba mensal para controle de saldo e planejamento.
+            </div>
+          )}
+        </div>
+
+        {/* Payment Frequency */}
+        <div className="space-y-2">
+          <Label htmlFor="ad_payment_frequency" className="flex items-center gap-2">
+            <CalendarClock className="h-4 w-4" />
+            Frequência de Pagamento
+          </Label>
+          <Select value={paymentFrequency || 'none'} onValueChange={handlePaymentFrequencyChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione a frequência" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Não definida</SelectItem>
+              {PAYMENT_FREQUENCY_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Linked Ad Accounts */}

@@ -16,6 +16,8 @@ export type Database = {
     Tables: {
       accounts: {
         Row: {
+          ad_monthly_budget: number | null
+          ad_payment_frequency: string | null
           ad_payment_method: string | null
           address_complement: string | null
           churned_at: string | null
@@ -52,6 +54,8 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          ad_monthly_budget?: number | null
+          ad_payment_frequency?: string | null
           ad_payment_method?: string | null
           address_complement?: string | null
           churned_at?: string | null
@@ -88,6 +92,8 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          ad_monthly_budget?: number | null
+          ad_payment_frequency?: string | null
           ad_payment_method?: string | null
           address_complement?: string | null
           churned_at?: string | null
