@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { X, Plus, AlertTriangle, Megaphone, CreditCard } from 'lucide-react';
+import { X, Plus, AlertTriangle, Megaphone, CreditCard, Check, ChevronsUpDown } from 'lucide-react';
 import { useMetaAds } from '@/hooks/useMetaAds';
 import { Account, AdPaymentMethod } from '@/types/crm';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
 
 interface ClientTrafficSectionProps {
   account: Account;
@@ -31,6 +33,7 @@ export function ClientTrafficSection({ account, onUpdate }: ClientTrafficSection
 
   const [selectedAccountId, setSelectedAccountId] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<string>(account.ad_payment_method || '');
+  const [open, setOpen] = useState(false);
 
   const clientAdAccounts = getClientAdAccounts(account.id);
   const linkedAccountIds = clientAdAccounts.map(a => a.ad_account_id);
@@ -103,7 +106,7 @@ export function ClientTrafficSection({ account, onUpdate }: ClientTrafficSection
             </SelectContent>
           </Select>
           {!paymentMethod && (
-            <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400">
+            <div className="flex items-center gap-2 text-xs text-destructive">
               <AlertTriangle className="h-3 w-3" />
               Defina o método de pagamento para calcular saldo corretamente.
             </div>
@@ -141,21 +144,55 @@ export function ClientTrafficSection({ account, onUpdate }: ClientTrafficSection
           )}
         </div>
 
-        {/* Add Account */}
+        {/* Add Account with search */}
         {availableAccounts.length > 0 && (
           <div className="flex gap-2">
-            <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
-              <SelectTrigger className="flex-1">
-                <SelectValue placeholder="Vincular conta de anúncio..." />
-              </SelectTrigger>
-              <SelectContent>
-                {availableAccounts.map((account) => (
-                  <SelectItem key={account.id} value={account.ad_account_id}>
-                    {account.name} ({account.ad_account_id})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={open}
+                  className="flex-1 justify-between"
+                >
+                  {selectedAccountId
+                    ? availableAccounts.find(a => a.ad_account_id === selectedAccountId)?.name ?? 'Selecionar...'
+                    : 'Buscar conta de anúncio...'}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[400px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Buscar conta..." />
+                  <CommandList>
+                    <CommandEmpty>Nenhuma conta encontrada.</CommandEmpty>
+                    <CommandGroup>
+                      {availableAccounts.map((acc) => (
+                        <CommandItem
+                          key={acc.id}
+                          value={`${acc.name} ${acc.ad_account_id}`}
+                          onSelect={() => {
+                            setSelectedAccountId(acc.ad_account_id);
+                            setOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedAccountId === acc.ad_account_id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          <div className="flex flex-col">
+                            <span>{acc.name}</span>
+                            <span className="text-xs text-muted-foreground font-mono">{acc.ad_account_id}</span>
+                          </div>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
             <Button onClick={handleAddAccount} disabled={!selectedAccountId} size="sm">
               <Plus className="h-4 w-4 mr-1" />
               Vincular
