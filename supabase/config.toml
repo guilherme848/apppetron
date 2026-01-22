@@ -1,1 +1,4 @@
 project_id = "ucbltsnmkcxpcioetlpz"
+
+[functions.meta-refresh-balances-cron]
+verify_jwt = false
