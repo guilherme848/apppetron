@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DollarSign, RefreshCw, Loader2, AlertTriangle } from 'lucide-react';
+import { DollarSign, RefreshCw, Loader2, AlertTriangle, TrendingDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -8,6 +8,10 @@ import { Input } from '@/components/ui/input';
 import { useMetaAds } from '@/hooks/useMetaAds';
 import { useCrm } from '@/contexts/CrmContext';
 import { AdPaymentMethod } from '@/types/crm';
+import { cn } from '@/lib/utils';
+
+// Low balance threshold (R$ 500)
+const LOW_BALANCE_THRESHOLD = 500;
 
 // Payment method display labels
 const PAYMENT_METHOD_LABELS: Record<AdPaymentMethod, string> = {
@@ -54,6 +58,11 @@ export default function TrafficBalancesPage() {
         displayedBalance = Math.max(snapshot.available_balance, 0);
       }
       
+      // Check if balance is low (only for pix/boleto with actual balance)
+      const isLowBalance = paymentMethod !== 'cartao' 
+        && displayedBalance !== null 
+        && displayedBalance <= LOW_BALANCE_THRESHOLD;
+      
       return {
         clientId: client.id,
         clientName: client.name,
@@ -63,6 +72,7 @@ export default function TrafficBalancesPage() {
         displayedBalance,
         paymentMethod,
         hasSnapshot: !!snapshot,
+        isLowBalance,
       };
     })
     .filter(Boolean) as {
@@ -74,6 +84,7 @@ export default function TrafficBalancesPage() {
       displayedBalance: number | null;
       paymentMethod: AdPaymentMethod | null;
       hasSnapshot: boolean;
+      isLowBalance: boolean;
     }[];
 
   // Filter by search term
@@ -105,6 +116,9 @@ export default function TrafficBalancesPage() {
 
   // Count accounts without payment method defined
   const missingPaymentMethodCount = sortedRows.filter(row => !row.paymentMethod).length;
+  
+  // Count low balance accounts
+  const lowBalanceCount = sortedRows.filter(row => row.isLowBalance).length;
 
   if (loading) {
     return (
@@ -159,14 +173,33 @@ export default function TrafficBalancesPage() {
         </Button>
       </div>
 
-      {/* Warning for missing payment methods */}
-      {missingPaymentMethodCount > 0 && (
-        <Card className="border-amber-500/50 bg-amber-500/5">
+      {/* Alert for low balance accounts */}
+      {lowBalanceCount > 0 && (
+        <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="py-4">
             <div className="flex items-center gap-3">
-              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              <TrendingDown className="h-5 w-5 text-destructive" />
               <div>
-                <p className="font-medium text-amber-600 dark:text-amber-400">
+                <p className="font-medium text-destructive">
+                  {lowBalanceCount} conta{lowBalanceCount > 1 ? 's' : ''} com saldo baixo (≤ R$ {LOW_BALANCE_THRESHOLD})
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Atenção: essas contas podem parar de veicular anúncios em breve.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Warning for missing payment methods */}
+      {missingPaymentMethodCount > 0 && (
+        <Card className="border-accent/50 bg-accent/5">
+          <CardContent className="py-4">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-5 w-5 text-accent-foreground" />
+              <div>
+                <p className="font-medium">
                   {missingPaymentMethodCount} cliente{missingPaymentMethodCount > 1 ? 's' : ''} sem método de pagamento definido
                 </p>
                 <p className="text-sm text-muted-foreground">
@@ -213,8 +246,18 @@ export default function TrafficBalancesPage() {
               </TableHeader>
               <TableBody>
                 {sortedRows.map((row, idx) => (
-                  <TableRow key={`${row.clientId}-${row.adAccountId}-${idx}`}>
-                    <TableCell className="font-medium">{row.clientName}</TableCell>
+                  <TableRow 
+                    key={`${row.clientId}-${row.adAccountId}-${idx}`}
+                    className={cn(row.isLowBalance && "bg-destructive/5")}
+                  >
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        {row.isLowBalance && (
+                          <TrendingDown className="h-4 w-4 text-destructive shrink-0" />
+                        )}
+                        {row.clientName}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <div>
                         <p>{row.adAccountName}</p>
@@ -225,9 +268,19 @@ export default function TrafficBalancesPage() {
                       {row.paymentMethod === 'cartao' ? (
                         <span className="text-muted-foreground">—</span>
                       ) : row.displayedBalance !== null ? (
-                        <span className={row.displayedBalance === 0 ? 'text-destructive font-medium' : 'text-green-600 dark:text-green-400'}>
-                          {formatCurrency(row.displayedBalance, row.currency)}
-                        </span>
+                        <div className="flex items-center justify-end gap-2">
+                          {row.isLowBalance && (
+                            <Badge variant="attention" className="text-xs">
+                              Saldo Baixo
+                            </Badge>
+                          )}
+                          <span className={cn(
+                            "font-medium",
+                            row.isLowBalance ? "text-destructive" : "text-foreground"
+                          )}>
+                            {formatCurrency(row.displayedBalance, row.currency)}
+                          </span>
+                        </div>
                       ) : (
                         <span className="text-muted-foreground">—</span>
                       )}
@@ -238,7 +291,7 @@ export default function TrafficBalancesPage() {
                           {PAYMENT_METHOD_LABELS[row.paymentMethod]}
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="text-amber-600 border-amber-500/50">
+                        <Badge variant="outline" className="border-accent">
                           Não definido
                         </Badge>
                       )}
