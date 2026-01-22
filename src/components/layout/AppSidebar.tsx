@@ -38,6 +38,7 @@ const contentItems: MenuItem[] = [
 const trafficItems: MenuItem[] = [
   { title: 'Visão Geral', url: '/traffic', icon: TrendingUp, permission: 'view_traffic' },
   { title: 'Tarefas de Tráfego', url: '/traffic/tasks', icon: CheckSquare, permission: 'view_traffic' },
+  { title: 'Saldos', url: '/traffic/balances', icon: BarChart3, permission: 'view_traffic' },
 ];
 
 const csItems: MenuItem[] = [
