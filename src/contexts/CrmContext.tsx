@@ -10,7 +10,7 @@ export function CrmProvider({ children }: { children: ReactNode }) {
   return <CrmContext.Provider value={crmData}>{children}</CrmContext.Provider>;
 }
 
-export function useCrm() {
+export function useCrm(): CrmContextType {
   const context = useContext(CrmContext);
   if (!context) {
     throw new Error('useCrm must be used within CrmProvider');
