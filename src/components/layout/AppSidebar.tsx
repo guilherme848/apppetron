@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, CheckSquare, Layers, Settings, ListTodo, TrendingUp, BarChart3, HeartHandshake, FileText } from 'lucide-react';
+import { LayoutDashboard, Users, CheckSquare, Layers, Settings, ListTodo, TrendingUp, BarChart3, HeartHandshake, FileText, Home } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
   Sidebar,
@@ -22,8 +22,12 @@ interface MenuItem {
   permission?: PermissionKey;
 }
 
+const mainItems: MenuItem[] = [
+  { title: 'Início', url: '/', icon: Home },
+  { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard, permission: 'view_dashboard' },
+];
+
 const crmItems: MenuItem[] = [
-  { title: 'Dashboard', url: '/', icon: LayoutDashboard, permission: 'view_dashboard' },
   { title: 'Clientes', url: '/crm', icon: Users, permission: 'view_crm' },
   { title: 'Tarefas CRM', url: '/tasks', icon: CheckSquare, permission: 'view_tasks' },
   { title: 'Tarefas Conteúdo', url: '/content/tasks', icon: ListTodo, permission: 'view_tasks' },
@@ -60,6 +64,7 @@ export function AppSidebar() {
     return items.filter(item => !item.permission || can(item.permission));
   };
 
+  const visibleMainItems = filterByPermission(mainItems);
   const visibleCrmItems = filterByPermission(crmItems);
   const visibleContentItems = filterByPermission(contentItems);
   const visibleTrafficItems = filterByPermission(trafficItems);
@@ -78,6 +83,29 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent>
+        {visibleMainItems.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {visibleMainItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={item.url}
+                        end={item.url === '/'}
+                        className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors hover:bg-accent"
+                        activeClassName="bg-accent text-accent-foreground font-medium"
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
         {visibleCrmItems.length > 0 && (
           <SidebarGroup>
             <SidebarGroupLabel>CRM</SidebarGroupLabel>
@@ -88,7 +116,6 @@ export function AppSidebar() {
                     <SidebarMenuButton asChild>
                       <NavLink
                         to={item.url}
-                        end={item.url === '/'}
                         className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors hover:bg-accent"
                         activeClassName="bg-accent text-accent-foreground font-medium"
                       >
