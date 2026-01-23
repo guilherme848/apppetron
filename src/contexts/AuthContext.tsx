@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { TeamMember } from '@/types/team';
@@ -23,6 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [member, setMember] = useState<TeamMember | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const initialSessionResolvedRef = useRef(false);
 
   const fetchMemberData = async (userId: string): Promise<TeamMember | null> => {
     try {
@@ -78,9 +79,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (!isMounted) return;
+
+        // Logs temporários para diagnóstico (podemos remover depois que estabilizar)
+        console.debug('[auth] onAuthStateChange', {
+          event,
+          hasSession: Boolean(session),
+          userId: session?.user?.id,
+          path: window.location.pathname,
+          initialResolved: initialSessionResolvedRef.current,
+        });
         
         setSession(session);
         setUser(session?.user ?? null);
+
+        // Evita liberar o loading antes de resolver a sessão inicial.
+        // Em alguns cenários o listener pode disparar primeiro com session=null,
+        // o que causaria redirect precoce para /login.
+        if (!initialSessionResolvedRef.current) {
+          return;
+        }
         
         // Defer member data fetch to avoid deadlock
         if (session?.user) {
@@ -107,6 +124,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // THEN check for existing session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!isMounted) return;
+
+      console.debug('[auth] getSession resolved', {
+        hasSession: Boolean(session),
+        userId: session?.user?.id,
+        path: window.location.pathname,
+      });
       
       setSession(session);
       setUser(session?.user ?? null);
@@ -114,6 +137,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         await fetchMemberData(session.user.id);
       }
+
+      initialSessionResolvedRef.current = true;
       if (isMounted) {
         setLoading(false);
       }
