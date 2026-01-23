@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useTraffic } from '@/contexts/TrafficContext';
+import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
 
 export function ServicesTab() {
   const { services, loading, addService, updateService, deleteService, toggleServiceActive } = useSettings();
@@ -134,9 +135,14 @@ export function ServicesTab() {
                         <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(service)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(service.id, service.name)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <ConfirmDeleteDialog
+                          itemName={service.name}
+                          onConfirm={() => handleDelete(service.id, service.name)}
+                        >
+                          <Button variant="ghost" size="icon">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </ConfirmDeleteDialog>
                       </div>
                     </TableCell>
                   </TableRow>

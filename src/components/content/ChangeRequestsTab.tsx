@@ -7,13 +7,13 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { RichTextEditor, RichTextViewer } from '@/components/content/RichTextEditor';
 import { ContentChangeRequest, ChangeRequestStatus, CHANGE_REQUEST_STATUS_OPTIONS } from '@/types/changeRequest';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
+import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
 
 interface ChangeRequestsTabProps {
   requests: ContentChangeRequest[];
@@ -311,31 +311,18 @@ export function ChangeRequestsTab({
                       Cancelar
                     </Button>
                     <div className="flex-1" />
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="icon">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Excluir solicitação?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Esta ação não pode ser desfeita.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={async () => {
-                            await onDelete(selectedRequest.id);
-                            setSelectedRequest(null);
-                            toast.success('Solicitação excluída');
-                          }}>
-                            Excluir
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    <ConfirmDeleteDialog
+                      itemName="esta solicitação"
+                      onConfirm={async () => {
+                        await onDelete(selectedRequest.id);
+                        setSelectedRequest(null);
+                        toast.success('Solicitação excluída');
+                      }}
+                    >
+                      <Button variant="destructive" size="icon">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </ConfirmDeleteDialog>
                   </div>
                 )}
               </div>

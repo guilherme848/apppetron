@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useTraffic } from '@/contexts/TrafficContext';
+import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
 
 export function TrafficCyclesTab() {
   const { cycles, loading, addCycle, updateCycle, deleteCycle, toggleCycleActive, getRoutinesByCycle } = useTraffic();
@@ -132,9 +133,14 @@ export function TrafficCyclesTab() {
                           <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(cycle)}>
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(cycle.id, cycle.name)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <ConfirmDeleteDialog
+                            itemName={cycle.name}
+                            onConfirm={() => handleDelete(cycle.id, cycle.name)}
+                          >
+                            <Button variant="ghost" size="icon">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </ConfirmDeleteDialog>
                         </div>
                       </TableCell>
                     </TableRow>

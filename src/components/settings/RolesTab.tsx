@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useJobRoles } from '@/hooks/useJobRoles';
+import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
 
 export function RolesTab() {
   const { roles, loading, addRole, updateRole, deleteRole } = useJobRoles();
@@ -109,9 +110,14 @@ export function RolesTab() {
                         <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(role)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(role.id, role.name)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <ConfirmDeleteDialog
+                          itemName={role.name}
+                          onConfirm={() => handleDelete(role.id, role.name)}
+                        >
+                          <Button variant="ghost" size="icon">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </ConfirmDeleteDialog>
                       </div>
                     </TableCell>
                   </TableRow>
