@@ -1,0 +1,650 @@
+/**
+ * Route Registry - Single Source of Truth for Navigation
+ * 
+ * IMPORTANT: When adding new routes/pages to the system,
+ * add them here FIRST. The permissions will be auto-synced
+ * when an admin opens the Access Control page.
+ */
+
+import {
+  Home,
+  LayoutDashboard,
+  Users,
+  CheckSquare,
+  Layers,
+  ListTodo,
+  TrendingUp,
+  BarChart3,
+  HeartHandshake,
+  FileText,
+  Settings,
+  Briefcase,
+  UserCog,
+  Shield,
+  Package,
+  GitBranch,
+  Tag,
+  Calendar,
+  Clock,
+  Zap,
+  User,
+} from 'lucide-react';
+
+// Action types for permissions
+export type PermissionAction = 'view' | 'edit' | 'manage';
+
+// Route definition interface
+export interface RouteDefinition {
+  id: string;                     // Unique identifier: module.page (e.g., 'content.tasks')
+  path: string;                   // Route path (e.g., '/content/tasks')
+  label: string;                  // Display name (e.g., 'Tarefas de Conteúdo')
+  category: string;               // Category for grouping (e.g., 'Tarefas')
+  module: string;                 // Module name (e.g., 'Conteúdo')
+  permissions: PermissionAction[];// Available actions: ['view'], ['view', 'edit'], ['view', 'edit', 'manage']
+  icon?: React.ElementType;       // Icon component
+  hideInMenu?: boolean;           // Hide from main navigation
+  order?: number;                 // Sort order within category
+  parentId?: string;              // Parent route for nested routes (details pages)
+}
+
+// Module definitions for organization
+export const MODULES = {
+  MAIN: 'Principal',
+  CRM: 'CRM',
+  CONTENT: 'Conteúdo',
+  TRAFFIC: 'Tráfego',
+  CS: 'Customer Success',
+  SETTINGS: 'Configurações',
+} as const;
+
+export type ModuleKey = keyof typeof MODULES;
+
+// Categories for grouping
+export const CATEGORIES = {
+  DASHBOARD: 'Dashboard',
+  CLIENTS: 'Clientes',
+  TASKS: 'Tarefas',
+  PRODUCTION: 'Produção',
+  REQUESTS: 'Solicitações',
+  ANALYTICS: 'Análises',
+  MEETINGS: 'Reuniões',
+  RISK: 'Risco',
+  TEAM: 'Equipe',
+  SERVICES: 'Serviços',
+  PIPELINE: 'Pipeline',
+  INTEGRATIONS: 'Integrações',
+  ACCESS: 'Acessos',
+} as const;
+
+/**
+ * ROUTE REGISTRY
+ * Add new routes here. They will be automatically synced to the database.
+ */
+export const routeRegistry: RouteDefinition[] = [
+  // ============================================
+  // MAIN MODULE
+  // ============================================
+  {
+    id: 'main.welcome',
+    path: '/',
+    label: 'Início',
+    category: CATEGORIES.DASHBOARD,
+    module: MODULES.MAIN,
+    permissions: ['view'],
+    icon: Home,
+    order: 1,
+  },
+  {
+    id: 'main.dashboard',
+    path: '/dashboard',
+    label: 'Dashboard',
+    category: CATEGORIES.DASHBOARD,
+    module: MODULES.MAIN,
+    permissions: ['view'],
+    icon: LayoutDashboard,
+    order: 2,
+  },
+  {
+    id: 'main.profile',
+    path: '/profile',
+    label: 'Meu Perfil',
+    category: CATEGORIES.DASHBOARD,
+    module: MODULES.MAIN,
+    permissions: ['view', 'edit'],
+    icon: User,
+    hideInMenu: true,
+    order: 3,
+  },
+
+  // ============================================
+  // CRM MODULE
+  // ============================================
+  {
+    id: 'crm.clients',
+    path: '/crm',
+    label: 'Clientes',
+    category: CATEGORIES.CLIENTS,
+    module: MODULES.CRM,
+    permissions: ['view', 'edit'],
+    icon: Users,
+    order: 1,
+  },
+  {
+    id: 'crm.client_detail',
+    path: '/crm/:id',
+    label: 'Detalhes do Cliente',
+    category: CATEGORIES.CLIENTS,
+    module: MODULES.CRM,
+    permissions: ['view', 'edit'],
+    hideInMenu: true,
+    parentId: 'crm.clients',
+    order: 2,
+  },
+  {
+    id: 'crm.tasks',
+    path: '/tasks',
+    label: 'Tarefas CRM',
+    category: CATEGORIES.TASKS,
+    module: MODULES.CRM,
+    permissions: ['view', 'edit'],
+    icon: CheckSquare,
+    order: 3,
+  },
+  {
+    id: 'crm.content_tasks',
+    path: '/content/tasks',
+    label: 'Tarefas de Conteúdo',
+    category: CATEGORIES.TASKS,
+    module: MODULES.CRM,
+    permissions: ['view', 'edit'],
+    icon: ListTodo,
+    order: 4,
+  },
+
+  // ============================================
+  // CONTENT MODULE
+  // ============================================
+  {
+    id: 'content.dashboard',
+    path: '/content/dashboard',
+    label: 'Dashboard Produção',
+    category: CATEGORIES.ANALYTICS,
+    module: MODULES.CONTENT,
+    permissions: ['view'],
+    icon: BarChart3,
+    order: 1,
+  },
+  {
+    id: 'content.production',
+    path: '/content/production',
+    label: 'Produção de Conteúdo',
+    category: CATEGORIES.PRODUCTION,
+    module: MODULES.CONTENT,
+    permissions: ['view', 'edit'],
+    icon: Layers,
+    order: 2,
+  },
+  {
+    id: 'content.batch_detail',
+    path: '/content/production/:id',
+    label: 'Detalhes do Lote',
+    category: CATEGORIES.PRODUCTION,
+    module: MODULES.CONTENT,
+    permissions: ['view', 'edit'],
+    hideInMenu: true,
+    parentId: 'content.production',
+    order: 3,
+  },
+  {
+    id: 'content.post_detail',
+    path: '/content/production/:batchId/posts/:postId',
+    label: 'Detalhes do Post',
+    category: CATEGORIES.PRODUCTION,
+    module: MODULES.CONTENT,
+    permissions: ['view', 'edit'],
+    hideInMenu: true,
+    parentId: 'content.production',
+    order: 4,
+  },
+  {
+    id: 'content.extra_requests',
+    path: '/content/extra-requests',
+    label: 'Solicitações Extras',
+    category: CATEGORIES.REQUESTS,
+    module: MODULES.CONTENT,
+    permissions: ['view', 'edit'],
+    icon: FileText,
+    order: 5,
+  },
+  {
+    id: 'content.extra_request_new',
+    path: '/content/extra-requests/new',
+    label: 'Nova Solicitação Extra',
+    category: CATEGORIES.REQUESTS,
+    module: MODULES.CONTENT,
+    permissions: ['view', 'edit'],
+    hideInMenu: true,
+    parentId: 'content.extra_requests',
+    order: 6,
+  },
+  {
+    id: 'content.extra_request_detail',
+    path: '/content/extra-requests/:id',
+    label: 'Detalhes da Solicitação Extra',
+    category: CATEGORIES.REQUESTS,
+    module: MODULES.CONTENT,
+    permissions: ['view', 'edit'],
+    hideInMenu: true,
+    parentId: 'content.extra_requests',
+    order: 7,
+  },
+  {
+    id: 'content.legacy',
+    path: '/content',
+    label: 'Conteúdo (Legado)',
+    category: CATEGORIES.PRODUCTION,
+    module: MODULES.CONTENT,
+    permissions: ['view', 'edit'],
+    hideInMenu: true,
+    order: 99,
+  },
+  {
+    id: 'content.legacy_detail',
+    path: '/content/:id',
+    label: 'Detalhes Conteúdo (Legado)',
+    category: CATEGORIES.PRODUCTION,
+    module: MODULES.CONTENT,
+    permissions: ['view', 'edit'],
+    hideInMenu: true,
+    parentId: 'content.legacy',
+    order: 100,
+  },
+
+  // ============================================
+  // TRAFFIC MODULE
+  // ============================================
+  {
+    id: 'traffic.dashboard',
+    path: '/traffic',
+    label: 'Visão Geral',
+    category: CATEGORIES.DASHBOARD,
+    module: MODULES.TRAFFIC,
+    permissions: ['view'],
+    icon: TrendingUp,
+    order: 1,
+  },
+  {
+    id: 'traffic.tasks',
+    path: '/traffic/tasks',
+    label: 'Tarefas de Tráfego',
+    category: CATEGORIES.TASKS,
+    module: MODULES.TRAFFIC,
+    permissions: ['view', 'edit'],
+    icon: CheckSquare,
+    order: 2,
+  },
+  {
+    id: 'traffic.balances',
+    path: '/traffic/balances',
+    label: 'Saldos',
+    category: CATEGORIES.ANALYTICS,
+    module: MODULES.TRAFFIC,
+    permissions: ['view'],
+    icon: BarChart3,
+    order: 3,
+  },
+  {
+    id: 'traffic.client_detail',
+    path: '/traffic/clients/:id',
+    label: 'Detalhes do Cliente (Tráfego)',
+    category: CATEGORIES.CLIENTS,
+    module: MODULES.TRAFFIC,
+    permissions: ['view', 'edit'],
+    hideInMenu: true,
+    parentId: 'traffic.dashboard',
+    order: 4,
+  },
+  {
+    id: 'traffic.creative_requests',
+    path: '/traffic/creative-requests',
+    label: 'Solicitações de Criativos',
+    category: CATEGORIES.REQUESTS,
+    module: MODULES.TRAFFIC,
+    permissions: ['view', 'edit'],
+    icon: FileText,
+    order: 5,
+  },
+  {
+    id: 'traffic.creative_request_new',
+    path: '/traffic/creative-requests/new',
+    label: 'Nova Solicitação de Criativo',
+    category: CATEGORIES.REQUESTS,
+    module: MODULES.TRAFFIC,
+    permissions: ['view', 'edit'],
+    hideInMenu: true,
+    parentId: 'traffic.creative_requests',
+    order: 6,
+  },
+  {
+    id: 'traffic.creative_request_detail',
+    path: '/traffic/creative-requests/:id',
+    label: 'Detalhes da Solicitação de Criativo',
+    category: CATEGORIES.REQUESTS,
+    module: MODULES.TRAFFIC,
+    permissions: ['view', 'edit'],
+    hideInMenu: true,
+    parentId: 'traffic.creative_requests',
+    order: 7,
+  },
+
+  // ============================================
+  // CUSTOMER SUCCESS MODULE
+  // ============================================
+  {
+    id: 'cs.dashboard',
+    path: '/cs',
+    label: 'Visão Geral',
+    category: CATEGORIES.DASHBOARD,
+    module: MODULES.CS,
+    permissions: ['view'],
+    icon: HeartHandshake,
+    order: 1,
+  },
+  {
+    id: 'cs.onboarding',
+    path: '/cs/onboarding',
+    label: 'Onboarding',
+    category: CATEGORIES.CLIENTS,
+    module: MODULES.CS,
+    permissions: ['view', 'edit'],
+    icon: Users,
+    order: 2,
+  },
+  {
+    id: 'cs.meetings',
+    path: '/cs/meetings',
+    label: 'Reuniões',
+    category: CATEGORIES.MEETINGS,
+    module: MODULES.CS,
+    permissions: ['view', 'edit'],
+    icon: LayoutDashboard,
+    order: 3,
+  },
+  {
+    id: 'cs.nps',
+    path: '/cs/nps',
+    label: 'NPS',
+    category: CATEGORIES.ANALYTICS,
+    module: MODULES.CS,
+    permissions: ['view', 'edit'],
+    icon: BarChart3,
+    order: 4,
+  },
+  {
+    id: 'cs.risk',
+    path: '/cs/risk',
+    label: 'Risco',
+    category: CATEGORIES.RISK,
+    module: MODULES.CS,
+    permissions: ['view', 'edit'],
+    icon: TrendingUp,
+    order: 5,
+  },
+  {
+    id: 'cs.client_detail',
+    path: '/cs/clients/:id',
+    label: 'Detalhes do Cliente (CS)',
+    category: CATEGORIES.CLIENTS,
+    module: MODULES.CS,
+    permissions: ['view', 'edit'],
+    hideInMenu: true,
+    parentId: 'cs.dashboard',
+    order: 6,
+  },
+
+  // ============================================
+  // SETTINGS MODULE
+  // ============================================
+  {
+    id: 'settings.home',
+    path: '/settings',
+    label: 'Configurações',
+    category: CATEGORIES.DASHBOARD,
+    module: MODULES.SETTINGS,
+    permissions: ['view', 'manage'],
+    icon: Settings,
+    order: 1,
+  },
+  {
+    id: 'settings.roles',
+    path: '/settings/roles',
+    label: 'Cargos',
+    category: CATEGORIES.TEAM,
+    module: MODULES.SETTINGS,
+    permissions: ['view', 'edit', 'manage'],
+    icon: Briefcase,
+    order: 2,
+  },
+  {
+    id: 'settings.users',
+    path: '/settings/users',
+    label: 'Usuários',
+    category: CATEGORIES.TEAM,
+    module: MODULES.SETTINGS,
+    permissions: ['view', 'edit', 'manage'],
+    icon: UserCog,
+    order: 3,
+  },
+  {
+    id: 'settings.permissions',
+    path: '/settings/permissions',
+    label: 'Controle de Acessos',
+    category: CATEGORIES.ACCESS,
+    module: MODULES.SETTINGS,
+    permissions: ['view', 'manage'],
+    icon: Shield,
+    order: 4,
+  },
+  {
+    id: 'settings.services',
+    path: '/settings/services',
+    label: 'Serviços',
+    category: CATEGORIES.SERVICES,
+    module: MODULES.SETTINGS,
+    permissions: ['view', 'edit', 'manage'],
+    icon: Package,
+    order: 5,
+  },
+  {
+    id: 'settings.deliverables',
+    path: '/settings/deliverables',
+    label: 'Entregáveis',
+    category: CATEGORIES.SERVICES,
+    module: MODULES.SETTINGS,
+    permissions: ['view', 'edit', 'manage'],
+    icon: Package,
+    order: 6,
+  },
+  {
+    id: 'settings.pipeline',
+    path: '/settings/pipeline',
+    label: 'Pipeline de Produção',
+    category: CATEGORIES.PIPELINE,
+    module: MODULES.SETTINGS,
+    permissions: ['view', 'edit', 'manage'],
+    icon: GitBranch,
+    order: 7,
+  },
+  {
+    id: 'settings.niches',
+    path: '/settings/niches',
+    label: 'Nichos',
+    category: CATEGORIES.CLIENTS,
+    module: MODULES.SETTINGS,
+    permissions: ['view', 'edit', 'manage'],
+    icon: Tag,
+    order: 8,
+  },
+  {
+    id: 'settings.traffic_cycles',
+    path: '/settings/traffic-cycles',
+    label: 'Ciclos de Tráfego',
+    category: CATEGORIES.PIPELINE,
+    module: MODULES.SETTINGS,
+    permissions: ['view', 'edit', 'manage'],
+    icon: Calendar,
+    order: 9,
+  },
+  {
+    id: 'settings.traffic_cycle_tasks',
+    path: '/settings/traffic-cycles/:id/tasks',
+    label: 'Tarefas do Ciclo',
+    category: CATEGORIES.PIPELINE,
+    module: MODULES.SETTINGS,
+    permissions: ['view', 'edit', 'manage'],
+    hideInMenu: true,
+    parentId: 'settings.traffic_cycles',
+    order: 10,
+  },
+  {
+    id: 'settings.traffic_routines',
+    path: '/settings/traffic-routines',
+    label: 'Rotinas de Tráfego',
+    category: CATEGORIES.PIPELINE,
+    module: MODULES.SETTINGS,
+    permissions: ['view', 'edit', 'manage'],
+    icon: Clock,
+    order: 11,
+  },
+  {
+    id: 'settings.meta_integration',
+    path: '/settings/meta',
+    label: 'Integração Meta',
+    category: CATEGORIES.INTEGRATIONS,
+    module: MODULES.SETTINGS,
+    permissions: ['view', 'manage'],
+    icon: Zap,
+    order: 12,
+  },
+];
+
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
+
+/**
+ * Get all routes for menu rendering (excluding hidden routes)
+ */
+export function getMenuRoutes(): RouteDefinition[] {
+  return routeRegistry.filter(r => !r.hideInMenu).sort((a, b) => (a.order || 0) - (b.order || 0));
+}
+
+/**
+ * Get routes grouped by module
+ */
+export function getRoutesByModule(): Record<string, RouteDefinition[]> {
+  const grouped: Record<string, RouteDefinition[]> = {};
+  
+  for (const route of getMenuRoutes()) {
+    if (!grouped[route.module]) {
+      grouped[route.module] = [];
+    }
+    grouped[route.module].push(route);
+  }
+  
+  return grouped;
+}
+
+/**
+ * Get a route by ID
+ */
+export function getRouteById(id: string): RouteDefinition | undefined {
+  return routeRegistry.find(r => r.id === id);
+}
+
+/**
+ * Get a route by path
+ */
+export function getRouteByPath(path: string): RouteDefinition | undefined {
+  return routeRegistry.find(r => r.path === path);
+}
+
+/**
+ * Generate permission key from route ID and action
+ * Format: action:route_id (e.g., view:content.tasks)
+ */
+export function generatePermissionKey(routeId: string, action: PermissionAction): string {
+  return `${action}:${routeId}`;
+}
+
+/**
+ * Parse permission key to get route ID and action
+ */
+export function parsePermissionKey(key: string): { action: PermissionAction; routeId: string } | null {
+  const parts = key.split(':');
+  if (parts.length !== 2) return null;
+  
+  const action = parts[0] as PermissionAction;
+  const routeId = parts[1];
+  
+  if (!['view', 'edit', 'manage'].includes(action)) return null;
+  
+  return { action, routeId };
+}
+
+/**
+ * Get all permission keys that should exist based on registry
+ */
+export function getAllPermissionKeys(): string[] {
+  const keys: string[] = [];
+  
+  for (const route of routeRegistry) {
+    for (const action of route.permissions) {
+      keys.push(generatePermissionKey(route.id, action));
+    }
+  }
+  
+  return keys;
+}
+
+/**
+ * Get routes grouped by module and category for the Access Control page
+ */
+export function getRoutesForAccessControl(): Record<string, Record<string, RouteDefinition[]>> {
+  const result: Record<string, Record<string, RouteDefinition[]>> = {};
+  
+  for (const route of routeRegistry) {
+    // Skip detail pages (use parent permissions)
+    if (route.parentId) continue;
+    
+    if (!result[route.module]) {
+      result[route.module] = {};
+    }
+    if (!result[route.module][route.category]) {
+      result[route.module][route.category] = [];
+    }
+    
+    result[route.module][route.category].push(route);
+  }
+  
+  // Sort routes within categories
+  for (const module of Object.keys(result)) {
+    for (const category of Object.keys(result[module])) {
+      result[module][category].sort((a, b) => (a.order || 0) - (b.order || 0));
+    }
+  }
+  
+  return result;
+}
+
+/**
+ * Module order for display
+ */
+export const MODULE_ORDER: string[] = [
+  MODULES.MAIN,
+  MODULES.CRM,
+  MODULES.CONTENT,
+  MODULES.TRAFFIC,
+  MODULES.CS,
+  MODULES.SETTINGS,
+];
