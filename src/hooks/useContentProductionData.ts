@@ -178,7 +178,7 @@ export function useContentProductionData() {
     return mapped;
   };
 
-  // Variable stages where responsible is per-item (not updated automatically)
+  // Variable stages where responsible is per-item (uses format-based assignment)
   const VARIABLE_STAGES = ['production', 'changes'];
 
   // Reset all posts to 'todo' and update responsible when batch status changes
@@ -187,46 +187,76 @@ export function useContentProductionData() {
     const result = await updateBatch(id, updates);
     if (!result) return null;
 
-    // If status changed, reset all posts to 'todo' and update responsible
+    // If status changed, handle post updates
     if (updates.status) {
       const isVariableStage = VARIABLE_STAGES.includes(updates.status);
       
-      // Build the update object
-      const postUpdates: Record<string, any> = { 
-        status: 'todo', 
-        updated_at: new Date().toISOString() 
-      };
-      
-      // Only update responsible for fixed stages (not production/changes)
-      if (!isVariableStage && stageRoleId !== undefined) {
-        postUpdates.responsible_role_id = stageRoleId;
-      }
-
-      const { error } = await supabase
-        .from('content_posts')
-        .update(postUpdates)
-        .eq('batch_id', id);
-      
-      if (error) {
-        console.error('Error resetting posts:', error);
-      } else {
-        // Update local state
-        setPosts((prev) => prev.map((p) => {
-          if (p.batch_id !== id) return p;
-          
-          const updated: ContentPost = { 
-            ...p, 
-            status: 'todo' as PostStatus, 
+      if (isVariableStage) {
+        // For production/changes, call the DB function to reassign by format
+        const { data: reassignResult, error: reassignError } = await supabase
+          .rpc('reassign_batch_posts_by_format', { p_batch_id: id });
+        
+        if (reassignError) {
+          console.error('Error reassigning posts by format:', reassignError);
+        }
+        
+        // Check for any errors in the reassignment
+        const errors = (reassignResult || []).filter((r: any) => r.error_message);
+        if (errors.length > 0) {
+          console.warn('Some posts could not be reassigned:', errors);
+        }
+        
+        // Also reset status to 'todo'
+        const { error: resetError } = await supabase
+          .from('content_posts')
+          .update({ 
+            status: 'todo', 
             updated_at: new Date().toISOString() 
-          };
-          
-          // Update responsible only for fixed stages
-          if (!isVariableStage && stageRoleId !== undefined) {
-            updated.responsible_role_id = stageRoleId;
-          }
-          
-          return updated;
-        }));
+          })
+          .eq('batch_id', id);
+        
+        if (resetError) {
+          console.error('Error resetting posts status:', resetError);
+        }
+        
+        // Refresh posts to get the updated data
+        await fetchPosts(id);
+      } else {
+        // For non-variable stages, update responsible globally
+        const postUpdates: Record<string, any> = { 
+          status: 'todo', 
+          updated_at: new Date().toISOString() 
+        };
+        
+        if (stageRoleId !== undefined) {
+          postUpdates.responsible_role_id = stageRoleId;
+        }
+
+        const { error } = await supabase
+          .from('content_posts')
+          .update(postUpdates)
+          .eq('batch_id', id);
+        
+        if (error) {
+          console.error('Error resetting posts:', error);
+        } else {
+          // Update local state
+          setPosts((prev) => prev.map((p) => {
+            if (p.batch_id !== id) return p;
+            
+            const updated: ContentPost = { 
+              ...p, 
+              status: 'todo' as PostStatus, 
+              updated_at: new Date().toISOString() 
+            };
+            
+            if (stageRoleId !== undefined) {
+              updated.responsible_role_id = stageRoleId;
+            }
+            
+            return updated;
+          }));
+        }
       }
     }
     
