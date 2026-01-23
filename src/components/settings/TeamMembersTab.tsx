@@ -57,8 +57,10 @@ export function TeamMembersTab() {
   const [authDialogMode, setAuthDialogMode] = useState<'create' | 'link'>('create');
   const [selectedMemberForAuth, setSelectedMemberForAuth] = useState<typeof editingMember>(null);
   const [authEmail, setAuthEmail] = useState('');
-  const [authPassword, setAuthPassword] = useState('');
+  const [authPassword, setAuthPassword] = useState('Petron123'); // Senha padrão
   const [authLoading, setAuthLoading] = useState(false);
+
+  const DEFAULT_PASSWORD = 'Petron123';
 
   const canEditAdmission = isAdmin || can('edit_admission_date');
 
@@ -164,7 +166,7 @@ export function TeamMembersTab() {
     setSelectedMemberForAuth(member);
     setAuthDialogMode(mode);
     setAuthEmail(member?.email || '');
-    setAuthPassword('');
+    setAuthPassword(DEFAULT_PASSWORD); // Usar senha padrão
     setAuthDialogOpen(true);
   };
 
