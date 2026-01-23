@@ -4,6 +4,7 @@ import { Plus, Search, Eye, Pencil, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { AccountStatusBadge } from '@/components/crm/StatusBadge';
 import { AccountForm } from '@/components/crm/AccountForm';
 import { useCrm } from '@/contexts/CrmContext';
@@ -80,6 +81,7 @@ export default function CrmList() {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
+              <TableHead>Plano</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Criado em</TableHead>
               <TableHead className="w-[100px]">Ações</TableHead>
@@ -88,7 +90,7 @@ export default function CrmList() {
           <TableBody>
             {filteredAccounts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                   Nenhum cliente encontrado
                 </TableCell>
               </TableRow>
@@ -96,6 +98,13 @@ export default function CrmList() {
               filteredAccounts.map((account) => (
                 <TableRow key={account.id}>
                   <TableCell className="font-medium">{account.name}</TableCell>
+                  <TableCell>
+                    {account.service_name ? (
+                      <Badge variant="secondary">{account.service_name}</Badge>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">—</span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <AccountStatusBadge status={account.status} />
                   </TableCell>
