@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CrmProvider } from "@/contexts/CrmContext";
 import { ContentProvider } from "@/contexts/ContentContext";
@@ -71,6 +71,26 @@ import CreativeRequestDetail from "./pages/traffic/CreativeRequestDetail";
 
 const queryClient = new QueryClient();
 
+function AuthOnlyLayout() {
+  return (
+    <AuthGuard>
+      <Outlet />
+    </AuthGuard>
+  );
+}
+
+function ProtectedAppShell() {
+  return (
+    <AuthGuard>
+      <AppLayout>
+        <ProfileGuard>
+          <Outlet />
+        </ProfileGuard>
+      </AppLayout>
+    </AuthGuard>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -86,81 +106,77 @@ const App = () => (
                     <Routes>
                       {/* Public routes */}
                       <Route path="/login" element={<LoginPage />} />
-                      
-                      {/* Profile setup - requires auth but not profile guard */}
-                      <Route path="/profile/setup" element={
-                        <AuthGuard>
-                          <ProfileSetupPage />
-                        </AuthGuard>
-                      } />
-                      
-                      {/* Protected routes */}
-                      <Route path="/*" element={
-                        <AuthGuard>
-                          <AppLayout>
-                            <ProfileGuard>
-                              <Routes>
-                                <Route path="/" element={<WelcomePage />} />
-                                <Route path="/dashboard" element={<Dashboard />} />
-                                <Route path="/profile" element={<ProfilePage />} />
-                                <Route path="/crm" element={<CrmList />} />
-                                <Route path="/crm/:id" element={<CrmDetail />} />
-                                <Route path="/tasks" element={<TaskList />} />
-                                <Route path="/content" element={<ContentPage />} />
-                                <Route path="/content/:id" element={<ContentDetail />} />
-                                <Route path="/content/production" element={<ContentProduction />} />
-                                <Route path="/content/production/:id" element={<BatchDetail />} />
-                                <Route path="/content/production/:batchId/posts/:postId" element={<PostDetail />} />
-                                <Route path="/content/dashboard" element={<ContentDashboard />} />
-                                <Route path="/content/tasks" element={<ContentTasks />} />
-                                <Route path="/content/extra-requests" element={<ExtraRequestsList />} />
-                                <Route path="/content/extra-requests/new" element={<ExtraRequestNew />} />
-                                <Route path="/content/extra-requests/:id" element={<ExtraRequestDetail />} />
-                                
-                                {/* Traffic routes */}
-                                <Route path="/traffic" element={<TrafficDashboard />} />
-                                <Route path="/traffic/tasks" element={<TrafficTasks />} />
-                                <Route path="/traffic/clients/:id" element={<TrafficClientDetail />} />
-                                <Route path="/traffic/balances" element={<TrafficBalancesPage />} />
-                                
-                                {/* CS routes */}
-                                <Route path="/cs" element={<CsDashboard />} />
-                                <Route path="/cs/onboarding" element={<CsOnboarding />} />
-                                <Route path="/cs/meetings" element={<CsMeetings />} />
-                                <Route path="/cs/nps" element={<CsNps />} />
-                                <Route path="/cs/risk" element={<CsRisk />} />
-                                <Route path="/cs/client/:clientId" element={<CsClientDetail />} />
-                                
-                                {/* Settings - Admin only with internal navigation */}
-                                <Route path="/settings" element={
-                                  <AdminGuard>
-                                    <SettingsLayout />
-                                  </AdminGuard>
-                                }>
-                                  <Route index element={<SettingsHome />} />
-                                  <Route path="access/roles" element={<RolesPage />} />
-                                  <Route path="access/users" element={<UsersPage />} />
-                                  <Route path="access/permissions" element={<PermissionsPage />} />
-                                  <Route path="plans/services" element={<ServicesPage />} />
-                                  <Route path="plans/deliverables" element={<DeliverablesPage />} />
-                                  <Route path="general/pipeline" element={<PipelinePage />} />
-                                  <Route path="general/niches" element={<NichesPage />} />
-                                  <Route path="traffic/routines" element={<TrafficRoutinesPage />} />
-                                  <Route path="traffic/cycles" element={<TrafficCyclesPage />} />
-                                  <Route path="integrations/meta" element={<MetaIntegrationPage />} />
-                                </Route>
-                                
-                                {/* Traffic Creative Requests */}
-                                <Route path="/traffic/creative-requests" element={<CreativeRequestsList />} />
-                                <Route path="/traffic/creative-requests/new" element={<CreativeRequestNew />} />
-                                <Route path="/traffic/creative-requests/:id" element={<CreativeRequestDetail />} />
-                                
-                                <Route path="*" element={<NotFound />} />
-                              </Routes>
-                            </ProfileGuard>
-                          </AppLayout>
-                        </AuthGuard>
-                      } />
+
+                      {/* Auth-only routes (no AppShell) */}
+                      <Route element={<AuthOnlyLayout />}>
+                        <Route path="/profile/setup" element={<ProfileSetupPage />} />
+                      </Route>
+
+                      {/* Protected routes (with AppShell) */}
+                      <Route element={<ProtectedAppShell />}>
+                        <Route path="/" element={<WelcomePage />} />
+                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/profile" element={<ProfilePage />} />
+
+                        <Route path="/crm" element={<CrmList />} />
+                        <Route path="/crm/:id" element={<CrmDetail />} />
+
+                        <Route path="/tasks" element={<TaskList />} />
+
+                        <Route path="/content" element={<ContentPage />} />
+                        <Route path="/content/:id" element={<ContentDetail />} />
+                        <Route path="/content/production" element={<ContentProduction />} />
+                        <Route path="/content/production/:id" element={<BatchDetail />} />
+                        <Route path="/content/production/:batchId/posts/:postId" element={<PostDetail />} />
+                        <Route path="/content/dashboard" element={<ContentDashboard />} />
+                        <Route path="/content/tasks" element={<ContentTasks />} />
+                        <Route path="/content/extra-requests" element={<ExtraRequestsList />} />
+                        <Route path="/content/extra-requests/new" element={<ExtraRequestNew />} />
+                        <Route path="/content/extra-requests/:id" element={<ExtraRequestDetail />} />
+
+                        {/* Traffic routes */}
+                        <Route path="/traffic" element={<TrafficDashboard />} />
+                        <Route path="/traffic/tasks" element={<TrafficTasks />} />
+                        <Route path="/traffic/clients/:id" element={<TrafficClientDetail />} />
+                        <Route path="/traffic/balances" element={<TrafficBalancesPage />} />
+
+                        {/* Traffic Creative Requests */}
+                        <Route path="/traffic/creative-requests" element={<CreativeRequestsList />} />
+                        <Route path="/traffic/creative-requests/new" element={<CreativeRequestNew />} />
+                        <Route path="/traffic/creative-requests/:id" element={<CreativeRequestDetail />} />
+
+                        {/* CS routes */}
+                        <Route path="/cs" element={<CsDashboard />} />
+                        <Route path="/cs/onboarding" element={<CsOnboarding />} />
+                        <Route path="/cs/meetings" element={<CsMeetings />} />
+                        <Route path="/cs/nps" element={<CsNps />} />
+                        <Route path="/cs/risk" element={<CsRisk />} />
+                        <Route path="/cs/client/:clientId" element={<CsClientDetail />} />
+
+                        {/* Settings - Admin only with internal navigation */}
+                        <Route
+                          path="/settings"
+                          element={
+                            <AdminGuard>
+                              <SettingsLayout />
+                            </AdminGuard>
+                          }
+                        >
+                          <Route index element={<SettingsHome />} />
+                          <Route path="access/roles" element={<RolesPage />} />
+                          <Route path="access/users" element={<UsersPage />} />
+                          <Route path="access/permissions" element={<PermissionsPage />} />
+                          <Route path="plans/services" element={<ServicesPage />} />
+                          <Route path="plans/deliverables" element={<DeliverablesPage />} />
+                          <Route path="general/pipeline" element={<PipelinePage />} />
+                          <Route path="general/niches" element={<NichesPage />} />
+                          <Route path="traffic/routines" element={<TrafficRoutinesPage />} />
+                          <Route path="traffic/cycles" element={<TrafficCyclesPage />} />
+                          <Route path="integrations/meta" element={<MetaIntegrationPage />} />
+                        </Route>
+
+                        <Route path="*" element={<NotFound />} />
+                      </Route>
                     </Routes>
                   </TrafficProvider>
                 </ContentProductionProvider>
