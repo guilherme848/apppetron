@@ -272,6 +272,53 @@ export type Database = {
           },
         ]
       }
+      clint_webhook_events: {
+        Row: {
+          contract_id: string | null
+          created_at: string
+          error: string | null
+          event_type: string | null
+          id: string
+          payload: Json
+          processed_at: string | null
+          received_at: string
+          source_event_id: string
+          status: string
+        }
+        Insert: {
+          contract_id?: string | null
+          created_at?: string
+          error?: string | null
+          event_type?: string | null
+          id?: string
+          payload: Json
+          processed_at?: string | null
+          received_at?: string
+          source_event_id: string
+          status?: string
+        }
+        Update: {
+          contract_id?: string | null
+          created_at?: string
+          error?: string | null
+          event_type?: string | null
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          received_at?: string
+          source_event_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clint_webhook_events_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts_generated"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_batches: {
         Row: {
           archived: boolean
@@ -767,6 +814,283 @@ export type Database = {
           },
         ]
       }
+      contract_events: {
+        Row: {
+          actor_id: string | null
+          actor_name: string | null
+          actor_type: string | null
+          contract_id: string
+          created_at: string
+          event_description: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          payload_original: Json | null
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_name?: string | null
+          actor_type?: string | null
+          contract_id: string
+          created_at?: string
+          event_description?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          payload_original?: Json | null
+        }
+        Update: {
+          actor_id?: string | null
+          actor_name?: string | null
+          actor_type?: string | null
+          contract_id?: string
+          created_at?: string
+          event_description?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          payload_original?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_events_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts_generated"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_files: {
+        Row: {
+          contract_id: string
+          created_at: string
+          document_hash: string | null
+          file_name: string
+          file_size: number | null
+          file_type: string
+          id: string
+          mime_type: string | null
+          storage_path: string
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string
+          document_hash?: string | null
+          file_name: string
+          file_size?: number | null
+          file_type: string
+          id?: string
+          mime_type?: string | null
+          storage_path: string
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string
+          document_hash?: string | null
+          file_name?: string
+          file_size?: number | null
+          file_type?: string
+          id?: string
+          mime_type?: string | null
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_files_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts_generated"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_signers: {
+        Row: {
+          contract_id: string
+          cpf: string | null
+          created_at: string
+          email: string
+          external_signer_id: string | null
+          id: string
+          ip_address: string | null
+          name: string
+          role: string
+          sign_order: number
+          signed_at: string | null
+          status: string
+        }
+        Insert: {
+          contract_id: string
+          cpf?: string | null
+          created_at?: string
+          email: string
+          external_signer_id?: string | null
+          id?: string
+          ip_address?: string | null
+          name: string
+          role?: string
+          sign_order?: number
+          signed_at?: string | null
+          status?: string
+        }
+        Update: {
+          contract_id?: string
+          cpf?: string | null
+          created_at?: string
+          email?: string
+          external_signer_id?: string | null
+          id?: string
+          ip_address?: string | null
+          name?: string
+          role?: string
+          sign_order?: number
+          signed_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_signers_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts_generated"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_template_fields: {
+        Row: {
+          created_at: string
+          default_value: string | null
+          field_key: string
+          field_label: string
+          field_type: string
+          id: string
+          is_required: boolean
+          sort_order: number
+          source_mapping: string | null
+          template_id: string
+        }
+        Insert: {
+          created_at?: string
+          default_value?: string | null
+          field_key: string
+          field_label: string
+          field_type?: string
+          id?: string
+          is_required?: boolean
+          sort_order?: number
+          source_mapping?: string | null
+          template_id: string
+        }
+        Update: {
+          created_at?: string
+          default_value?: string | null
+          field_key?: string
+          field_label?: string
+          field_type?: string
+          id?: string
+          is_required?: boolean
+          sort_order?: number
+          source_mapping?: string | null
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_template_fields_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "contract_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_template_versions: {
+        Row: {
+          content_html: string
+          created_at: string
+          created_by_member_id: string | null
+          id: string
+          is_active: boolean
+          template_id: string
+          version_number: number
+        }
+        Insert: {
+          content_html: string
+          created_at?: string
+          created_by_member_id?: string | null
+          id?: string
+          is_active?: boolean
+          template_id: string
+          version_number?: number
+        }
+        Update: {
+          content_html?: string
+          created_at?: string
+          created_by_member_id?: string | null
+          id?: string
+          is_active?: boolean
+          template_id?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_template_versions_created_by_member_id_fkey"
+            columns: ["created_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_template_versions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "contract_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_templates: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          is_default_for_plan: boolean
+          name: string
+          service_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default_for_plan?: boolean
+          name: string
+          service_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default_for_plan?: boolean
+          name?: string
+          service_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_templates_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contracts: {
         Row: {
           account_id: string
@@ -798,6 +1122,106 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contracts_generated: {
+        Row: {
+          account_id: string
+          contract_end_date: string | null
+          contract_number: string
+          contract_start_date: string | null
+          created_at: string
+          document_hash: string | null
+          external_document_id: string | null
+          external_provider: string | null
+          external_signing_url: string | null
+          fields_snapshot: Json
+          generated_at: string | null
+          id: string
+          mrr: number | null
+          sent_at: string | null
+          setup_fee: number | null
+          signed_at: string | null
+          source: string
+          source_event_id: string | null
+          status: string
+          template_id: string | null
+          template_version_id: string | null
+          total_first_month: number | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          contract_end_date?: string | null
+          contract_number: string
+          contract_start_date?: string | null
+          created_at?: string
+          document_hash?: string | null
+          external_document_id?: string | null
+          external_provider?: string | null
+          external_signing_url?: string | null
+          fields_snapshot?: Json
+          generated_at?: string | null
+          id?: string
+          mrr?: number | null
+          sent_at?: string | null
+          setup_fee?: number | null
+          signed_at?: string | null
+          source?: string
+          source_event_id?: string | null
+          status?: string
+          template_id?: string | null
+          template_version_id?: string | null
+          total_first_month?: number | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          contract_end_date?: string | null
+          contract_number?: string
+          contract_start_date?: string | null
+          created_at?: string
+          document_hash?: string | null
+          external_document_id?: string | null
+          external_provider?: string | null
+          external_signing_url?: string | null
+          fields_snapshot?: Json
+          generated_at?: string | null
+          id?: string
+          mrr?: number | null
+          sent_at?: string | null
+          setup_fee?: number | null
+          signed_at?: string | null
+          source?: string
+          source_event_id?: string | null
+          status?: string
+          template_id?: string | null
+          template_version_id?: string | null
+          total_first_month?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_generated_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_generated_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "contract_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_generated_template_version_id_fkey"
+            columns: ["template_version_id"]
+            isOneToOne: false
+            referencedRelation: "contract_template_versions"
             referencedColumns: ["id"]
           },
         ]
@@ -2709,6 +3133,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_contract_number: { Args: never; Returns: string }
       get_batch_status: { Args: { p_batch_id: string }; Returns: string }
       get_client_id_from_batch: {
         Args: { p_batch_id: string }
