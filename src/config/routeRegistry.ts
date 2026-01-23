@@ -28,6 +28,7 @@ import {
   Clock,
   Zap,
   User,
+  FilePen,
 } from 'lucide-react';
 
 // Action types for permissions
@@ -74,6 +75,7 @@ export const CATEGORIES = {
   PIPELINE: 'Pipeline',
   INTEGRATIONS: 'Integrações',
   ACCESS: 'Acessos',
+  CONTRACTS: 'Contratos',
 } as const;
 
 /**
@@ -399,6 +401,31 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view', 'edit'],
     hideInMenu: true,
     parentId: 'cs.dashboard',
+    order: 6,
+  },
+
+  // ============================================
+  // CONTRACTS (within CRM module)
+  // ============================================
+  {
+    id: 'crm.contracts',
+    path: '/contracts',
+    label: 'Contratos',
+    category: CATEGORIES.CONTRACTS,
+    module: MODULES.CRM,
+    permissions: ['view', 'edit'],
+    icon: FilePen,
+    order: 5,
+  },
+  {
+    id: 'crm.contract_detail',
+    path: '/contracts/:id',
+    label: 'Detalhes do Contrato',
+    category: CATEGORIES.CONTRACTS,
+    module: MODULES.CRM,
+    permissions: ['view', 'edit'],
+    hideInMenu: true,
+    parentId: 'crm.contracts',
     order: 6,
   },
 
