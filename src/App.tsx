@@ -49,19 +49,7 @@ import CsRisk from "./pages/cs/CsRisk";
 import CsClientDetail from "./pages/cs/CsClientDetail";
 
 // Settings pages
-import { SettingsLayout } from "./pages/settings/SettingsLayout";
-import SettingsHome from "./pages/settings/SettingsHome";
-import RolesPage from "./pages/settings/RolesPage";
-import UsersPage from "./pages/settings/UsersPage";
-import PermissionsPage from "./pages/settings/PermissionsPage";
-import ServicesPage from "./pages/settings/ServicesPage";
-import DeliverablesPage from "./pages/settings/DeliverablesPage";
-import PipelinePage from "./pages/settings/PipelinePage";
-import NichesPage from "./pages/settings/NichesPage";
-import TrafficCyclesPage from "./pages/settings/TrafficCyclesPage";
-import TrafficCycleTasksPage from "./pages/settings/TrafficCycleTasksPage";
-import TrafficRoutinesPage from "./pages/settings/TrafficRoutinesPage";
-import MetaIntegrationPage from "./pages/settings/MetaIntegrationPage";
+import SettingsCompactPage from "./pages/settings/SettingsCompactPage";
 import TrafficBalancesPage from "./pages/traffic/TrafficBalancesPage";
 
 // Traffic Creative Requests
@@ -131,21 +119,9 @@ const App = () => (
                                 <Route path="/cs/risk" element={<CsRisk />} />
                                 <Route path="/cs/client/:clientId" element={<CsClientDetail />} />
                                 
-                                {/* Settings with nested routes */}
-                                <Route path="/settings" element={<SettingsLayout />}>
-                                  <Route index element={<SettingsHome />} />
-                                  <Route path="access/roles" element={<RolesPage />} />
-                                  <Route path="access/users" element={<UsersPage />} />
-                                  <Route path="access/permissions" element={<PermissionsPage />} />
-                                  <Route path="plans/services" element={<ServicesPage />} />
-                                  <Route path="plans/deliverables" element={<DeliverablesPage />} />
-                                  <Route path="general/pipeline" element={<PipelinePage />} />
-                                  <Route path="general/niches" element={<NichesPage />} />
-                                  <Route path="traffic/cycles" element={<TrafficCyclesPage />} />
-                                  <Route path="traffic/cycle-tasks" element={<TrafficCycleTasksPage />} />
-                                  <Route path="traffic/routines" element={<TrafficRoutinesPage />} />
-                                  <Route path="integrations/meta" element={<MetaIntegrationPage />} />
-                                </Route>
+                                {/* Settings - Single compact page */}
+                                <Route path="/settings" element={<SettingsCompactPage />} />
+                                <Route path="/settings/*" element={<SettingsCompactPage />} />
                                 
                                 {/* Traffic Creative Requests */}
                                 <Route path="/traffic/creative-requests" element={<CreativeRequestsList />} />
