@@ -245,12 +245,12 @@ export default function ExtraRequestDetail() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Cargo Responsável</Label>
-                  <Select value={responsibleRoleKey} onValueChange={(v) => { setResponsibleRoleKey(v as ExtraResponsibleRole); saveNow({ responsible_role_key: v || null }); }}>
+                  <Select value={responsibleRoleKey || '_none_'} onValueChange={(v) => { const val = v === '_none_' ? '' : v; setResponsibleRoleKey(val as ExtraResponsibleRole | ''); saveNow({ responsible_role_key: val || null }); }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Nenhum</SelectItem>
+                      <SelectItem value="_none_">Nenhum</SelectItem>
                       {Object.entries(EXTRA_RESPONSIBLE_ROLE_LABELS).map(([k, v]) => (
                         <SelectItem key={k} value={k}>{v}</SelectItem>
                       ))}
