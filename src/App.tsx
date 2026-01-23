@@ -49,7 +49,19 @@ import CsRisk from "./pages/cs/CsRisk";
 import CsClientDetail from "./pages/cs/CsClientDetail";
 
 // Settings pages
-import SettingsCompactPage from "./pages/settings/SettingsCompactPage";
+import { SettingsLayout } from "./pages/settings/SettingsLayout";
+import SettingsHome from "./pages/settings/SettingsHome";
+import RolesPage from "./pages/settings/RolesPage";
+import UsersPage from "./pages/settings/UsersPage";
+import PermissionsPage from "./pages/settings/PermissionsPage";
+import ServicesPage from "./pages/settings/ServicesPage";
+import DeliverablesPage from "./pages/settings/DeliverablesPage";
+import PipelinePage from "./pages/settings/PipelinePage";
+import NichesPage from "./pages/settings/NichesPage";
+import TrafficRoutinesPage from "./pages/settings/TrafficRoutinesPage";
+import TrafficCyclesPage from "./pages/settings/TrafficCyclesPage";
+import MetaIntegrationPage from "./pages/settings/MetaIntegrationPage";
+import { AdminGuard } from "./components/auth/AdminGuard";
 import TrafficBalancesPage from "./pages/traffic/TrafficBalancesPage";
 
 // Traffic Creative Requests
@@ -119,20 +131,29 @@ const App = () => (
                                 <Route path="/cs/risk" element={<CsRisk />} />
                                 <Route path="/cs/client/:clientId" element={<CsClientDetail />} />
                                 
-                                {/* Settings - Single compact page */}
-                                <Route path="/settings" element={<SettingsCompactPage />} />
-                                <Route path="/settings/*" element={<SettingsCompactPage />} />
+                                {/* Settings - Admin only with internal navigation */}
+                                <Route path="/settings" element={
+                                  <AdminGuard>
+                                    <SettingsLayout />
+                                  </AdminGuard>
+                                }>
+                                  <Route index element={<SettingsHome />} />
+                                  <Route path="access/roles" element={<RolesPage />} />
+                                  <Route path="access/users" element={<UsersPage />} />
+                                  <Route path="access/permissions" element={<PermissionsPage />} />
+                                  <Route path="plans/services" element={<ServicesPage />} />
+                                  <Route path="plans/deliverables" element={<DeliverablesPage />} />
+                                  <Route path="general/pipeline" element={<PipelinePage />} />
+                                  <Route path="general/niches" element={<NichesPage />} />
+                                  <Route path="traffic/routines" element={<TrafficRoutinesPage />} />
+                                  <Route path="traffic/cycles" element={<TrafficCyclesPage />} />
+                                  <Route path="integrations/meta" element={<MetaIntegrationPage />} />
+                                </Route>
                                 
                                 {/* Traffic Creative Requests */}
                                 <Route path="/traffic/creative-requests" element={<CreativeRequestsList />} />
                                 <Route path="/traffic/creative-requests/new" element={<CreativeRequestNew />} />
                                 <Route path="/traffic/creative-requests/:id" element={<CreativeRequestDetail />} />
-                                
-                                {/* Redirects from old routes */}
-                                <Route path="/settings/services" element={<Navigate to="/settings/plans/services" replace />} />
-                                <Route path="/settings/niches" element={<Navigate to="/settings/general/niches" replace />} />
-                                <Route path="/settings/roles" element={<Navigate to="/settings/access/roles" replace />} />
-                                <Route path="/content/settings/stages" element={<Navigate to="/settings/general/pipeline" replace />} />
                                 
                                 <Route path="*" element={<NotFound />} />
                               </Routes>
