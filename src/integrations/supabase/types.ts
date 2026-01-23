@@ -738,18 +738,21 @@ export type Database = {
       content_stage_responsibilities: {
         Row: {
           created_at: string
+          default_responsible_role_key: string | null
           id: string
           role_id: string | null
           stage_key: string
         }
         Insert: {
           created_at?: string
+          default_responsible_role_key?: string | null
           id?: string
           role_id?: string | null
           stage_key: string
         }
         Update: {
           created_at?: string
+          default_responsible_role_key?: string | null
           id?: string
           role_id?: string | null
           stage_key?: string
@@ -2725,6 +2728,10 @@ export type Database = {
       }
       get_current_member_id: { Args: never; Returns: string }
       get_role_key_from_format: { Args: { p_format: string }; Returns: string }
+      get_stage_default_role_key: {
+        Args: { p_stage_key: string }
+        Returns: string
+      }
       is_admin: { Args: { _auth_user_id: string }; Returns: boolean }
       reassign_batch_posts_by_format: {
         Args: { p_batch_id: string }
