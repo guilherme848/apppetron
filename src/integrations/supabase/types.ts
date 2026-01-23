@@ -2058,6 +2058,7 @@ export type Database = {
         Row: {
           active: boolean
           admission_date: string | null
+          auth_user_id: string | null
           birth_date: string | null
           created_at: string
           email: string | null
@@ -2072,6 +2073,7 @@ export type Database = {
         Insert: {
           active?: boolean
           admission_date?: string | null
+          auth_user_id?: string | null
           birth_date?: string | null
           created_at?: string
           email?: string | null
@@ -2086,6 +2088,7 @@ export type Database = {
         Update: {
           active?: boolean
           admission_date?: string | null
+          auth_user_id?: string | null
           birth_date?: string | null
           created_at?: string
           email?: string | null
@@ -2629,6 +2632,8 @@ export type Database = {
         Args: { p_risk_case_id: string }
         Returns: string
       }
+      get_current_member_id: { Args: never; Returns: string }
+      is_admin: { Args: { _auth_user_id: string }; Returns: boolean }
       resolve_assignee_from_account_team: {
         Args: { p_client_id: string; p_responsible_role_key: string }
         Returns: string

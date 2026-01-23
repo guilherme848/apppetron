@@ -1,5 +1,8 @@
-import { ChevronDown } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { useJobRoles } from '@/hooks/useJobRoles';
+import { MemberAvatar } from '@/components/common/MemberAvatar';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,17 +11,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { useTeamMembers } from '@/hooks/useTeamMembers';
-import { useCurrentMember } from '@/hooks/usePermissions';
-import { MemberAvatar } from '@/components/common/MemberAvatar';
+import { User, LogOut, Settings, ChevronDown } from 'lucide-react';
 
 export function UserSelector() {
-  const { members, loading } = useTeamMembers();
-  const { currentMemberId, setCurrentMemberId } = useCurrentMember();
+  const { member, user, signOut, loading, isAdmin } = useAuth();
+  const { getRoleById } = useJobRoles();
+  const navigate = useNavigate();
 
-  const activeMembers = members.filter(m => m.active);
-  const currentMember = activeMembers.find(m => m.id === currentMemberId);
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/login');
+  };
 
   if (loading) {
     return (
@@ -29,65 +32,67 @@ export function UserSelector() {
     );
   }
 
+  const role = member?.role_id ? getRoleById(member.role_id) : null;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
           <MemberAvatar
-            name={currentMember?.full_name || currentMember?.name || null}
-            photoPath={currentMember?.profile_photo_path || null}
+            name={member?.full_name || member?.name || null}
+            photoPath={member?.profile_photo_path || null}
             size="xs"
           />
-          <span className="max-w-[120px] truncate">
-            {currentMember ? (currentMember.full_name || currentMember.name) : 'Administrador'}
+          <span className="max-w-[120px] truncate hidden sm:inline">
+            {member?.name || user?.email?.split('@')[0] || 'Usuário'}
           </span>
           <ChevronDown className="h-3 w-3 opacity-50" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuLabel className="text-xs text-muted-foreground">
-          Usando como:
+        <DropdownMenuLabel className="font-normal">
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium leading-none">
+              {member?.full_name || member?.name || 'Usuário'}
+            </p>
+            <p className="text-xs leading-none text-muted-foreground">
+              {user?.email}
+            </p>
+            {role && (
+              <p className="text-xs leading-none text-muted-foreground">
+                {role.name}
+                {isAdmin && ' (Admin)'}
+              </p>
+            )}
+          </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem 
-          onClick={() => setCurrentMemberId(null)}
-          className={!currentMemberId ? 'bg-accent' : ''}
-        >
-          <MemberAvatar name={null} photoPath={null} size="xs" className="mr-2" />
-          <span className="flex-1">Administrador</span>
-          <span className="text-xs text-muted-foreground">Acesso total</span>
+        
+        <DropdownMenuItem asChild>
+          <Link to="/profile" className="cursor-pointer">
+            <User className="mr-2 h-4 w-4" />
+            <span>Meu Perfil</span>
+          </Link>
         </DropdownMenuItem>
+
+        {isAdmin && (
+          <DropdownMenuItem asChild>
+            <Link to="/settings" className="cursor-pointer">
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Configurações</span>
+            </Link>
+          </DropdownMenuItem>
+        )}
+
         <DropdownMenuSeparator />
-        {activeMembers.map((member) => (
-          <DropdownMenuItem
-            key={member.id}
-            onClick={() => setCurrentMemberId(member.id)}
-            className={currentMemberId === member.id ? 'bg-accent' : ''}
-          >
-            <MemberAvatar
-              name={member.full_name || member.name}
-              photoPath={member.profile_photo_path}
-              size="xs"
-              className="mr-2"
-            />
-            <span className="truncate">{member.full_name || member.name}</span>
-          </DropdownMenuItem>
-        ))}
-        {activeMembers.length === 0 && (
-          <DropdownMenuItem disabled>
-            Nenhum usuário cadastrado
-          </DropdownMenuItem>
-        )}
-        {currentMemberId && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link to="/profile" className="cursor-pointer">
-                Meu Perfil
-              </Link>
-            </DropdownMenuItem>
-          </>
-        )}
+        
+        <DropdownMenuItem 
+          onClick={handleSignOut}
+          className="cursor-pointer text-destructive focus:text-destructive"
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Sair</span>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
