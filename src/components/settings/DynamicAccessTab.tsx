@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Loader2, Shield, ShieldCheck, ShieldX, RefreshCw, Sparkles, Users, User } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { Loader2, Shield, ShieldCheck, ShieldX, RefreshCw, Sparkles, Users, User, ToggleLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { useJobRoles } from '@/hooks/useJobRoles';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
@@ -40,12 +41,13 @@ export function DynamicAccessTab() {
   const [activeTab, setActiveTab] = useState<'roles' | 'users'>('roles');
   const [selectedRoleKey, setSelectedRoleKey] = useState<string | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [togglingModule, setTogglingModule] = useState<string | null>(null);
   
   const { roles, loading: loadingRoles } = useJobRoles();
   const { members, loading: loadingMembers } = useTeamMembers();
   const { syncPermissions, syncing, lastSyncReport } = usePermissionSync();
   const { permissions, loading: loadingPermissions, fetchPermissions } = useRoutePermissions();
-  const { rolePermissions, loading: loadingRolePerms, fetchRolePermissions, setPermission, hasPermission } = useRolePermissions(selectedRoleKey);
+  const { rolePermissions, loading: loadingRolePerms, fetchRolePermissions, setPermission, setMultiplePermissions, hasPermission } = useRolePermissions(selectedRoleKey);
   const { overrides, loading: loadingOverrides, fetchOverrides, setOverride, getOverride } = useUserPermissionOverrides(selectedUserId);
 
   // Get user's role key for user override tab
@@ -112,6 +114,40 @@ export function DynamicAccessTab() {
       toast.error(result.error || 'Erro ao atualizar');
     }
   };
+
+  // Handle toggling all permissions in a module
+  const handleToggleModule = async (module: string, enable: boolean) => {
+    const modulePermissions = permissions.filter(p => p.module === module);
+    if (modulePermissions.length === 0) return;
+
+    setTogglingModule(module);
+    const permissionKeys = modulePermissions.map(p => p.key);
+    
+    const result = await setMultiplePermissions(permissionKeys, enable);
+    
+    if (result.success) {
+      toast.success(enable ? `Módulo "${module}" habilitado` : `Módulo "${module}" desabilitado`);
+    } else {
+      toast.error(result.error || 'Erro ao atualizar módulo');
+    }
+    
+    setTogglingModule(null);
+  };
+
+  // Calculate if a module has all permissions enabled
+  const isModuleFullyEnabled = useCallback((module: string): boolean => {
+    const modulePermissions = permissions.filter(p => p.module === module);
+    if (modulePermissions.length === 0) return false;
+    return modulePermissions.every(p => hasPermission(p.key));
+  }, [permissions, hasPermission]);
+
+  // Calculate if a module has some (but not all) permissions enabled
+  const isModulePartiallyEnabled = useCallback((module: string): boolean => {
+    const modulePermissions = permissions.filter(p => p.module === module);
+    if (modulePermissions.length === 0) return false;
+    const enabledCount = modulePermissions.filter(p => hasPermission(p.key)).length;
+    return enabledCount > 0 && enabledCount < modulePermissions.length;
+  }, [permissions, hasPermission]);
 
   const handleToggleUserOverride = async (permissionKey: string, currentOverride: boolean | null, roleDefault: boolean) => {
     // Cycle through: null (use role) -> !roleDefault -> roleDefault -> null
@@ -237,6 +273,10 @@ export function DynamicAccessTab() {
                     checkPermission={(key) => hasPermission(key)}
                     onToggle={handleToggleRolePermission}
                     permissions={permissions}
+                    isModuleFullyEnabled={isModuleFullyEnabled}
+                    isModulePartiallyEnabled={isModulePartiallyEnabled}
+                    onToggleModule={handleToggleModule}
+                    togglingModule={togglingModule}
                   />
                 )
               )}
@@ -338,19 +378,69 @@ interface PermissionMatrixProps {
   checkPermission: (key: string) => boolean;
   onToggle: (key: string, currentValue: boolean) => void;
   permissions: RoutePermission[];
+  isModuleFullyEnabled: (module: string) => boolean;
+  isModulePartiallyEnabled: (module: string) => boolean;
+  onToggleModule: (module: string, enable: boolean) => void;
+  togglingModule: string | null;
 }
 
-function PermissionMatrix({ groupedPermissions, checkPermission, onToggle, permissions }: PermissionMatrixProps) {
+function PermissionMatrix({ 
+  groupedPermissions, 
+  checkPermission, 
+  onToggle, 
+  permissions,
+  isModuleFullyEnabled,
+  isModulePartiallyEnabled,
+  onToggleModule,
+  togglingModule,
+}: PermissionMatrixProps) {
   return (
     <Accordion type="multiple" defaultValue={MODULE_ORDER} className="space-y-2">
       {MODULE_ORDER.map((module) => {
         const categories = groupedPermissions[module];
         if (!categories || Object.keys(categories).length === 0) return null;
 
+        const isFullyEnabled = isModuleFullyEnabled(module);
+        const isPartiallyEnabled = isModulePartiallyEnabled(module);
+        const isToggling = togglingModule === module;
+
         return (
           <AccordionItem key={module} value={module} className="border rounded-lg px-4">
             <AccordionTrigger className="hover:no-underline">
-              <span className="font-semibold">{module}</span>
+              <div className="flex items-center justify-between w-full pr-2">
+                <div className="flex items-center gap-3">
+                  <span className="font-semibold">{module}</span>
+                  {isFullyEnabled && (
+                    <Badge variant="default" className="text-xs bg-primary/20 text-primary">
+                      Completo
+                    </Badge>
+                  )}
+                  {isPartiallyEnabled && (
+                    <Badge variant="secondary" className="text-xs">
+                      Parcial
+                    </Badge>
+                  )}
+                </div>
+                <div 
+                  className="flex items-center gap-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {isToggling ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  ) : (
+                    <Checkbox 
+                      checked={isFullyEnabled}
+                      className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                      onCheckedChange={(checked) => {
+                        onToggleModule(module, checked === true);
+                      }}
+                    />
+                  )}
+                  <span className="text-xs text-muted-foreground font-normal">
+                    Módulo inteiro
+                  </span>
+                </div>
+              </div>
             </AccordionTrigger>
             <AccordionContent>
               <div className="space-y-4 pt-2">
