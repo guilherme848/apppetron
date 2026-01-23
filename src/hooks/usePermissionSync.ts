@@ -307,6 +307,56 @@ export function useRolePermissions(roleKey: string | null) {
     return { success: true };
   }, [roleKey, rolePermissions]);
 
+  const setMultiplePermissions = useCallback(async (permissionKeys: string[], allowed: boolean): Promise<{ success: boolean; error?: string }> => {
+    if (!roleKey) return { success: false, error: 'No role selected' };
+
+    const existingMap = new Map(rolePermissions.map(rp => [rp.permission_key, rp]));
+    
+    const toUpdate: { id: string; allowed: boolean }[] = [];
+    const toInsert: { role_key: string; permission_key: string; allowed: boolean }[] = [];
+
+    for (const key of permissionKeys) {
+      const existing = existingMap.get(key);
+      if (existing) {
+        toUpdate.push({ id: existing.id, allowed });
+      } else {
+        toInsert.push({ role_key: roleKey, permission_key: key, allowed });
+      }
+    }
+
+    // Update existing permissions
+    if (toUpdate.length > 0) {
+      const { error } = await supabase
+        .from('role_permissions' as any)
+        .upsert(toUpdate.map(u => ({ 
+          id: u.id, 
+          role_key: roleKey,
+          permission_key: rolePermissions.find(rp => rp.id === u.id)?.permission_key,
+          allowed: u.allowed 
+        })));
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+    }
+
+    // Insert new permissions
+    if (toInsert.length > 0) {
+      const { error } = await supabase
+        .from('role_permissions' as any)
+        .insert(toInsert);
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+    }
+
+    // Refresh permissions
+    await fetchRolePermissions();
+
+    return { success: true };
+  }, [roleKey, rolePermissions, fetchRolePermissions]);
+
   const hasPermission = useCallback((permissionKey: string): boolean => {
     const rp = rolePermissions.find(p => p.permission_key === permissionKey);
     return rp?.allowed ?? false;
@@ -317,6 +367,7 @@ export function useRolePermissions(roleKey: string | null) {
     loading,
     fetchRolePermissions,
     setPermission,
+    setMultiplePermissions,
     hasPermission,
   };
 }
