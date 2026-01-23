@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, ReactNode, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { TeamMember } from '@/types/team';
@@ -9,10 +9,13 @@ interface AuthContextType {
   member: TeamMember | null;
   isAdmin: boolean;
   loading: boolean;
+  loadingProfile: boolean;
+  profileError: Error | null;
   signInWithEmail: (email: string, password: string) => Promise<{ error: Error | null }>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshMember: () => Promise<void>;
+  retryProfileLoad: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,10 +26,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [member, setMember] = useState<TeamMember | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadingProfile, setLoadingProfile] = useState(false);
+  const [profileError, setProfileError] = useState<Error | null>(null);
   const initialSessionResolvedRef = useRef(false);
+  const isMountedRef = useRef(true);
 
-  const fetchMemberData = async (userId: string): Promise<TeamMember | null> => {
+  const fetchMemberData = useCallback(async (userId: string): Promise<TeamMember | null> => {
+    if (!isMountedRef.current) return null;
+    
+    setLoadingProfile(true);
+    setProfileError(null);
+    
     try {
+      console.debug('[auth] Fetching member data for userId:', userId);
+      
       // Fetch team member linked to this auth user
       const { data: memberData, error: memberError } = await supabase
         .from('team_members')
@@ -35,76 +48,104 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
 
       if (memberError) {
-        console.error('Error fetching member:', memberError);
+        console.error('[auth] Error fetching member:', memberError);
+        setProfileError(new Error(memberError.message));
+        setLoadingProfile(false);
         return null;
       }
 
       if (memberData) {
+        console.debug('[auth] Member data found:', memberData.id);
         const typedMember = memberData as TeamMember;
-        setMember(typedMember);
+        
+        if (isMountedRef.current) {
+          setMember(typedMember);
+        }
 
         // Check if member is admin
         if (memberData.role_id) {
-          const { data: roleData } = await supabase
+          const { data: roleData, error: roleError } = await supabase
             .from('job_roles')
             .select('name')
             .eq('id', memberData.role_id)
             .single();
 
-          if (roleData) {
+          if (roleError) {
+            console.warn('[auth] Error fetching role:', roleError);
+          }
+
+          if (roleData && isMountedRef.current) {
             const isAdminRole = roleData.name.toLowerCase().includes('admin') || 
                                roleData.name === 'Administrador';
             setIsAdmin(isAdminRole);
+            console.debug('[auth] isAdmin:', isAdminRole);
           }
         }
+        
+        setLoadingProfile(false);
         return typedMember;
       }
+      
+      console.debug('[auth] No member found for userId:', userId);
+      setLoadingProfile(false);
       return null;
     } catch (error) {
-      console.error('Error in fetchMemberData:', error);
+      console.error('[auth] Error in fetchMemberData:', error);
+      if (isMountedRef.current) {
+        setProfileError(error instanceof Error ? error : new Error('Erro ao carregar perfil'));
+        setLoadingProfile(false);
+      }
       return null;
     }
-  };
+  }, []);
 
-  const refreshMember = async () => {
+  const refreshMember = useCallback(async () => {
     if (user) {
       await fetchMemberData(user.id);
     }
-  };
+  }, [user, fetchMemberData]);
+
+  const retryProfileLoad = useCallback(async () => {
+    if (user) {
+      await fetchMemberData(user.id);
+    }
+  }, [user, fetchMemberData]);
 
   useEffect(() => {
-    let isMounted = true;
+    isMountedRef.current = true;
+
+    console.debug('[auth] AuthProvider mounting, path:', window.location.pathname);
 
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (!isMounted) return;
+      async (event, currentSession) => {
+        if (!isMountedRef.current) return;
 
-        // Logs temporários para diagnóstico (podemos remover depois que estabilizar)
         console.debug('[auth] onAuthStateChange', {
           event,
-          hasSession: Boolean(session),
-          userId: session?.user?.id,
+          hasSession: Boolean(currentSession),
+          userId: currentSession?.user?.id,
           path: window.location.pathname,
           initialResolved: initialSessionResolvedRef.current,
         });
         
-        setSession(session);
-        setUser(session?.user ?? null);
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
 
-        // Evita liberar o loading antes de resolver a sessão inicial.
-        // Em alguns cenários o listener pode disparar primeiro com session=null,
-        // o que causaria redirect precoce para /login.
+        // Don't process events until initial session is resolved
+        // This prevents race conditions where SIGNED_IN fires before getSession completes
         if (!initialSessionResolvedRef.current) {
+          console.debug('[auth] Ignoring event before initial session resolved');
           return;
         }
         
-        // Defer member data fetch to avoid deadlock
-        if (session?.user) {
+        // Handle session changes after initial load
+        if (currentSession?.user) {
+          // Use setTimeout to avoid Supabase auth deadlock
           setTimeout(async () => {
-            if (!isMounted) return;
-            await fetchMemberData(session.user.id);
-            if (isMounted) {
+            if (!isMountedRef.current) return;
+            await fetchMemberData(currentSession.user.id);
+            if (isMountedRef.current) {
               setLoading(false);
             }
           }, 0);
@@ -117,47 +158,72 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (event === 'SIGNED_OUT') {
           setMember(null);
           setIsAdmin(false);
+          setProfileError(null);
         }
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!isMounted) return;
+    const initSession = async () => {
+      try {
+        console.debug('[auth] Getting initial session...');
+        const { data: { session: existingSession }, error } = await supabase.auth.getSession();
+        
+        if (!isMountedRef.current) return;
 
-      console.debug('[auth] getSession resolved', {
-        hasSession: Boolean(session),
-        userId: session?.user?.id,
-        path: window.location.pathname,
-      });
-      
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        await fetchMemberData(session.user.id);
-      }
+        if (error) {
+          console.error('[auth] Error getting session:', error);
+        }
 
-      initialSessionResolvedRef.current = true;
-      if (isMounted) {
-        setLoading(false);
+        console.debug('[auth] getSession resolved', {
+          hasSession: Boolean(existingSession),
+          userId: existingSession?.user?.id,
+          path: window.location.pathname,
+        });
+        
+        setSession(existingSession);
+        setUser(existingSession?.user ?? null);
+        
+        if (existingSession?.user) {
+          await fetchMemberData(existingSession.user.id);
+        }
+
+        // Mark initial session as resolved BEFORE setting loading to false
+        initialSessionResolvedRef.current = true;
+        
+        if (isMountedRef.current) {
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('[auth] Error in initSession:', error);
+        initialSessionResolvedRef.current = true;
+        if (isMountedRef.current) {
+          setLoading(false);
+        }
       }
-    });
+    };
+
+    initSession();
 
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchMemberData]);
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
+      setLoading(true);
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+      if (error) {
+        setLoading(false);
+      }
       return { error };
     } catch (error) {
+      setLoading(false);
       return { error: error as Error };
     }
   };
@@ -183,6 +249,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
     setMember(null);
     setIsAdmin(false);
+    setProfileError(null);
   };
 
   return (
@@ -193,10 +260,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         member,
         isAdmin,
         loading,
+        loadingProfile,
+        profileError,
         signInWithEmail,
         signInWithGoogle,
         signOut,
         refreshMember,
+        retryProfileLoad,
       }}
     >
       {children}
