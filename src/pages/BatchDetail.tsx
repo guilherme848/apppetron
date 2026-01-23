@@ -210,9 +210,10 @@ export default function BatchDetail() {
     toast.success('Status atualizado');
   };
 
-  const handlePostResponsibleChange = async (postId: string, roleId: string) => {
-    await updatePost(postId, { responsible_role_id: roleId === '_none_' ? null : roleId } as any);
-    toast.success('Responsável atualizado');
+  const handlePostResponsibleChange = async (postId: string, roleKey: string) => {
+    // IMPORTANT: auto-assign is driven by responsible_role_key (backend trigger)
+    await updatePost(postId, { responsible_role_key: roleKey === '_none_' ? null : (roleKey as any) } as any);
+    toast.success('Cargo atualizado');
   };
 
   // Stages where responsible is variable (editable per post)

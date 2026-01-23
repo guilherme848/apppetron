@@ -32,6 +32,7 @@ import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
 import { getRoleKeyFromFormat, getRoleLabel } from '@/lib/formatRoleMapping';
 import { ROLE_KEY_LABELS } from '@/lib/accountTeam';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
+import { RESPONSIBLE_ROLE_OPTIONS, ResponsibleRoleKey } from '@/types/crm';
 
 interface SortablePostListProps {
   posts: ContentPost[];
@@ -205,12 +206,23 @@ function SortableRow({
               </TooltipProvider>
             );
           })()
-        ) : post.responsible_role_id ? (
-          <Badge variant="neutral">{getRoleById(post.responsible_role_id)?.name || '-'}</Badge>
-        ) : planningResponsibleName ? (
-          <Badge variant="neutral">{planningResponsibleName}</Badge>
         ) : (
-          <Badge variant="attention" className="text-xs">Não definido</Badge>
+          <Select
+            value={(post.responsible_role_key as ResponsibleRoleKey) || '_none_'}
+            onValueChange={(v) => onPostResponsibleChange(post.id, v)}
+          >
+            <SelectTrigger className="w-40 h-8 bg-background">
+              <SelectValue placeholder="Selecione" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover z-50">
+              <SelectItem value="_none_">Nenhum</SelectItem>
+              {RESPONSIBLE_ROLE_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         )}
       </TableCell>
       <TableCell>
