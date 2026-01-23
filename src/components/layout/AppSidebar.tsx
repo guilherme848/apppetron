@@ -11,6 +11,7 @@ import {
   SidebarMenuItem,
   SidebarHeader,
 } from '@/components/ui/sidebar';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useRouteAccess } from '@/hooks/useRouteAccess';
 import { useAuth } from '@/contexts/AuthContext';
 import { getMenuRoutes, RouteDefinition, MODULES } from '@/config/routeRegistry';
@@ -37,39 +38,86 @@ function getRouteIcon(route: RouteDefinition): React.ElementType {
   return LayoutDashboard; // Default
 }
 
+// Module display config
+const moduleConfig: { module: string; label: string | null }[] = [
+  { module: MODULES.MAIN, label: null }, // No label for main items
+  { module: MODULES.CRM, label: 'CRM' },
+  { module: MODULES.CONTENT, label: 'Criação' },
+  { module: MODULES.TRAFFIC, label: 'Tráfego Pago' },
+  { module: MODULES.CS, label: 'Customer Success' },
+  { module: MODULES.SETTINGS, label: 'Sistema' },
+];
+
+// Skeleton menu for loading state
+function SidebarSkeleton() {
+  return (
+    <>
+      {/* Main group skeleton */}
+      <SidebarGroup>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {[1, 2].map((i) => (
+              <SidebarMenuItem key={i}>
+                <div className="flex items-center gap-3 px-3 py-2">
+                  <Skeleton className="h-4 w-4 rounded" />
+                  <Skeleton className="h-4 w-24 rounded" />
+                </div>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+      
+      {/* Other groups skeleton */}
+      {[1, 2, 3].map((group) => (
+        <SidebarGroup key={group}>
+          <Skeleton className="h-3 w-16 mb-2 ml-2" />
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {[1, 2].map((i) => (
+                <SidebarMenuItem key={i}>
+                  <div className="flex items-center gap-3 px-3 py-2">
+                    <Skeleton className="h-4 w-4 rounded" />
+                    <Skeleton className="h-4 w-20 rounded" />
+                  </div>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      ))}
+    </>
+  );
+}
+
 export function AppSidebar() {
-  const { canAccess } = useRouteAccess();
-  const { isAdmin } = useAuth();
+  const { canAccess, loading: permissionsLoading } = useRouteAccess();
+  const { isAdmin, loading: authLoading } = useAuth();
 
   // Get menu routes from registry
   const menuRoutes = getMenuRoutes();
 
+  // Show skeleton while permissions are loading
+  const isLoading = permissionsLoading || authLoading;
+
   // Filter routes by permission and group by module
-  // Settings module is only visible to admins
+  // Only process when not loading to avoid flickering
   const routesByModule: Record<string, RouteDefinition[]> = {};
   
-  for (const route of menuRoutes) {
-    // Settings module is admin-only
-    if (route.module === MODULES.SETTINGS && !isAdmin) continue;
-    
-    // Check if user can view this route
-    if (!canAccess(route.id, 'view')) continue;
+  if (!isLoading) {
+    for (const route of menuRoutes) {
+      // Settings module is admin-only
+      if (route.module === MODULES.SETTINGS && !isAdmin) continue;
+      
+      // Check if user can view this route
+      if (!canAccess(route.id, 'view')) continue;
 
-    if (!routesByModule[route.module]) {
-      routesByModule[route.module] = [];
+      if (!routesByModule[route.module]) {
+        routesByModule[route.module] = [];
+      }
+      routesByModule[route.module].push(route);
     }
-    routesByModule[route.module].push(route);
   }
-
-  // Module display config
-  const moduleConfig: { module: string; label: string | null }[] = [
-    { module: MODULES.MAIN, label: null }, // No label for main items
-    { module: MODULES.CRM, label: 'CRM' },
-    { module: MODULES.CONTENT, label: 'Criação' },
-    { module: MODULES.TRAFFIC, label: 'Tráfego Pago' },
-    { module: MODULES.CS, label: 'Customer Success' },
-    { module: MODULES.SETTINGS, label: 'Sistema' },
-  ];
 
   return (
     <Sidebar>
@@ -83,38 +131,42 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        {moduleConfig.map(({ module, label }) => {
-          const routes = routesByModule[module];
-          if (!routes || routes.length === 0) return null;
+        {isLoading ? (
+          <SidebarSkeleton />
+        ) : (
+          moduleConfig.map(({ module, label }) => {
+            const routes = routesByModule[module];
+            if (!routes || routes.length === 0) return null;
 
-          return (
-            <SidebarGroup key={module}>
-              {label && <SidebarGroupLabel>{label}</SidebarGroupLabel>}
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {routes.map((route) => {
-                    const Icon = getRouteIcon(route);
-                    return (
-                      <SidebarMenuItem key={route.id}>
-                        <SidebarMenuButton asChild>
-                          <NavLink
-                            to={route.path}
-                            end={route.path === '/'}
-                            className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors hover:bg-accent"
-                            activeClassName="bg-accent text-accent-foreground font-medium"
-                          >
-                            <Icon className="h-4 w-4" />
-                            <span>{route.label}</span>
-                          </NavLink>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          );
-        })}
+            return (
+              <SidebarGroup key={module}>
+                {label && <SidebarGroupLabel>{label}</SidebarGroupLabel>}
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {routes.map((route) => {
+                      const Icon = getRouteIcon(route);
+                      return (
+                        <SidebarMenuItem key={route.id}>
+                          <SidebarMenuButton asChild>
+                            <NavLink
+                              to={route.path}
+                              end={route.path === '/'}
+                              className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors hover:bg-accent"
+                              activeClassName="bg-accent text-accent-foreground font-medium"
+                            >
+                              <Icon className="h-4 w-4" />
+                              <span>{route.label}</span>
+                            </NavLink>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            );
+          })
+        )}
       </SidebarContent>
     </Sidebar>
   );

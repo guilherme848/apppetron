@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { generatePermissionKey, PermissionAction } from '@/config/routeRegistry';
@@ -13,78 +13,122 @@ export function useRouteAccess() {
   const [userOverrides, setUserOverrides] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [roleKey, setRoleKey] = useState<string | null>(null);
+  const fetchedRoleIdRef = useRef<string | null>(null);
 
-  // Fetch role name
+  // Fetch role name when member changes
   useEffect(() => {
-    const fetchRoleKey = async () => {
-      if (!member?.role_id) {
-        setRoleKey(null);
-        return;
-      }
+    // Don't do anything while auth is still loading
+    if (authLoading) {
+      return;
+    }
 
-      const { data } = await supabase
+    // If no member, set loading to false and reset state
+    if (!member?.role_id) {
+      setRoleKey(null);
+      setRolePermissions({});
+      setUserOverrides({});
+      setLoading(false);
+      return;
+    }
+
+    // Skip if we already fetched for this role
+    if (fetchedRoleIdRef.current === member.role_id) {
+      return;
+    }
+
+    const fetchRoleKey = async () => {
+      console.debug('[permissions] Fetching role key for role_id:', member.role_id);
+      
+      const { data, error } = await supabase
         .from('job_roles')
         .select('name')
         .eq('id', member.role_id)
         .single();
 
-      if (data) {
-        setRoleKey(data.name.toLowerCase());
-      }
-    };
-
-    if (!authLoading && member) {
-      fetchRoleKey();
-    }
-  }, [member?.role_id, authLoading, member]);
-
-  // Fetch permissions
-  useEffect(() => {
-    const fetchPermissions = async () => {
-      if (!roleKey || authLoading) {
-        if (!authLoading && !member) {
-          setLoading(false);
-        }
+      if (error) {
+        console.error('[permissions] Error fetching role:', error);
+        setLoading(false);
         return;
       }
 
+      if (data) {
+        const key = data.name.toLowerCase();
+        setRoleKey(key);
+        fetchedRoleIdRef.current = member.role_id;
+        console.debug('[permissions] Role key set:', key);
+      }
+    };
+
+    fetchRoleKey();
+  }, [member?.role_id, authLoading]);
+
+  // Fetch permissions when roleKey changes
+  useEffect(() => {
+    // Don't fetch if auth is loading or no roleKey yet
+    if (authLoading || !roleKey) {
+      return;
+    }
+
+    const fetchPermissions = async () => {
+      console.debug('[permissions] Fetching permissions for role:', roleKey);
       setLoading(true);
 
-      // Fetch role permissions
-      const { data: rolePerms } = await supabase
-        .from('role_permissions' as any)
-        .select('permission_key, allowed')
-        .eq('role_key', roleKey);
-
-      const rolePermsMap: Record<string, boolean> = {};
-      if (rolePerms) {
-        for (const rp of rolePerms as any[]) {
-          rolePermsMap[rp.permission_key] = rp.allowed;
-        }
-      }
-      setRolePermissions(rolePermsMap);
-
-      // Fetch user overrides
-      if (member?.id) {
-        const { data: overrides } = await supabase
-          .from('user_permission_overrides' as any)
+      try {
+        // Fetch role permissions
+        const { data: rolePerms, error: roleError } = await supabase
+          .from('role_permissions' as any)
           .select('permission_key, allowed')
-          .eq('user_id', member.id);
+          .eq('role_key', roleKey);
 
-        const overridesMap: Record<string, boolean> = {};
-        if (overrides) {
-          for (const o of overrides as any[]) {
-            overridesMap[o.permission_key] = o.allowed;
+        if (roleError) {
+          console.error('[permissions] Error fetching role permissions:', roleError);
+        }
+
+        const rolePermsMap: Record<string, boolean> = {};
+        if (rolePerms) {
+          for (const rp of rolePerms as any[]) {
+            rolePermsMap[rp.permission_key] = rp.allowed;
           }
         }
-        setUserOverrides(overridesMap);
-      }
+        setRolePermissions(rolePermsMap);
+        console.debug('[permissions] Role permissions loaded:', Object.keys(rolePermsMap).length);
 
-      setLoading(false);
+        // Fetch user overrides
+        if (member?.id) {
+          const { data: overrides, error: overridesError } = await supabase
+            .from('user_permission_overrides' as any)
+            .select('permission_key, allowed')
+            .eq('user_id', member.id);
+
+          if (overridesError) {
+            console.error('[permissions] Error fetching user overrides:', overridesError);
+          }
+
+          const overridesMap: Record<string, boolean> = {};
+          if (overrides) {
+            for (const o of overrides as any[]) {
+              overridesMap[o.permission_key] = o.allowed;
+            }
+          }
+          setUserOverrides(overridesMap);
+          console.debug('[permissions] User overrides loaded:', Object.keys(overridesMap).length);
+        }
+      } catch (error) {
+        console.error('[permissions] Error in fetchPermissions:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchPermissions();
   }, [roleKey, member?.id, authLoading]);
+
+  // Set loading to false if auth is done but there's no member (allows app to proceed)
+  useEffect(() => {
+    if (!authLoading && !member) {
+      setLoading(false);
+    }
+  }, [authLoading, member]);
 
   /**
    * Check if user can perform an action on a route

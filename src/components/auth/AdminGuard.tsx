@@ -1,8 +1,8 @@
 import { ReactNode } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, ShieldX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 interface AdminGuardProps {
   children: ReactNode;
@@ -11,17 +11,33 @@ interface AdminGuardProps {
 /**
  * Guard component that restricts access to admin users only.
  * Non-admin users see a "restricted access" page with option to go back.
+ * 
+ * IMPORTANT: This guard should only be used INSIDE AppLayout (after AuthGuard).
+ * It assumes the user is already authenticated.
  */
 export function AdminGuard({ children }: AdminGuardProps) {
-  const { isAdmin, loading } = useAuth();
-  const location = useLocation();
+  const { isAdmin, loading, member } = useAuth();
+  const navigate = useNavigate();
 
+  // Show loading while auth is being resolved
   if (loading) {
     return (
       <div className="min-h-[400px] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-muted-foreground">Verificando permissões...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Wait for member to be loaded before checking admin status
+  if (!member) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Carregando...</p>
         </div>
       </div>
     );
@@ -41,10 +57,10 @@ export function AdminGuard({ children }: AdminGuardProps) {
           </p>
           <Button 
             variant="outline" 
-            onClick={() => window.history.back()}
+            onClick={() => navigate('/')}
             className="mt-4"
           >
-            Voltar
+            Voltar ao início
           </Button>
         </div>
       </div>
