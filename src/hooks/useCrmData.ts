@@ -18,6 +18,8 @@ const mapAccount = (data: any): Account => ({
   churned_at: data.churned_at,
   service_id: data.service_id,
   niche_id: data.niche_id,
+  // Nome do serviço via join
+  service_name: data.services?.name || null,
   contact_name: data.contact_name,
   contact_phone: data.contact_phone,
   contact_email: data.contact_email,
@@ -69,7 +71,7 @@ export function useCrmData() {
   const fetchAccounts = useCallback(async () => {
     const { data, error } = await supabase
       .from('accounts')
-      .select('*')
+      .select('*, services(name)')
       .order('created_at', { ascending: false });
     if (error) {
       console.error('Error fetching accounts:', error);

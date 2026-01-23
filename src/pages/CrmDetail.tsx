@@ -4,6 +4,7 @@ import { ArrowLeft, Plus, Pencil, Trash2, Loader2, ExternalLink, Phone, Mail, Ma
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { AccountStatusBadge, ContractStatusBadge, TaskStatusBadge } from '@/components/crm/StatusBadge';
 import { ContractForm } from '@/components/crm/ContractForm';
 import { TaskForm } from '@/components/crm/TaskForm';
@@ -14,6 +15,7 @@ import { ClientTrafficSection } from '@/components/crm/ClientTrafficSection';
 import { useCrm } from '@/contexts/CrmContext';
 import { Contract, Task, ContractStatus, TaskStatus, Account } from '@/types/crm';
 import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
+
 export default function CrmDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -130,7 +132,14 @@ export default function CrmDetail() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">{account.name}</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold">{account.name}</h1>
+              {account.service_name && (
+                <Badge variant="default" className="text-sm">
+                  {account.service_name}
+                </Badge>
+              )}
+            </div>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               <AccountStatusBadge status={account.status} />
               {account.niche && <span className="text-sm text-muted-foreground">• {account.niche}</span>}

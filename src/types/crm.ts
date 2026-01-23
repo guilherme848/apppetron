@@ -28,6 +28,9 @@ export interface Account {
   service_id?: string | null;
   niche_id?: string | null;
   
+  // Nome do serviço/plano (via join)
+  service_name?: string | null;
+  
   // Contato
   contact_name?: string | null;
   contact_phone?: string | null;
