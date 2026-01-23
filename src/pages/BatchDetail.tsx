@@ -132,9 +132,17 @@ export default function BatchDetail() {
     const isVariable = VARIABLE_STAGES.includes(status);
     
     if (isVariable) {
-      toast.success('Responsáveis atribuídos automaticamente pelo formato (Designer/Videomaker)', {
-        description: 'Posts de imagem → Designer | Posts de vídeo → Videomaker',
-      });
+      // Check if any post is missing assignee after reassignment
+      const postsWithoutAssignee = batchPosts.filter(p => !p.assignee_id).length;
+      if (postsWithoutAssignee > 0) {
+        toast.info('Responsáveis atribuídos automaticamente pelo formato', {
+          description: `${postsWithoutAssignee} post(s) sem executor definido. Configure o Time da Conta do cliente.`,
+        });
+      } else {
+        toast.success('Responsáveis atribuídos automaticamente pelo formato (Designer/Videomaker)', {
+          description: 'Posts de imagem → Designer | Posts de vídeo → Videomaker',
+        });
+      }
     } else {
       toast.success('Status atualizado. Atividades resetadas para "A fazer" e responsável atualizado.');
     }
@@ -215,8 +223,9 @@ export default function BatchDetail() {
   const planningResponsibleId = getRoleForStage('planning');
   const planningResponsibleName = planningResponsibleId ? getRoleById(planningResponsibleId)?.name : null;
 
-  // Check if any post is missing responsible
+  // Check if any post is missing responsible or assignee
   const postsWithoutResponsible = batchPosts.filter(p => !p.responsible_role_id).length;
+  const postsWithoutAssignee = batchPosts.filter(p => !p.assignee_id).length;
 
   const handleFileUploaded = async (file: { file_name: string; file_path: string; file_size: number; file_type: string }) => {
     const { data, error } = await supabase
@@ -370,16 +379,30 @@ export default function BatchDetail() {
         </CardContent>
       </Card>
 
-      {/* Warning for missing responsible */}
-      {batchPosts.length > 0 && postsWithoutResponsible > 0 && (
-        <div className="flex items-center gap-2 p-3 rounded-md bg-accent/10 border border-accent/30 text-accent-foreground">
-          <AlertCircle className="h-4 w-4 flex-shrink-0" />
-          <span className="text-sm">
-            {postsWithoutResponsible === batchPosts.length 
-              ? 'Nenhum post possui responsável atribuído.'
-              : `${postsWithoutResponsible} post(s) sem responsável atribuído.`}
-            {!isVariableStage && !planningResponsibleId && ' Configure o responsável na etapa de Planejamento.'}
-          </span>
+      {/* Warning for missing responsible or assignee */}
+      {batchPosts.length > 0 && (postsWithoutResponsible > 0 || (isVariableStage && postsWithoutAssignee > 0)) && (
+        <div className="flex items-center gap-2 p-3 rounded-md bg-attention/10 border border-attention/30 text-foreground">
+          <AlertCircle className="h-4 w-4 flex-shrink-0 text-attention" />
+          <div className="text-sm">
+            {postsWithoutResponsible > 0 && (
+              <p>
+                {postsWithoutResponsible === batchPosts.length 
+                  ? 'Nenhum post possui cargo atribuído.'
+                  : `${postsWithoutResponsible} post(s) sem cargo atribuído.`}
+                {!isVariableStage && !planningResponsibleId && ' Configure o responsável na etapa de Planejamento.'}
+              </p>
+            )}
+            {isVariableStage && postsWithoutAssignee > 0 && (
+              <p className="flex items-center gap-1">
+                {postsWithoutAssignee === batchPosts.length 
+                  ? 'Nenhum post possui executor atribuído.'
+                  : `${postsWithoutAssignee} post(s) sem executor atribuído.`}
+                <a href={`/crm/${batch.client_id}`} className="underline text-primary hover:text-primary/80">
+                  Definir no Time da Conta
+                </a>
+              </p>
+            )}
+          </div>
         </div>
       )}
 
@@ -409,6 +432,7 @@ export default function BatchDetail() {
             <SortablePostList
               posts={batchPosts}
               batchId={batch.id}
+              clientId={batch.client_id}
               isVariableStage={isVariableStage}
               planningResponsibleName={planningResponsibleName}
               roles={roles}

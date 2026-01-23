@@ -17,7 +17,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Eye, Trash2, ChevronUp, ChevronDown, Lock } from 'lucide-react';
+import { GripVertical, Eye, Trash2, ChevronUp, ChevronDown, Lock, AlertCircle, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -31,10 +31,12 @@ import { getTaskStatusVariant, getChannelVariant, getContentFormatVariant } from
 import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
 import { getRoleKeyFromFormat, getRoleLabel } from '@/lib/formatRoleMapping';
 import { ROLE_KEY_LABELS } from '@/lib/accountTeam';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
 
 interface SortablePostListProps {
   posts: ContentPost[];
   batchId: string;
+  clientId: string | null;
   isVariableStage: boolean;
   planningResponsibleName: string | null;
   roles: JobRole[];
@@ -48,10 +50,12 @@ interface SortablePostListProps {
 interface SortableRowProps {
   post: ContentPost;
   batchId: string;
+  clientId: string | null;
   isVariableStage: boolean;
   planningResponsibleName: string | null;
   roles: JobRole[];
   getRoleById: (id: string) => JobRole | undefined;
+  getMemberById: (id: string) => { id: string; name: string } | undefined;
   onPostStatusChange: (postId: string, status: string) => Promise<void>;
   onPostResponsibleChange: (postId: string, roleId: string) => Promise<void>;
   onDeletePost: (postId: string) => Promise<void>;
@@ -71,10 +75,12 @@ const getStatusLabel = (value: string) =>
 function SortableRow({
   post,
   batchId,
+  clientId,
   isVariableStage,
   planningResponsibleName,
   roles,
   getRoleById,
+  getMemberById,
   onPostStatusChange,
   onPostResponsibleChange,
   onDeletePost,
@@ -208,6 +214,34 @@ function SortableRow({
         )}
       </TableCell>
       <TableCell>
+        {/* Executor (assignee) column */}
+        {post.assignee_id ? (
+          <span className="text-sm">{getMemberById(post.assignee_id)?.name || '-'}</span>
+        ) : (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-auto p-1 text-attention hover:text-attention"
+                  onClick={() => clientId && navigate(`/crm/${clientId}`)}
+                >
+                  <div className="flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    <span className="text-xs">Sem responsável</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </div>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Defina no Time da Conta do cliente</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+      </TableCell>
+      <TableCell>
         <Select value={post.status} onValueChange={(v) => onPostStatusChange(post.id, v)}>
           <SelectTrigger className="w-28 h-8 bg-background">
             <Badge variant={getTaskStatusVariant(post.status)} className="text-xs w-full justify-center">
@@ -251,6 +285,7 @@ function SortableRow({
 export function SortablePostList({
   posts,
   batchId,
+  clientId,
   isVariableStage,
   planningResponsibleName,
   roles,
@@ -260,6 +295,7 @@ export function SortablePostList({
   onDeletePost,
   onOrderChange,
 }: SortablePostListProps) {
+  const { getMemberById } = useTeamMembers();
   const [isSaving, setIsSaving] = useState(false);
   
   const sensors = useSensors(
@@ -345,7 +381,8 @@ export function SortablePostList({
               <TableHead>Título</TableHead>
               <TableHead>Canal</TableHead>
               <TableHead>Formato</TableHead>
-              <TableHead>Responsável</TableHead>
+              <TableHead>Cargo</TableHead>
+              <TableHead>Executor</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-24">Ações</TableHead>
             </TableRow>
@@ -356,10 +393,12 @@ export function SortablePostList({
                 key={post.id}
                 post={post}
                 batchId={batchId}
+                clientId={clientId}
                 isVariableStage={isVariableStage}
                 planningResponsibleName={planningResponsibleName}
                 roles={roles}
                 getRoleById={getRoleById}
+                getMemberById={getMemberById}
                 onPostStatusChange={onPostStatusChange}
                 onPostResponsibleChange={onPostResponsibleChange}
                 onDeletePost={onDeletePost}

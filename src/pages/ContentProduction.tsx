@@ -123,9 +123,19 @@ export default function ContentProduction() {
     
     const isVariable = VARIABLE_STAGES.includes(status);
     if (isVariable) {
-      toast.success('Responsáveis atribuídos automaticamente pelo formato', {
-        description: 'Posts de imagem → Designer | Posts de vídeo → Videomaker',
-      });
+      // Check for posts without assignee after reassignment
+      const batchPosts = posts.filter(p => p.batch_id === batchId);
+      const postsWithoutAssignee = batchPosts.filter(p => !p.assignee_id).length;
+      
+      if (postsWithoutAssignee > 0) {
+        toast.info('Responsáveis atribuídos automaticamente pelo formato', {
+          description: `${postsWithoutAssignee} post(s) sem executor. Configure o Time da Conta do cliente.`,
+        });
+      } else {
+        toast.success('Responsáveis atribuídos automaticamente pelo formato', {
+          description: 'Posts de imagem → Designer | Posts de vídeo → Videomaker',
+        });
+      }
     } else {
       toast.success('Status atualizado');
     }
