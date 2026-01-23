@@ -1935,6 +1935,69 @@ export type Database = {
           },
         ]
       }
+      role_permissions: {
+        Row: {
+          allowed: boolean
+          created_at: string
+          id: string
+          permission_key: string
+          role_key: string
+          updated_at: string
+        }
+        Insert: {
+          allowed?: boolean
+          created_at?: string
+          id?: string
+          permission_key: string
+          role_key: string
+          updated_at?: string
+        }
+        Update: {
+          allowed?: boolean
+          created_at?: string
+          id?: string
+          permission_key?: string
+          role_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      route_permissions: {
+        Row: {
+          action: string
+          category: string
+          created_at: string
+          id: string
+          key: string
+          label: string
+          module: string
+          path: string
+          route_id: string
+        }
+        Insert: {
+          action: string
+          category: string
+          created_at?: string
+          id?: string
+          key: string
+          label: string
+          module: string
+          path: string
+          route_id: string
+        }
+        Update: {
+          action?: string
+          category?: string
+          created_at?: string
+          id?: string
+          key?: string
+          label?: string
+          module?: string
+          path?: string
+          route_id?: string
+        }
+        Relationships: []
+      }
       service_deliverables: {
         Row: {
           created_at: string
@@ -2610,6 +2673,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_permission_overrides: {
+        Row: {
+          allowed: boolean
+          created_at: string
+          id: string
+          permission_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allowed: boolean
+          created_at?: string
+          id?: string
+          permission_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allowed?: boolean
+          created_at?: string
+          id?: string
+          permission_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {

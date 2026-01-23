@@ -1,44 +1,26 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { PermissionKey, MemberPermission } from '@/types/permissions';
+import { PermissionKey } from '@/types/permissions';
+import { useRouteAccess } from '@/hooks/useRouteAccess';
 
 /**
- * Hook to check permissions for the currently authenticated user
- * This replaces the localStorage-based useCurrentUserPermissions
+ * Hook to check permissions for the currently authenticated user.
+ * 
+ * MIGRATION NOTE: This hook now delegates to useRouteAccess for the new
+ * route-based permission system. Legacy permission keys are mapped automatically.
+ * 
+ * For new code, prefer using useRouteAccess directly with route IDs:
+ *   const { canAccess } = useRouteAccess();
+ *   canAccess('content.production', 'view')
  */
 export function useAuthPermissions() {
   const { member, isAdmin, loading: authLoading } = useAuth();
-  const [memberPermissions, setMemberPermissions] = useState<MemberPermission[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { can: routeAccessCan, loading: routeLoading } = useRouteAccess();
 
-  useEffect(() => {
-    const fetchPermissions = async () => {
-      if (!member?.id) {
-        setMemberPermissions([]);
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('member_permissions')
-        .select('*')
-        .eq('member_id', member.id);
-
-      if (error) {
-        console.error('Error fetching permissions:', error);
-      } else {
-        setMemberPermissions(data || []);
-      }
-      setLoading(false);
-    };
-
-    if (!authLoading) {
-      fetchPermissions();
-    }
-  }, [member?.id, authLoading]);
-
+  /**
+   * Check if user has a legacy permission.
+   * Maps to the new route-based system under the hood.
+   */
   const can = useCallback((permissionKey: PermissionKey): boolean => {
     // Admin has all permissions
     if (isAdmin) return true;
@@ -46,14 +28,13 @@ export function useAuthPermissions() {
     // If no member is set, deny all
     if (!member) return false;
     
-    const mp = memberPermissions.find(p => p.permission_key === permissionKey);
-    // If no record exists, permission is allowed by default
-    return mp ? mp.allowed : true;
-  }, [member, isAdmin, memberPermissions]);
+    // Delegate to route access system with legacy key mapping
+    return routeAccessCan(permissionKey);
+  }, [member, isAdmin, routeAccessCan]);
 
   return { 
     can, 
-    loading: loading || authLoading, 
+    loading: authLoading || routeLoading, 
     currentMemberId: member?.id || null,
     isAdmin,
     member,
