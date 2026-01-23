@@ -9,6 +9,7 @@ export interface TeamMember {
   admission_date: string | null;
   profile_photo_path: string | null;
   profile_completed_at: string | null;
+  auth_user_id: string | null;
   created_at: string;
   updated_at: string;
 }

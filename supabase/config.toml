@@ -2,3 +2,6 @@ project_id = "ucbltsnmkcxpcioetlpz"
 
 [functions.meta-refresh-balances-cron]
 verify_jwt = false
+
+[functions.admin-create-user]
+verify_jwt = false

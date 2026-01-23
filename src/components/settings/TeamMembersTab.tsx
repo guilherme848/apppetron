@@ -1,32 +1,34 @@
 import { useState, useRef } from 'react';
-import { Plus, Pencil, Trash2, Loader2, Camera } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Camera, UserPlus, Link, Unlink, KeyRound, Shield, ShieldCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useJobRoles } from '@/hooks/useJobRoles';
-import { useCurrentUserPermissions } from '@/hooks/usePermissions';
+import { useAuthPermissions } from '@/hooks/useAuthPermissions';
 import { useProfilePhoto } from '@/hooks/useProfilePhoto';
 import { MemberAvatar } from '@/components/common/MemberAvatar';
+import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 export function TeamMembersTab() {
   const { members, loading, addMember, updateMember, deleteMember, refetch } = useTeamMembers();
   const { roles, getRoleById } = useJobRoles();
-  const { can, isAdmin } = useCurrentUserPermissions();
+  const { can, isAdmin } = useAuthPermissions();
   const { uploadPhoto, uploading } = useProfilePhoto();
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  // Member dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<{ 
     id: string; 
@@ -38,6 +40,7 @@ export function TeamMembersTab() {
     birth_date: string | null;
     admission_date: string | null;
     profile_photo_path: string | null;
+    auth_user_id: string | null;
   } | null>(null);
   const [name, setName] = useState('');
   const [roleId, setRoleId] = useState<string>('');
@@ -48,6 +51,14 @@ export function TeamMembersTab() {
   const [photoPath, setPhotoPath] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [showInactive, setShowInactive] = useState(false);
+
+  // Auth dialog state
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
+  const [authDialogMode, setAuthDialogMode] = useState<'create' | 'link'>('create');
+  const [selectedMemberForAuth, setSelectedMemberForAuth] = useState<typeof editingMember>(null);
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
 
   const canEditAdmission = isAdmin || can('edit_admission_date');
 
@@ -106,7 +117,6 @@ export function TeamMembersTab() {
       profile_photo_path: photoPath,
     };
 
-    // Only include admission_date if user can edit it
     if (canEditAdmission) {
       memberData.admission_date = admissionDate || null;
     }
@@ -149,7 +159,119 @@ export function TeamMembersTab() {
     }
   };
 
+  // Auth management functions
+  const handleOpenAuthDialog = (member: typeof editingMember, mode: 'create' | 'link') => {
+    setSelectedMemberForAuth(member);
+    setAuthDialogMode(mode);
+    setAuthEmail(member?.email || '');
+    setAuthPassword('');
+    setAuthDialogOpen(true);
+  };
+
+  const handleCreateAuthUser = async () => {
+    if (!selectedMemberForAuth || !authEmail || !authPassword) {
+      toast.error('Email e senha são obrigatórios');
+      return;
+    }
+
+    if (authPassword.length < 6) {
+      toast.error('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
+    setAuthLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-create-user', {
+        body: {
+          action: 'create_user',
+          email: authEmail,
+          password: authPassword,
+          team_member_id: selectedMemberForAuth.id,
+        },
+      });
+
+      if (error) {
+        console.error('Function error:', error);
+        toast.error(error.message || 'Erro ao criar usuário');
+      } else if (data?.error) {
+        toast.error(data.error);
+      } else {
+        toast.success('Conta de autenticação criada e vinculada!');
+        setAuthDialogOpen(false);
+        refetch();
+      }
+    } catch (err: any) {
+      console.error('Error:', err);
+      toast.error(err.message || 'Erro inesperado');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleUnlinkAuth = async (member: typeof editingMember) => {
+    if (!member) return;
+    
+    setAuthLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-create-user', {
+        body: {
+          action: 'unlink_user',
+          team_member_id: member.id,
+        },
+      });
+
+      if (error) {
+        toast.error(error.message || 'Erro ao desvincular');
+      } else if (data?.error) {
+        toast.error(data.error);
+      } else {
+        toast.success('Conta desvinculada');
+        refetch();
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Erro inesperado');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (member: typeof editingMember) => {
+    if (!member?.email) {
+      toast.error('Este membro não tem email cadastrado');
+      return;
+    }
+
+    setAuthLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-create-user', {
+        body: {
+          action: 'reset_password',
+          email: member.email,
+        },
+      });
+
+      if (error) {
+        toast.error(error.message || 'Erro ao enviar email');
+      } else if (data?.error) {
+        toast.error(data.error);
+      } else {
+        toast.success('Email de redefinição de senha enviado!');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Erro inesperado');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
   const filteredMembers = showInactive ? members : members.filter(m => m.active);
+
+  // Check if role is admin
+  const isAdminRole = (roleId: string | null) => {
+    if (!roleId) return false;
+    const role = getRoleById(roleId);
+    return role?.name?.toLowerCase().includes('admin') || role?.name === 'Administrador';
+  };
 
   if (loading) {
     return (
@@ -166,7 +288,7 @@ export function TeamMembersTab() {
           <div>
             <CardTitle className="text-base">Usuários Internos</CardTitle>
             <CardDescription>
-              Membros da equipe para atribuição de tarefas. Não requer login.
+              Membros da equipe. Vincule contas de autenticação para permitir login.
             </CardDescription>
           </div>
           <div className="flex items-center gap-4">
@@ -202,9 +324,9 @@ export function TeamMembersTab() {
                   <TableHead>Nome</TableHead>
                   <TableHead>Cargo</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Admissão</TableHead>
+                  <TableHead className="w-[100px]">Login</TableHead>
                   <TableHead className="w-[100px]">Ativo</TableHead>
-                  <TableHead className="w-[120px]">Ações</TableHead>
+                  <TableHead className="w-[180px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -217,7 +339,19 @@ export function TeamMembersTab() {
                         size="sm"
                       />
                     </TableCell>
-                    <TableCell className="font-medium">{member.full_name || member.name}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        {member.full_name || member.name}
+                        {isAdminRole(member.role_id) && (
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <ShieldCheck className="h-4 w-4 text-primary" />
+                            </TooltipTrigger>
+                            <TooltipContent>Administrador</TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       {member.role_id ? (
                         <Badge variant="outline">{getRoleById(member.role_id)?.name || '-'}</Badge>
@@ -229,10 +363,15 @@ export function TeamMembersTab() {
                       {member.email || <span className="text-muted-foreground">-</span>}
                     </TableCell>
                     <TableCell>
-                      {member.admission_date ? (
-                        format(parseISO(member.admission_date), 'dd/MM/yyyy')
+                      {member.auth_user_id ? (
+                        <Badge variant="default" className="bg-primary text-primary-foreground">
+                          <Shield className="h-3 w-3 mr-1" />
+                          Ativo
+                        </Badge>
                       ) : (
-                        <span className="text-muted-foreground">-</span>
+                        <Badge variant="secondary">
+                          Sem conta
+                        </Badge>
                       )}
                     </TableCell>
                     <TableCell>
@@ -250,6 +389,65 @@ export function TeamMembersTab() {
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
+                        
+                        {/* Auth actions - only for admins */}
+                        {isAdmin && (
+                          <>
+                            {!member.auth_user_id ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleOpenAuthDialog(member, 'create')}
+                                  >
+                                    <UserPlus className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Criar conta de login</TooltipContent>
+                              </Tooltip>
+                            ) : (
+                              <>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleResetPassword(member)}
+                                      disabled={authLoading}
+                                    >
+                                      <KeyRound className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Redefinir senha</TooltipContent>
+                                </Tooltip>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                      <Unlink className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Desvincular conta?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        O usuário não poderá mais fazer login até ser vinculado novamente.
+                                        A conta de autenticação não será excluída.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleUnlinkAuth(member)}>
+                                        Desvincular
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </>
+                            )}
+                          </>
+                        )}
+
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="ghost" size="icon">
@@ -281,13 +479,13 @@ export function TeamMembersTab() {
         </CardContent>
       </Card>
 
+      {/* Member Edit/Create Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>{editingMember ? 'Editar Usuário' : 'Novo Usuário'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {/* Photo section (only for editing) */}
             {editingMember && (
               <div className="flex items-center gap-4">
                 <div className="relative">
@@ -349,7 +547,7 @@ export function TeamMembersTab() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="memberEmail">Email (opcional)</Label>
+              <Label htmlFor="memberEmail">Email</Label>
               <Input
                 id="memberEmail"
                 type="email"
@@ -400,6 +598,56 @@ export function TeamMembersTab() {
             <Button onClick={handleSave} disabled={saving}>
               {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Auth Creation Dialog */}
+      <Dialog open={authDialogOpen} onOpenChange={setAuthDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Criar Conta de Login
+            </DialogTitle>
+            <DialogDescription>
+              Crie uma conta de autenticação para {selectedMemberForAuth?.full_name || selectedMemberForAuth?.name}.
+              O usuário poderá fazer login com estas credenciais.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="authEmail">Email *</Label>
+              <Input
+                id="authEmail"
+                type="email"
+                value={authEmail}
+                onChange={(e) => setAuthEmail(e.target.value)}
+                placeholder="email@exemplo.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="authPassword">Senha *</Label>
+              <Input
+                id="authPassword"
+                type="password"
+                value={authPassword}
+                onChange={(e) => setAuthPassword(e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+              />
+              <p className="text-xs text-muted-foreground">
+                O usuário poderá alterar a senha depois de fazer login.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAuthDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleCreateAuthUser} disabled={authLoading}>
+              {authLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}
+              Criar Conta
             </Button>
           </DialogFooter>
         </DialogContent>
