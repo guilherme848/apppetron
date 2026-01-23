@@ -15,6 +15,8 @@ import { useExtraRequests, useExtraRequestFiles } from '@/hooks/useExtraRequests
 import { useCrmData } from '@/hooks/useCrmData';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { RichTextEditor } from '@/components/content/RichTextEditor';
+import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
+import { supabase } from '@/integrations/supabase/client';
 import {
   EXTRA_REQUEST_STATUS_LABELS,
   EXTRA_REQUEST_PRIORITY_LABELS,
@@ -32,9 +34,10 @@ export default function ExtraRequestDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { requests, updateRequest, loading: requestsLoading } = useExtraRequests();
+  const { requests, updateRequest, deleteRequest, loading: requestsLoading } = useExtraRequests();
   const { files, uploadFile, deleteFile, loading: filesLoading } = useExtraRequestFiles(id || null);
   const { accounts } = useCrmData();
+  const [deleting, setDeleting] = useState(false);
   const { members } = useTeamMembers();
 
   const request = requests.find(r => r.id === id);
@@ -110,6 +113,26 @@ export default function ExtraRequestDetail() {
     }
   };
 
+  const handleDeleteRequest = async () => {
+    if (!id) return;
+    setDeleting(true);
+    
+    // Delete associated files from storage first
+    if (files.length > 0) {
+      const paths = files.map(f => f.storage_path);
+      await supabase.storage.from('content-production').remove(paths);
+    }
+    
+    const result = await deleteRequest(id);
+    if (result.success) {
+      toast({ title: 'Solicitação extra apagada', description: 'A solicitação foi excluída com sucesso.' });
+      navigate('/content/extra-requests');
+    } else {
+      toast({ title: 'Erro', description: result.error || 'Não foi possível apagar', variant: 'destructive' });
+      setDeleting(false);
+    }
+  };
+
   if (requestsLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -144,7 +167,20 @@ export default function ExtraRequestDetail() {
             <p className="text-muted-foreground">Solicitação Extra • {request.month_ref}</p>
           </div>
         </div>
-        <SaveStatus status={saveStatus} />
+        <div className="flex items-center gap-3">
+          <SaveStatus status={saveStatus} />
+          <ConfirmDeleteDialog
+            itemName={request.title}
+            description="Tem certeza que deseja apagar esta solicitação extra? Esta ação não poderá ser desfeita."
+            warning={files.length > 0 ? `Esta solicitação possui ${files.length} anexo(s) que também serão excluídos.` : undefined}
+            onConfirm={handleDeleteRequest}
+          >
+            <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" disabled={deleting}>
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
+              {deleting ? 'Excluindo...' : 'Excluir'}
+            </Button>
+          </ConfirmDeleteDialog>
+        </div>
       </div>
 
       <Tabs defaultValue="details" className="space-y-4">
