@@ -12,6 +12,7 @@ import {
   SidebarHeader,
 } from '@/components/ui/sidebar';
 import { useRouteAccess } from '@/hooks/useRouteAccess';
+import { useAuth } from '@/contexts/AuthContext';
 import { getMenuRoutes, RouteDefinition, MODULES } from '@/config/routeRegistry';
 import petronLogo from '@/assets/petron-logo.png';
 
@@ -38,14 +39,19 @@ function getRouteIcon(route: RouteDefinition): React.ElementType {
 
 export function AppSidebar() {
   const { canAccess } = useRouteAccess();
+  const { isAdmin } = useAuth();
 
   // Get menu routes from registry
   const menuRoutes = getMenuRoutes();
 
   // Filter routes by permission and group by module
+  // Settings module is only visible to admins
   const routesByModule: Record<string, RouteDefinition[]> = {};
   
   for (const route of menuRoutes) {
+    // Settings module is admin-only
+    if (route.module === MODULES.SETTINGS && !isAdmin) continue;
+    
     // Check if user can view this route
     if (!canAccess(route.id, 'view')) continue;
 
