@@ -24,7 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const fetchMemberData = async (userId: string) => {
+  const fetchMemberData = async (userId: string): Promise<TeamMember | null> => {
     try {
       // Fetch team member linked to this auth user
       const { data: memberData, error: memberError } = await supabase
@@ -35,11 +35,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (memberError) {
         console.error('Error fetching member:', memberError);
-        return;
+        return null;
       }
 
       if (memberData) {
-        setMember(memberData as TeamMember);
+        const typedMember = memberData as TeamMember;
+        setMember(typedMember);
 
         // Check if member is admin
         if (memberData.role_id) {
@@ -55,9 +56,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setIsAdmin(isAdminRole);
           }
         }
+        return typedMember;
       }
+      return null;
     } catch (error) {
       console.error('Error in fetchMemberData:', error);
+      return null;
     }
   };
 
@@ -68,20 +72,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    let isMounted = true;
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        if (!isMounted) return;
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         // Defer member data fetch to avoid deadlock
         if (session?.user) {
-          setTimeout(() => {
-            fetchMemberData(session.user.id);
+          setTimeout(async () => {
+            if (!isMounted) return;
+            await fetchMemberData(session.user.id);
+            if (isMounted) {
+              setLoading(false);
+            }
           }, 0);
         } else {
           setMember(null);
           setIsAdmin(false);
+          setLoading(false);
         }
 
         if (event === 'SIGNED_OUT') {
@@ -92,20 +105,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!isMounted) return;
+      
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        fetchMemberData(session.user.id).finally(() => {
-          setLoading(false);
-        });
-      } else {
+        await fetchMemberData(session.user.id);
+      }
+      if (isMounted) {
         setLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signInWithEmail = async (email: string, password: string) => {
