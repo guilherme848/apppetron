@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { format as formatDate } from 'date-fns';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getRoleKeyFromFormat, isFormatAssignmentStage } from '@/lib/formatRoleMapping';
+import { resolveAssigneeFromAccountTeam } from '@/lib/accountTeam';
 
 export default function PostDetail() {
   const { batchId, postId } = useParams<{ batchId: string; postId: string }>();
@@ -76,11 +77,20 @@ export default function PostDetail() {
 
   const isVariableStage = batch ? isFormatAssignmentStage(batch.status) : false;
 
-  // AutoSave setup
+  // AutoSave setup - returns updated post so we can sync local state
   const handleSavePost = useCallback(async (data: Record<string, any>) => {
     if (!post) return;
-    await updatePost(post.id, data);
-  }, [post, updatePost]);
+    const updatedPost = await updatePost(post.id, data);
+    
+    // Sync local assignee state with the trigger-updated value from DB
+    if (updatedPost && 'assignee_id' in data === false) {
+      // Only sync if we didn't explicitly set assignee_id (trigger did it)
+      if (updatedPost.assignee_id !== assigneeId) {
+        setAssigneeId(updatedPost.assignee_id || '');
+        setShowTeamWarning(!updatedPost.assignee_id);
+      }
+    }
+  }, [post, updatePost, assigneeId]);
 
   const { status: saveStatus, saveNow, queueChange, flush, hasPendingChanges } = useAutoSave({
     onSave: handleSavePost,
@@ -205,11 +215,19 @@ export default function PostDetail() {
     }
   };
 
-  const handleRoleChange = (newRoleKey: ResponsibleRoleKey) => {
+  const handleRoleChange = async (newRoleKey: ResponsibleRoleKey) => {
     setResponsibleRoleKey(newRoleKey);
-    // Backend trigger will assign assignee_id immediately based on Account Team.
+    
+    // IMMEDIATE UI update: resolve assignee locally from Account Team in memory
+    if (client) {
+      const localAssignee = resolveAssigneeFromAccountTeam(client as any, newRoleKey);
+      setAssigneeId(localAssignee || '');
+      setShowTeamWarning(!localAssignee);
+    }
+    
+    // Save to backend (trigger will also set assignee_id, but we already updated UI)
     if (initialLoadComplete.current) {
-      saveNow({ responsible_role_key: newRoleKey });
+      await saveNow({ responsible_role_key: newRoleKey });
     }
   };
 
