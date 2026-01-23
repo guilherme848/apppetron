@@ -69,6 +69,10 @@ import CreativeRequestsList from "./pages/traffic/CreativeRequestsList";
 import CreativeRequestNew from "./pages/traffic/CreativeRequestNew";
 import CreativeRequestDetail from "./pages/traffic/CreativeRequestDetail";
 
+// Contracts pages
+import ContractsList from "./pages/contracts/ContractsList";
+import ContractDetail from "./pages/contracts/ContractDetail";
+
 const queryClient = new QueryClient();
 
 function AuthOnlyLayout() {
@@ -152,6 +156,10 @@ const App = () => (
                         <Route path="/cs/nps" element={<CsNps />} />
                         <Route path="/cs/risk" element={<CsRisk />} />
                         <Route path="/cs/client/:clientId" element={<CsClientDetail />} />
+
+                        {/* Contracts routes */}
+                        <Route path="/contracts" element={<ContractsList />} />
+                        <Route path="/contracts/:id" element={<ContractDetail />} />
 
                         {/* Settings - Admin only with internal navigation */}
                         <Route

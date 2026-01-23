@@ -5,3 +5,18 @@ verify_jwt = false
 
 [functions.admin-create-user]
 verify_jwt = false
+
+[functions.clint-webhook]
+verify_jwt = false
+
+[functions.autentique-send]
+verify_jwt = false
+
+[functions.clicksign-send]
+verify_jwt = false
+
+[functions.autentique-webhook]
+verify_jwt = false
+
+[functions.clicksign-webhook]
+verify_jwt = false
