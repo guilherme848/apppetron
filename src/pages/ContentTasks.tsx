@@ -1,15 +1,19 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ListTodo, Search, AlertCircle, ExternalLink, Filter } from 'lucide-react';
+import { ListTodo, Search, AlertCircle, ExternalLink, Filter, Trash2, MoreHorizontal } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
+import { useExtraRequests } from '@/hooks/useExtraRequests';
+import { useToast } from '@/hooks/use-toast';
+import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
 import { POST_STATUS_OPTIONS, ITEM_TYPE_OPTIONS, BATCH_STATUS_OPTIONS, PostStatus, ItemType } from '@/types/contentProduction';
 import { RESPONSIBLE_ROLE_OPTIONS, ResponsibleRoleKey } from '@/types/crm';
 import { EXTRA_REQUEST_STATUS_LABELS, ExtraRequestStatus } from '@/types/extraRequests';
@@ -42,11 +46,14 @@ interface AccountOption {
 
 export default function ContentTasks() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { members, loading: loadingMembers, getActiveMembers, getMemberById } = useTeamMembers();
+  const { deleteRequest: deleteExtraRequest } = useExtraRequests();
 
   const [tasks, setTasks] = useState<ConsolidatedTask[]>([]);
   const [accounts, setAccounts] = useState<AccountOption[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
 
   const [filterAssignee, setFilterAssignee] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -272,6 +279,30 @@ export default function ContentTasks() {
     }
   };
 
+  const handleDeleteExtraRequest = async (taskId: string) => {
+    setDeletingTaskId(taskId);
+    
+    // Delete associated files from storage first
+    const { data: files } = await supabase
+      .from('content_extra_request_files')
+      .select('storage_path')
+      .eq('request_id', taskId);
+    
+    if (files && files.length > 0) {
+      const paths = files.map(f => f.storage_path);
+      await supabase.storage.from('content-production').remove(paths);
+    }
+    
+    const result = await deleteExtraRequest(taskId);
+    if (result.success) {
+      setTasks(prev => prev.filter(t => !(t.type === 'extra' && t.id === taskId)));
+      toast({ title: 'Solicitação extra apagada', description: 'A solicitação foi excluída com sucesso.' });
+    } else {
+      toast({ title: 'Erro', description: result.error || 'Não foi possível apagar', variant: 'destructive' });
+    }
+    setDeletingTaskId(null);
+  };
+
   if (loading || loadingMembers) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -492,13 +523,39 @@ export default function ContentTasks() {
                         </TableCell>
                         <TableCell>{getStatusBadge(task.status, task.type)}</TableCell>
                         <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleOpenTask(task)}
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleOpenTask(task)}
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </Button>
+                            {task.type === 'extra' && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <ConfirmDeleteDialog
+                                    itemName={task.title}
+                                    description="Tem certeza que deseja apagar esta solicitação extra? Esta ação não poderá ser desfeita."
+                                    onConfirm={() => handleDeleteExtraRequest(task.id)}
+                                  >
+                                    <DropdownMenuItem
+                                      className="text-destructive focus:text-destructive"
+                                      onSelect={(e) => e.preventDefault()}
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Excluir solicitação
+                                    </DropdownMenuItem>
+                                  </ConfirmDeleteDialog>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     );

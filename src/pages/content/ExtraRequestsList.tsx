@@ -1,16 +1,20 @@
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { Plus, Filter, FileText } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Plus, Filter, FileText, Trash2, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useExtraRequests } from '@/hooks/useExtraRequests';
 import { useCrmData } from '@/hooks/useCrmData';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
+import { useToast } from '@/hooks/use-toast';
+import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
+import { supabase } from '@/integrations/supabase/client';
 import {
   EXTRA_REQUEST_STATUS_LABELS,
   EXTRA_REQUEST_PRIORITY_LABELS,
@@ -24,9 +28,31 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function ExtraRequestsList() {
-  const { requests, loading } = useExtraRequests();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { requests, loading, deleteRequest } = useExtraRequests();
   const { accounts } = useCrmData();
   const { members } = useTeamMembers();
+
+  const handleDelete = async (requestId: string) => {
+    // Delete associated files from storage first
+    const { data: files } = await supabase
+      .from('content_extra_request_files')
+      .select('storage_path')
+      .eq('request_id', requestId);
+    
+    if (files && files.length > 0) {
+      const paths = files.map(f => f.storage_path);
+      await supabase.storage.from('content-production').remove(paths);
+    }
+    
+    const result = await deleteRequest(requestId);
+    if (result.success) {
+      toast({ title: 'Solicitação extra apagada', description: 'A solicitação foi excluída com sucesso.' });
+    } else {
+      toast({ title: 'Erro', description: result.error || 'Não foi possível apagar', variant: 'destructive' });
+    }
+  };
 
   // Filters
   const [filterMonth, setFilterMonth] = useState<string>('');
@@ -218,12 +244,13 @@ export default function ExtraRequestsList() {
                 <TableHead>Prioridade</TableHead>
                 <TableHead>Vencimento</TableHead>
                 <TableHead>Criado em</TableHead>
+                <TableHead className="w-[60px]">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredRequests.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
                     Nenhuma solicitação encontrada
                   </TableCell>
                 </TableRow>
@@ -264,6 +291,30 @@ export default function ExtraRequestsList() {
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {format(new Date(r.created_at), 'dd/MM/yyyy', { locale: ptBR })}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <ConfirmDeleteDialog
+                            itemName={r.title}
+                            description="Tem certeza que deseja apagar esta solicitação extra? Esta ação não poderá ser desfeita."
+                            onConfirm={() => handleDelete(r.id)}
+                          >
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onSelect={(e) => e.preventDefault()}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Excluir solicitação
+                            </DropdownMenuItem>
+                          </ConfirmDeleteDialog>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))
