@@ -374,29 +374,19 @@ export default function BatchDetail() {
         </CardContent>
       </Card>
 
-      {/* Warning for missing responsible or assignee */}
-      {batchPosts.length > 0 && (postsWithoutResponsible > 0 || postsWithoutAssignee > 0) && (
+      {/* Warning for missing assignee only */}
+      {batchPosts.length > 0 && postsWithoutAssignee > 0 && (
         <div className="flex items-center gap-2 p-3 rounded-md bg-attention/10 border border-attention/30 text-foreground">
           <AlertCircle className="h-4 w-4 flex-shrink-0 text-attention" />
           <div className="text-sm">
-            {postsWithoutResponsible > 0 && (
-              <p>
-                {postsWithoutResponsible === batchPosts.length 
-                  ? 'Nenhum post possui cargo atribuído.'
-                  : `${postsWithoutResponsible} post(s) sem cargo atribuído.`}
-                {!isVariableStage && !currentStageRoleKey && ' Configure o responsável na etapa atual no Pipeline.'}
-              </p>
-            )}
-            {postsWithoutAssignee > 0 && (
-              <p className="flex items-center gap-1">
-                {postsWithoutAssignee === batchPosts.length 
-                  ? 'Nenhum post possui responsável atribuído.'
-                  : `${postsWithoutAssignee} post(s) sem responsável atribuído.`}
-                <a href={`/crm/${batch.client_id}`} className="underline text-primary hover:text-primary/80">
-                  Definir no Time da Conta
-                </a>
-              </p>
-            )}
+            <p className="flex items-center gap-1">
+              {postsWithoutAssignee === batchPosts.length 
+                ? 'Nenhum post possui responsável atribuído.'
+                : `${postsWithoutAssignee} post(s) sem responsável atribuído.`}
+              <a href={`/crm/${batch.client_id}`} className="underline text-primary hover:text-primary/80">
+                Definir no Time da Conta
+              </a>
+            </p>
           </div>
         </div>
       )}
