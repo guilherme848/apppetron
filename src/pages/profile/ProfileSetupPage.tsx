@@ -6,21 +6,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { MemberAvatar } from '@/components/common/MemberAvatar';
-import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useProfilePhoto } from '@/hooks/useProfilePhoto';
-import { useCurrentMember } from '@/hooks/usePermissions';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { isProfileComplete } from '@/types/team';
 import { toast } from 'sonner';
 
 export default function ProfileSetupPage() {
   const navigate = useNavigate();
-  const { members, loading, updateMember, refetch } = useTeamMembers();
-  const { currentMemberId } = useCurrentMember();
+  const { member, loading: authLoading, refreshMember, signOut } = useAuth();
   const { uploadPhoto, uploading } = useProfilePhoto();
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const currentMember = members.find(m => m.id === currentMemberId);
+  const currentMember = member;
   
   const [fullName, setFullName] = useState('');
   const [birthDate, setBirthDate] = useState('');
@@ -35,19 +33,12 @@ export default function ProfileSetupPage() {
       
       // If profile is already complete, redirect to home
       if (isProfileComplete(currentMember)) {
-        navigate('/');
+        navigate('/', { replace: true });
       }
     }
   }, [currentMember, navigate]);
 
-  // If no member selected (admin mode), redirect to home
-  useEffect(() => {
-    if (!loading && !currentMemberId) {
-      navigate('/');
-    }
-  }, [loading, currentMemberId, navigate]);
-
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -56,7 +47,18 @@ export default function ProfileSetupPage() {
   }
 
   if (!currentMember) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-6">
+        <div className="max-w-md text-center space-y-4">
+          <h1 className="text-2xl font-semibold text-foreground">Acesso pendente</h1>
+          <p className="text-muted-foreground">
+            Sua conta ainda não foi vinculada a um perfil de membro da equipe.
+            Peça ao administrador para concluir o vínculo.
+          </p>
+          <Button variant="outline" onClick={signOut}>Sair</Button>
+        </div>
+      </div>
+    );
   }
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,7 +68,17 @@ export default function ProfileSetupPage() {
     const path = await uploadPhoto(currentMember.id, file);
     if (path) {
       setPhotoPath(path);
-      await updateMember(currentMember.id, { profile_photo_path: path });
+      const { error } = await supabase
+        .from('team_members')
+        .update({ profile_photo_path: path })
+        .eq('id', currentMember.id);
+
+      if (error) {
+        toast.error('Erro ao salvar foto');
+        return;
+      }
+
+      await refreshMember();
       toast.success('Foto enviada!');
     }
   };
@@ -82,21 +94,24 @@ export default function ProfileSetupPage() {
     }
 
     setSaving(true);
-    const { error } = await updateMember(currentMember.id, {
-      full_name: fullName.trim(),
-      name: fullName.trim(),
-      birth_date: birthDate,
-      profile_photo_path: photoPath,
-      profile_completed_at: new Date().toISOString(),
-    });
+    const { error } = await supabase
+      .from('team_members')
+      .update({
+        full_name: fullName.trim(),
+        name: fullName.trim(),
+        birth_date: birthDate,
+        profile_photo_path: photoPath,
+        profile_completed_at: new Date().toISOString(),
+      })
+      .eq('id', currentMember.id);
 
     if (error) {
       toast.error('Erro ao salvar perfil');
       setSaving(false);
     } else {
       toast.success('Perfil completo!');
-      await refetch();
-      navigate('/');
+      await refreshMember();
+      navigate('/', { replace: true });
     }
   };
 
