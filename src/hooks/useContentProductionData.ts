@@ -200,10 +200,12 @@ export function useContentProductionData() {
           console.error('Error reassigning posts by format:', reassignError);
         }
         
-        // Check for any errors in the reassignment
-        const errors = (reassignResult || []).filter((r: any) => r.error_message);
-        if (errors.length > 0) {
-          console.warn('Some posts could not be reassigned:', errors);
+        // Log reassignment result (now returns { updated, missing, status })
+        if (reassignResult && typeof reassignResult === 'object' && 'missing' in reassignResult) {
+          const result = reassignResult as { updated: number; missing: number; status: string };
+          if (result.missing > 0) {
+            console.warn(`${result.missing} posts could not be assigned (missing team member)`);
+          }
         }
         
         // Also reset status to 'todo'

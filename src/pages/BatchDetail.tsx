@@ -136,7 +136,7 @@ export default function BatchDetail() {
       const postsWithoutAssignee = batchPosts.filter(p => !p.assignee_id).length;
       if (postsWithoutAssignee > 0) {
         toast.info('Responsáveis atribuídos automaticamente pelo formato', {
-          description: `${postsWithoutAssignee} post(s) sem executor definido. Configure o Time da Conta do cliente.`,
+          description: `${postsWithoutAssignee} post(s) sem responsável definido. Configure o Time da Conta do cliente.`,
         });
       } else {
         toast.success('Responsáveis atribuídos automaticamente pelo formato (Designer/Videomaker)', {
@@ -395,8 +395,8 @@ export default function BatchDetail() {
             {isVariableStage && postsWithoutAssignee > 0 && (
               <p className="flex items-center gap-1">
                 {postsWithoutAssignee === batchPosts.length 
-                  ? 'Nenhum post possui executor atribuído.'
-                  : `${postsWithoutAssignee} post(s) sem executor atribuído.`}
+                  ? 'Nenhum post possui responsável atribuído.'
+                  : `${postsWithoutAssignee} post(s) sem responsável atribuído.`}
                 <a href={`/crm/${batch.client_id}`} className="underline text-primary hover:text-primary/80">
                   Definir no Time da Conta
                 </a>

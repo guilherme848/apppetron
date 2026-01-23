@@ -214,7 +214,7 @@ function SortableRow({
         )}
       </TableCell>
       <TableCell>
-        {/* Executor (assignee) column */}
+        {/* Responsável (assignee) column */}
         {post.assignee_id ? (
           <span className="text-sm">{getMemberById(post.assignee_id)?.name || '-'}</span>
         ) : (
@@ -382,7 +382,7 @@ export function SortablePostList({
               <TableHead>Canal</TableHead>
               <TableHead>Formato</TableHead>
               <TableHead>Cargo</TableHead>
-              <TableHead>Executor</TableHead>
+              <TableHead>Responsável</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-24">Ações</TableHead>
             </TableRow>
