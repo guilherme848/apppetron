@@ -2728,12 +2728,7 @@ export type Database = {
       is_admin: { Args: { _auth_user_id: string }; Returns: boolean }
       reassign_batch_posts_by_format: {
         Args: { p_batch_id: string }
-        Returns: {
-          error_message: string
-          new_assignee_id: string
-          new_role_key: string
-          post_id: string
-        }[]
+        Returns: Json
       }
       resolve_assignee_from_account_team: {
         Args: { p_client_id: string; p_responsible_role_key: string }

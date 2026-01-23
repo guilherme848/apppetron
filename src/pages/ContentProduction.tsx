@@ -129,7 +129,7 @@ export default function ContentProduction() {
       
       if (postsWithoutAssignee > 0) {
         toast.info('Responsáveis atribuídos automaticamente pelo formato', {
-          description: `${postsWithoutAssignee} post(s) sem executor. Configure o Time da Conta do cliente.`,
+          description: `${postsWithoutAssignee} post(s) sem responsável. Configure o Time da Conta do cliente.`,
         });
       } else {
         toast.success('Responsáveis atribuídos automaticamente pelo formato', {
