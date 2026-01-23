@@ -11,7 +11,7 @@ import {
   SidebarMenuItem,
   SidebarHeader,
 } from '@/components/ui/sidebar';
-import { useCurrentUserPermissions } from '@/hooks/usePermissions';
+import { useAuthPermissions } from '@/hooks/useAuthPermissions';
 import { PermissionKey } from '@/types/permissions';
 import petronLogo from '@/assets/petron-logo.png';
 
@@ -58,7 +58,7 @@ const settingsItems: MenuItem[] = [
 ];
 
 export function AppSidebar() {
-  const { can } = useCurrentUserPermissions();
+  const { can } = useAuthPermissions();
 
   const filterByPermission = (items: MenuItem[]) => {
     return items.filter(item => !item.permission || can(item.permission));

@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTeamMembers } from './useTeamMembers';
-import { useCurrentMember } from './usePermissions';
-import { format, isToday, isSameMonth, parseISO, isBefore, startOfDay } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { useAuth } from '@/contexts/AuthContext';
+import { format, parseISO, isBefore, startOfDay } from 'date-fns';
 
 export interface BirthdayMember {
   id: string;
@@ -44,7 +43,8 @@ export interface RoutineMetrics {
 
 export function useWelcomeData() {
   const { members, loading: membersLoading } = useTeamMembers();
-  const { currentMemberId } = useCurrentMember();
+  const { member: currentMember, loading: authLoading } = useAuth();
+  const currentMemberId = currentMember?.id || null;
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<RoutineMetrics>({
     pendencias: { aFazer: 0, emAndamento: 0, delegado: 0 },
@@ -54,10 +54,6 @@ export function useWelcomeData() {
   const [nextStepItems, setNextStepItems] = useState<NextStepItem[]>([]);
   const [todayMeetings, setTodayMeetings] = useState<any[]>([]);
   const [lowBalanceAccounts, setLowBalanceAccounts] = useState<any[]>([]);
-
-  const currentMember = useMemo(() => {
-    return members.find(m => m.id === currentMemberId);
-  }, [members, currentMemberId]);
 
   // Birthday members for current month
   const birthdayMembers = useMemo((): BirthdayMember[] => {
@@ -233,10 +229,10 @@ export function useWelcomeData() {
   }, [currentMemberId]);
 
   useEffect(() => {
-    if (!membersLoading) {
+    if (!membersLoading && !authLoading) {
       fetchMetrics();
     }
-  }, [membersLoading, fetchMetrics]);
+  }, [membersLoading, authLoading, fetchMetrics]);
 
   // Dynamic greeting based on time
   const greeting = useMemo(() => {
@@ -258,7 +254,7 @@ export function useWelcomeData() {
   const userName = currentMember?.full_name || currentMember?.name || 'Usuário';
 
   return {
-    loading: loading || membersLoading,
+    loading: loading || membersLoading || authLoading,
     greeting,
     userName,
     contextualMessage,

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useCurrentMember } from './usePermissions';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface PersonalNote {
   id: string;
@@ -13,7 +13,8 @@ export interface PersonalNote {
 }
 
 export function usePersonalNotes() {
-  const { currentMemberId } = useCurrentMember();
+  const { member } = useAuth();
+  const currentMemberId = member?.id || null;
   const [notes, setNotes] = useState<PersonalNote[]>([]);
   const [loading, setLoading] = useState(true);
 
