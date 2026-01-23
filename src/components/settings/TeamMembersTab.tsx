@@ -19,6 +19,7 @@ import { useProfilePhoto } from '@/hooks/useProfilePhoto';
 import { MemberAvatar } from '@/components/common/MemberAvatar';
 import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO } from 'date-fns';
+import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
 
 export function TeamMembersTab() {
   const { members, loading, addMember, updateMember, deleteMember, refetch } = useTeamMembers();
@@ -450,27 +451,15 @@ export function TeamMembersTab() {
                           </>
                         )}
 
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Excluir usuário?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Esta ação não pode ser desfeita. Se o usuário estiver atribuído a posts, a exclusão falhará.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(member.id, member.full_name || member.name)}>
-                                Excluir
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                        <ConfirmDeleteDialog
+                          itemName={member.full_name || member.name}
+                          warning="Se o usuário estiver atribuído a posts ou tarefas, a exclusão pode falhar."
+                          onConfirm={() => handleDelete(member.id, member.full_name || member.name)}
+                        >
+                          <Button variant="ghost" size="icon">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </ConfirmDeleteDialog>
                       </div>
                     </TableCell>
                   </TableRow>

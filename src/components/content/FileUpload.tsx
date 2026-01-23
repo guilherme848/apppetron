@@ -3,6 +3,7 @@ import { Upload, X, FileIcon, Loader2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
 
 interface FileItem {
   id: string;
@@ -131,20 +132,24 @@ export function FileUpload({ files, folder, onFileUploaded, onFileDeleted }: Fil
               >
                 <ExternalLink className="h-4 w-4" />
               </a>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={() => handleDelete(file.id, file.file_path)}
-                disabled={deleting === file.id}
+              <ConfirmDeleteDialog
+                itemName={file.file_name}
+                onConfirm={() => handleDelete(file.id, file.file_path)}
               >
-                {deleting === file.id ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <X className="h-3 w-3" />
-                )}
-              </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  disabled={deleting === file.id}
+                >
+                  {deleting === file.id ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <X className="h-3 w-3" />
+                  )}
+                </Button>
+              </ConfirmDeleteDialog>
             </div>
           ))}
         </div>

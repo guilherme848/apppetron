@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { useDeliverablesData, useServiceDeliverables } from '@/hooks/useDeliverablesData';
 import { useSettings } from '@/contexts/SettingsContext';
 import { Deliverable } from '@/types/deliverables';
+import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
 
 export function DeliverablesTab() {
   return (
@@ -165,13 +166,14 @@ function CatalogSubTab() {
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(item.id, item.name)}
+                        <ConfirmDeleteDialog
+                          itemName={item.name}
+                          onConfirm={() => handleDelete(item.id, item.name)}
                         >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                          <Button variant="ghost" size="icon">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </ConfirmDeleteDialog>
                       </div>
                     </TableCell>
                   </TableRow>

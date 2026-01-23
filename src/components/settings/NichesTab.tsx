@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useSettings } from '@/contexts/SettingsContext';
+import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
 
 export function NichesTab() {
   const { niches, loading, addNiche, updateNiche, deleteNiche, toggleNicheActive } = useSettings();
@@ -110,9 +111,14 @@ export function NichesTab() {
                         <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(niche.id, niche.name)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(niche.id, niche.name)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <ConfirmDeleteDialog
+                          itemName={niche.name}
+                          onConfirm={() => handleDelete(niche.id, niche.name)}
+                        >
+                          <Button variant="ghost" size="icon">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </ConfirmDeleteDialog>
                       </div>
                     </TableCell>
                   </TableRow>

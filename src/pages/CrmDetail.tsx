@@ -13,6 +13,7 @@ import { AccountTeamCard } from '@/components/crm/AccountTeamCard';
 import { ClientTrafficSection } from '@/components/crm/ClientTrafficSection';
 import { useCrm } from '@/contexts/CrmContext';
 import { Contract, Task, ContractStatus, TaskStatus, Account } from '@/types/crm';
+import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
 export default function CrmDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -349,13 +350,14 @@ export default function CrmDetail() {
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteTask(task.id)}
+                          <ConfirmDeleteDialog
+                            itemName={task.title}
+                            onConfirm={() => handleDeleteTask(task.id)}
                           >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                            <Button variant="ghost" size="icon">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </ConfirmDeleteDialog>
                         </div>
                       </TableCell>
                     </TableRow>

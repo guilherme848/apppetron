@@ -7,6 +7,7 @@ import { TaskStatusBadge } from '@/components/crm/StatusBadge';
 import { TaskForm } from '@/components/crm/TaskForm';
 import { useCrm } from '@/contexts/CrmContext';
 import { TaskStatus } from '@/types/crm';
+import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
 
 export default function TaskList() {
   const { tasks, accounts, addTask, updateTask, deleteTask, getAccountById, loading } = useCrm();
@@ -136,9 +137,14 @@ export default function TaskList() {
                         <Button variant="ghost" size="icon" onClick={() => handleEdit(task)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(task.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <ConfirmDeleteDialog
+                          itemName={task.title}
+                          onConfirm={() => handleDelete(task.id)}
+                        >
+                          <Button variant="ghost" size="icon">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </ConfirmDeleteDialog>
                       </div>
                     </TableCell>
                   </TableRow>
