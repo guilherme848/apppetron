@@ -39,7 +39,7 @@ interface SortablePostListProps {
   batchId: string;
   clientId: string | null;
   isVariableStage: boolean;
-  planningResponsibleName: string | null;
+  stageRoleLabel: string | null;
   roles: JobRole[];
   getRoleById: (id: string) => JobRole | undefined;
   onPostStatusChange: (postId: string, status: string) => Promise<void>;
@@ -53,7 +53,7 @@ interface SortableRowProps {
   batchId: string;
   clientId: string | null;
   isVariableStage: boolean;
-  planningResponsibleName: string | null;
+  stageRoleLabel: string | null;
   roles: JobRole[];
   getRoleById: (id: string) => JobRole | undefined;
   getMemberById: (id: string) => { id: string; name: string } | undefined;
@@ -78,7 +78,7 @@ function SortableRow({
   batchId,
   clientId,
   isVariableStage,
-  planningResponsibleName,
+  stageRoleLabel,
   roles,
   getRoleById,
   getMemberById,
@@ -299,7 +299,7 @@ export function SortablePostList({
   batchId,
   clientId,
   isVariableStage,
-  planningResponsibleName,
+  stageRoleLabel,
   roles,
   getRoleById,
   onPostStatusChange,
@@ -407,7 +407,7 @@ export function SortablePostList({
                 batchId={batchId}
                 clientId={clientId}
                 isVariableStage={isVariableStage}
-                planningResponsibleName={planningResponsibleName}
+                stageRoleLabel={stageRoleLabel}
                 roles={roles}
                 getRoleById={getRoleById}
                 getMemberById={getMemberById}

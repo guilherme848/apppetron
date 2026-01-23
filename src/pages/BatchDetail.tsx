@@ -21,6 +21,7 @@ import { SaveStatus } from '@/components/ui/save-status';
 import { useAutoSave, useAutoSaveNavigation } from '@/hooks/useAutoSave';
 import { BATCH_STATUS_OPTIONS, BatchStatus, BatchAttachment, ContentPost } from '@/types/contentProduction';
 import { isFormatAssignmentStage } from '@/lib/formatRoleMapping';
+import { ROLE_KEY_LABELS } from '@/lib/accountTeam';
 
 export default function BatchDetail() {
   const { id } = useParams<{ id: string }>();
@@ -30,7 +31,7 @@ export default function BatchDetail() {
     updateBatch, updateBatchWithReset, deleteBatch, archiveBatch, addPost, updatePost, deletePost, fetchPosts, updatePostsOrder 
   } = useContentProduction();
   const { roles, getRoleById } = useJobRoles();
-  const { responsibilities, getRoleForStage } = useStageResponsibilities();
+  const { responsibilities, getRoleKeyForStage, getRoleForStage } = useStageResponsibilities();
 
   const initialLoadComplete = useRef(false);
   const [notes, setNotes] = useState('');
@@ -124,27 +125,23 @@ export default function BatchDetail() {
   };
 
   const handleStatusChange = async (status: BatchStatus) => {
-    // Get the responsible for the new stage
-    const stageRoleId = getRoleForStage(status);
-    await updateBatchWithReset(batch.id, { status }, stageRoleId);
+    // The batch status change trigger will automatically:
+    // 1. For production/changes: set role by format (designer/videomaker)
+    // 2. For other stages: set role by pipeline default
+    // 3. Always: assign user from Account Team
+    await updateBatchWithReset(batch.id, { status }, null);
     
     const VARIABLE_STAGES = ['production', 'changes'];
     const isVariable = VARIABLE_STAGES.includes(status);
     
     if (isVariable) {
-      // Check if any post is missing assignee after reassignment
-      const postsWithoutAssignee = batchPosts.filter(p => !p.assignee_id).length;
-      if (postsWithoutAssignee > 0) {
-        toast.info('Responsáveis atribuídos automaticamente pelo formato', {
-          description: `${postsWithoutAssignee} post(s) sem responsável definido. Configure o Time da Conta do cliente.`,
-        });
-      } else {
-        toast.success('Responsáveis atribuídos automaticamente pelo formato (Designer/Videomaker)', {
-          description: 'Posts de imagem → Designer | Posts de vídeo → Videomaker',
-        });
-      }
+      toast.success('Etapa atualizada: responsáveis por formato', {
+        description: 'Posts de imagem → Designer | Posts de vídeo → Videomaker',
+      });
     } else {
-      toast.success('Status atualizado. Atividades resetadas para "A fazer" e responsável atualizado.');
+      const stageRoleKey = getRoleKeyForStage(status);
+      const roleLabel = stageRoleKey ? ROLE_KEY_LABELS[stageRoleKey] : 'padrão da etapa';
+      toast.success(`Etapa atualizada: responsável automático (${roleLabel})`);
     }
   };
 
@@ -187,13 +184,10 @@ export default function BatchDetail() {
   };
 
   const handleNewPost = async () => {
-    // Always use the planning stage responsible for new posts
-    const planningRoleId = getRoleForStage('planning');
-    
+    // The trigger will auto-assign based on current batch stage
     const newPost = await addPost({ 
       batch_id: batch.id, 
       title: '',
-      responsible_role_id: planningRoleId || undefined,
     } as any);
     if (newPost) {
       navigate(`/content/production/${batch.id}/posts/${newPost.id}`);
@@ -220,9 +214,9 @@ export default function BatchDetail() {
   const VARIABLE_STAGES = ['production', 'changes'];
   const isVariableStage = VARIABLE_STAGES.includes(batch.status);
 
-  // Get planning stage responsible for non-variable stages
-  const planningResponsibleId = getRoleForStage('planning');
-  const planningResponsibleName = planningResponsibleId ? getRoleById(planningResponsibleId)?.name : null;
+  // Get current stage role key for display
+  const currentStageRoleKey = getRoleKeyForStage(batch.status);
+  const currentStageRoleLabel = currentStageRoleKey ? ROLE_KEY_LABELS[currentStageRoleKey] : null;
 
   // Check if any post is missing responsible or assignee
   const postsWithoutResponsible = batchPosts.filter(p => !p.responsible_role_id).length;
@@ -381,7 +375,7 @@ export default function BatchDetail() {
       </Card>
 
       {/* Warning for missing responsible or assignee */}
-      {batchPosts.length > 0 && (postsWithoutResponsible > 0 || (isVariableStage && postsWithoutAssignee > 0)) && (
+      {batchPosts.length > 0 && (postsWithoutResponsible > 0 || postsWithoutAssignee > 0) && (
         <div className="flex items-center gap-2 p-3 rounded-md bg-attention/10 border border-attention/30 text-foreground">
           <AlertCircle className="h-4 w-4 flex-shrink-0 text-attention" />
           <div className="text-sm">
@@ -390,10 +384,10 @@ export default function BatchDetail() {
                 {postsWithoutResponsible === batchPosts.length 
                   ? 'Nenhum post possui cargo atribuído.'
                   : `${postsWithoutResponsible} post(s) sem cargo atribuído.`}
-                {!isVariableStage && !planningResponsibleId && ' Configure o responsável na etapa de Planejamento.'}
+                {!isVariableStage && !currentStageRoleKey && ' Configure o responsável na etapa atual no Pipeline.'}
               </p>
             )}
-            {isVariableStage && postsWithoutAssignee > 0 && (
+            {postsWithoutAssignee > 0 && (
               <p className="flex items-center gap-1">
                 {postsWithoutAssignee === batchPosts.length 
                   ? 'Nenhum post possui responsável atribuído.'
@@ -435,7 +429,7 @@ export default function BatchDetail() {
               batchId={batch.id}
               clientId={batch.client_id}
               isVariableStage={isVariableStage}
-              planningResponsibleName={planningResponsibleName}
+              stageRoleLabel={currentStageRoleLabel}
               roles={roles}
               getRoleById={getRoleById}
               onPostStatusChange={handlePostStatusChange}
