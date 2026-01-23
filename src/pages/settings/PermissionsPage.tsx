@@ -1,5 +1,5 @@
 import { Shield } from 'lucide-react';
-import { AccessTab } from '@/components/settings/AccessTab';
+import { DynamicAccessTab } from '@/components/settings/DynamicAccessTab';
 
 export default function PermissionsPage() {
   return (
@@ -9,9 +9,11 @@ export default function PermissionsPage() {
           <Shield className="h-6 w-6" />
           Controle de Acessos
         </h1>
-        <p className="text-muted-foreground">Defina o que cada usuário pode ver e fazer no sistema.</p>
+        <p className="text-muted-foreground">
+          Defina o que cada cargo e usuário pode ver e fazer no sistema.
+        </p>
       </div>
-      <AccessTab />
+      <DynamicAccessTab />
     </>
   );
 }

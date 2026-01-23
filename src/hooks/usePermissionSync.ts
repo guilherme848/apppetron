@@ -18,7 +18,7 @@ export interface RoutePermission {
   id: string;
   key: string;
   route_id: string;
-  action: PermissionAction;
+  action: string;
   label: string;
   category: string;
   module: string;
@@ -30,6 +30,13 @@ export interface RoutePermission {
 export interface RolePermission {
   id: string;
   role_key: string;
+  permission_key: string;
+  allowed: boolean;
+}
+
+export interface UserPermissionOverride {
+  id: string;
+  user_id: string;
   permission_key: string;
   allowed: boolean;
 }
@@ -55,9 +62,9 @@ export function usePermissionSync() {
     };
 
     try {
-      // 1. Get existing permissions from database
+      // 1. Get existing permissions from database using raw query for new tables
       const { data: existingPermissions, error: permError } = await supabase
-        .from('route_permissions')
+        .from('route_permissions' as any)
         .select('*');
 
       if (permError) {
@@ -67,7 +74,7 @@ export function usePermissionSync() {
         return report;
       }
 
-      const existingKeys = new Set((existingPermissions || []).map(p => p.key));
+      const existingKeys = new Set((existingPermissions || []).map((p: any) => p.key));
 
       // 2. Get existing roles
       const { data: roles, error: rolesError } = await supabase
@@ -79,7 +86,7 @@ export function usePermissionSync() {
       }
 
       // 3. Build permissions to insert
-      const permissionsToInsert: Omit<RoutePermission, 'id' | 'created_at' | 'is_new'>[] = [];
+      const permissionsToInsert: any[] = [];
       const seenRoutes = new Set<string>();
 
       for (const route of routeRegistry) {
@@ -111,7 +118,7 @@ export function usePermissionSync() {
       // 4. Insert new permissions
       if (permissionsToInsert.length > 0) {
         const { error: insertError } = await supabase
-          .from('route_permissions')
+          .from('route_permissions' as any)
           .insert(permissionsToInsert);
 
         if (insertError) {
@@ -123,16 +130,16 @@ export function usePermissionSync() {
 
       // 5. Get all permissions again (including newly created)
       const { data: allPermissions } = await supabase
-        .from('route_permissions')
+        .from('route_permissions' as any)
         .select('key');
 
       // 6. Get existing role_permissions
       const { data: existingRolePerms } = await supabase
-        .from('role_permissions')
+        .from('role_permissions' as any)
         .select('role_key, permission_key');
 
       const existingRolePermKeys = new Set(
-        (existingRolePerms || []).map(rp => `${rp.role_key}:${rp.permission_key}`)
+        (existingRolePerms || []).map((rp: any) => `${rp.role_key}:${rp.permission_key}`)
       );
 
       // 7. Create missing role_permissions (default: false, except 'admin')
@@ -143,7 +150,7 @@ export function usePermissionSync() {
           const roleKey = role.name.toLowerCase();
           const isAdmin = roleKey === 'admin' || roleKey === 'administrador';
 
-          for (const perm of allPermissions) {
+          for (const perm of allPermissions as any[]) {
             const key = `${roleKey}:${perm.key}`;
             if (!existingRolePermKeys.has(key)) {
               rolePermissionsToInsert.push({
@@ -158,7 +165,7 @@ export function usePermissionSync() {
 
       if (rolePermissionsToInsert.length > 0) {
         const { error: rpInsertError } = await supabase
-          .from('role_permissions')
+          .from('role_permissions' as any)
           .insert(rolePermissionsToInsert);
 
         if (rpInsertError) {
@@ -208,7 +215,7 @@ export function useRoutePermissions() {
     setLoading(true);
     
     const { data, error } = await supabase
-      .from('route_permissions')
+      .from('route_permissions' as any)
       .select('*')
       .order('module')
       .order('category')
@@ -219,7 +226,7 @@ export function useRoutePermissions() {
     } else {
       // Mark permissions created in last 24 hours as "new"
       const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const withNewFlag = (data || []).map(p => ({
+      const withNewFlag = (data || []).map((p: any) => ({
         ...p,
         is_new: p.created_at > oneDayAgo,
       }));
@@ -252,14 +259,14 @@ export function useRolePermissions(roleKey: string | null) {
     setLoading(true);
     
     const { data, error } = await supabase
-      .from('role_permissions')
+      .from('role_permissions' as any)
       .select('*')
       .eq('role_key', roleKey);
 
     if (error) {
       console.error('Error fetching role permissions:', error);
     } else {
-      setRolePermissions((data || []) as RolePermission[]);
+      setRolePermissions((data || []) as unknown as RolePermission[]);
     }
 
     setLoading(false);
@@ -272,7 +279,7 @@ export function useRolePermissions(roleKey: string | null) {
 
     if (existing) {
       const { error } = await supabase
-        .from('role_permissions')
+        .from('role_permissions' as any)
         .update({ allowed })
         .eq('id', existing.id);
 
@@ -285,7 +292,7 @@ export function useRolePermissions(roleKey: string | null) {
       );
     } else {
       const { data, error } = await supabase
-        .from('role_permissions')
+        .from('role_permissions' as any)
         .insert([{ role_key: roleKey, permission_key: permissionKey, allowed }])
         .select()
         .single();
@@ -294,7 +301,7 @@ export function useRolePermissions(roleKey: string | null) {
         return { success: false, error: error.message };
       }
 
-      setRolePermissions(prev => [...prev, data as RolePermission]);
+      setRolePermissions(prev => [...prev, data as unknown as RolePermission]);
     }
 
     return { success: true };
@@ -318,7 +325,7 @@ export function useRolePermissions(roleKey: string | null) {
  * Hook for managing user permission overrides
  */
 export function useUserPermissionOverrides(userId: string | null) {
-  const [overrides, setOverrides] = useState<{ id: string; permission_key: string; allowed: boolean }[]>([]);
+  const [overrides, setOverrides] = useState<UserPermissionOverride[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchOverrides = useCallback(async () => {
@@ -330,14 +337,14 @@ export function useUserPermissionOverrides(userId: string | null) {
     setLoading(true);
     
     const { data, error } = await supabase
-      .from('user_permission_overrides')
+      .from('user_permission_overrides' as any)
       .select('*')
       .eq('user_id', userId);
 
     if (error) {
       console.error('Error fetching user overrides:', error);
     } else {
-      setOverrides(data || []);
+      setOverrides((data || []) as unknown as UserPermissionOverride[]);
     }
 
     setLoading(false);
@@ -352,7 +359,7 @@ export function useUserPermissionOverrides(userId: string | null) {
       // Remove override
       if (existing) {
         const { error } = await supabase
-          .from('user_permission_overrides')
+          .from('user_permission_overrides' as any)
           .delete()
           .eq('id', existing.id);
 
@@ -363,7 +370,7 @@ export function useUserPermissionOverrides(userId: string | null) {
     } else if (existing) {
       // Update existing
       const { error } = await supabase
-        .from('user_permission_overrides')
+        .from('user_permission_overrides' as any)
         .update({ allowed })
         .eq('id', existing.id);
 
@@ -373,14 +380,14 @@ export function useUserPermissionOverrides(userId: string | null) {
     } else {
       // Create new
       const { data, error } = await supabase
-        .from('user_permission_overrides')
+        .from('user_permission_overrides' as any)
         .insert([{ user_id: userId, permission_key: permissionKey, allowed }])
         .select()
         .single();
 
       if (error) return { success: false, error: error.message };
       
-      setOverrides(prev => [...prev, data]);
+      setOverrides(prev => [...prev, data as unknown as UserPermissionOverride]);
     }
 
     return { success: true };
