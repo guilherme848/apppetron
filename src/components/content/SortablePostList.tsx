@@ -17,17 +17,20 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Eye, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
+import { GripVertical, Eye, Trash2, ChevronUp, ChevronDown, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ContentPost, POST_STATUS_OPTIONS, CHANNEL_OPTIONS, FORMAT_OPTIONS } from '@/types/contentProduction';
 import { JobRole } from '@/types/contentProduction';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { getTaskStatusVariant, getChannelVariant, getContentFormatVariant } from '@/lib/badgeMaps';
 import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
+import { getRoleKeyFromFormat, getRoleLabel } from '@/lib/formatRoleMapping';
+import { ROLE_KEY_LABELS } from '@/lib/accountTeam';
 
 interface SortablePostListProps {
   posts: ContentPost[];
@@ -155,24 +158,47 @@ function SortableRow({
       </TableCell>
       <TableCell>
         {isVariableStage ? (
-          <Select
-            value={post.responsible_role_id || ''}
-            onValueChange={(v) => onPostResponsibleChange(post.id, v)}
-          >
-            <SelectTrigger
-              className={`w-32 h-8 bg-background ${!post.responsible_role_id ? 'border-accent' : ''}`}
-            >
-              <SelectValue placeholder="-" />
-            </SelectTrigger>
-            <SelectContent className="bg-popover z-50">
-              <SelectItem value="_none_">-</SelectItem>
-              {roles.map((role) => (
-                <SelectItem key={role.id} value={role.id}>
-                  {role.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          // In production/changes stages, show auto-assigned role based on format
+          (() => {
+            const formatRoleKey = getRoleKeyFromFormat(post.format);
+            const roleLabel = formatRoleKey ? ROLE_KEY_LABELS[formatRoleKey] : null;
+            
+            if (formatRoleKey && roleLabel) {
+              return (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-1">
+                        <Badge variant="neutral" className="text-xs">
+                          {roleLabel}
+                        </Badge>
+                        <Lock className="h-3 w-3 text-muted-foreground" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Atribuído automaticamente pelo formato do post</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              );
+            }
+            
+            // No format mapped - show warning
+            return (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge variant="attention" className="text-xs">
+                      Defina formato
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Defina um formato para atribuição automática</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            );
+          })()
         ) : post.responsible_role_id ? (
           <Badge variant="neutral">{getRoleById(post.responsible_role_id)?.name || '-'}</Badge>
         ) : planningResponsibleName ? (

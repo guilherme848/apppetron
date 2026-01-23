@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Loader2, AlertTriangle, Archive, AlertCircle, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Loader2, AlertTriangle, Archive, AlertCircle, Trash2, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -20,6 +20,7 @@ import { SortablePostList } from '@/components/content/SortablePostList';
 import { SaveStatus } from '@/components/ui/save-status';
 import { useAutoSave, useAutoSaveNavigation } from '@/hooks/useAutoSave';
 import { BATCH_STATUS_OPTIONS, BatchStatus, BatchAttachment, ContentPost } from '@/types/contentProduction';
+import { isFormatAssignmentStage } from '@/lib/formatRoleMapping';
 
 export default function BatchDetail() {
   const { id } = useParams<{ id: string }>();
@@ -131,7 +132,9 @@ export default function BatchDetail() {
     const isVariable = VARIABLE_STAGES.includes(status);
     
     if (isVariable) {
-      toast.success('Status atualizado. Atividades resetadas para "A fazer". Responsável mantido (etapa variável).');
+      toast.success('Responsáveis atribuídos automaticamente pelo formato (Designer/Videomaker)', {
+        description: 'Posts de imagem → Designer | Posts de vídeo → Videomaker',
+      });
     } else {
       toast.success('Status atualizado. Atividades resetadas para "A fazer" e responsável atualizado.');
     }
@@ -386,9 +389,10 @@ export default function BatchDetail() {
           <div>
             <CardTitle className="text-base">Posts do Mês ({batchPosts.length})</CardTitle>
             {isVariableStage && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Etapa com responsável variável por post
-              </p>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                <Lock className="h-3 w-3" />
+                Responsável automático por formato: Post/Carrossel/Story → Designer | Vídeo/Reels/Shorts → Videomaker
+              </div>
             )}
           </div>
           <Button size="sm" onClick={handleNewPost}>

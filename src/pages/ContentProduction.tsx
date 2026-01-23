@@ -120,6 +120,15 @@ export default function ContentProduction() {
     // Get the responsible for the new stage
     const stageRoleId = getStageRoleId(status);
     await updateBatchWithReset(batchId, { status }, stageRoleId);
+    
+    const isVariable = VARIABLE_STAGES.includes(status);
+    if (isVariable) {
+      toast.success('Responsáveis atribuídos automaticamente pelo formato', {
+        description: 'Posts de imagem → Designer | Posts de vídeo → Videomaker',
+      });
+    } else {
+      toast.success('Status atualizado');
+    }
   };
 
   const handleAddPost = (batchId: string) => {
