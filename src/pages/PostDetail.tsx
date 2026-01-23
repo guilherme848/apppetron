@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2, Loader2, RefreshCw, FileText, Paperclip, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Trash2, Loader2, FileText, Paperclip, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,6 +25,7 @@ import { useChangeRequests } from '@/hooks/useChangeRequests';
 import { Badge } from '@/components/ui/badge';
 import { format as formatDate } from 'date-fns';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { getRoleKeyFromFormat, isFormatAssignmentStage } from '@/lib/formatRoleMapping';
 
 export default function PostDetail() {
   const { batchId, postId } = useParams<{ batchId: string; postId: string }>();
@@ -72,6 +73,8 @@ export default function PostDetail() {
   const batch = batches.find((b) => b.id === batchId);
   const post = posts.find((p) => p.id === postId);
   const client = batch ? accounts.find((a) => a.id === batch.client_id) : null;
+
+  const isVariableStage = batch ? isFormatAssignmentStage(batch.status) : false;
 
   // AutoSave setup
   const handleSavePost = useCallback(async (data: Record<string, any>) => {
@@ -153,6 +156,9 @@ export default function PostDetail() {
       const roleKey = (post as any).responsible_role_key as ResponsibleRoleKey || 'social';
       setResponsibleRoleKey(roleKey);
       setAssigneeId(post.assignee_id || '');
+
+      // Warning when no one is assigned (Account Team missing)
+      setShowTeamWarning(!post.assignee_id);
       
       // Mark initial load complete after a short delay
       setTimeout(() => {
@@ -160,15 +166,6 @@ export default function PostDetail() {
       }, 100);
     }
   }, [post]);
-
-  // Auto-assign based on role
-  const getAssigneeFromRole = useCallback((roleKey: ResponsibleRoleKey): string | null => {
-    if (!client) return null;
-    const roleOption = RESPONSIBLE_ROLE_OPTIONS.find(o => o.value === roleKey);
-    if (!roleOption) return null;
-    const memberId = (client as any)[roleOption.field] as string | null;
-    return memberId || null;
-  }, [client]);
 
   // Field change handlers with commit-based autosave
   // Text fields: queue changes on change, flush on blur
@@ -210,40 +207,9 @@ export default function PostDetail() {
 
   const handleRoleChange = (newRoleKey: ResponsibleRoleKey) => {
     setResponsibleRoleKey(newRoleKey);
-    const autoAssignee = getAssigneeFromRole(newRoleKey);
-    
-    if (autoAssignee) {
-      setAssigneeId(autoAssignee);
-      setShowTeamWarning(false);
-      if (initialLoadComplete.current) {
-        saveNow({ responsible_role_key: newRoleKey, assignee_id: autoAssignee });
-      }
-    } else {
-      setShowTeamWarning(true);
-      if (initialLoadComplete.current) {
-        saveNow({ responsible_role_key: newRoleKey });
-      }
-    }
-  };
-
-  const handleAssigneeChange = (value: string) => {
-    const newAssigneeId = value === '_none_' ? '' : value;
-    setAssigneeId(newAssigneeId);
+    // Backend trigger will assign assignee_id immediately based on Account Team.
     if (initialLoadComplete.current) {
-      saveNow({ assignee_id: newAssigneeId || null });
-    }
-  };
-
-  const handleReapplyAssignment = () => {
-    const autoAssignee = getAssigneeFromRole(responsibleRoleKey);
-    if (autoAssignee) {
-      setAssigneeId(autoAssignee);
-      setShowTeamWarning(false);
-      saveNow({ assignee_id: autoAssignee });
-      toast.success('Responsável atribuído automaticamente');
-    } else {
-      setShowTeamWarning(true);
-      toast.warning('Configure o Time da Conta para este cargo');
+      saveNow({ responsible_role_key: newRoleKey });
     }
   };
 
@@ -529,7 +495,15 @@ export default function PostDetail() {
               </div>
               <div className="space-y-2">
                 <Label>Cargo Responsável</Label>
-                <Select value={responsibleRoleKey} onValueChange={(v) => handleRoleChange(v as ResponsibleRoleKey)}>
+                <Select
+                  value={
+                    isVariableStage
+                      ? ((getRoleKeyFromFormat(format) as ResponsibleRoleKey | null) || responsibleRoleKey)
+                      : responsibleRoleKey
+                  }
+                  onValueChange={(v) => handleRoleChange(v as ResponsibleRoleKey)}
+                  disabled={isVariableStage}
+                >
                   <SelectTrigger className="bg-background">
                     <SelectValue />
                   </SelectTrigger>
@@ -541,6 +515,11 @@ export default function PostDetail() {
                     ))}
                   </SelectContent>
                 </Select>
+                {isVariableStage && (
+                  <p className="text-xs text-muted-foreground">
+                    Cargo travado nesta etapa (Produção/Alterações): é definido automaticamente pelo formato.
+                  </p>
+                )}
               </div>
               
               {showTeamWarning && (
@@ -562,19 +541,7 @@ export default function PostDetail() {
               )}
               
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Responsável (Usuário)</Label>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={handleReapplyAssignment}
-                    className="h-6 text-xs"
-                  >
-                    <RefreshCw className="h-3 w-3 mr-1" />
-                    Reaplicar pelo cargo
-                  </Button>
-                </div>
+                <Label>Responsável (Usuário)</Label>
                 {/* Read-only assignee display - assignment is automatic based on role */}
                 <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
                   <span className="text-sm">
