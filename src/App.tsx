@@ -39,6 +39,9 @@ import ProfileSetupPage from "./pages/profile/ProfileSetupPage";
 import TrafficDashboard from "./pages/traffic/TrafficDashboard";
 import TrafficTasks from "./pages/traffic/TrafficTasks";
 import TrafficClientDetail from "./pages/traffic/TrafficClientDetail";
+import TrafficOverview from "./pages/traffic/TrafficOverview";
+import TrafficAccountDetail from "./pages/traffic/TrafficAccountDetail";
+import TrafficBenchmarks from "./pages/traffic/TrafficBenchmarks";
 
 // CS pages
 import CsDashboard from "./pages/cs/CsDashboard";
@@ -61,6 +64,7 @@ import NichesPage from "./pages/settings/NichesPage";
 import TrafficRoutinesPage from "./pages/settings/TrafficRoutinesPage";
 import TrafficCyclesPage from "./pages/settings/TrafficCyclesPage";
 import MetaIntegrationPage from "./pages/settings/MetaIntegrationPage";
+import { TrafficAnalyticsSettingsTab } from "./components/settings/TrafficAnalyticsSettingsTab";
 import { AdminGuard } from "./components/auth/AdminGuard";
 import TrafficBalancesPage from "./pages/traffic/TrafficBalancesPage";
 
@@ -143,6 +147,9 @@ const App = () => (
                         <Route path="/traffic/tasks" element={<TrafficTasks />} />
                         <Route path="/traffic/clients/:id" element={<TrafficClientDetail />} />
                         <Route path="/traffic/balances" element={<TrafficBalancesPage />} />
+                        <Route path="/traffic/overview" element={<TrafficOverview />} />
+                        <Route path="/traffic/accounts/:id" element={<TrafficAccountDetail />} />
+                        <Route path="/traffic/benchmarks" element={<TrafficBenchmarks />} />
 
                         {/* Traffic Creative Requests */}
                         <Route path="/traffic/creative-requests" element={<CreativeRequestsList />} />
@@ -181,6 +188,7 @@ const App = () => (
                           <Route path="traffic/routines" element={<TrafficRoutinesPage />} />
                           <Route path="traffic/cycles" element={<TrafficCyclesPage />} />
                           <Route path="integrations/meta" element={<MetaIntegrationPage />} />
+                          <Route path="traffic/analytics" element={<TrafficAnalyticsSettingsTab />} />
                         </Route>
 
                         <Route path="*" element={<NotFound />} />

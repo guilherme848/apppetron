@@ -23,7 +23,48 @@ import {
   METRIC_TYPE_OPTIONS,
   ALERT_CONDITION_OPTIONS,
   ALERT_SEVERITY_OPTIONS,
+  MetricCategory,
+  MetricUnit,
+  MetricType,
+  AlertCondition,
+  AlertSeverity,
 } from '@/types/trafficAnalytics';
+
+interface MetricFormData {
+  name: string;
+  slug: string;
+  description: string;
+  category: MetricCategory;
+  unit: MetricUnit;
+  metric_type: MetricType;
+  formula: string;
+  visible_for_managers: boolean;
+  default_order: number;
+}
+
+interface AlertFormData {
+  name: string;
+  metric_slug: string;
+  condition: AlertCondition;
+  threshold: string;
+  window_days: number;
+  severity: AlertSeverity;
+  message: string;
+  action_hint: string;
+  is_active: boolean;
+}
+
+interface AlertSaveData {
+  name: string;
+  metric_slug: string;
+  condition: AlertCondition;
+  threshold: number | null;
+  window_days: number;
+  severity: AlertSeverity;
+  message: string;
+  action_hint: string;
+  is_active: boolean;
+}
 
 export function TrafficAnalyticsSettingsTab() {
   const [metrics, setMetrics] = useState<TrafficMetricCatalog[]>([]);
@@ -62,11 +103,23 @@ export function TrafficAnalyticsSettingsTab() {
   }, [fetchAll]);
 
   // Metric CRUD
-  const handleSaveMetric = async (metric: Record<string, unknown>) => {
+  const handleSaveMetric = async (metric: MetricFormData) => {
+    const payload = {
+      name: metric.name,
+      slug: metric.slug,
+      description: metric.description,
+      category: metric.category,
+      unit: metric.unit,
+      metric_type: metric.metric_type,
+      formula: metric.formula || null,
+      visible_for_managers: metric.visible_for_managers,
+      default_order: metric.default_order,
+    };
+    
     if (editingMetric?.id) {
       const { error } = await supabase
         .from('traffic_metric_catalog')
-        .update(metric)
+        .update(payload)
         .eq('id', editingMetric.id);
       if (error) {
         toast.error('Erro ao atualizar métrica');
@@ -76,7 +129,7 @@ export function TrafficAnalyticsSettingsTab() {
     } else {
       const { error } = await supabase
         .from('traffic_metric_catalog')
-        .insert([metric]);
+        .insert([payload]);
       if (error) {
         toast.error('Erro ao criar métrica');
         return;
@@ -110,11 +163,23 @@ export function TrafficAnalyticsSettingsTab() {
   };
 
   // Alert CRUD
-  const handleSaveAlert = async (alert: Record<string, unknown>) => {
+  const handleSaveAlert = async (alert: AlertSaveData) => {
+    const payload = {
+      name: alert.name,
+      metric_slug: alert.metric_slug,
+      condition: alert.condition,
+      threshold: alert.threshold,
+      window_days: alert.window_days,
+      severity: alert.severity,
+      message: alert.message,
+      action_hint: alert.action_hint || null,
+      is_active: alert.is_active,
+    };
+    
     if (editingAlert?.id) {
       const { error } = await supabase
         .from('traffic_alert_rules')
-        .update(alert)
+        .update(payload)
         .eq('id', editingAlert.id);
       if (error) {
         toast.error('Erro ao atualizar alerta');
@@ -124,7 +189,7 @@ export function TrafficAnalyticsSettingsTab() {
     } else {
       const { error } = await supabase
         .from('traffic_alert_rules')
-        .insert([alert]);
+        .insert([payload]);
       if (error) {
         toast.error('Erro ao criar alerta');
         return;
@@ -448,16 +513,16 @@ function MetricForm({
   onCancel 
 }: { 
   metric: TrafficMetricCatalog | null; 
-  onSave: (m: Record<string, unknown>) => void;
+  onSave: (m: MetricFormData) => void;
   onCancel: () => void;
 }) {
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<MetricFormData>({
     name: metric?.name || '',
     slug: metric?.slug || '',
     description: metric?.description || '',
-    category: metric?.category || 'entrega',
-    unit: metric?.unit || 'NUMBER',
-    metric_type: metric?.metric_type || 'simple',
+    category: (metric?.category || 'entrega') as MetricCategory,
+    unit: (metric?.unit || 'NUMBER') as MetricUnit,
+    metric_type: (metric?.metric_type || 'simple') as MetricType,
     formula: metric?.formula || '',
     visible_for_managers: metric?.visible_for_managers ?? true,
     default_order: metric?.default_order || 0,
@@ -496,7 +561,7 @@ function MetricForm({
           <Label>Categoria</Label>
           <Select 
             value={form.category}
-            onValueChange={(v) => setForm(prev => ({ ...prev, category: v }))}
+            onValueChange={(v) => setForm(prev => ({ ...prev, category: v as MetricCategory }))}
           >
             <SelectTrigger>
               <SelectValue />
@@ -512,7 +577,7 @@ function MetricForm({
           <Label>Unidade</Label>
           <Select 
             value={form.unit}
-            onValueChange={(v) => setForm(prev => ({ ...prev, unit: v }))}
+            onValueChange={(v) => setForm(prev => ({ ...prev, unit: v as MetricUnit }))}
           >
             <SelectTrigger>
               <SelectValue />
@@ -528,7 +593,7 @@ function MetricForm({
           <Label>Tipo</Label>
           <Select 
             value={form.metric_type}
-            onValueChange={(v) => setForm(prev => ({ ...prev, metric_type: v }))}
+            onValueChange={(v) => setForm(prev => ({ ...prev, metric_type: v as MetricType }))}
           >
             <SelectTrigger>
               <SelectValue />
@@ -581,16 +646,16 @@ function AlertForm({
 }: { 
   alert: TrafficAlertRule | null;
   metrics: TrafficMetricCatalog[];
-  onSave: (a: Record<string, unknown>) => void;
+  onSave: (a: AlertSaveData) => void;
   onCancel: () => void;
 }) {
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<AlertFormData>({
     name: alert?.name || '',
     metric_slug: alert?.metric_slug || '',
-    condition: alert?.condition || 'gt',
+    condition: (alert?.condition || 'gt') as AlertCondition,
     threshold: alert?.threshold?.toString() || '',
     window_days: alert?.window_days || 7,
-    severity: alert?.severity || 'attention',
+    severity: (alert?.severity || 'attention') as AlertSeverity,
     message: alert?.message || '',
     action_hint: alert?.action_hint || '',
     is_active: alert?.is_active ?? true,
@@ -627,7 +692,7 @@ function AlertForm({
           <Label>Condição</Label>
           <Select 
             value={form.condition}
-            onValueChange={(v) => setForm(prev => ({ ...prev, condition: v }))}
+            onValueChange={(v) => setForm(prev => ({ ...prev, condition: v as AlertCondition }))}
           >
             <SelectTrigger>
               <SelectValue />
@@ -662,7 +727,7 @@ function AlertForm({
           <Label>Severidade</Label>
           <Select 
             value={form.severity}
-            onValueChange={(v) => setForm(prev => ({ ...prev, severity: v }))}
+            onValueChange={(v) => setForm(prev => ({ ...prev, severity: v as AlertSeverity }))}
           >
             <SelectTrigger>
               <SelectValue />
@@ -704,10 +769,20 @@ function AlertForm({
 
       <DialogFooter>
         <Button variant="outline" onClick={onCancel}>Cancelar</Button>
-        <Button onClick={() => onSave({
-          ...form,
-          threshold: form.threshold ? parseFloat(form.threshold) : null,
-        })}>
+        <Button onClick={() => {
+          const saveData: AlertSaveData = {
+            name: form.name,
+            metric_slug: form.metric_slug,
+            condition: form.condition,
+            threshold: form.threshold ? parseFloat(form.threshold) : null,
+            window_days: form.window_days,
+            severity: form.severity,
+            message: form.message,
+            action_hint: form.action_hint,
+            is_active: form.is_active,
+          };
+          onSave(saveData);
+        }}>
           Salvar
         </Button>
       </DialogFooter>

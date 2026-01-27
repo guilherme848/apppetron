@@ -338,6 +338,36 @@ export const routeRegistry: RouteDefinition[] = [
     parentId: 'traffic.creative_requests',
     order: 7,
   },
+  {
+    id: 'traffic.overview',
+    path: '/traffic/overview',
+    label: 'Dashboard Multi-Contas',
+    category: CATEGORIES.ANALYTICS,
+    module: MODULES.TRAFFIC,
+    permissions: ['view'],
+    icon: BarChart3,
+    order: 8,
+  },
+  {
+    id: 'traffic.account_detail',
+    path: '/traffic/accounts/:id',
+    label: 'Detalhes da Conta',
+    category: CATEGORIES.ANALYTICS,
+    module: MODULES.TRAFFIC,
+    permissions: ['view'],
+    hideInMenu: true,
+    parentId: 'traffic.overview',
+    order: 9,
+  },
+  {
+    id: 'traffic.benchmarks',
+    path: '/traffic/benchmarks',
+    label: 'Benchmarks',
+    category: CATEGORIES.ANALYTICS,
+    module: MODULES.TRAFFIC,
+    permissions: ['view'],
+    icon: TrendingUp,
+  },
 
   // ============================================
   // CUSTOMER SUCCESS MODULE
@@ -553,6 +583,17 @@ export const routeRegistry: RouteDefinition[] = [
     hideInMenu: true,
     parentId: 'settings.home',
     order: 11,
+  },
+  {
+    id: 'settings.traffic_analytics',
+    path: '/settings/traffic/analytics',
+    label: 'Painel Multi-Contas',
+    category: CATEGORIES.INTEGRATIONS,
+    module: MODULES.SETTINGS,
+    permissions: ['view', 'manage'],
+    hideInMenu: true,
+    parentId: 'settings.home',
+    order: 12,
   },
 ];
 
