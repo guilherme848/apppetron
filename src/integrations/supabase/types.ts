@@ -202,6 +202,33 @@ export type Database = {
           },
         ]
       }
+      ad_account_metrics_daily: {
+        Row: {
+          ad_account_id: string
+          created_at: string
+          date: string
+          id: string
+          metrics_json: Json
+          platform: string
+        }
+        Insert: {
+          ad_account_id: string
+          created_at?: string
+          date: string
+          id?: string
+          metrics_json?: Json
+          platform?: string
+        }
+        Update: {
+          ad_account_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          metrics_json?: Json
+          platform?: string
+        }
+        Relationships: []
+      }
       batch_attachments: {
         Row: {
           batch_id: string
@@ -2600,6 +2627,59 @@ export type Database = {
           },
         ]
       }
+      traffic_alert_rules: {
+        Row: {
+          action_hint: string | null
+          condition: string
+          created_at: string
+          id: string
+          is_active: boolean
+          message: string
+          metric_slug: string
+          name: string
+          severity: string
+          threshold: number | null
+          updated_at: string
+          window_days: number
+        }
+        Insert: {
+          action_hint?: string | null
+          condition?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          message: string
+          metric_slug: string
+          name: string
+          severity?: string
+          threshold?: number | null
+          updated_at?: string
+          window_days?: number
+        }
+        Update: {
+          action_hint?: string | null
+          condition?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          message?: string
+          metric_slug?: string
+          name?: string
+          severity?: string
+          threshold?: number | null
+          updated_at?: string
+          window_days?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traffic_alert_rules_metric_slug_fkey"
+            columns: ["metric_slug"]
+            isOneToOne: false
+            referencedRelation: "traffic_metric_catalog"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       traffic_creative_request_files: {
         Row: {
           created_at: string
@@ -2854,6 +2934,168 @@ export type Database = {
         }
         Relationships: []
       }
+      traffic_dashboard_layout: {
+        Row: {
+          cards: Json
+          columns: Json
+          created_at: string
+          id: string
+          objective: string | null
+          scope: string
+          updated_at: string
+        }
+        Insert: {
+          cards?: Json
+          columns?: Json
+          created_at?: string
+          id?: string
+          objective?: string | null
+          scope?: string
+          updated_at?: string
+        }
+        Update: {
+          cards?: Json
+          columns?: Json
+          created_at?: string
+          id?: string
+          objective?: string | null
+          scope?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      traffic_metric_catalog: {
+        Row: {
+          availability_objectives: Json | null
+          availability_platforms: Json | null
+          category: string
+          created_at: string
+          default_order: number
+          dependencies: Json | null
+          description: string | null
+          formula: string | null
+          id: string
+          is_active: boolean
+          metric_type: string
+          name: string
+          slug: string
+          source: string
+          unit: string
+          updated_at: string
+          visible_for_managers: boolean
+        }
+        Insert: {
+          availability_objectives?: Json | null
+          availability_platforms?: Json | null
+          category?: string
+          created_at?: string
+          default_order?: number
+          dependencies?: Json | null
+          description?: string | null
+          formula?: string | null
+          id?: string
+          is_active?: boolean
+          metric_type?: string
+          name: string
+          slug: string
+          source?: string
+          unit?: string
+          updated_at?: string
+          visible_for_managers?: boolean
+        }
+        Update: {
+          availability_objectives?: Json | null
+          availability_platforms?: Json | null
+          category?: string
+          created_at?: string
+          default_order?: number
+          dependencies?: Json | null
+          description?: string | null
+          formula?: string | null
+          id?: string
+          is_active?: boolean
+          metric_type?: string
+          name?: string
+          slug?: string
+          source?: string
+          unit?: string
+          updated_at?: string
+          visible_for_managers?: boolean
+        }
+        Relationships: []
+      }
+      traffic_metric_targets: {
+        Row: {
+          better_when: string
+          created_at: string
+          green_max: number | null
+          green_min: number | null
+          id: string
+          invest_max: number | null
+          invest_min: number | null
+          metric_slug: string
+          niche_id: string | null
+          objective: string | null
+          red_max: number | null
+          red_min: number | null
+          scope: string
+          updated_at: string
+          yellow_max: number | null
+          yellow_min: number | null
+        }
+        Insert: {
+          better_when?: string
+          created_at?: string
+          green_max?: number | null
+          green_min?: number | null
+          id?: string
+          invest_max?: number | null
+          invest_min?: number | null
+          metric_slug: string
+          niche_id?: string | null
+          objective?: string | null
+          red_max?: number | null
+          red_min?: number | null
+          scope?: string
+          updated_at?: string
+          yellow_max?: number | null
+          yellow_min?: number | null
+        }
+        Update: {
+          better_when?: string
+          created_at?: string
+          green_max?: number | null
+          green_min?: number | null
+          id?: string
+          invest_max?: number | null
+          invest_min?: number | null
+          metric_slug?: string
+          niche_id?: string | null
+          objective?: string | null
+          red_max?: number | null
+          red_min?: number | null
+          scope?: string
+          updated_at?: string
+          yellow_max?: number | null
+          yellow_min?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traffic_metric_targets_metric_slug_fkey"
+            columns: ["metric_slug"]
+            isOneToOne: false
+            referencedRelation: "traffic_metric_catalog"
+            referencedColumns: ["slug"]
+          },
+          {
+            foreignKeyName: "traffic_metric_targets_niche_id_fkey"
+            columns: ["niche_id"]
+            isOneToOne: false
+            referencedRelation: "niches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       traffic_periods: {
         Row: {
           client_id: string
@@ -3024,6 +3266,74 @@ export type Database = {
           id?: string
           name?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      traffic_saved_views: {
+        Row: {
+          columns_json: Json
+          created_at: string
+          filters_json: Json
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          columns_json?: Json
+          created_at?: string
+          filters_json?: Json
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          columns_json?: Json
+          created_at?: string
+          filters_json?: Json
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traffic_saved_views_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      traffic_scores: {
+        Row: {
+          config_json: Json
+          created_at: string
+          green_threshold: number
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+          yellow_threshold: number
+        }
+        Insert: {
+          config_json?: Json
+          created_at?: string
+          green_threshold?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+          yellow_threshold?: number
+        }
+        Update: {
+          config_json?: Json
+          created_at?: string
+          green_threshold?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+          yellow_threshold?: number
         }
         Relationships: []
       }
