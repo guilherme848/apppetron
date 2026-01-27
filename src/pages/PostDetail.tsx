@@ -14,7 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useContentProduction } from '@/contexts/ContentProductionContext';
 import { FileUpload } from '@/components/content/FileUpload';
 import { RichTextEditor } from '@/components/content/RichTextEditor';
-import { ContentFileUpload } from '@/components/content/ContentFileUpload';
+import { MultiFileUpload } from '@/components/content/MultiFileUpload';
 import { ChangeRequestsTab } from '@/components/content/ChangeRequestsTab';
 import { SaveStatus } from '@/components/ui/save-status';
 import { useAutoSave, useAutoSaveNavigation } from '@/hooks/useAutoSave';
@@ -152,6 +152,7 @@ export default function PostDetail() {
   useEffect(() => {
     if (post) {
       setTitle(post.title || '');
+      savedTitleRef.current = post.title || '';
       setChannel(post.channel || '');
       setFormat(post.format || '');
       setStatus(post.status);
@@ -179,16 +180,33 @@ export default function PostDetail() {
 
   // Field change handlers with commit-based autosave
   // Text fields: queue changes on change, flush on blur
+  // Track draft title separately to detect actual changes
+  const savedTitleRef = useRef(title);
+
   const handleTitleChange = (value: string) => {
     setTitle(value);
-    if (initialLoadComplete.current) {
+    // Queue change only if value is different from saved
+    if (initialLoadComplete.current && value.trim() !== savedTitleRef.current.trim()) {
       queueChange({ title: value.trim() });
     }
   };
 
   const handleTitleBlur = async () => {
-    if (initialLoadComplete.current) {
+    if (initialLoadComplete.current && title.trim() !== savedTitleRef.current.trim()) {
       await flush();
+      savedTitleRef.current = title.trim();
+    }
+  };
+
+  const handleTitleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (initialLoadComplete.current && title.trim() !== savedTitleRef.current.trim()) {
+        await flush();
+        savedTitleRef.current = title.trim();
+      }
+      // Optionally blur to give visual feedback
+      (e.target as HTMLInputElement).blur();
     }
   };
 
@@ -459,6 +477,7 @@ export default function PostDetail() {
                   value={title}
                   onChange={(e) => handleTitleChange(e.target.value)}
                   onBlur={handleTitleBlur}
+                  onKeyDown={handleTitleKeyDown}
                   placeholder="Ex: Reels - Depoimento Cliente"
                 />
               </div>
@@ -629,7 +648,7 @@ export default function PostDetail() {
                 </TabsContent>
 
                 <TabsContent value="files">
-                  <ContentFileUpload
+                  <MultiFileUpload
                     files={briefingFiles}
                     postId={postId!}
                     context="briefing"
