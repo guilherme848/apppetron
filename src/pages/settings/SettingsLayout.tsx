@@ -60,6 +60,7 @@ const SETTINGS_CATEGORIES: SettingsCategory[] = [
     icon: Settings,
     items: [
       { id: 'meta-ads', label: 'Meta Ads', path: '/settings/integrations/meta' },
+      { id: 'traffic-analytics', label: 'Painel Multi-Contas', path: '/settings/traffic/analytics' },
     ],
   },
 ];
