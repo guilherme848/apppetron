@@ -9,12 +9,14 @@ import { AccountStatusBadge, ContractStatusBadge, TaskStatusBadge } from '@/comp
 import { ContractForm } from '@/components/crm/ContractForm';
 import { TaskForm } from '@/components/crm/TaskForm';
 import { AccountForm } from '@/components/crm/AccountForm';
+import { AccountRemoveDialog, RemovalType } from '@/components/crm/AccountRemoveDialog';
 import { ClientDeliverables } from '@/components/crm/ClientDeliverables';
 import { AccountTeamCard } from '@/components/crm/AccountTeamCard';
 import { ClientTrafficSection } from '@/components/crm/ClientTrafficSection';
 import { useCrm } from '@/contexts/CrmContext';
 import { Contract, Task, ContractStatus, TaskStatus, Account } from '@/types/crm';
 import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
+import { toast } from '@/hooks/use-toast';
 
 export default function CrmDetail() {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +28,8 @@ export default function CrmDetail() {
     getContractsByAccount,
     getTasksByAccount,
     updateAccount,
+    softDeleteAccount,
+    churnAccount,
     addContract,
     updateContract,
     deleteContract,
@@ -41,6 +45,7 @@ export default function CrmDetail() {
   const [contractFormOpen, setContractFormOpen] = useState(false);
   const [taskFormOpen, setTaskFormOpen] = useState(false);
   const [accountFormOpen, setAccountFormOpen] = useState(false);
+  const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | undefined>();
   const [editingTask, setEditingTask] = useState<Task | undefined>();
 
@@ -124,6 +129,41 @@ export default function CrmDetail() {
     await deleteTask(taskId);
   };
 
+  const handleRemoveConfirm = async (type: RemovalType, churnDate?: string) => {
+    if (!account) return;
+
+    if (type === 'churn' && churnDate) {
+      const result = await churnAccount(account.id, churnDate);
+      if (result.success) {
+        toast({
+          title: 'Cliente marcado como Churned',
+          description: `${account.name} foi marcado como cancelado.`,
+        });
+      } else {
+        toast({
+          title: 'Erro ao registrar churn',
+          description: 'Não foi possível registrar o cancelamento.',
+          variant: 'destructive',
+        });
+      }
+    } else if (type === 'delete') {
+      const result = await softDeleteAccount(account.id);
+      if (result.success) {
+        toast({
+          title: 'Cliente arquivado',
+          description: `${account.name} foi removido da listagem.`,
+        });
+        navigate('/crm');
+      } else {
+        toast({
+          title: 'Erro ao arquivar cliente',
+          description: 'Não foi possível remover o cliente.',
+          variant: 'destructive',
+        });
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -149,10 +189,16 @@ export default function CrmDetail() {
             </div>
           </div>
         </div>
-        <Button onClick={() => setAccountFormOpen(true)}>
-          <Pencil className="h-4 w-4 mr-2" />
-          Editar
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={() => setAccountFormOpen(true)}>
+            <Pencil className="h-4 w-4 mr-2" />
+            Editar
+          </Button>
+          <Button variant="outline" onClick={() => setRemoveDialogOpen(true)}>
+            <Trash2 className="h-4 w-4 mr-2" />
+            Remover
+          </Button>
+        </div>
       </div>
 
       {/* Cards de Resumo */}
@@ -405,6 +451,13 @@ export default function CrmDetail() {
         onSubmit={handleTaskSubmit}
         task={editingTask}
         accounts={accounts}
+      />
+
+      <AccountRemoveDialog
+        open={removeDialogOpen}
+        onOpenChange={setRemoveDialogOpen}
+        account={account}
+        onConfirm={handleRemoveConfirm}
       />
     </div>
   );

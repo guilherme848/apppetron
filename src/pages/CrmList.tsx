@@ -7,7 +7,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { AccountStatusBadge } from '@/components/crm/StatusBadge';
 import { AccountForm } from '@/components/crm/AccountForm';
+import { AccountRemoveDialog, RemovalType } from '@/components/crm/AccountRemoveDialog';
 import { useCrm } from '@/contexts/CrmContext';
+import { toast } from '@/hooks/use-toast';
+import type { Account } from '@/types/crm';
 
 type SortKey = 'name' | 'plan' | 'monthly_value' | 'niche';
 type SortDirection = 'asc' | 'desc';
@@ -36,11 +39,15 @@ const getStoredSort = (): SortConfig => {
 
 export default function CrmList() {
   const navigate = useNavigate();
-  const { accounts, addAccount, updateAccount, deleteAccount, loading } = useCrm();
+  const { accounts, addAccount, updateAccount, softDeleteAccount, churnAccount, loading } = useCrm();
   const [search, setSearch] = useState('');
   const [formOpen, setFormOpen] = useState(false);
-  const [editingAccount, setEditingAccount] = useState<typeof accounts[0] | undefined>();
+  const [editingAccount, setEditingAccount] = useState<Account | undefined>();
   const [sortConfig, setSortConfig] = useState<SortConfig>(getStoredSort);
+  
+  // Remove dialog state
+  const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
+  const [accountToRemove, setAccountToRemove] = useState<Account | null>(null);
 
   // Persist sort preference
   useEffect(() => {
@@ -55,9 +62,10 @@ export default function CrmList() {
   };
 
   const sortedAndFilteredAccounts = useMemo(() => {
-    // Filter first
+    // Filter first - also exclude archived accounts from the list
     const filtered = accounts.filter((account) =>
-      account.name.toLowerCase().includes(search.toLowerCase())
+      account.name.toLowerCase().includes(search.toLowerCase()) &&
+      account.status !== 'archived'
     );
 
     // Then sort
@@ -97,7 +105,7 @@ export default function CrmList() {
     });
   }, [accounts, search, sortConfig]);
 
-  const handleSubmit = async (data: Partial<typeof accounts[0]>) => {
+  const handleSubmit = async (data: Partial<Account>) => {
     if (editingAccount) {
       if (import.meta.env.DEV) {
         console.debug('[CRM] AccountForm submit (EDIT)', {
@@ -120,7 +128,7 @@ export default function CrmList() {
     setEditingAccount(undefined);
   };
 
-  const handleEdit = (account: typeof accounts[0]) => {
+  const handleEdit = (account: Account) => {
     if (import.meta.env.DEV) {
       console.debug('[CRM] Open AccountForm (EDIT)', { accountId: account.id });
     }
@@ -136,8 +144,45 @@ export default function CrmList() {
     setEditingAccount(undefined);
   };
 
-  const handleDelete = async (id: string) => {
-    await deleteAccount(id);
+  const handleRemoveClick = (account: Account) => {
+    setAccountToRemove(account);
+    setRemoveDialogOpen(true);
+  };
+
+  const handleRemoveConfirm = async (type: RemovalType, churnDate?: string) => {
+    if (!accountToRemove) return;
+
+    if (type === 'churn' && churnDate) {
+      const result = await churnAccount(accountToRemove.id, churnDate);
+      if (result.success) {
+        toast({
+          title: 'Cliente marcado como Churned',
+          description: `${accountToRemove.name} foi marcado como cancelado.`,
+        });
+      } else {
+        toast({
+          title: 'Erro ao registrar churn',
+          description: 'Não foi possível registrar o cancelamento.',
+          variant: 'destructive',
+        });
+      }
+    } else if (type === 'delete') {
+      const result = await softDeleteAccount(accountToRemove.id);
+      if (result.success) {
+        toast({
+          title: 'Cliente arquivado',
+          description: `${accountToRemove.name} foi removido da listagem.`,
+        });
+      } else {
+        toast({
+          title: 'Erro ao arquivar cliente',
+          description: 'Não foi possível remover o cliente.',
+          variant: 'destructive',
+        });
+      }
+    }
+
+    setAccountToRemove(null);
   };
 
   const SortIcon = ({ columnKey }: { columnKey: SortKey }) => {
@@ -284,7 +329,7 @@ export default function CrmList() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDelete(account.id)}
+                        onClick={() => handleRemoveClick(account)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -302,6 +347,13 @@ export default function CrmList() {
         onClose={handleClose}
         onSubmit={handleSubmit}
         account={editingAccount}
+      />
+
+      <AccountRemoveDialog
+        open={removeDialogOpen}
+        onOpenChange={setRemoveDialogOpen}
+        account={accountToRemove}
+        onConfirm={handleRemoveConfirm}
       />
     </div>
   );

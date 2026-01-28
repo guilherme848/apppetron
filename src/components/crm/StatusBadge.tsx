@@ -10,6 +10,7 @@ const accountStatusLabels: Record<AccountStatus, string> = {
   lead: 'Lead',
   active: 'Ativo',
   churned: 'Churned',
+  archived: 'Arquivado',
 };
 
 const contractStatusLabels: Record<ContractStatus, string> = {

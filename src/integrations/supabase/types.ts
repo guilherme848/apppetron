@@ -29,6 +29,7 @@ export type Database = {
           cpf_cnpj: string | null
           created_at: string
           cs_member_id: string | null
+          deleted_at: string | null
           designer_member_id: string | null
           id: string
           monthly_value: number | null
@@ -67,6 +68,7 @@ export type Database = {
           cpf_cnpj?: string | null
           created_at?: string
           cs_member_id?: string | null
+          deleted_at?: string | null
           designer_member_id?: string | null
           id?: string
           monthly_value?: number | null
@@ -105,6 +107,7 @@ export type Database = {
           cpf_cnpj?: string | null
           created_at?: string
           cs_member_id?: string | null
+          deleted_at?: string | null
           designer_member_id?: string | null
           id?: string
           monthly_value?: number | null

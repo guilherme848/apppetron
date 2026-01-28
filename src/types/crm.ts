@@ -1,4 +1,4 @@
-export type AccountStatus = 'lead' | 'active' | 'churned';
+export type AccountStatus = 'lead' | 'active' | 'churned' | 'archived';
 export type ContractStatus = 'active' | 'paused' | 'canceled';
 export type TaskStatus = 'backlog' | 'todo' | 'doing' | 'done';
 export type AdPaymentMethod = 'pix' | 'boleto' | 'cartao';
@@ -21,8 +21,9 @@ export interface Account {
   monthly_value?: number | null;
   start_date?: string | null;
   
-  // Churn
+  // Churn / Soft delete
   churned_at?: string | null;
+  deleted_at?: string | null;
   
   // Novos campos FK
   service_id?: string | null;
