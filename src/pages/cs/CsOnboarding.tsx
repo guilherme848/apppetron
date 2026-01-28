@@ -3,13 +3,16 @@ import { Loader2, Users, CheckCircle, Clock, AlertTriangle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCsClientOnboarding, useCsClientTasks } from '@/hooks/useCsData';
 import { CS_ONBOARDING_STATUS_LABELS } from '@/types/cs';
 import { Link } from 'react-router-dom';
+import { SalesBriefingSection } from '@/components/cs/SalesBriefingSection';
 
 export default function CsOnboarding() {
   const { onboardings, loading } = useCsClientOnboarding();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const { tasks } = useCsClientTasks(selectedId);
 
   if (loading) {
@@ -35,6 +38,16 @@ export default function CsOnboarding() {
     return tasks.length > 0 ? (done / tasks.length) * 100 : 0;
   };
 
+  const handleCardClick = (onboarding: { id: string; client_id: string }) => {
+    if (selectedId === onboarding.id) {
+      setSelectedId(null);
+      setSelectedClientId(null);
+    } else {
+      setSelectedId(onboarding.id);
+      setSelectedClientId(onboarding.client_id);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -56,8 +69,8 @@ export default function CsOnboarding() {
           {onboardings.map((onboarding) => (
             <Card 
               key={onboarding.id} 
-              className="cursor-pointer hover:bg-muted/50 transition-colors"
-              onClick={() => setSelectedId(selectedId === onboarding.id ? null : onboarding.id)}
+              className={`cursor-pointer transition-colors ${selectedId === onboarding.id ? 'ring-2 ring-primary' : 'hover:bg-muted/50'}`}
+              onClick={() => handleCardClick(onboarding)}
             >
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
@@ -94,6 +107,53 @@ export default function CsOnboarding() {
             </Card>
           ))}
         </div>
+      )}
+
+      {/* Briefing Section - shown when a client is selected */}
+      {selectedClientId && (
+        <Tabs defaultValue="briefing" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="briefing">Briefing da Venda</TabsTrigger>
+            <TabsTrigger value="tasks">Tarefas</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="briefing">
+            <SalesBriefingSection clientId={selectedClientId} />
+          </TabsContent>
+
+          <TabsContent value="tasks">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Tarefas de Onboarding</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {tasks.length === 0 ? (
+                  <p className="text-center py-4 text-muted-foreground">Nenhuma tarefa</p>
+                ) : (
+                  <div className="space-y-2">
+                    {tasks.map((task) => (
+                      <div key={task.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                        {task.status === 'done' ? (
+                          <CheckCircle className="h-5 w-5 text-primary" />
+                        ) : task.status === 'in_progress' ? (
+                          <Clock className="h-5 w-5 text-secondary" />
+                        ) : (
+                          <div className="h-5 w-5 rounded-full border-2" />
+                        )}
+                        <div className="flex-1">
+                          <p className={task.status === 'done' ? 'line-through text-muted-foreground' : ''}>
+                            {task.title}
+                          </p>
+                        </div>
+                        <Badge variant="outline">{task.status}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   );
