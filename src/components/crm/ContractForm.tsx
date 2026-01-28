@@ -5,6 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Contract, ContractStatus } from '@/types/crm';
+import { useSensitivePermission } from '@/hooks/useSensitivePermission';
+import { Lock } from 'lucide-react';
 
 interface ContractFormProps {
   open: boolean;
@@ -15,12 +17,21 @@ interface ContractFormProps {
 }
 
 export function ContractForm({ open, onClose, onSubmit, contract, accountId }: ContractFormProps) {
+  const { canViewContractValues, isAdmin } = useSensitivePermission();
+  const showValues = canViewContractValues();
+  
   const [mrr, setMrr] = useState(contract?.mrr?.toString() || '');
   const [startDate, setStartDate] = useState(contract?.start_date || '');
   const [status, setStatus] = useState<ContractStatus>(contract?.status || 'active');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Only admin can set MRR values
+    if (!showValues) {
+      return;
+    }
+    
     if (mrr && startDate) {
       onSubmit({
         mrr: parseFloat(mrr),
@@ -34,6 +45,30 @@ export function ContractForm({ open, onClose, onSubmit, contract, accountId }: C
       onClose();
     }
   };
+
+  // Non-admin users cannot create/edit contracts with values
+  if (!showValues) {
+    return (
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{contract ? 'Editar Contrato' : 'Novo Contrato'}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <Lock className="h-12 w-12 text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">
+              A criação e edição de contratos com valores financeiros é restrita ao Administrador.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={onClose}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

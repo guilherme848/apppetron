@@ -2425,6 +2425,7 @@ export type Database = {
           category: string
           created_at: string
           id: string
+          is_sensitive: boolean
           key: string
           label: string
           module: string
@@ -2436,6 +2437,7 @@ export type Database = {
           category: string
           created_at?: string
           id?: string
+          is_sensitive?: boolean
           key: string
           label: string
           module: string
@@ -2447,6 +2449,7 @@ export type Database = {
           category?: string
           created_at?: string
           id?: string
+          is_sensitive?: boolean
           key?: string
           label?: string
           module?: string

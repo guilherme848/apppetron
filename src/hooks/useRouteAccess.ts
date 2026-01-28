@@ -132,8 +132,11 @@ export function useRouteAccess() {
 
   /**
    * Check if user can perform an action on a route
+   * @param routeId - The route/permission ID to check
+   * @param action - The action to check (view, edit, manage)
+   * @param defaultDeny - If true, deny access when no explicit permission exists (for sensitive permissions)
    */
-  const canAccess = useCallback((routeId: string, action: PermissionAction = 'view'): boolean => {
+  const canAccess = useCallback((routeId: string, action: PermissionAction = 'view', defaultDeny: boolean = false): boolean => {
     // Admin has all permissions
     if (isAdmin) return true;
     
@@ -152,9 +155,10 @@ export function useRouteAccess() {
       return rolePermissions[key];
     }
 
-    // Default: allow if no explicit permission exists
-    // This makes new routes accessible until configured
-    return true;
+    // Default behavior:
+    // - Regular permissions: allow if no explicit permission exists (new routes accessible until configured)
+    // - Sensitive permissions (defaultDeny=true): deny if no explicit permission exists
+    return !defaultDeny;
   }, [member, isAdmin, rolePermissions, userOverrides]);
 
   /**

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Pencil, Trash2, Loader2, ExternalLink, Phone, Mail, MapPin } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Loader2, ExternalLink, Phone, Mail, MapPin, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -17,6 +17,13 @@ import { useCrm } from '@/contexts/CrmContext';
 import { Contract, Task, ContractStatus, TaskStatus, Account } from '@/types/crm';
 import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
 import { toast } from '@/hooks/use-toast';
+import { useSensitivePermission } from '@/hooks/useSensitivePermission';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function CrmDetail() {
   const { id } = useParams<{ id: string }>();
@@ -41,6 +48,8 @@ export default function CrmDetail() {
   const account = getAccountById(id!);
   const contracts = getContractsByAccount(id!);
   const tasks = getTasksByAccount(id!);
+  const { canViewContractValues } = useSensitivePermission();
+  const showContractValues = canViewContractValues();
 
   const [contractFormOpen, setContractFormOpen] = useState(false);
   const [taskFormOpen, setTaskFormOpen] = useState(false);
@@ -48,6 +57,22 @@ export default function CrmDetail() {
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | undefined>();
   const [editingTask, setEditingTask] = useState<Task | undefined>();
+
+  const RestrictedValue = () => (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex items-center gap-1 text-muted-foreground cursor-help">
+            <Lock className="h-3 w-3" />
+            <span className="text-xs">Restrito</span>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Restrito ao Administrador</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
 
   if (loading) {
     return (
@@ -307,10 +332,12 @@ export default function CrmDetail() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Contratos (MRR)</CardTitle>
-            <Button size="sm" onClick={() => setContractFormOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Novo
-            </Button>
+            {showContractValues && (
+              <Button size="sm" onClick={() => setContractFormOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Novo
+              </Button>
+            )}
           </CardHeader>
           <CardContent>
             {contracts.length === 0 ? (
@@ -328,31 +355,37 @@ export default function CrmDetail() {
                 <TableBody>
                   {contracts.map((contract) => (
                     <TableRow key={contract.id}>
-                      <TableCell className="font-medium">{formatCurrency(Number(contract.mrr))}</TableCell>
+                      <TableCell className="font-medium">
+                        {showContractValues ? formatCurrency(Number(contract.mrr)) : <RestrictedValue />}
+                      </TableCell>
                       <TableCell>{formatDate(contract.start_date)}</TableCell>
                       <TableCell>
                         <ContractStatusBadge status={contract.status} />
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setEditingContract(contract);
-                              setContractFormOpen(true);
-                            }}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteContract(contract.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        {showContractValues ? (
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setEditingContract(contract);
+                                setContractFormOpen(true);
+                              }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteContract(contract.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}

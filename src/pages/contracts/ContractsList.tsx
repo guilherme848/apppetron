@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { FileText, ExternalLink, Search, Filter } from "lucide-react";
+import { FileText, ExternalLink, Search, Filter, Lock } from "lucide-react";
 import { useContracts } from "@/hooks/useContracts";
+import { useSensitivePermission } from "@/hooks/useSensitivePermission";
 import { ContractStatusBadge } from "@/components/contracts/ContractStatusBadge";
 import { ContractStatus, contractStatusLabels } from "@/types/contracts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,11 +27,20 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function ContractsList() {
   const { data: contracts, isLoading } = useContracts();
+  const { canViewContractValues, loading: permLoading } = useSensitivePermission();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  const showValues = canViewContractValues();
 
   const filteredContracts = contracts?.filter((contract) => {
     const matchesSearch =
@@ -50,6 +60,22 @@ export default function ContractsList() {
       currency: "BRL",
     }).format(value);
   };
+
+  const RestrictedValue = () => (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex items-center gap-1 text-muted-foreground cursor-help">
+            <Lock className="h-3 w-3" />
+            <span className="text-xs">Restrito</span>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Restrito ao Administrador</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -91,7 +117,7 @@ export default function ContractsList() {
           </div>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {isLoading || permLoading ? (
             <div className="space-y-3">
               {[1, 2, 3, 4, 5].map((i) => (
                 <Skeleton key={i} className="h-16 w-full" />
@@ -127,7 +153,9 @@ export default function ContractsList() {
                       {contract.contract_number}
                     </TableCell>
                     <TableCell>{contract.account?.name || "-"}</TableCell>
-                    <TableCell>{formatCurrency(contract.mrr)}</TableCell>
+                    <TableCell>
+                      {showValues ? formatCurrency(contract.mrr) : <RestrictedValue />}
+                    </TableCell>
                     <TableCell>
                       <Badge variant="outline">
                         {contract.source === "clint" ? "CRM Clint" : "Manual"}

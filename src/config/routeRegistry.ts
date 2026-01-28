@@ -459,6 +459,17 @@ export const routeRegistry: RouteDefinition[] = [
     parentId: 'crm.contracts',
     order: 6,
   },
+  // Sensitive permission for contract financial values (data-level, not route)
+  {
+    id: 'contracts.values',
+    path: '/contracts', // Associated route
+    label: 'Ver Valores de Contratos',
+    category: CATEGORIES.CONTRACTS,
+    module: MODULES.CRM,
+    permissions: ['view'], // Only view action, no edit
+    hideInMenu: true, // Not a navigation item, just a permission
+    order: 7,
+  },
 
   // ============================================
   // SETTINGS MODULE (Admin Only - Single Menu Entry)

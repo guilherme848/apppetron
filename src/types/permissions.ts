@@ -32,4 +32,5 @@ export type PermissionKey =
   | 'edit_cs'
   | 'manage_cs_settings'
   | 'view_sensitive_cs'
-  | 'edit_admission_date';
+  | 'edit_admission_date'
+  | 'view_contract_values'; // Sensitive permission for contract financial values
