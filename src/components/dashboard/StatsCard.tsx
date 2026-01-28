@@ -1,9 +1,10 @@
 import { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ReactNode } from 'react';
 
 interface StatsCardProps {
   title: string;
-  value: string | number;
+  value: string | number | ReactNode;
   icon: LucideIcon;
   description?: string;
 }
