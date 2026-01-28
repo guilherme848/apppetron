@@ -60,6 +60,11 @@ const isValidEmail = (email: string) => {
 export function AccountForm({ open, onClose, onSubmit, account }: AccountFormProps) {
   const { activeServices, activeNiches, services, niches, findServiceByName, findNicheByName } = useSettings();
   const { trafficRoutines, getTrafficRoutineById } = useTraffic();
+
+  // Supports legacy accounts that only have `service_contracted` text (no FK).
+  // We keep a stable synthetic value so Radix Select can render the saved label.
+  const LEGACY_SERVICE_PREFIX = '__legacy_service__:';
+  const isLegacyServiceValue = (value: string) => value.startsWith(LEGACY_SERVICE_PREFIX);
   
   const activeRoutines = trafficRoutines.filter(r => r.active);
   const isEditing = !!account;
@@ -151,17 +156,23 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
 
   // Build the data object for saving
   const buildSaveData = useCallback((data: typeof formData): Partial<Account> => {
-    const selectedService = services.find(s => s.id === data.service_id);
+    const normalizedServiceId = !data.service_id || isLegacyServiceValue(data.service_id) ? '' : data.service_id;
+    const selectedService = services.find(s => s.id === normalizedServiceId);
     const selectedNiche = niches.find(n => n.id === data.niche_id);
+
+    // IMPORTANT: don't wipe legacy text fields when FK isn't set.
+    const serviceContracted = selectedService?.name
+      ?? (normalizedServiceId ? null : (account?.service_contracted ?? account?.service_name ?? null));
+    const nicheName = selectedNiche?.name ?? (data.niche_id ? null : (account?.niche ?? null));
 
     return {
       name: data.name.trim(),
       status: data.status,
-      service_id: data.service_id || null,
+      service_id: normalizedServiceId || null,
       niche_id: data.niche_id || null,
       traffic_routine_id: data.traffic_routine_id || null,
-      service_contracted: selectedService?.name || null,
-      niche: selectedNiche?.name || null,
+      service_contracted: serviceContracted,
+      niche: nicheName,
       website: data.website || null,
       cpf_cnpj: data.cpf_cnpj || null,
       monthly_value: data.monthly_value ? parseFloat(data.monthly_value) : null,
@@ -178,7 +189,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
       street_number: data.street_number || null,
       address_complement: data.address_complement || null,
     } as Partial<Account>;
-  }, [services, niches]);
+  }, [services, niches, account]);
 
   // AutoSave hook - only used when editing existing account
   const { status: saveStatus, saveNow, queueChange, flush } = useAutoSave({
@@ -239,6 +250,14 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
           (account as Account & { service_name?: string | null }).service_name as string
         );
         if (matchingService) serviceId = matchingService.id;
+      }
+
+      // Legacy support: keep showing the saved text even if we cannot resolve an FK.
+      if (!serviceId) {
+        const legacyLabel = (account as Account & { service_name?: string | null }).service_name || account.service_contracted;
+        if (legacyLabel) {
+          serviceId = `${LEGACY_SERVICE_PREFIX}${legacyLabel}`;
+        }
       }
       if (!nicheId && account.niche) {
         const matchingNiche = findNicheByName(account.niche);
