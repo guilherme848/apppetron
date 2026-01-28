@@ -1843,6 +1843,60 @@ export type Database = {
         }
         Relationships: []
       }
+      cs_onboarding_briefings: {
+        Row: {
+          briefing_content: Json
+          client_id: string
+          created_at: string
+          cs_notes: string | null
+          id: string
+          risk_level: string | null
+          risk_score: number | null
+          status: string
+          transcript_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          briefing_content?: Json
+          client_id: string
+          created_at?: string
+          cs_notes?: string | null
+          id?: string
+          risk_level?: string | null
+          risk_score?: number | null
+          status?: string
+          transcript_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          briefing_content?: Json
+          client_id?: string
+          created_at?: string
+          cs_notes?: string | null
+          id?: string
+          risk_level?: string | null
+          risk_score?: number | null
+          status?: string
+          transcript_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_onboarding_briefings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_onboarding_briefings_transcript_id_fkey"
+            columns: ["transcript_id"]
+            isOneToOne: false
+            referencedRelation: "cs_sales_transcripts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cs_onboarding_flow_rules: {
         Row: {
           active: boolean
@@ -2153,6 +2207,45 @@ export type Database = {
           {
             foreignKeyName: "cs_risk_cases_owner_member_id_fkey"
             columns: ["owner_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_sales_transcripts: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by_member_id: string | null
+          id: string
+          transcript_text: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by_member_id?: string | null
+          id?: string
+          transcript_text: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by_member_id?: string | null
+          id?: string
+          transcript_text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_sales_transcripts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_sales_transcripts_created_by_member_id_fkey"
+            columns: ["created_by_member_id"]
             isOneToOne: false
             referencedRelation: "team_members"
             referencedColumns: ["id"]

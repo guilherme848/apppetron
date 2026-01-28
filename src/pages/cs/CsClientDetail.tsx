@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
-import { Loader2, ArrowLeft, User, Calendar, Star, AlertTriangle, FileText, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Loader2, ArrowLeft, User, Calendar, Star, AlertTriangle, FileText, Clock, CheckCircle, XCircle, Briefcase } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -27,6 +27,7 @@ import {
 } from '@/types/cs';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { SalesBriefingSection } from '@/components/cs/SalesBriefingSection';
 
 interface Account {
   id: string;
@@ -223,8 +224,9 @@ export default function CsClientDetail() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="timeline" className="space-y-4">
+      <Tabs defaultValue="briefing" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="briefing">Briefing da Venda</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
           <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
           <TabsTrigger value="meetings">Reuniões</TabsTrigger>
@@ -232,6 +234,10 @@ export default function CsClientDetail() {
           <TabsTrigger value="risk">Risco</TabsTrigger>
           <TabsTrigger value="audit">Histórico</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="briefing">
+          <SalesBriefingSection clientId={client.id} />
+        </TabsContent>
 
         <TabsContent value="timeline">
           <Card>
