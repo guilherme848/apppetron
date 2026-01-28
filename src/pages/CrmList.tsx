@@ -152,8 +152,13 @@ export default function CrmList() {
   const handleRemoveConfirm = async (type: RemovalType, churnDate?: string) => {
     if (!accountToRemove) return;
 
+    console.log('[CrmList] handleRemoveConfirm called', { type, churnDate, accountId: accountToRemove.id });
+
     if (type === 'churn' && churnDate) {
+      console.log('[CrmList] Executing churnAccount', { accountId: accountToRemove.id, churnDate });
       const result = await churnAccount(accountToRemove.id, churnDate);
+      console.log('[CrmList] churnAccount result:', result);
+      
       if (result.success) {
         toast({
           title: 'Cliente marcado como Churned',
@@ -162,12 +167,16 @@ export default function CrmList() {
       } else {
         toast({
           title: 'Erro ao registrar churn',
-          description: 'Não foi possível registrar o cancelamento.',
+          description: result.error?.message || 'Não foi possível registrar o cancelamento.',
           variant: 'destructive',
         });
+        throw new Error(result.error?.message || 'Churn failed');
       }
     } else if (type === 'delete') {
+      console.log('[CrmList] Executing softDeleteAccount', { accountId: accountToRemove.id });
       const result = await softDeleteAccount(accountToRemove.id);
+      console.log('[CrmList] softDeleteAccount result:', result);
+      
       if (result.success) {
         toast({
           title: 'Cliente arquivado',
@@ -176,9 +185,10 @@ export default function CrmList() {
       } else {
         toast({
           title: 'Erro ao arquivar cliente',
-          description: 'Não foi possível remover o cliente.',
+          description: result.error?.message || 'Não foi possível remover o cliente.',
           variant: 'destructive',
         });
+        throw new Error(result.error?.message || 'Soft delete failed');
       }
     }
 

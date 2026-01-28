@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Trash2, UserX } from 'lucide-react';
+import { CalendarIcon, Trash2, UserX, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -17,15 +17,17 @@ interface AccountRemoveDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   account: Account | null;
-  onConfirm: (type: RemovalType, churnDate?: string) => void;
+  onConfirm: (type: RemovalType, churnDate?: string) => Promise<void>;
 }
 
 export function AccountRemoveDialog({ open, onOpenChange, account, onConfirm }: AccountRemoveDialogProps) {
   const [removalType, setRemovalType] = useState<RemovalType>('churn');
   const [churnDate, setChurnDate] = useState<Date | undefined>(new Date());
   const [step, setStep] = useState<1 | 2>(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleOpenChange = (isOpen: boolean) => {
+    if (isSubmitting) return; // Prevent closing during submission
     if (!isOpen) {
       // Reset state on close
       setRemovalType('churn');
@@ -48,13 +50,32 @@ export function AccountRemoveDialog({ open, onOpenChange, account, onConfirm }: 
     setStep(1);
   };
 
-  const handleConfirm = () => {
-    if (removalType === 'churn' && churnDate) {
-      onConfirm('churn', format(churnDate, 'yyyy-MM-dd'));
-    } else if (removalType === 'delete') {
-      onConfirm('delete');
+  const handleConfirm = async () => {
+    if (isSubmitting) return; // Prevent double submit
+    
+    setIsSubmitting(true);
+    
+    try {
+      if (removalType === 'churn' && churnDate) {
+        console.log('[AccountRemoveDialog] Executing CHURN action', { 
+          accountId: account?.id, 
+          churnDate: format(churnDate, 'yyyy-MM-dd') 
+        });
+        await onConfirm('churn', format(churnDate, 'yyyy-MM-dd'));
+      } else if (removalType === 'delete') {
+        console.log('[AccountRemoveDialog] Executing DELETE (soft delete) action', { 
+          accountId: account?.id 
+        });
+        await onConfirm('delete');
+      }
+      // Only close after success
+      handleOpenChange(false);
+    } catch (error) {
+      console.error('[AccountRemoveDialog] Error during confirm:', error);
+      // Don't close on error - let user see the error toast
+    } finally {
+      setIsSubmitting(false);
     }
-    handleOpenChange(false);
   };
 
   const canConfirm = removalType === 'delete' || (removalType === 'churn' && churnDate);
@@ -187,30 +208,55 @@ export function AccountRemoveDialog({ open, onOpenChange, account, onConfirm }: 
           </div>
         )}
 
-        <DialogFooter className="flex-col sm:flex-row gap-2">
+        {/* Footer with proper button layout */}
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-4 border-t">
           {step === 2 && (
-            <Button variant="outline" onClick={handleBack} className="sm:order-1">
+            <Button 
+              type="button"
+              variant="outline" 
+              onClick={handleBack} 
+              disabled={isSubmitting}
+              className="sm:order-1"
+            >
               Voltar
             </Button>
           )}
-          <Button variant="outline" onClick={() => handleOpenChange(false)} className="sm:order-2">
+          <Button 
+            type="button"
+            variant="outline" 
+            onClick={() => handleOpenChange(false)} 
+            disabled={isSubmitting}
+            className="sm:order-2"
+          >
             Cancelar
           </Button>
           {step === 1 ? (
-            <Button onClick={handleNext} className="sm:order-3">
+            <Button 
+              type="button"
+              onClick={handleNext} 
+              className="sm:order-3"
+            >
               Continuar
             </Button>
           ) : (
             <Button 
+              type="button"
               onClick={handleConfirm} 
-              disabled={!canConfirm}
+              disabled={!canConfirm || isSubmitting}
               variant={removalType === 'delete' ? 'destructive' : 'default'}
               className="sm:order-3"
             >
-              {removalType === 'churn' ? 'Confirmar Churn' : 'Confirmar Exclusão'}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processando...
+                </>
+              ) : (
+                removalType === 'churn' ? 'Confirmar Churn' : 'Confirmar Exclusão'
+              )}
             </Button>
           )}
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
