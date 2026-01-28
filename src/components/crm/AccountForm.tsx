@@ -10,8 +10,10 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { useTraffic } from '@/contexts/TrafficContext';
 import { useSensitivePermission } from '@/hooks/useSensitivePermission';
 import { Link } from 'react-router-dom';
-import { ExternalLink, RotateCcw, Undo2, Lock } from 'lucide-react';
+import { ExternalLink, RotateCcw, Undo2, Lock, Loader2 } from 'lucide-react';
 import { useAutoSave } from '@/hooks/useAutoSave';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { SaveStatus } from '@/components/ui/save-status';
 import {
   Tooltip,
@@ -399,6 +401,9 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
     }
   };
 
+  // CNPJ Address Lookup state
+  const [cnpjLookupLoading, setCnpjLookupLoading] = useState(false);
+
   // Special formatted inputs - queue on change, flush on blur
   const handleCpfCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatCpfCnpj(e.target.value);
@@ -407,6 +412,90 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
       if (isEditing && !skipAutoSave.current) {
         queueChange({ cpf_cnpj: formatted });
       }
+    }
+  };
+
+  // CNPJ address lookup on blur
+  const handleCpfCnpjBlur = async () => {
+    // First, handle the normal autosave flush
+    if (isEditing && !skipAutoSave.current) {
+      await flush();
+    }
+
+    // Check if it's a valid CNPJ (14 digits)
+    const cleanCnpj = formData.cpf_cnpj.replace(/\D/g, '');
+    if (cleanCnpj.length !== 14) {
+      return;
+    }
+
+    // Try to lookup address
+    setCnpjLookupLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('lookup-cnpj-address', {
+        body: { cnpj: cleanCnpj }
+      });
+
+      if (error) {
+        console.error('Error looking up CNPJ address:', error);
+        toast.warning('Não foi possível localizar endereço automaticamente.');
+        return;
+      }
+
+      if (!data?.address) {
+        toast.warning('Não foi possível localizar endereço automaticamente.');
+        return;
+      }
+
+      const address = data.address;
+      const updates: Partial<typeof formData> = {};
+      let fieldsUpdated = 0;
+
+      // Only fill empty fields
+      if (address.cep && !formData.postal_code) {
+        updates.postal_code = address.cep;
+        fieldsUpdated++;
+      }
+      if (address.state && !formData.state) {
+        updates.state = address.state;
+        fieldsUpdated++;
+      }
+      if (address.city && !formData.city) {
+        updates.city = address.city;
+        fieldsUpdated++;
+      }
+      if (address.neighborhood && !formData.neighborhood) {
+        updates.neighborhood = address.neighborhood;
+        fieldsUpdated++;
+      }
+      if (address.street && !formData.street) {
+        updates.street = address.street;
+        fieldsUpdated++;
+      }
+      if (address.complement && !formData.address_complement) {
+        updates.address_complement = address.complement;
+        fieldsUpdated++;
+      }
+
+      if (fieldsUpdated > 0) {
+        setFormData(prev => ({ ...prev, ...updates }));
+        
+        // Queue changes for autosave if editing
+        if (isEditing && !skipAutoSave.current) {
+          Object.entries(updates).forEach(([key, value]) => {
+            queueChange({ [key]: value });
+          });
+          await flush();
+        }
+
+        toast.success(`${fieldsUpdated} campo(s) de endereço preenchido(s) automaticamente.`);
+      } else {
+        toast.info('Todos os campos de endereço já estavam preenchidos.');
+      }
+    } catch (err) {
+      console.error('CNPJ lookup error:', err);
+      toast.warning('Não foi possível localizar endereço automaticamente.');
+    } finally {
+      setCnpjLookupLoading(false);
     }
   };
 
@@ -503,13 +592,21 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
               </div>
               <div className="space-y-2">
                 <Label htmlFor="cpf_cnpj">CPF/CNPJ</Label>
-                <Input
-                  id="cpf_cnpj"
-                  value={formData.cpf_cnpj}
-                  onChange={handleCpfCnpjChange}
-                  onBlur={handleTextBlur('cpf_cnpj')}
-                  placeholder="000.000.000-00 ou 00.000.000/0001-00"
-                />
+                <div className="relative">
+                  <Input
+                    id="cpf_cnpj"
+                    value={formData.cpf_cnpj}
+                    onChange={handleCpfCnpjChange}
+                    onBlur={handleCpfCnpjBlur}
+                    placeholder="000.000.000-00 ou 00.000.000/0001-00"
+                    disabled={cnpjLookupLoading}
+                  />
+                  {cnpjLookupLoading && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="col-span-2 space-y-2">
                 <Label htmlFor="website">Website</Label>
