@@ -29,6 +29,7 @@ import { Link } from 'react-router-dom';
 import { useContentDashboardData } from '@/hooks/useContentDashboardData';
 import { BATCH_STATUS_OPTIONS, POST_STATUS_OPTIONS } from '@/types/contentProduction';
 import { ExtraRequestsMetrics } from '@/components/dashboard/ExtraRequestsMetrics';
+import { CreativeRequestsMetrics } from '@/components/dashboard/CreativeRequestsMetrics';
 
 const ROLE_LABELS: Record<string, string> = {
   designer: 'Designer',
@@ -279,12 +280,13 @@ export default function ContentDashboard() {
 
       {/* Tabs for sections */}
       <Tabs defaultValue="executive" className="space-y-4">
-        <TabsList className="grid grid-cols-6 w-full max-w-3xl">
+        <TabsList className="grid grid-cols-7 w-full max-w-4xl">
           <TabsTrigger value="executive">Executivo</TabsTrigger>
           <TabsTrigger value="productivity">Produtividade</TabsTrigger>
           <TabsTrigger value="workload">Carga</TabsTrigger>
           <TabsTrigger value="batches">Planejamentos</TabsTrigger>
           <TabsTrigger value="extras">Extras</TabsTrigger>
+          <TabsTrigger value="creatives">Criativos</TabsTrigger>
           <TabsTrigger value="report">Relatório</TabsTrigger>
         </TabsList>
 
@@ -713,6 +715,11 @@ export default function ContentDashboard() {
               <ExtraRequestsMetrics />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Creatives View */}
+        <TabsContent value="creatives" className="space-y-6">
+          <CreativeRequestsMetrics />
         </TabsContent>
       </Tabs>
     </div>
