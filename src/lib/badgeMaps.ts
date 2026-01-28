@@ -90,12 +90,13 @@ export function getPriorityVariant(priority: string): BadgeVariant {
 // -----------------------------------------------------------------------------
 // ACCOUNT STATUS (CRM)
 // -----------------------------------------------------------------------------
-export type AccountStatusKey = 'lead' | 'active' | 'churned';
+export type AccountStatusKey = 'lead' | 'active' | 'churned' | 'archived';
 
 export const ACCOUNT_STATUS_VARIANT: Record<AccountStatusKey, BadgeVariant> = {
   lead: 'neutral',
   active: 'strong',
   churned: 'muted',
+  archived: 'muted',
 };
 
 export function getAccountStatusVariant(status: string): BadgeVariant {

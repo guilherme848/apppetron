@@ -16,6 +16,7 @@ const mapAccount = (data: any): Account => ({
   monthly_value: data.monthly_value,
   start_date: data.start_date,
   churned_at: data.churned_at,
+  deleted_at: data.deleted_at,
   service_id: data.service_id,
   niche_id: data.niche_id,
   // Nome do serviço via join
@@ -72,6 +73,7 @@ export function useCrmData() {
     const { data, error } = await supabase
       .from('accounts')
       .select('*, services(name)')
+      .is('deleted_at', null) // Exclude soft-deleted accounts
       .order('created_at', { ascending: false });
     if (error) {
       console.error('Error fetching accounts:', error);
@@ -166,6 +168,45 @@ export function useCrmData() {
     setAccounts((prev) => prev.map((a) => (a.id === id ? mapped : a)));
   };
 
+  // Soft delete: marks account as archived (deleted_at = now(), status = 'archived')
+  const softDeleteAccount = async (id: string) => {
+    const { error } = await supabase
+      .from('accounts')
+      .update({ 
+        deleted_at: new Date().toISOString(),
+        status: 'archived' 
+      })
+      .eq('id', id);
+    if (error) {
+      console.error('Error soft deleting account:', error);
+      return { success: false, error };
+    }
+    // Remove from local state (since we filter out deleted_at != null)
+    setAccounts((prev) => prev.filter((a) => a.id !== id));
+    return { success: true };
+  };
+
+  // Churn: marks account as churned with date
+  const churnAccount = async (id: string, churnDate: string) => {
+    const { data, error } = await supabase
+      .from('accounts')
+      .update({ 
+        status: 'churned',
+        churned_at: churnDate
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) {
+      console.error('Error churning account:', error);
+      return { success: false, error };
+    }
+    const mapped = mapAccount(data);
+    setAccounts((prev) => prev.map((a) => (a.id === id ? mapped : a)));
+    return { success: true };
+  };
+
+  // Legacy hard delete (kept for backwards compatibility but not recommended)
   const deleteAccount = async (id: string) => {
     const { error } = await supabase.from('accounts').delete().eq('id', id);
     if (error) {
@@ -285,6 +326,8 @@ export function useCrmData() {
     addAccount,
     updateAccount,
     deleteAccount,
+    softDeleteAccount,
+    churnAccount,
     addContract,
     updateContract,
     deleteContract,
