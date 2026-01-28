@@ -25,9 +25,12 @@ export default function CsOnboarding() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed': return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'attention': return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-      case 'in_progress': return <Clock className="h-4 w-4 text-blue-500" />;
+      case 'completed':
+        return <CheckCircle className="h-4 w-4 text-primary" />;
+      case 'attention':
+        return <AlertTriangle className="h-4 w-4 text-destructive" />;
+      case 'in_progress':
+        return <Clock className="h-4 w-4 text-secondary" />;
       default: return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
   };
@@ -57,6 +60,63 @@ export default function CsOnboarding() {
           <p className="text-muted-foreground">Acompanhamento de onboarding de clientes</p>
         </div>
       </div>
+
+      {/* Briefing/Tarefas sempre visíveis (com estado vazio quando nada selecionado) */}
+      <Tabs defaultValue="briefing" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="briefing">Briefing da Venda</TabsTrigger>
+          <TabsTrigger value="tasks">Tarefas</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="briefing">
+          {selectedClientId ? (
+            <SalesBriefingSection clientId={selectedClientId} />
+          ) : (
+            <Card>
+              <CardContent className="py-6 text-center text-muted-foreground">
+                Selecione um cliente abaixo para ver o Briefing da Venda.
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="tasks">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Tarefas de Onboarding</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {!selectedId ? (
+                <p className="text-center py-4 text-muted-foreground">
+                  Selecione um cliente abaixo para ver as tarefas.
+                </p>
+              ) : tasks.length === 0 ? (
+                <p className="text-center py-4 text-muted-foreground">Nenhuma tarefa</p>
+              ) : (
+                <div className="space-y-2">
+                  {tasks.map((task) => (
+                    <div key={task.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                      {task.status === 'done' ? (
+                        <CheckCircle className="h-5 w-5 text-primary" />
+                      ) : task.status === 'in_progress' ? (
+                        <Clock className="h-5 w-5 text-secondary" />
+                      ) : (
+                        <div className="h-5 w-5 rounded-full border-2" />
+                      )}
+                      <div className="flex-1">
+                        <p className={task.status === 'done' ? 'line-through text-muted-foreground' : ''}>
+                          {task.title}
+                        </p>
+                      </div>
+                      <Badge variant="outline">{task.status}</Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {onboardings.length === 0 ? (
         <Card>
@@ -107,53 +167,6 @@ export default function CsOnboarding() {
             </Card>
           ))}
         </div>
-      )}
-
-      {/* Briefing Section - shown when a client is selected */}
-      {selectedClientId && (
-        <Tabs defaultValue="briefing" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="briefing">Briefing da Venda</TabsTrigger>
-            <TabsTrigger value="tasks">Tarefas</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="briefing">
-            <SalesBriefingSection clientId={selectedClientId} />
-          </TabsContent>
-
-          <TabsContent value="tasks">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Tarefas de Onboarding</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {tasks.length === 0 ? (
-                  <p className="text-center py-4 text-muted-foreground">Nenhuma tarefa</p>
-                ) : (
-                  <div className="space-y-2">
-                    {tasks.map((task) => (
-                      <div key={task.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                        {task.status === 'done' ? (
-                          <CheckCircle className="h-5 w-5 text-primary" />
-                        ) : task.status === 'in_progress' ? (
-                          <Clock className="h-5 w-5 text-secondary" />
-                        ) : (
-                          <div className="h-5 w-5 rounded-full border-2" />
-                        )}
-                        <div className="flex-1">
-                          <p className={task.status === 'done' ? 'line-through text-muted-foreground' : ''}>
-                            {task.title}
-                          </p>
-                        </div>
-                        <Badge variant="outline">{task.status}</Badge>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
       )}
     </div>
   );
