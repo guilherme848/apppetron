@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Eye, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Search, Eye, Pencil, Trash2, Loader2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -9,21 +9,88 @@ import { AccountStatusBadge } from '@/components/crm/StatusBadge';
 import { AccountForm } from '@/components/crm/AccountForm';
 import { useCrm } from '@/contexts/CrmContext';
 
+type SortKey = 'name' | 'plan' | 'monthly_value';
+type SortDirection = 'asc' | 'desc';
+
+interface SortConfig {
+  key: SortKey;
+  direction: SortDirection;
+}
+
+const SORT_STORAGE_KEY = 'petron_crm_sort';
+
+const getStoredSort = (): SortConfig => {
+  try {
+    const stored = localStorage.getItem(SORT_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (['name', 'plan', 'monthly_value'].includes(parsed.key) && ['asc', 'desc'].includes(parsed.direction)) {
+        return parsed;
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return { key: 'name', direction: 'asc' };
+};
+
 export default function CrmList() {
   const navigate = useNavigate();
   const { accounts, addAccount, updateAccount, deleteAccount, loading } = useCrm();
   const [search, setSearch] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<typeof accounts[0] | undefined>();
+  const [sortConfig, setSortConfig] = useState<SortConfig>(getStoredSort);
 
-  const filteredAccounts = accounts.filter((account) =>
-    account.name.toLowerCase().includes(search.toLowerCase())
-  );
+  // Persist sort preference
+  useEffect(() => {
+    localStorage.setItem(SORT_STORAGE_KEY, JSON.stringify(sortConfig));
+  }, [sortConfig]);
+
+  const handleSort = (key: SortKey) => {
+    setSortConfig((prev) => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc',
+    }));
+  };
+
+  const sortedAndFilteredAccounts = useMemo(() => {
+    // Filter first
+    const filtered = accounts.filter((account) =>
+      account.name.toLowerCase().includes(search.toLowerCase())
+    );
+
+    // Then sort
+    return [...filtered].sort((a, b) => {
+      const { key, direction } = sortConfig;
+      const multiplier = direction === 'asc' ? 1 : -1;
+
+      switch (key) {
+        case 'name': {
+          const nameA = (a.name || '').toLowerCase();
+          const nameB = (b.name || '').toLowerCase();
+          return nameA.localeCompare(nameB, 'pt-BR') * multiplier;
+        }
+        case 'plan': {
+          const planA = (a.service_name || '').toLowerCase();
+          const planB = (b.service_name || '').toLowerCase();
+          // Empty plans go to the end
+          if (!planA && planB) return 1;
+          if (planA && !planB) return -1;
+          return planA.localeCompare(planB, 'pt-BR') * multiplier;
+        }
+        case 'monthly_value': {
+          const valA = a.monthly_value ?? 0;
+          const valB = b.monthly_value ?? 0;
+          return (valA - valB) * multiplier;
+        }
+        default:
+          return 0;
+      }
+    });
+  }, [accounts, search, sortConfig]);
 
   const handleSubmit = async (data: Partial<typeof accounts[0]>) => {
-    // IMPORTANT:
-    // In edit mode, AccountForm autosave calls onSubmit frequently.
-    // We must NOT clear `editingAccount` here, otherwise the dialog flips to "Novo Cliente".
     if (editingAccount) {
       if (import.meta.env.DEV) {
         console.debug('[CRM] AccountForm submit (EDIT)', {
@@ -43,7 +110,6 @@ export default function CrmList() {
       });
     }
     await addAccount(data as { name: string; status: 'lead' | 'active' | 'churned' });
-    // Only clear after creating (or when closing)
     setEditingAccount(undefined);
   };
 
@@ -65,6 +131,23 @@ export default function CrmList() {
 
   const handleDelete = async (id: string) => {
     await deleteAccount(id);
+  };
+
+  const SortIcon = ({ columnKey }: { columnKey: SortKey }) => {
+    if (sortConfig.key !== columnKey) {
+      return <ArrowUpDown className="ml-1 h-3 w-3 text-muted-foreground/50" />;
+    }
+    return sortConfig.direction === 'asc' 
+      ? <ArrowUp className="ml-1 h-3 w-3" /> 
+      : <ArrowDown className="ml-1 h-3 w-3" />;
+  };
+
+  const formatCurrency = (value: number | null | undefined) => {
+    if (value == null) return '—';
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value);
   };
 
   if (loading) {
@@ -104,22 +187,46 @@ export default function CrmList() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Plano</TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/50 select-none"
+                onClick={() => handleSort('name')}
+              >
+                <div className="flex items-center">
+                  Nome
+                  <SortIcon columnKey="name" />
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/50 select-none"
+                onClick={() => handleSort('plan')}
+              >
+                <div className="flex items-center">
+                  Plano
+                  <SortIcon columnKey="plan" />
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/50 select-none"
+                onClick={() => handleSort('monthly_value')}
+              >
+                <div className="flex items-center">
+                  Valor Mensal
+                  <SortIcon columnKey="monthly_value" />
+                </div>
+              </TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Criado em</TableHead>
               <TableHead className="w-[100px]">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredAccounts.length === 0 ? (
+            {sortedAndFilteredAccounts.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                   Nenhum cliente encontrado
                 </TableCell>
               </TableRow>
             ) : (
-              filteredAccounts.map((account) => (
+              sortedAndFilteredAccounts.map((account) => (
                 <TableRow key={account.id}>
                   <TableCell className="font-medium">{account.name}</TableCell>
                   <TableCell>
@@ -129,10 +236,12 @@ export default function CrmList() {
                       <span className="text-muted-foreground text-sm">—</span>
                     )}
                   </TableCell>
+                  <TableCell className="font-medium">
+                    {formatCurrency(account.monthly_value)}
+                  </TableCell>
                   <TableCell>
                     <AccountStatusBadge status={account.status} />
                   </TableCell>
-                  <TableCell>{new Date(account.created_at).toLocaleDateString('pt-BR')}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
                       <Button
