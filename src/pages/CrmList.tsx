@@ -21,20 +21,44 @@ export default function CrmList() {
   );
 
   const handleSubmit = async (data: Partial<typeof accounts[0]>) => {
+    // IMPORTANT:
+    // In edit mode, AccountForm autosave calls onSubmit frequently.
+    // We must NOT clear `editingAccount` here, otherwise the dialog flips to "Novo Cliente".
     if (editingAccount) {
+      if (import.meta.env.DEV) {
+        console.debug('[CRM] AccountForm submit (EDIT)', {
+          editingAccountId: editingAccount.id,
+          formOpen,
+          keys: Object.keys(data),
+        });
+      }
       await updateAccount(editingAccount.id, data);
-    } else {
-      await addAccount(data as { name: string; status: 'lead' | 'active' | 'churned' });
+      return;
     }
+
+    if (import.meta.env.DEV) {
+      console.debug('[CRM] AccountForm submit (CREATE)', {
+        formOpen,
+        keys: Object.keys(data),
+      });
+    }
+    await addAccount(data as { name: string; status: 'lead' | 'active' | 'churned' });
+    // Only clear after creating (or when closing)
     setEditingAccount(undefined);
   };
 
   const handleEdit = (account: typeof accounts[0]) => {
+    if (import.meta.env.DEV) {
+      console.debug('[CRM] Open AccountForm (EDIT)', { accountId: account.id });
+    }
     setEditingAccount(account);
     setFormOpen(true);
   };
 
   const handleClose = () => {
+    if (import.meta.env.DEV) {
+      console.debug('[CRM] Close AccountForm', { wasEditing: !!editingAccount, editingAccountId: editingAccount?.id });
+    }
     setFormOpen(false);
     setEditingAccount(undefined);
   };
