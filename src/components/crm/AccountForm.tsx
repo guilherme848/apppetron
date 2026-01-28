@@ -1,16 +1,16 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Account, AccountStatus } from '@/types/crm';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useTraffic } from '@/contexts/TrafficContext';
 import { Link } from 'react-router-dom';
 import { ExternalLink, RotateCcw, Undo2 } from 'lucide-react';
-import { useAutoSave, useAutoSaveNavigation } from '@/hooks/useAutoSave';
+import { useAutoSave } from '@/hooks/useAutoSave';
 import { SaveStatus } from '@/components/ui/save-status';
 
 interface AccountFormProps {
@@ -64,6 +64,13 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
   const activeRoutines = trafficRoutines.filter(r => r.active);
   const isEditing = !!account;
   const skipAutoSave = useRef(false);
+  
+  // Track the account ID and open state to control form initialization
+  const accountId = account?.id;
+  const lastInitializedRef = useRef<{ accountId: string | undefined; wasOpen: boolean }>({ 
+    accountId: undefined, 
+    wasOpen: false 
+  });
   
   const [formData, setFormData] = useState({
     name: '',
@@ -138,7 +145,26 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
     onClose();
   }, [flush, onClose]);
 
+  // Initialize form data only when:
+  // 1. Dialog opens for the first time
+  // 2. Account ID changes (switching to a different account)
+  // NOT when account object reference changes after a save
   useEffect(() => {
+    const shouldInitialize = 
+      // Dialog just opened
+      (open && !lastInitializedRef.current.wasOpen) ||
+      // Account ID changed
+      (open && accountId !== lastInitializedRef.current.accountId);
+    
+    if (!shouldInitialize) {
+      // Update the wasOpen state even if we don't initialize
+      lastInitializedRef.current.wasOpen = open;
+      return;
+    }
+    
+    // Mark that we're initializing for this account and open state
+    lastInitializedRef.current = { accountId, wasOpen: open };
+    
     if (account) {
       let serviceId = account.service_id || '';
       let nicheId = account.niche_id || '';
@@ -205,7 +231,14 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
       setTimeout(() => { skipAutoSave.current = false; }, 100);
     }
     setEmailError('');
-  }, [account, open, findServiceByName, findNicheByName]);
+  }, [account, accountId, open, findServiceByName, findNicheByName]);
+  
+  // Reset the ref when dialog closes so next open will reinitialize
+  useEffect(() => {
+    if (!open) {
+      lastInitializedRef.current = { accountId: undefined, wasOpen: false };
+    }
+  }, [open]);
 
   // For new accounts, use submit button. For existing, use autosave
   const handleSubmit = (e: React.FormEvent) => {
@@ -298,6 +331,9 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
             <DialogTitle>{account ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
             {isEditing && <SaveStatus status={saveStatus} />}
           </div>
+          <DialogDescription className="sr-only">
+            {account ? 'Formulário para editar os dados do cliente' : 'Formulário para criar um novo cliente'}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Dados do Cliente */}
