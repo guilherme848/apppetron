@@ -133,28 +133,28 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* LT dos Churns */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <ChurnLTCard avgMonths={churnLTData.avgMonths} count={churnLTData.count} />
-      </div>
-
-      {/* Row 2: Cohort Analysis */}
-      <CohortAnalysis data={cohortData} />
-
-      {/* Row 3: Distribution Charts (Plan / Niche) */}
-      <DistributionCharts
-        distributionByPlan={distributionByPlan}
-        distributionByNiche={distributionByNiche}
-      />
-
-      {/* Row 4: Ticket by Niche */}
-      <TicketByNicheChart data={ticketByNiche} />
-
       {/* Churn and MRR Charts (existing) */}
       <ChurnMrrCharts />
 
       {/* Client Evolution Chart (existing) */}
       <ClientEvolutionChart />
+
+      {/* LT dos Churns */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <ChurnLTCard avgMonths={churnLTData.avgMonths} count={churnLTData.count} />
+      </div>
+
+      {/* Cohort Analysis */}
+      <CohortAnalysis data={cohortData} />
+
+      {/* Distribution Charts (Plan / Niche) */}
+      <DistributionCharts
+        distributionByPlan={distributionByPlan}
+        distributionByNiche={distributionByNiche}
+      />
+
+      {/* Ticket by Niche */}
+      <TicketByNicheChart data={ticketByNiche} />
     </div>
   );
 }
