@@ -208,7 +208,7 @@ export default function CrmList() {
                 onClick={() => handleSort('plan')}
               >
                 <div className="flex items-center">
-                  Plano
+                  Serviço Contratado
                   <SortIcon columnKey="plan" />
                 </div>
               </TableHead>
