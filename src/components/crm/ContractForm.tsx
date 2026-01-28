@@ -17,8 +17,8 @@ interface ContractFormProps {
 }
 
 export function ContractForm({ open, onClose, onSubmit, contract, accountId }: ContractFormProps) {
-  const { canViewContractValues, isAdmin } = useSensitivePermission();
-  const showValues = canViewContractValues();
+  const { canViewFinancialValues, isAdmin } = useSensitivePermission();
+  const showValues = canViewFinancialValues();
   
   const [mrr, setMrr] = useState(contract?.mrr?.toString() || '');
   const [startDate, setStartDate] = useState(contract?.start_date || '');

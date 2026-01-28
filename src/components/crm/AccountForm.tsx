@@ -8,10 +8,17 @@ import { Separator } from '@/components/ui/separator';
 import { Account, AccountStatus } from '@/types/crm';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useTraffic } from '@/contexts/TrafficContext';
+import { useSensitivePermission } from '@/hooks/useSensitivePermission';
 import { Link } from 'react-router-dom';
-import { ExternalLink, RotateCcw, Undo2 } from 'lucide-react';
+import { ExternalLink, RotateCcw, Undo2, Lock } from 'lucide-react';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { SaveStatus } from '@/components/ui/save-status';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface AccountFormProps {
   open: boolean;
@@ -60,6 +67,8 @@ const isValidEmail = (email: string) => {
 export function AccountForm({ open, onClose, onSubmit, account }: AccountFormProps) {
   const { activeServices, activeNiches, services, niches, findServiceByName, findNicheByName } = useSettings();
   const { trafficRoutines, getTrafficRoutineById } = useTraffic();
+  const { canViewFinancialValues } = useSensitivePermission();
+  const showFinancialFields = canViewFinancialValues();
 
   // Supports legacy accounts that only have `service_contracted` text (no FK).
   // We keep a stable synthetic value so Radix Select can render the saved label.
@@ -69,6 +78,26 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
   const activeRoutines = trafficRoutines.filter(r => r.active);
   const isEditing = !!account;
   const skipAutoSave = useRef(false);
+  
+  // Restricted field placeholder
+  const RestrictedField = ({ label }: { label: string }) => (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex items-center gap-2 h-10 px-3 py-2 rounded-md border border-input bg-muted/50 text-muted-foreground cursor-not-allowed">
+              <Lock className="h-4 w-4" />
+              <span className="text-sm">Restrito ao Administrador</span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Você não tem permissão para visualizar valores financeiros</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
+  );
   
   // Track the account ID and open state to control form initialization
   const accountId = account?.id;
@@ -595,19 +624,23 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                   );
                 })()}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="monthly_value">Valor Mensal (R$)</Label>
-                <Input
-                  id="monthly_value"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.monthly_value}
-                  onChange={handleTextChange('monthly_value')}
-                  onBlur={handleTextBlur('monthly_value')}
-                  placeholder="0.00"
-                />
-              </div>
+              {showFinancialFields ? (
+                <div className="space-y-2">
+                  <Label htmlFor="monthly_value">Valor Mensal (R$)</Label>
+                  <Input
+                    id="monthly_value"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.monthly_value}
+                    onChange={handleTextChange('monthly_value')}
+                    onBlur={handleTextBlur('monthly_value')}
+                    placeholder="0.00"
+                  />
+                </div>
+              ) : (
+                <RestrictedField label="Valor Mensal (R$)" />
+              )}
               <div className="space-y-2">
                 <Label htmlFor="start_date">Data de Entrada</Label>
                 <Input
