@@ -1,12 +1,48 @@
-import { Users, DollarSign, CheckSquare, Loader2, Receipt, Clock } from 'lucide-react';
+import { Users, DollarSign, TrendingDown, Loader2, Receipt, Lock } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/StatsCard';
-import { ContentActivitySummary } from '@/components/dashboard/ContentActivitySummary';
 import { ClientEvolutionChart } from '@/components/dashboard/ClientEvolutionChart';
 import { ChurnMrrCharts } from '@/components/dashboard/ChurnMrrCharts';
-import { useCrm } from '@/contexts/CrmContext';
+import { DashboardFilters } from '@/components/dashboard/DashboardFilters';
+import { ChurnLTCard } from '@/components/dashboard/ChurnLTCard';
+import { CohortAnalysis } from '@/components/dashboard/CohortAnalysis';
+import { DistributionCharts } from '@/components/dashboard/DistributionCharts';
+import { TicketByNicheChart } from '@/components/dashboard/TicketByNicheChart';
+import { useExecutiveDashboard } from '@/hooks/useExecutiveDashboard';
+import { useSensitivePermission } from '@/hooks/useSensitivePermission';
 
 export default function Dashboard() {
-  const { activeAccountsCount, totalMrr, openTasksCount, averageTicket, averageLifetimeMonths, loading } = useCrm();
+  const {
+    loading,
+    services,
+    niches,
+    // Filters
+    periodFilter,
+    setPeriodFilter,
+    customStartDate,
+    setCustomStartDate,
+    customEndDate,
+    setCustomEndDate,
+    serviceFilter,
+    setServiceFilter,
+    nicheFilter,
+    setNicheFilter,
+    statusFilter,
+    setStatusFilter,
+    // KPIs
+    activeClients,
+    churnedThisMonth,
+    churnLTData,
+    totalMrr,
+    avgTicket,
+    // Analytics
+    cohortData,
+    distributionByPlan,
+    distributionByNiche,
+    ticketByNiche,
+  } = useExecutiveDashboard();
+
+  const { canViewFinancialValues, loading: permissionLoading } = useSensitivePermission();
+  const canViewFinancial = canViewFinancialValues();
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -17,15 +53,7 @@ export default function Dashboard() {
     }).format(value);
   };
 
-  const formatLifetime = (months: number) => {
-    const years = months / 12;
-    return {
-      months: months.toFixed(1).replace('.', ','),
-      years: years.toFixed(1).replace('.', ','),
-    };
-  };
-
-  if (loading) {
+  if (loading || permissionLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -36,51 +64,97 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">Visão geral do CRM Petron</p>
+        <h1 className="text-2xl font-bold">Dashboard Executivo</h1>
+        <p className="text-muted-foreground">Visão estratégica de CS, retenção e performance financeira</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      {/* Global Filters */}
+      <DashboardFilters
+        periodFilter={periodFilter}
+        onPeriodChange={setPeriodFilter}
+        customStartDate={customStartDate}
+        customEndDate={customEndDate}
+        onCustomStartChange={setCustomStartDate}
+        onCustomEndChange={setCustomEndDate}
+        serviceFilter={serviceFilter}
+        onServiceChange={setServiceFilter}
+        nicheFilter={nicheFilter}
+        onNicheChange={setNicheFilter}
+        statusFilter={statusFilter}
+        onStatusChange={setStatusFilter}
+        services={services}
+        niches={niches}
+      />
+
+      {/* Row 1: KPIs de CS */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Clientes Ativos"
-          value={activeAccountsCount}
+          value={activeClients}
           icon={Users}
           description="Total de clientes com status ativo"
         />
         <StatsCard
-          title="Receita Mensal (Ativos)"
-          value={formatCurrency(totalMrr)}
-          icon={DollarSign}
-          description="Soma do valor mensal dos clientes ativos"
+          title="Churns (Período)"
+          value={churnedThisMonth}
+          icon={TrendingDown}
+          description="Cancelamentos no período selecionado"
         />
-        <StatsCard
-          title="Ticket Médio"
-          value={formatCurrency(averageTicket)}
-          icon={Receipt}
-          description="Média do valor mensal (ativos)"
-        />
-        <StatsCard
-          title="LT Médio"
-          value={`${formatLifetime(averageLifetimeMonths).months} meses`}
-          icon={Clock}
-          description={`≈ ${formatLifetime(averageLifetimeMonths).years} anos`}
-        />
-        <StatsCard
-          title="Tarefas em Aberto"
-          value={openTasksCount}
-          icon={CheckSquare}
-          description="Tarefas não concluídas"
-        />
+        {canViewFinancial ? (
+          <>
+            <StatsCard
+              title="Receita Mensal"
+              value={formatCurrency(totalMrr)}
+              icon={DollarSign}
+              description="Soma do valor mensal dos clientes ativos"
+            />
+            <StatsCard
+              title="Ticket Médio"
+              value={formatCurrency(avgTicket)}
+              icon={Receipt}
+              description="Média do valor mensal (ativos)"
+            />
+          </>
+        ) : (
+          <>
+            <StatsCard
+              title="Receita Mensal"
+              value={<Lock className="h-5 w-5" />}
+              icon={DollarSign}
+              description="Restrito ao administrador"
+            />
+            <StatsCard
+              title="Ticket Médio"
+              value={<Lock className="h-5 w-5" />}
+              icon={Receipt}
+              description="Restrito ao administrador"
+            />
+          </>
+        )}
       </div>
 
-      {/* Churn and MRR Charts */}
+      {/* LT dos Churns */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <ChurnLTCard avgMonths={churnLTData.avgMonths} count={churnLTData.count} />
+      </div>
+
+      {/* Row 2: Cohort Analysis */}
+      <CohortAnalysis data={cohortData} />
+
+      {/* Row 3: Distribution Charts (Plan / Niche) */}
+      <DistributionCharts
+        distributionByPlan={distributionByPlan}
+        distributionByNiche={distributionByNiche}
+      />
+
+      {/* Row 4: Ticket by Niche */}
+      <TicketByNicheChart data={ticketByNiche} />
+
+      {/* Churn and MRR Charts (existing) */}
       <ChurnMrrCharts />
 
-      {/* Client Evolution Chart */}
+      {/* Client Evolution Chart (existing) */}
       <ClientEvolutionChart />
-
-      {/* Content Activity Summary */}
-      <ContentActivitySummary />
     </div>
   );
 }
