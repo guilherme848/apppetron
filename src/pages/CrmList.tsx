@@ -12,7 +12,7 @@ import { useCrm } from '@/contexts/CrmContext';
 import { toast } from '@/hooks/use-toast';
 import type { Account } from '@/types/crm';
 
-type SortKey = 'name' | 'plan' | 'monthly_value' | 'niche';
+type SortKey = 'name' | 'plan' | 'start_date' | 'monthly_value' | 'niche';
 type SortDirection = 'asc' | 'desc';
 
 interface SortConfig {
@@ -27,7 +27,7 @@ const getStoredSort = (): SortConfig => {
     const stored = localStorage.getItem(SORT_STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (['name', 'plan', 'monthly_value', 'niche'].includes(parsed.key) && ['asc', 'desc'].includes(parsed.direction)) {
+      if (['name', 'plan', 'start_date', 'monthly_value', 'niche'].includes(parsed.key) && ['asc', 'desc'].includes(parsed.direction)) {
         return parsed;
       }
     }
@@ -86,6 +86,14 @@ export default function CrmList() {
           if (!planA && planB) return 1;
           if (planA && !planB) return -1;
           return planA.localeCompare(planB, 'pt-BR') * multiplier;
+        }
+        case 'start_date': {
+          const dateA = a.start_date || '';
+          const dateB = b.start_date || '';
+          // Empty dates go to the end
+          if (!dateA && dateB) return 1;
+          if (dateA && !dateB) return -1;
+          return dateA.localeCompare(dateB) * multiplier;
         }
         case 'monthly_value': {
           const valA = a.monthly_value ?? 0;
@@ -212,6 +220,12 @@ export default function CrmList() {
     }).format(value);
   };
 
+  const formatDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return '—';
+    const date = new Date(dateStr + 'T00:00:00');
+    return date.toLocaleDateString('pt-BR');
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -269,6 +283,15 @@ export default function CrmList() {
               </TableHead>
               <TableHead 
                 className="cursor-pointer hover:bg-muted/50 select-none"
+                onClick={() => handleSort('start_date')}
+              >
+                <div className="flex items-center">
+                  Data de Entrada
+                  <SortIcon columnKey="start_date" />
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/50 select-none"
                 onClick={() => handleSort('monthly_value')}
               >
                 <div className="flex items-center">
@@ -292,7 +315,7 @@ export default function CrmList() {
           <TableBody>
             {sortedAndFilteredAccounts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                   Nenhum cliente encontrado
                 </TableCell>
               </TableRow>
@@ -306,6 +329,9 @@ export default function CrmList() {
                     ) : (
                       <span className="text-muted-foreground text-sm">—</span>
                     )}
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {formatDate(account.start_date)}
                   </TableCell>
                   <TableCell className="font-medium">
                     {formatCurrency(account.monthly_value)}
