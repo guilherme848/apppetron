@@ -174,7 +174,7 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.CONTENT,
     permissions: ['view'],
     icon: BarChart3,
-    order: 1,
+    order: 0, // Always first in module
   },
   {
     id: 'content.production',
@@ -184,6 +184,16 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.CONTENT,
     permissions: ['view', 'edit'],
     icon: Layers,
+    order: 1,
+  },
+  {
+    id: 'content.extra_requests',
+    path: '/content/extra-requests',
+    label: 'Solicitações Extras',
+    category: CATEGORIES.REQUESTS,
+    module: MODULES.CONTENT,
+    permissions: ['view', 'edit'],
+    icon: FileText,
     order: 2,
   },
   {
@@ -195,7 +205,7 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view', 'edit'],
     hideInMenu: true,
     parentId: 'content.production',
-    order: 3,
+    order: 90,
   },
   {
     id: 'content.post_detail',
@@ -206,17 +216,7 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view', 'edit'],
     hideInMenu: true,
     parentId: 'content.production',
-    order: 4,
-  },
-  {
-    id: 'content.extra_requests',
-    path: '/content/extra-requests',
-    label: 'Solicitações Extras',
-    category: CATEGORIES.REQUESTS,
-    module: MODULES.CONTENT,
-    permissions: ['view', 'edit'],
-    icon: FileText,
-    order: 5,
+    order: 91,
   },
   {
     id: 'content.extra_request_new',
@@ -227,7 +227,7 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view', 'edit'],
     hideInMenu: true,
     parentId: 'content.extra_requests',
-    order: 6,
+    order: 92,
   },
   {
     id: 'content.extra_request_detail',
@@ -238,7 +238,7 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view', 'edit'],
     hideInMenu: true,
     parentId: 'content.extra_requests',
-    order: 7,
+    order: 93,
   },
   {
     id: 'content.legacy',
@@ -273,7 +273,7 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.TRAFFIC,
     permissions: ['view'],
     icon: TrendingUp,
-    order: 1,
+    order: 0, // Always first in module
   },
   {
     id: 'traffic.tasks',
@@ -283,7 +283,7 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.TRAFFIC,
     permissions: ['view', 'edit'],
     icon: CheckSquare,
-    order: 2,
+    order: 1,
   },
   {
     id: 'traffic.balances',
@@ -293,17 +293,26 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.TRAFFIC,
     permissions: ['view'],
     icon: BarChart3,
+    order: 2,
+  },
+  {
+    id: 'traffic.overview',
+    path: '/traffic/overview',
+    label: 'Dashboard Multi-Contas',
+    category: CATEGORIES.ANALYTICS,
+    module: MODULES.TRAFFIC,
+    permissions: ['view'],
+    icon: BarChart3,
     order: 3,
   },
   {
-    id: 'traffic.client_detail',
-    path: '/traffic/clients/:id',
-    label: 'Detalhes do Cliente (Tráfego)',
-    category: CATEGORIES.CLIENTS,
+    id: 'traffic.benchmarks',
+    path: '/traffic/benchmarks',
+    label: 'Benchmarks',
+    category: CATEGORIES.ANALYTICS,
     module: MODULES.TRAFFIC,
-    permissions: ['view', 'edit'],
-    hideInMenu: true,
-    parentId: 'traffic.dashboard',
+    permissions: ['view'],
+    icon: TrendingUp,
     order: 4,
   },
   {
@@ -317,6 +326,17 @@ export const routeRegistry: RouteDefinition[] = [
     order: 5,
   },
   {
+    id: 'traffic.client_detail',
+    path: '/traffic/clients/:id',
+    label: 'Detalhes do Cliente (Tráfego)',
+    category: CATEGORIES.CLIENTS,
+    module: MODULES.TRAFFIC,
+    permissions: ['view', 'edit'],
+    hideInMenu: true,
+    parentId: 'traffic.dashboard',
+    order: 90,
+  },
+  {
     id: 'traffic.creative_request_new',
     path: '/traffic/creative-requests/new',
     label: 'Nova Solicitação de Criativo',
@@ -325,7 +345,7 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view', 'edit'],
     hideInMenu: true,
     parentId: 'traffic.creative_requests',
-    order: 6,
+    order: 91,
   },
   {
     id: 'traffic.creative_request_detail',
@@ -336,17 +356,7 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view', 'edit'],
     hideInMenu: true,
     parentId: 'traffic.creative_requests',
-    order: 7,
-  },
-  {
-    id: 'traffic.overview',
-    path: '/traffic/overview',
-    label: 'Dashboard Multi-Contas',
-    category: CATEGORIES.ANALYTICS,
-    module: MODULES.TRAFFIC,
-    permissions: ['view'],
-    icon: BarChart3,
-    order: 8,
+    order: 92,
   },
   {
     id: 'traffic.account_detail',
@@ -357,16 +367,7 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view'],
     hideInMenu: true,
     parentId: 'traffic.overview',
-    order: 9,
-  },
-  {
-    id: 'traffic.benchmarks',
-    path: '/traffic/benchmarks',
-    label: 'Benchmarks',
-    category: CATEGORIES.ANALYTICS,
-    module: MODULES.TRAFFIC,
-    permissions: ['view'],
-    icon: TrendingUp,
+    order: 93,
   },
 
   // ============================================
@@ -380,7 +381,7 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.CS,
     permissions: ['view'],
     icon: HeartHandshake,
-    order: 1,
+    order: 0, // Always first in module
   },
   {
     id: 'cs.onboarding',
@@ -390,7 +391,7 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.CS,
     permissions: ['view', 'edit'],
     icon: Users,
-    order: 2,
+    order: 1,
   },
   {
     id: 'cs.meetings',
@@ -400,7 +401,7 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.CS,
     permissions: ['view', 'edit'],
     icon: LayoutDashboard,
-    order: 3,
+    order: 2,
   },
   {
     id: 'cs.nps',
@@ -410,7 +411,7 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.CS,
     permissions: ['view', 'edit'],
     icon: BarChart3,
-    order: 4,
+    order: 3,
   },
   {
     id: 'cs.risk',
@@ -420,7 +421,7 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.CS,
     permissions: ['view', 'edit'],
     icon: TrendingUp,
-    order: 5,
+    order: 4,
   },
   {
     id: 'cs.client_detail',
@@ -431,7 +432,7 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view', 'edit'],
     hideInMenu: true,
     parentId: 'cs.dashboard',
-    order: 6,
+    order: 90,
   },
 
   // ============================================

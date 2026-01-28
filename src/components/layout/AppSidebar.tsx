@@ -1,5 +1,5 @@
 import { LayoutDashboard, Users, CheckSquare, Layers, Settings, ListTodo, TrendingUp, BarChart3, HeartHandshake, FileText, Home } from 'lucide-react';
-import { NavLink } from '@/components/NavLink';
+import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
@@ -15,9 +15,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useRouteAccess } from '@/hooks/useRouteAccess';
 import { useAuth } from '@/contexts/AuthContext';
 import { getMenuRoutes, RouteDefinition, MODULES } from '@/config/routeRegistry';
+import { cn } from '@/lib/utils';
 import petronLogo from '@/assets/petron-logo.png';
 
-// Icon mapping for routes
+// Icon mapping for routes (kept for potential future use)
 const ICON_MAP: Record<string, React.ElementType> = {
   Home,
   LayoutDashboard,
@@ -47,6 +48,16 @@ const moduleConfig: { module: string; label: string | null }[] = [
   { module: MODULES.CS, label: 'Customer Success' },
   { module: MODULES.SETTINGS, label: 'Sistema' },
 ];
+
+/**
+ * Check if a route should be marked as active.
+ * Uses EXACT matching to prevent multiple items being highlighted.
+ * This fixes the bug where clicking one item activates multiple items.
+ */
+function isRouteActive(routePath: string, currentPath: string): boolean {
+  // Exact match only - no startsWith to prevent parent routes matching children
+  return currentPath === routePath;
+}
 
 // Skeleton menu for loading state
 function SidebarSkeleton() {
@@ -93,6 +104,8 @@ function SidebarSkeleton() {
 export function AppSidebar() {
   const { canAccess, loading: permissionsLoading } = useRouteAccess();
   const { isAdmin, loading: authLoading } = useAuth();
+  const location = useLocation();
+  const currentPath = location.pathname;
 
   // Get menu routes from registry
   const menuRoutes = getMenuRoutes();
@@ -145,18 +158,24 @@ export function AppSidebar() {
                   <SidebarMenu>
                     {routes.map((route) => {
                       const Icon = getRouteIcon(route);
+                      const isActive = isRouteActive(route.path, currentPath);
+                      
                       return (
                         <SidebarMenuItem key={route.id}>
-                          <SidebarMenuButton asChild>
-                            <NavLink
+                          <SidebarMenuButton asChild data-active={isActive}>
+                            <RouterNavLink
                               to={route.path}
-                              end={route.path === '/'}
-                              className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors hover:bg-accent"
-                              activeClassName="bg-accent text-accent-foreground font-medium"
+                              end // Force exact matching in react-router
+                              className={cn(
+                                "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
+                                isActive 
+                                  ? "bg-accent text-accent-foreground font-medium" 
+                                  : "hover:bg-accent/50"
+                              )}
                             >
                               <Icon className="h-4 w-4" />
                               <span>{route.label}</span>
-                            </NavLink>
+                            </RouterNavLink>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                       );
