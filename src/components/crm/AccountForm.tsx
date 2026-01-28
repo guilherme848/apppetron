@@ -101,13 +101,39 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
   const selectedService = services.find(s => s.id === formData.service_id);
   const selectedNiche = niches.find(n => n.id === formData.niche_id);
 
+  // If the form already has a saved FK but settings haven't loaded that row yet (or it was removed),
+  // create a temporary option so Radix Select can render the selected label.
+  const fallbackServiceOption = (!selectedService && formData.service_id && (account?.service_name || account?.service_contracted))
+    ? {
+        id: formData.service_id,
+        name: account?.service_name || account?.service_contracted || 'Serviço selecionado',
+        active: true,
+        created_at: '',
+        traffic_cycle_id: null,
+        traffic_routine_id: null,
+      }
+    : null;
+
+  const fallbackNicheOption = (!selectedNiche && formData.niche_id && account?.niche)
+    ? {
+        id: formData.niche_id,
+        name: account.niche,
+        active: true,
+        created_at: '',
+      }
+    : null;
+
   const serviceOptions = selectedService && !activeServices.some(s => s.id === selectedService.id)
     ? [selectedService, ...activeServices]
-    : activeServices;
+    : fallbackServiceOption && !activeServices.some(s => s.id === fallbackServiceOption.id)
+      ? [fallbackServiceOption, ...activeServices]
+      : activeServices;
 
   const nicheOptions = selectedNiche && !activeNiches.some(n => n.id === selectedNiche.id)
     ? [selectedNiche, ...activeNiches]
-    : activeNiches;
+    : fallbackNicheOption && !activeNiches.some(n => n.id === fallbackNicheOption.id)
+      ? [fallbackNicheOption, ...activeNiches]
+      : activeNiches;
 
   // Build the data object for saving
   const buildSaveData = useCallback((data: typeof formData): Partial<Account> => {
