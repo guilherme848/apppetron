@@ -64,18 +64,6 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
   const activeRoutines = trafficRoutines.filter(r => r.active);
   const isEditing = !!account;
   const skipAutoSave = useRef(false);
-
-  // Ensure selects can display the current value even if it's not in the active list
-  const selectedService = services.find(s => s.id === formData.service_id);
-  const selectedNiche = niches.find(n => n.id === formData.niche_id);
-
-  const serviceOptions = selectedService && !activeServices.some(s => s.id === selectedService.id)
-    ? [selectedService, ...activeServices]
-    : activeServices;
-
-  const nicheOptions = selectedNiche && !activeNiches.some(n => n.id === selectedNiche.id)
-    ? [selectedNiche, ...activeNiches]
-    : activeNiches;
   
   // Track the account ID and open state to control form initialization
   const accountId = account?.id;
@@ -108,6 +96,18 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
     address_complement: '',
   });
   const [emailError, setEmailError] = useState('');
+
+  // Ensure selects can display the current value even if it's not in the active list
+  const selectedService = services.find(s => s.id === formData.service_id);
+  const selectedNiche = niches.find(n => n.id === formData.niche_id);
+
+  const serviceOptions = selectedService && !activeServices.some(s => s.id === selectedService.id)
+    ? [selectedService, ...activeServices]
+    : activeServices;
+
+  const nicheOptions = selectedNiche && !activeNiches.some(n => n.id === selectedNiche.id)
+    ? [selectedNiche, ...activeNiches]
+    : activeNiches;
 
   // Build the data object for saving
   const buildSaveData = useCallback((data: typeof formData): Partial<Account> => {
