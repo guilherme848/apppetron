@@ -192,6 +192,14 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
         const matchingService = findServiceByName(account.service_contracted);
         if (matchingService) serviceId = matchingService.id;
       }
+      // When the account comes from a JOIN (list/detail), we often have `service_name` but not `service_id`.
+      // Use it as a fallback so the Select can display the saved plan.
+      if (!serviceId && (account as Account & { service_name?: string | null }).service_name) {
+        const matchingService = findServiceByName(
+          (account as Account & { service_name?: string | null }).service_name as string
+        );
+        if (matchingService) serviceId = matchingService.id;
+      }
       if (!nicheId && account.niche) {
         const matchingNiche = findNicheByName(account.niche);
         if (matchingNiche) nicheId = matchingNiche.id;
