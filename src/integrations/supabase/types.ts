@@ -3417,6 +3417,89 @@ export type Database = {
           },
         ]
       }
+      user_note_events: {
+        Row: {
+          actor_member_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          note_id: string
+          payload: Json | null
+        }
+        Insert: {
+          actor_member_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          note_id: string
+          payload?: Json | null
+        }
+        Update: {
+          actor_member_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          note_id?: string
+          payload?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_note_events_actor_member_id_fkey"
+            columns: ["actor_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_note_events_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "user_notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_notes: {
+        Row: {
+          content: string | null
+          created_at: string
+          due_date: string | null
+          id: string
+          member_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          member_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          member_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_notes_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_permission_overrides: {
         Row: {
           allowed: boolean

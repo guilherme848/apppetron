@@ -10,7 +10,7 @@ import { BirthdayModal, useBirthdayModal } from '@/components/welcome/BirthdayMo
 import { BirthdayToast } from '@/components/welcome/BirthdayToast';
 import { TaskCounterCards } from '@/components/myarea/TaskCounterCards';
 import { RoleSpecificBlocks } from '@/components/myarea/RoleSpecificBlocks';
-import { PersonalNotesCard } from '@/components/welcome/PersonalNotesCard';
+import { UserNotesCard } from '@/components/notes/UserNotesCard';
 
 export default function WelcomePage() {
   const {
@@ -75,8 +75,8 @@ export default function WelcomePage() {
 
           {/* Right column - Sidebar */}
           <div className="space-y-6">
-            {/* Personal Notes */}
-            <PersonalNotesCard />
+            {/* User Notes */}
+            <UserNotesCard />
 
             {/* Birthday Card */}
             <BirthdayCard
