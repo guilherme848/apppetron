@@ -36,11 +36,11 @@ import {
 
 export default function ContractsList() {
   const { data: contracts, isLoading } = useContracts();
-  const { canViewContractValues, loading: permLoading } = useSensitivePermission();
+  const { canViewFinancialValues, loading: permLoading } = useSensitivePermission();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const showValues = canViewContractValues();
+  const showValues = canViewFinancialValues();
 
   const filteredContracts = contracts?.filter((contract) => {
     const matchesSearch =

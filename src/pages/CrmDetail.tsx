@@ -48,8 +48,8 @@ export default function CrmDetail() {
   const account = getAccountById(id!);
   const contracts = getContractsByAccount(id!);
   const tasks = getTasksByAccount(id!);
-  const { canViewContractValues } = useSensitivePermission();
-  const showContractValues = canViewContractValues();
+  const { canViewFinancialValues } = useSensitivePermission();
+  const showFinancialValues = canViewFinancialValues();
 
   const [contractFormOpen, setContractFormOpen] = useState(false);
   const [taskFormOpen, setTaskFormOpen] = useState(false);
@@ -242,7 +242,11 @@ export default function CrmDetail() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Valor Mensal</p>
-              <p className="font-medium text-lg">{formatCurrency(account.monthly_value)}</p>
+              {showFinancialValues ? (
+                <p className="font-medium text-lg">{formatCurrency(account.monthly_value)}</p>
+              ) : (
+                <RestrictedValue />
+              )}
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Data de Entrada</p>
@@ -332,7 +336,7 @@ export default function CrmDetail() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Contratos (MRR)</CardTitle>
-            {showContractValues && (
+            {showFinancialValues && (
               <Button size="sm" onClick={() => setContractFormOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Novo
@@ -356,14 +360,14 @@ export default function CrmDetail() {
                   {contracts.map((contract) => (
                     <TableRow key={contract.id}>
                       <TableCell className="font-medium">
-                        {showContractValues ? formatCurrency(Number(contract.mrr)) : <RestrictedValue />}
+                        {showFinancialValues ? formatCurrency(Number(contract.mrr)) : <RestrictedValue />}
                       </TableCell>
                       <TableCell>{formatDate(contract.start_date)}</TableCell>
                       <TableCell>
                         <ContractStatusBadge status={contract.status} />
                       </TableCell>
                       <TableCell>
-                        {showContractValues ? (
+                        {showFinancialValues ? (
                           <div className="flex items-center gap-1">
                             <Button
                               variant="ghost"

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Eye, Pencil, Trash2, Loader2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Search, Eye, Pencil, Trash2, Loader2, ArrowUpDown, ArrowUp, ArrowDown, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -10,6 +10,13 @@ import { AccountForm } from '@/components/crm/AccountForm';
 import { AccountRemoveDialog, RemovalType } from '@/components/crm/AccountRemoveDialog';
 import { useCrm } from '@/contexts/CrmContext';
 import { toast } from '@/hooks/use-toast';
+import { useSensitivePermission } from '@/hooks/useSensitivePermission';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { Account } from '@/types/crm';
 
 type SortKey = 'name' | 'plan' | 'start_date' | 'monthly_value' | 'niche';
@@ -40,6 +47,9 @@ const getStoredSort = (): SortConfig => {
 export default function CrmList() {
   const navigate = useNavigate();
   const { accounts, addAccount, updateAccount, softDeleteAccount, churnAccount, loading } = useCrm();
+  const { canViewFinancialValues } = useSensitivePermission();
+  const showFinancialValues = canViewFinancialValues();
+  
   const [search, setSearch] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | undefined>();
@@ -48,6 +58,23 @@ export default function CrmList() {
   // Remove dialog state
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [accountToRemove, setAccountToRemove] = useState<Account | null>(null);
+
+  // Restricted value component for financial data
+  const RestrictedValue = () => (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex items-center gap-1 text-muted-foreground cursor-help">
+            <Lock className="h-3 w-3" />
+            <span className="text-xs">Restrito</span>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Restrito ao Administrador</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
 
   // Persist sort preference
   useEffect(() => {
@@ -290,15 +317,17 @@ export default function CrmList() {
                   <SortIcon columnKey="start_date" />
                 </div>
               </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-muted/50 select-none"
-                onClick={() => handleSort('monthly_value')}
-              >
-                <div className="flex items-center">
-                  Valor Mensal
-                  <SortIcon columnKey="monthly_value" />
-                </div>
-              </TableHead>
+              {showFinancialValues && (
+                <TableHead 
+                  className="cursor-pointer hover:bg-muted/50 select-none"
+                  onClick={() => handleSort('monthly_value')}
+                >
+                  <div className="flex items-center">
+                    Valor Mensal
+                    <SortIcon columnKey="monthly_value" />
+                  </div>
+                </TableHead>
+              )}
               <TableHead 
                 className="cursor-pointer hover:bg-muted/50 select-none"
                 onClick={() => handleSort('niche')}
@@ -315,7 +344,7 @@ export default function CrmList() {
           <TableBody>
             {sortedAndFilteredAccounts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+              <TableCell colSpan={showFinancialValues ? 7 : 6} className="text-center text-muted-foreground py-8">
                   Nenhum cliente encontrado
                 </TableCell>
               </TableRow>
@@ -333,9 +362,11 @@ export default function CrmList() {
                   <TableCell className="text-sm">
                     {formatDate(account.start_date)}
                   </TableCell>
-                  <TableCell className="font-medium">
-                    {formatCurrency(account.monthly_value)}
-                  </TableCell>
+                  {showFinancialValues && (
+                    <TableCell className="font-medium">
+                      {formatCurrency(account.monthly_value)}
+                    </TableCell>
+                  )}
                   <TableCell>
                     {account.niche ? (
                       <span className="text-sm">{account.niche}</span>

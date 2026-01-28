@@ -459,11 +459,12 @@ export const routeRegistry: RouteDefinition[] = [
     parentId: 'crm.contracts',
     order: 6,
   },
-  // Sensitive permission for contract financial values (data-level, not route)
+  // Sensitive permission for financial values (data-level, not route)
+  // Applies to: contract MRR/setup fees, client monthly_value, ad budgets
   {
-    id: 'contracts.values',
-    path: '/contracts', // Associated route
-    label: 'Ver Valores de Contratos',
+    id: 'financial.values',
+    path: '/crm', // Associated route
+    label: 'Ver Valores Financeiros',
     category: CATEGORIES.CONTRACTS,
     module: MODULES.CRM,
     permissions: ['view'], // Only view action, no edit

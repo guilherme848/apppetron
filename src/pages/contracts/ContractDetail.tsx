@@ -30,9 +30,9 @@ export default function ContractDetail() {
   const { data: events = [], isLoading: eventsLoading } = useContractEvents(id);
   const { data: files = [], isLoading: filesLoading } = useContractFiles(id);
   const { data: signers = [], isLoading: signersLoading } = useContractSigners(id);
-  const { canViewContractValues, loading: permLoading } = useSensitivePermission();
+  const { canViewFinancialValues, loading: permLoading } = useSensitivePermission();
 
-  const showValues = canViewContractValues();
+  const showValues = canViewFinancialValues();
 
   const formatCurrency = (value: number | null) => {
     if (value === null || value === undefined) return "-";
