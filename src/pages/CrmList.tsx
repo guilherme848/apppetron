@@ -9,7 +9,7 @@ import { AccountStatusBadge } from '@/components/crm/StatusBadge';
 import { AccountForm } from '@/components/crm/AccountForm';
 import { useCrm } from '@/contexts/CrmContext';
 
-type SortKey = 'name' | 'plan' | 'monthly_value';
+type SortKey = 'name' | 'plan' | 'monthly_value' | 'niche';
 type SortDirection = 'asc' | 'desc';
 
 interface SortConfig {
@@ -24,7 +24,7 @@ const getStoredSort = (): SortConfig => {
     const stored = localStorage.getItem(SORT_STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (['name', 'plan', 'monthly_value'].includes(parsed.key) && ['asc', 'desc'].includes(parsed.direction)) {
+      if (['name', 'plan', 'monthly_value', 'niche'].includes(parsed.key) && ['asc', 'desc'].includes(parsed.direction)) {
         return parsed;
       }
     }
@@ -83,6 +83,13 @@ export default function CrmList() {
           const valA = a.monthly_value ?? 0;
           const valB = b.monthly_value ?? 0;
           return (valA - valB) * multiplier;
+        }
+        case 'niche': {
+          const nicheA = (a.niche || '').toLowerCase();
+          const nicheB = (b.niche || '').toLowerCase();
+          if (!nicheA && nicheB) return 1;
+          if (nicheA && !nicheB) return -1;
+          return nicheA.localeCompare(nicheB, 'pt-BR') * multiplier;
         }
         default:
           return 0;
@@ -214,6 +221,15 @@ export default function CrmList() {
                   <SortIcon columnKey="monthly_value" />
                 </div>
               </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/50 select-none"
+                onClick={() => handleSort('niche')}
+              >
+                <div className="flex items-center">
+                  Nicho
+                  <SortIcon columnKey="niche" />
+                </div>
+              </TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-[100px]">Ações</TableHead>
             </TableRow>
@@ -221,7 +237,7 @@ export default function CrmList() {
           <TableBody>
             {sortedAndFilteredAccounts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                   Nenhum cliente encontrado
                 </TableCell>
               </TableRow>
@@ -238,6 +254,13 @@ export default function CrmList() {
                   </TableCell>
                   <TableCell className="font-medium">
                     {formatCurrency(account.monthly_value)}
+                  </TableCell>
+                  <TableCell>
+                    {account.niche ? (
+                      <span className="text-sm">{account.niche}</span>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">—</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <AccountStatusBadge status={account.status} />
