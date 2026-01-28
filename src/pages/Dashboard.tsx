@@ -1,4 +1,3 @@
-import React from 'react';
 import { Users, DollarSign, TrendingDown, Loader2, Receipt, Lock } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { ClientEvolutionChart } from '@/components/dashboard/ClientEvolutionChart';
@@ -9,15 +8,14 @@ import { CohortAnalysis } from '@/components/dashboard/CohortAnalysis';
 import { DistributionCharts } from '@/components/dashboard/DistributionCharts';
 import { TicketByNicheChart } from '@/components/dashboard/TicketByNicheChart';
 import { BaseHealthScoreCard } from '@/components/dashboard/BaseHealthScoreCard';
-import { DraggableDashboard } from '@/components/dashboard/DraggableDashboard';
 import { useExecutiveDashboard } from '@/hooks/useExecutiveDashboard';
 import { useSensitivePermission } from '@/hooks/useSensitivePermission';
-
 export default function Dashboard() {
   const {
     loading,
     services,
     niches,
+    // Filters
     periodFilter,
     setPeriodFilter,
     customStartDate,
@@ -30,11 +28,13 @@ export default function Dashboard() {
     setNicheFilter,
     statusFilter,
     setStatusFilter,
+    // KPIs
     activeClients,
     churnedThisMonth,
     churnLTData,
     totalMrr,
     avgTicket,
+    // Analytics
     cohortData,
     distributionByPlan,
     distributionByNiche,
@@ -61,108 +61,11 @@ export default function Dashboard() {
     );
   }
 
-  // Define dashboard items with their components
-  const dashboardItems = [
-    {
-      key: 'health-score',
-      component: <BaseHealthScoreCard />,
-    },
-    {
-      key: 'active-clients',
-      component: (
-        <StatsCard
-          title="Clientes Ativos"
-          value={activeClients}
-          icon={Users}
-          description="Total de clientes com status ativo"
-        />
-      ),
-    },
-    {
-      key: 'churns',
-      component: (
-        <StatsCard
-          title="Churns (Período)"
-          value={churnedThisMonth}
-          icon={TrendingDown}
-          description="Cancelamentos no período selecionado"
-        />
-      ),
-    },
-    {
-      key: 'mrr',
-      component: canViewFinancial ? (
-        <StatsCard
-          title="Receita Mensal"
-          value={formatCurrency(totalMrr)}
-          icon={DollarSign}
-          description="Soma do valor mensal dos clientes ativos"
-        />
-      ) : (
-        <StatsCard
-          title="Receita Mensal"
-          value={<Lock className="h-5 w-5" />}
-          icon={DollarSign}
-          description="Restrito ao administrador"
-        />
-      ),
-    },
-    {
-      key: 'ticket',
-      component: canViewFinancial ? (
-        <StatsCard
-          title="Ticket Médio"
-          value={formatCurrency(avgTicket)}
-          icon={Receipt}
-          description="Média do valor mensal (ativos)"
-        />
-      ) : (
-        <StatsCard
-          title="Ticket Médio"
-          value={<Lock className="h-5 w-5" />}
-          icon={Receipt}
-          description="Restrito ao administrador"
-        />
-      ),
-    },
-    {
-      key: 'churn-mrr-charts',
-      component: <ChurnMrrCharts />,
-    },
-    {
-      key: 'client-evolution',
-      component: <ClientEvolutionChart />,
-    },
-    {
-      key: 'churn-lt',
-      component: <ChurnLTCard avgMonths={churnLTData.avgMonths} count={churnLTData.count} />,
-    },
-    {
-      key: 'cohort',
-      component: <CohortAnalysis data={cohortData} />,
-    },
-    {
-      key: 'distribution',
-      component: (
-        <DistributionCharts
-          distributionByPlan={distributionByPlan}
-          distributionByNiche={distributionByNiche}
-        />
-      ),
-    },
-    {
-      key: 'ticket-niche',
-      component: <TicketByNicheChart data={ticketByNiche} />,
-    },
-  ];
-
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Dashboard Executivo</h1>
-        <p className="text-muted-foreground">
-          Visão estratégica de CS, retenção e performance financeira. Arraste e redimensione os cards conforme sua preferência.
-        </p>
+        <p className="text-muted-foreground">Visão estratégica de CS, retenção e performance financeira</p>
       </div>
 
       {/* Global Filters */}
@@ -183,8 +86,76 @@ export default function Dashboard() {
         niches={niches}
       />
 
-      {/* Draggable Dashboard Grid */}
-      <DraggableDashboard items={dashboardItems} />
+      {/* Row 1: Health Score + KPIs de CS */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <BaseHealthScoreCard />
+        <StatsCard
+          title="Clientes Ativos"
+          value={activeClients}
+          icon={Users}
+          description="Total de clientes com status ativo"
+        />
+        <StatsCard
+          title="Churns (Período)"
+          value={churnedThisMonth}
+          icon={TrendingDown}
+          description="Cancelamentos no período selecionado"
+        />
+        {canViewFinancial ? (
+          <>
+            <StatsCard
+              title="Receita Mensal"
+              value={formatCurrency(totalMrr)}
+              icon={DollarSign}
+              description="Soma do valor mensal dos clientes ativos"
+            />
+            <StatsCard
+              title="Ticket Médio"
+              value={formatCurrency(avgTicket)}
+              icon={Receipt}
+              description="Média do valor mensal (ativos)"
+            />
+          </>
+        ) : (
+          <>
+            <StatsCard
+              title="Receita Mensal"
+              value={<Lock className="h-5 w-5" />}
+              icon={DollarSign}
+              description="Restrito ao administrador"
+            />
+            <StatsCard
+              title="Ticket Médio"
+              value={<Lock className="h-5 w-5" />}
+              icon={Receipt}
+              description="Restrito ao administrador"
+            />
+          </>
+        )}
+      </div>
+
+      {/* Churn and MRR Charts (existing) */}
+      <ChurnMrrCharts />
+
+      {/* Client Evolution Chart (existing) */}
+      <ClientEvolutionChart />
+
+      {/* LT dos Churns */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <ChurnLTCard avgMonths={churnLTData.avgMonths} count={churnLTData.count} />
+      </div>
+
+      {/* Cohort Analysis */}
+      <CohortAnalysis data={cohortData} />
+
+      {/* Distribution Charts (Plan / Niche) */}
+      <DistributionCharts
+        distributionByPlan={distributionByPlan}
+        distributionByNiche={distributionByNiche}
+      />
+
+      {/* Ticket by Niche */}
+      <TicketByNicheChart data={ticketByNiche} />
     </div>
   );
 }
