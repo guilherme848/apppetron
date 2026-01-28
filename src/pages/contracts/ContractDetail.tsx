@@ -1,13 +1,14 @@
 import { useParams, Link } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ArrowLeft, ExternalLink, Building2, FileText, Calendar } from "lucide-react";
+import { ArrowLeft, ExternalLink, Building2, FileText, Lock } from "lucide-react";
 import {
   useContract,
   useContractEvents,
   useContractFiles,
   useContractSigners,
 } from "@/hooks/useContracts";
+import { useSensitivePermission } from "@/hooks/useSensitivePermission";
 import { ContractStatusBadge } from "@/components/contracts/ContractStatusBadge";
 import { ContractTimeline } from "@/components/contracts/ContractTimeline";
 import { ContractFiles } from "@/components/contracts/ContractFiles";
@@ -16,8 +17,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
-import { Json } from "@/integrations/supabase/types";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function ContractDetail() {
   const { id } = useParams<{ id: string }>();
@@ -25,6 +30,9 @@ export default function ContractDetail() {
   const { data: events = [], isLoading: eventsLoading } = useContractEvents(id);
   const { data: files = [], isLoading: filesLoading } = useContractFiles(id);
   const { data: signers = [], isLoading: signersLoading } = useContractSigners(id);
+  const { canViewContractValues, loading: permLoading } = useSensitivePermission();
+
+  const showValues = canViewContractValues();
 
   const formatCurrency = (value: number | null) => {
     if (value === null || value === undefined) return "-";
@@ -39,7 +47,23 @@ export default function ContractDetail() {
     return format(new Date(date), "dd/MM/yyyy", { locale: ptBR });
   };
 
-  if (contractLoading) {
+  const RestrictedValue = ({ size = "default" }: { size?: "default" | "large" }) => (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className={`inline-flex items-center gap-1 text-muted-foreground cursor-help ${size === "large" ? "text-sm" : "text-xs"}`}>
+            <Lock className={size === "large" ? "h-4 w-4" : "h-3 w-3"} />
+            <span>Restrito ao Administrador</span>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Valores financeiros são restritos ao cargo Administrador</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+
+  if (contractLoading || permLoading) {
     return (
       <div className="container mx-auto p-6 space-y-6">
         <Skeleton className="h-8 w-64" />
@@ -117,15 +141,21 @@ export default function ContractDetail() {
             <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Valor Mensal (MRR)</p>
-                <p className="font-semibold">{formatCurrency(contract.mrr)}</p>
+                <p className="font-semibold">
+                  {showValues ? formatCurrency(contract.mrr) : <RestrictedValue size="large" />}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Taxa de Setup</p>
-                <p className="font-semibold">{formatCurrency(contract.setup_fee)}</p>
+                <p className="font-semibold">
+                  {showValues ? formatCurrency(contract.setup_fee) : <RestrictedValue size="large" />}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total 1º Mês</p>
-                <p className="font-semibold">{formatCurrency(contract.total_first_month)}</p>
+                <p className="font-semibold">
+                  {showValues ? formatCurrency(contract.total_first_month) : <RestrictedValue size="large" />}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Início do Contrato</p>
