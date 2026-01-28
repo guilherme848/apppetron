@@ -97,6 +97,20 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
   });
   const [emailError, setEmailError] = useState('');
 
+  // Debug: understand why the selected service isn't showing in the Select
+  useEffect(() => {
+    if (!open || !account) return;
+    console.debug('[CRM] AccountForm open snapshot', {
+      accountId: account.id,
+      account_service_id: (account as any).service_id,
+      account_service_name: (account as any).service_name,
+      account_service_contracted: (account as any).service_contracted,
+      form_service_id: formData.service_id,
+      servicesCount: services.length,
+      activeServicesCount: activeServices.length,
+    });
+  }, [open, account, formData.service_id, services.length, activeServices.length]);
+
   // Ensure selects can display the current value even if it's not in the active list
   const selectedService = services.find(s => s.id === formData.service_id);
   const selectedNiche = niches.find(n => n.id === formData.niche_id);
