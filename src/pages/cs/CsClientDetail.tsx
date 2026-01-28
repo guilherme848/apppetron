@@ -224,9 +224,8 @@ export default function CsClientDetail() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="briefing" className="space-y-4">
+      <Tabs defaultValue="timeline" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="briefing">Briefing da Venda</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
           <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
           <TabsTrigger value="meetings">Reuniões</TabsTrigger>
@@ -234,10 +233,6 @@ export default function CsClientDetail() {
           <TabsTrigger value="risk">Risco</TabsTrigger>
           <TabsTrigger value="audit">Histórico</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="briefing">
-          <SalesBriefingSection clientId={client.id} />
-        </TabsContent>
 
         <TabsContent value="timeline">
           <Card>
