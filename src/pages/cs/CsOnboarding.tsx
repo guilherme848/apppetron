@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCsClientOnboarding, useCsClientTasks } from '@/hooks/useCsData';
 import { CS_ONBOARDING_STATUS_LABELS } from '@/types/cs';
 import { Link } from 'react-router-dom';
@@ -41,11 +42,14 @@ export default function CsOnboarding() {
     return tasks.length > 0 ? (done / tasks.length) * 100 : 0;
   };
 
-  const handleCardClick = (onboarding: { id: string; client_id: string }) => {
-    if (selectedId === onboarding.id) {
+  const handleSelectClient = (value: string) => {
+    if (value === '_none_') {
       setSelectedId(null);
       setSelectedClientId(null);
-    } else {
+      return;
+    }
+    const onboarding = onboardings.find(o => o.client_id === value);
+    if (onboarding) {
       setSelectedId(onboarding.id);
       setSelectedClientId(onboarding.client_id);
     }
@@ -53,11 +57,30 @@ export default function CsOnboarding() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Users className="h-8 w-8 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold">Onboarding</h1>
-          <p className="text-muted-foreground">Acompanhamento de onboarding de clientes</p>
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-3">
+          <Users className="h-8 w-8 text-primary" />
+          <div>
+            <h1 className="text-2xl font-bold">Onboarding</h1>
+            <p className="text-muted-foreground">Acompanhamento de onboarding de clientes</p>
+          </div>
+        </div>
+
+        {/* Select de cliente */}
+        <div className="w-full sm:w-72">
+          <Select value={selectedClientId || '_none_'} onValueChange={handleSelectClient}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione um cliente..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_none_">Nenhum cliente selecionado</SelectItem>
+              {onboardings.map((o) => (
+                <SelectItem key={o.client_id} value={o.client_id}>
+                  {o.client_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -130,7 +153,7 @@ export default function CsOnboarding() {
             <Card 
               key={onboarding.id} 
               className={`cursor-pointer transition-colors ${selectedId === onboarding.id ? 'ring-2 ring-primary' : 'hover:bg-muted/50'}`}
-              onClick={() => handleCardClick(onboarding)}
+              onClick={() => handleSelectClient(onboarding.client_id)}
             >
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
