@@ -132,6 +132,13 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
   const { status: saveStatus, saveNow, queueChange, flush } = useAutoSave({
     onSave: async (patch) => {
       if (!isEditing || !account) return;
+      if (import.meta.env.DEV) {
+        console.debug('[CRM] AccountForm autosave', {
+          mode: 'edit',
+          accountId: account.id,
+          keys: Object.keys(patch as Record<string, unknown>),
+        });
+      }
       // We need to send the full data with the patch applied
       const currentData = { ...formData, ...patch };
       const saveData = buildSaveData(currentData);
