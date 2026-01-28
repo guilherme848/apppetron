@@ -232,6 +232,83 @@ export type Database = {
         }
         Relationships: []
       }
+      base_health_score_config: {
+        Row: {
+          components: Json
+          created_at: string
+          green_threshold: number
+          id: string
+          is_active: boolean
+          name: string
+          normalization_rules: Json
+          updated_at: string
+          yellow_threshold: number
+        }
+        Insert: {
+          components?: Json
+          created_at?: string
+          green_threshold?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          normalization_rules?: Json
+          updated_at?: string
+          yellow_threshold?: number
+        }
+        Update: {
+          components?: Json
+          created_at?: string
+          green_threshold?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          normalization_rules?: Json
+          updated_at?: string
+          yellow_threshold?: number
+        }
+        Relationships: []
+      }
+      base_health_score_history: {
+        Row: {
+          components_snapshot: Json
+          config_id: string | null
+          created_at: string
+          id: string
+          period_end: string
+          period_start: string
+          raw_metrics: Json | null
+          score_value: number
+        }
+        Insert: {
+          components_snapshot?: Json
+          config_id?: string | null
+          created_at?: string
+          id?: string
+          period_end: string
+          period_start: string
+          raw_metrics?: Json | null
+          score_value: number
+        }
+        Update: {
+          components_snapshot?: Json
+          config_id?: string | null
+          created_at?: string
+          id?: string
+          period_end?: string
+          period_start?: string
+          raw_metrics?: Json | null
+          score_value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "base_health_score_history_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "base_health_score_config"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       batch_attachments: {
         Row: {
           batch_id: string

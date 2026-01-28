@@ -7,9 +7,9 @@ import { ChurnLTCard } from '@/components/dashboard/ChurnLTCard';
 import { CohortAnalysis } from '@/components/dashboard/CohortAnalysis';
 import { DistributionCharts } from '@/components/dashboard/DistributionCharts';
 import { TicketByNicheChart } from '@/components/dashboard/TicketByNicheChart';
+import { BaseHealthScoreCard } from '@/components/dashboard/BaseHealthScoreCard';
 import { useExecutiveDashboard } from '@/hooks/useExecutiveDashboard';
 import { useSensitivePermission } from '@/hooks/useSensitivePermission';
-
 export default function Dashboard() {
   const {
     loading,
@@ -86,8 +86,9 @@ export default function Dashboard() {
         niches={niches}
       />
 
-      {/* Row 1: KPIs de CS */}
+      {/* Row 1: Health Score + KPIs de CS */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <BaseHealthScoreCard />
         <StatsCard
           title="Clientes Ativos"
           value={activeClients}
