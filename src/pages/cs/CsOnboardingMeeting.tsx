@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,13 +6,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   ChevronDown,
   ChevronRight,
-  Save,
   CheckCircle2,
   AlertCircle,
   Upload,
@@ -45,6 +43,10 @@ import {
   CS_RISK_LEVEL_COLORS,
 } from '@/types/onboardingMeeting';
 import { useToast } from '@/hooks/use-toast';
+import { TranscriptImportSection } from '@/components/cs/TranscriptImportSection';
+import { TypedQuestionInput } from '@/components/cs/TypedQuestionInput';
+import { useLatestTranscript, useAiAutofillAnswers } from '@/hooks/useCsTranscripts';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function CsOnboardingMeeting() {
   const { meetingId } = useParams<{ meetingId: string }>();
@@ -52,12 +54,19 @@ export default function CsOnboardingMeeting() {
   const { member } = useAuth();
   const { toast } = useToast();
 
+  const queryClient = useQueryClient();
+
   // Data hooks
   const { data: meeting, isLoading: loadingMeeting } = useOnboardingMeeting(meetingId);
   const { data: questions = [], isLoading: loadingQuestions } = useOnboardingQuestions();
   const { data: answersData = [], isLoading: loadingAnswers } = useOnboardingAnswers(meetingId);
   const { data: files = [] } = useOnboardingMeetingFiles(meetingId);
   const { members: teamMembers = [] } = useTeamMembers();
+
+  // Transcript for AI autofill
+  const clientId = meeting?.client_id;
+  const { data: transcript } = useLatestTranscript(clientId, 'onboarding_meeting');
+  const aiAutofill = useAiAutofillAnswers();
 
   // Mutations
   const updateMeeting = useUpdateOnboardingMeeting();
@@ -68,6 +77,7 @@ export default function CsOnboardingMeeting() {
   // Local state
   const [openBlocks, setOpenBlocks] = useState<Set<string>>(new Set());
   const [localAnswers, setLocalAnswers] = useState<Record<string, string>>({});
+  const [localAnswersJson, setLocalAnswersJson] = useState<Record<string, unknown>>({});
   const [generalNotes, setGeneralNotes] = useState('');
   const [pendingSaves, setPendingSaves] = useState<Set<string>>(new Set());
 
@@ -78,10 +88,13 @@ export default function CsOnboardingMeeting() {
   useEffect(() => {
     if (answersData.length > 0) {
       const answerMap: Record<string, string> = {};
+      const answerJsonMap: Record<string, unknown> = {};
       for (const a of answersData) {
         answerMap[a.question_id] = a.answer_text || '';
+        answerJsonMap[a.question_id] = a.answer_value_json;
       }
       setLocalAnswers(answerMap);
+      setLocalAnswersJson(answerJsonMap);
     }
   }, [answersData]);
 
@@ -117,8 +130,11 @@ export default function CsOnboardingMeeting() {
   };
 
   // Handle answer change (local)
-  const handleAnswerChange = (questionId: string, value: string) => {
-    setLocalAnswers(prev => ({ ...prev, [questionId]: value }));
+  const handleAnswerChange = (questionId: string, textValue: string, jsonValue?: unknown) => {
+    setLocalAnswers(prev => ({ ...prev, [questionId]: textValue }));
+    if (jsonValue !== undefined) {
+      setLocalAnswersJson(prev => ({ ...prev, [questionId]: jsonValue }));
+    }
   };
 
   // Save answer on blur
@@ -132,6 +148,7 @@ export default function CsOnboardingMeeting() {
         meeting_id: meetingId,
         question_id: questionId,
         answer_text: localAnswers[questionId] || null,
+        answer_value_json: localAnswersJson[questionId] ?? null,
       });
     } finally {
       setPendingSaves(prev => {
@@ -141,6 +158,53 @@ export default function CsOnboardingMeeting() {
       });
     }
   };
+
+  // AI Autofill handler
+  const handleAiAutofill = useCallback(async () => {
+    if (!transcript?.transcript_text || !meetingId) return;
+
+    // Get questions with empty answers
+    const questionsForAi = questions
+      .filter(q => q.is_active)
+      .map(q => ({
+        id: q.id,
+        answer_key: q.answer_key,
+        question_text: q.question_text,
+        field_type: q.field_type || 'long_text',
+        options_json: q.options_json,
+        ai_extract_hint: q.ai_extract_hint,
+      }));
+
+    const currentAnswers = questions.map(q => ({
+      question_id: q.id,
+      answer_text: localAnswers[q.id] || null,
+      answer_value_json: localAnswersJson[q.id] ?? null,
+    }));
+
+    const result = await aiAutofill.mutateAsync({
+      transcript_text: transcript.transcript_text,
+      questions: questionsForAi,
+      current_answers: currentAnswers,
+    });
+
+    // Save AI-generated answers
+    for (const answer of result.answers) {
+      if (answer.value !== null || answer.text) {
+        await saveAnswer.mutateAsync({
+          meeting_id: meetingId,
+          question_id: answer.question_id,
+          answer_text: answer.text || null,
+          answer_value_json: answer.value ?? null,
+          answered_by_ai: true,
+          needs_validation: answer.needs_validation,
+          confidence: answer.confidence,
+        });
+      }
+    }
+
+    // Refresh answers
+    queryClient.invalidateQueries({ queryKey: ['onboarding-answers', meetingId] });
+  }, [transcript, meetingId, questions, localAnswers, localAnswersJson, aiAutofill, saveAnswer, queryClient]);
 
   // Save general notes
   const handleNotesBlur = async () => {
@@ -318,6 +382,20 @@ export default function CsOnboardingMeeting() {
         </CardContent>
       </Card>
 
+      {/* Transcript Import Section */}
+      {clientId && !isCompleted && (
+        <TranscriptImportSection
+          clientId={clientId}
+          transcriptType="onboarding_meeting"
+          title="Transcrição da Reunião"
+          description="Importe a transcrição para preencher respostas automaticamente com IA"
+          showAiButton={true}
+          onAiAutofill={handleAiAutofill}
+          aiButtonDisabled={!transcript?.transcript_text}
+          aiButtonLoading={aiAutofill.isPending}
+        />
+      )}
+
       {/* Question Blocks */}
       <div className="space-y-4">
         {blocks.map(block => {
@@ -367,38 +445,22 @@ export default function CsOnboardingMeeting() {
                   <CardContent className="space-y-6 pt-0">
                         {block.questions.map((question, idx) => {
                           const isPending = pendingSaves.has(question.id);
-                          const hasAnswer = localAnswers[question.id]?.trim().length > 0;
+                          const answer = answersData.find(a => a.question_id === question.id);
 
                           return (
                             <div key={question.id} className="space-y-2">
-                              <div className="flex items-start justify-between gap-2">
-                                <label className="text-sm font-medium leading-tight">
-                                  {idx + 1}. {question.question_text}
-                                  {question.is_required && (
-                                    <span className="text-destructive ml-1">*</span>
-                                  )}
-                                </label>
-                                <div className="flex items-center gap-2 flex-shrink-0">
-                                  {question.impacts_quality && (
-                                    <Badge variant="outline" className="text-xs">
-                                      Peso: {question.weight}
-                                    </Badge>
-                                  )}
-                                  {isPending && (
-                                    <span className="text-xs text-muted-foreground">Salvando...</span>
-                                  )}
-                                  {!isPending && hasAnswer && (
-                                    <CheckCircle2 className="h-4 w-4 text-primary" />
-                                  )}
-                                </div>
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                                <span className="font-medium">{idx + 1}.</span>
                               </div>
-                              <Textarea
+                              <TypedQuestionInput
+                                question={question}
+                                answer={answer}
                                 value={localAnswers[question.id] || ''}
-                                onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                                valueJson={localAnswersJson[question.id]}
+                                onChange={(textValue, jsonValue) => handleAnswerChange(question.id, textValue, jsonValue)}
                                 onBlur={() => handleAnswerBlur(question.id)}
-                                placeholder="Digite sua resposta..."
                                 disabled={isCompleted}
-                                className="min-h-[80px]"
+                                isPending={isPending}
                               />
                             </div>
                           );
