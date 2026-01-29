@@ -210,6 +210,16 @@ serve(async (req) => {
             'onsite_conversion.lead_grouped',
           ]);
 
+          // Total engagement (likes, comments, shares, reactions)
+          const engagement = findActionValue(dayData.actions, [
+            'post_engagement',
+            'page_engagement',
+            'post_reaction',
+            'comment',
+            'post',
+            'like',
+          ]);
+
           const metricsJson = {
             // Basic metrics
             impressions: parseInt(dayData.impressions || '0'),
@@ -226,20 +236,17 @@ serve(async (req) => {
             
             // WhatsApp/Messaging metrics
             whatsapp_clicks: whatsappClicks,
-            whatsapp_conversations: whatsappConversations,
+            whatsapp_conversations: whatsappConversations + messagingReplies, // Combine both types
             messaging_replies: messagingReplies,
             cost_per_message: costPerMessage,
             
             // Profile/Engagement metrics
             page_engagement: pageEngagement,
             profile_visits: profileVisits,
+            engagement: engagement || pageEngagement, // Use engagement or fallback to page_engagement
             
             // Cost metrics
             cost_per_lead: costPerLead,
-            
-            // Raw data for debugging
-            raw_actions: dayData.actions || [],
-            raw_costs: dayData.cost_per_action_type || [],
           };
 
           // Upsert the daily metrics
