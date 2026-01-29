@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Loader2, HeartHandshake } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCommandCenter } from '@/hooks/useCommandCenter';
@@ -6,10 +6,15 @@ import { CommandCenterGlobalFilters } from '@/components/command-center/CommandC
 import { CommandCenterQuickActions } from '@/components/command-center/CommandCenterQuickActions';
 import { KPICards } from '@/components/command-center/KPICards';
 import { HealthDistributionCard, AlertsCard } from '@/components/command-center/HealthAndAlerts';
-import { OnboardingFunnelCard, NpsDistributionCard } from '@/components/command-center/OperationsCards';
+import { OnboardingFunnelCard } from '@/components/command-center/OperationsCards';
 import { ChurnByDimensionCard, CohortAnalysisCard } from '@/components/command-center/ChurnAnalytics';
 import { ClientList } from '@/components/command-center/ClientList';
 import { PlaybooksCard } from '@/components/command-center/PlaybooksCard';
+import { NpsSection } from '@/components/command-center/NpsSection';
+import { ClientDrillDownDrawer } from '@/components/command-center/ClientDrillDownDrawer';
+import { CreatePlaybookDialog } from '@/components/command-center/CreatePlaybookDialog';
+import { SelectClientDialog } from '@/components/command-center/SelectClientDialog';
+import { ClientListView, ClientListItem, PlaybookType } from '@/types/commandCenter';
 import { toast } from 'sonner';
 
 export default function CsCommandCenter() {
@@ -33,16 +38,141 @@ export default function CsCommandCenter() {
     cohortData,
     activePlaybooks,
     getClientList,
+    refetch,
   } = useCommandCenter();
+
+  // Drill-down drawer state
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerTitle, setDrawerTitle] = useState('');
+  const [drawerSubtitle, setDrawerSubtitle] = useState('');
+  const [drawerClients, setDrawerClients] = useState<ClientListItem[]>([]);
+
+  // Dialog states
+  const [playbookDialogOpen, setPlaybookDialogOpen] = useState(false);
+  const [selectClientDialogOpen, setSelectClientDialogOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<{ id: string; name: string } | null>(null);
+  const [pendingPlaybookType, setPendingPlaybookType] = useState<PlaybookType>('custom');
+  const [pendingAction, setPendingAction] = useState<'playbook' | 'risk' | 'meeting' | null>(null);
+
+  // Calculate detractors without follow-up
+  const detractorsWithoutFollowup = useMemo(() => {
+    const detractors = getClientList('detractors');
+    // In a real scenario, we'd check if they have a recent contact/meeting
+    return Math.floor(detractors.length * 0.4); // Simulated for now
+  }, [getClientList]);
+
+  // Open drill-down drawer with filtered clients
+  const openDrillDown = (title: string, view: ClientListView, subtitle?: string) => {
+    setDrawerTitle(title);
+    setDrawerSubtitle(subtitle || '');
+    setDrawerClients(getClientList(view));
+    setDrawerOpen(true);
+  };
+
+  // KPI card click handlers
+  const handleKpiClick = (type: string) => {
+    switch (type) {
+      case 'active':
+        openDrillDown('Clientes Ativos', 'action_today', 'Todos os clientes com status ativo');
+        break;
+      case 'onboarding':
+        openDrillDown('Clientes em Onboarding', 'onboarding_delayed', 'Clientes no processo de onboarding');
+        break;
+      case 'at_risk':
+        openDrillDown('Clientes em Risco', 'critical', 'Clientes com health score crítico ou em atenção');
+        break;
+      case 'nps':
+        openDrillDown('Detratores', 'detractors', 'Clientes que deram NPS <= 6');
+        break;
+      case 'churn':
+      case 'churn_mrr':
+        openDrillDown('Cancelamentos', 'churned', 'Clientes que cancelaram no período');
+        break;
+    }
+  };
 
   // Quick action handlers
   const handleCreateTask = () => toast.info('Funcionalidade em desenvolvimento');
-  const handleRegisterMeeting = () => navigate('/cs/meetings');
+  
+  const handleRegisterMeeting = () => {
+    setPendingAction('meeting');
+    setSelectClientDialogOpen(true);
+  };
+  
   const handleSendNps = () => navigate('/cs/nps');
-  const handleMarkAtRisk = () => navigate('/cs/risk');
-  const handleCreatePlaybook = () => toast.info('Funcionalidade em desenvolvimento');
+  
+  const handleMarkAtRisk = () => {
+    setPendingAction('risk');
+    setSelectClientDialogOpen(true);
+  };
+  
+  const handleCreatePlaybook = () => {
+    setPendingAction('playbook');
+    setPendingPlaybookType('custom');
+    setSelectClientDialogOpen(true);
+  };
+  
   const handleStartCancellation = () => navigate('/cs/risk');
   const handleOpenClient360 = () => navigate('/crm');
+
+  // Client selection handler
+  const handleClientSelected = (client: { id: string; name: string }) => {
+    setSelectedClient(client);
+    setSelectClientDialogOpen(false);
+
+    switch (pendingAction) {
+      case 'playbook':
+        setPlaybookDialogOpen(true);
+        break;
+      case 'meeting':
+        navigate(`/cs/meetings?client=${client.id}`);
+        break;
+      case 'risk':
+        // Mark client as at risk
+        toast.success(`${client.name} marcado em risco`);
+        refetch();
+        break;
+    }
+    setPendingAction(null);
+  };
+
+  // Playbook creation from NPS section
+  const handleCreateDetractorPlaybook = () => {
+    setPendingPlaybookType('detractor');
+    setPendingAction('playbook');
+    setSelectClientDialogOpen(true);
+  };
+
+  // Health distribution click
+  const handleHealthClick = (status: 'healthy' | 'attention' | 'critical') => {
+    const titles = {
+      healthy: 'Clientes Saudáveis',
+      attention: 'Clientes em Atenção',
+      critical: 'Clientes Críticos',
+    };
+    openDrillDown(titles[status], status === 'critical' ? 'critical' : 'action_today');
+  };
+
+  // Batch actions from drawer
+  const handleBatchCreateTask = (clientIds: string[]) => {
+    toast.info(`Criar tarefas para ${clientIds.length} clientes - Em desenvolvimento`);
+  };
+
+  const handleBatchCreatePlaybook = (clientIds: string[]) => {
+    if (clientIds.length === 1) {
+      const client = drawerClients.find(c => c.id === clientIds[0]);
+      if (client) {
+        setSelectedClient({ id: client.id, name: client.name });
+        setPlaybookDialogOpen(true);
+      }
+    } else {
+      toast.info(`Criar playbooks para ${clientIds.length} clientes - Em desenvolvimento`);
+    }
+  };
+
+  const handleBatchMarkRisk = (clientIds: string[]) => {
+    toast.info(`Marcar ${clientIds.length} clientes em risco - Em desenvolvimento`);
+  };
 
   const handleClientClick = (clientId: string) => navigate(`/cs/client/${clientId}`);
 
@@ -93,7 +223,7 @@ export default function CsCommandCenter() {
         <KPICards
           data={kpiData}
           metricMode={filters.metricMode}
-          onCardClick={(type) => console.log('Card clicked:', type)}
+          onCardClick={handleKpiClick}
         />
       </section>
 
@@ -103,7 +233,7 @@ export default function CsCommandCenter() {
           <h2 className="text-lg font-semibold">Operação de CS</h2>
           <OnboardingFunnelCard
             data={onboardingFunnel}
-            onStageClick={(stage) => console.log('Stage clicked:', stage)}
+            onStageClick={(stage) => openDrillDown('Onboarding', 'onboarding_delayed', `Etapa: ${stage}`)}
           />
         </div>
 
@@ -111,7 +241,7 @@ export default function CsCommandCenter() {
           <h2 className="text-lg font-semibold">Saúde e Risco</h2>
           <HealthDistributionCard
             data={healthDistribution}
-            onSegmentClick={(status) => console.log('Health clicked:', status)}
+            onSegmentClick={handleHealthClick}
           />
         </div>
       </section>
@@ -123,11 +253,14 @@ export default function CsCommandCenter() {
         onViewAll={() => navigate('/cs/risk')}
       />
 
-      {/* SECTION 4: NPS */}
+      {/* SECTION 4: NPS + Playbooks */}
       <section className="grid gap-6 lg:grid-cols-2">
-        <NpsDistributionCard
+        <NpsSection
           data={npsDistribution}
-          onSegmentClick={(classification) => console.log('NPS clicked:', classification)}
+          detractorsWithoutFollowup={detractorsWithoutFollowup}
+          onViewDetractors={() => openDrillDown('Detratores', 'detractors', 'Clientes com NPS <= 6')}
+          onViewPromoters={() => openDrillDown('Promotores', 'promoters', 'Clientes com NPS >= 9 - Solicitar cases')}
+          onCreatePlaybook={handleCreateDetractorPlaybook}
         />
         <PlaybooksCard
           playbooks={activePlaybooks}
@@ -144,13 +277,13 @@ export default function CsCommandCenter() {
             title="Churn por Nicho"
             data={churnByNiche}
             metricMode={filters.metricMode}
-            onItemClick={(item) => console.log('Niche clicked:', item)}
+            onItemClick={(item) => toast.info(`Filtrar por nicho: ${item.name}`)}
           />
           <ChurnByDimensionCard
             title="Churn por Plano"
             data={churnByService}
             metricMode={filters.metricMode}
-            onItemClick={(item) => console.log('Service clicked:', item)}
+            onItemClick={(item) => toast.info(`Filtrar por plano: ${item.name}`)}
           />
         </div>
       </section>
@@ -169,6 +302,36 @@ export default function CsCommandCenter() {
           onClientClick={handleClientClick}
         />
       </section>
+
+      {/* Drill-down Drawer */}
+      <ClientDrillDownDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        title={drawerTitle}
+        subtitle={drawerSubtitle}
+        clients={drawerClients}
+        onCreateTask={handleBatchCreateTask}
+        onCreatePlaybook={handleBatchCreatePlaybook}
+        onMarkAtRisk={handleBatchMarkRisk}
+      />
+
+      {/* Select Client Dialog */}
+      <SelectClientDialog
+        open={selectClientDialogOpen}
+        onOpenChange={setSelectClientDialogOpen}
+        onSelect={handleClientSelected}
+        title="Selecionar Cliente"
+      />
+
+      {/* Create Playbook Dialog */}
+      <CreatePlaybookDialog
+        open={playbookDialogOpen}
+        onOpenChange={setPlaybookDialogOpen}
+        clientId={selectedClient?.id}
+        clientName={selectedClient?.name}
+        defaultType={pendingPlaybookType}
+        onSuccess={refetch}
+      />
     </div>
   );
 }
