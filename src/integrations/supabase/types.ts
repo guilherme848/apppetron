@@ -1846,25 +1846,37 @@ export type Database = {
       cs_onboarding_answers: {
         Row: {
           answer_text: string | null
+          answer_value_json: Json | null
+          answered_by_ai: boolean
+          confidence: number | null
           created_at: string
           id: string
           meeting_id: string
+          needs_validation: boolean
           question_id: string
           updated_at: string
         }
         Insert: {
           answer_text?: string | null
+          answer_value_json?: Json | null
+          answered_by_ai?: boolean
+          confidence?: number | null
           created_at?: string
           id?: string
           meeting_id: string
+          needs_validation?: boolean
           question_id: string
           updated_at?: string
         }
         Update: {
           answer_text?: string | null
+          answer_value_json?: Json | null
+          answered_by_ai?: boolean
+          confidence?: number | null
           created_at?: string
           id?: string
           meeting_id?: string
+          needs_validation?: boolean
           question_id?: string
           updated_at?: string
         }
@@ -2171,42 +2183,66 @@ export type Database = {
       }
       cs_onboarding_questions: {
         Row: {
+          ai_extract_hint: string | null
+          answer_key: string | null
           block_key: string
           block_title: string
           created_at: string
+          field_type: string
+          help_text: string | null
           id: string
           impacts_quality: boolean
           is_active: boolean
+          is_decision_field: boolean
           is_required: boolean
+          options_json: Json | null
           order_index: number
+          placeholder: string | null
           question_text: string
           updated_at: string
+          validation_json: Json | null
           weight: number
         }
         Insert: {
+          ai_extract_hint?: string | null
+          answer_key?: string | null
           block_key: string
           block_title: string
           created_at?: string
+          field_type?: string
+          help_text?: string | null
           id?: string
           impacts_quality?: boolean
           is_active?: boolean
+          is_decision_field?: boolean
           is_required?: boolean
+          options_json?: Json | null
           order_index?: number
+          placeholder?: string | null
           question_text: string
           updated_at?: string
+          validation_json?: Json | null
           weight?: number
         }
         Update: {
+          ai_extract_hint?: string | null
+          answer_key?: string | null
           block_key?: string
           block_title?: string
           created_at?: string
+          field_type?: string
+          help_text?: string | null
           id?: string
           impacts_quality?: boolean
           is_active?: boolean
+          is_decision_field?: boolean
           is_required?: boolean
+          options_json?: Json | null
           order_index?: number
+          placeholder?: string | null
           question_text?: string
           updated_at?: string
+          validation_json?: Json | null
           weight?: number
         }
         Relationships: []
@@ -2527,6 +2563,64 @@ export type Database = {
           value?: string | null
         }
         Relationships: []
+      }
+      cs_transcripts: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          onboarding_id: string | null
+          source: string
+          transcript_text: string
+          transcript_type: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          onboarding_id?: string | null
+          source?: string
+          transcript_text: string
+          transcript_type: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          onboarding_id?: string | null
+          source?: string
+          transcript_text?: string
+          transcript_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_transcripts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_transcripts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_transcripts_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "cs_onboardings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       deliverables: {
         Row: {
