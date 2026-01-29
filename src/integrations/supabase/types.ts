@@ -2294,6 +2294,66 @@ export type Database = {
           },
         ]
       }
+      cs_onboardings: {
+        Row: {
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          cs_owner_id: string | null
+          current_step: number
+          id: string
+          started_at: string
+          status: string
+          step_1_status: string
+          step_2_status: string
+          step_3_status: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          completed_at?: string | null
+          created_at?: string
+          cs_owner_id?: string | null
+          current_step?: number
+          id?: string
+          started_at?: string
+          status?: string
+          step_1_status?: string
+          step_2_status?: string
+          step_3_status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string
+          cs_owner_id?: string | null
+          current_step?: number
+          id?: string
+          started_at?: string
+          status?: string
+          step_1_status?: string
+          step_2_status?: string
+          step_3_status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_onboardings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_onboardings_cs_owner_id_fkey"
+            columns: ["cs_owner_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cs_risk_action_items: {
         Row: {
           assignee_member_id: string | null
@@ -3950,6 +4010,29 @@ export type Database = {
       resolve_assignee_from_account_team: {
         Args: { p_client_id: string; p_responsible_role_key: string }
         Returns: string
+      }
+      update_onboarding_step: {
+        Args: { p_client_id: string; p_new_status: string; p_step: number }
+        Returns: {
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          cs_owner_id: string | null
+          current_step: number
+          id: string
+          started_at: string
+          status: string
+          step_1_status: string
+          step_2_status: string
+          step_3_status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "cs_onboardings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
     }
     Enums: {
