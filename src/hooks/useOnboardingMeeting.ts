@@ -343,7 +343,7 @@ export function useUpdateOnboardingQuestion() {
   return useMutation({
     mutationFn: async (data: { id: string } & Partial<CsOnboardingQuestion>) => {
       const { id, ...updates } = data;
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('cs_onboarding_questions')
         .update(updates)
         .eq('id', id);

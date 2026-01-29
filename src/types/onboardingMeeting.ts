@@ -2,6 +2,40 @@
 // CS ONBOARDING MEETING - TYPES
 // =============================================
 
+// ============ Field Types ============
+export type QuestionFieldType = 
+  | 'short_text'
+  | 'long_text'
+  | 'number'
+  | 'money'
+  | 'date'
+  | 'single_select'
+  | 'multi_select'
+  | 'boolean'
+  | 'phone'
+  | 'time'
+  | 'email';
+
+export const FIELD_TYPE_LABELS: Record<QuestionFieldType, string> = {
+  short_text: 'Texto Curto',
+  long_text: 'Texto Longo',
+  number: 'Número',
+  money: 'Valor (R$)',
+  date: 'Data',
+  single_select: 'Seleção Única',
+  multi_select: 'Múltipla Escolha',
+  boolean: 'Sim/Não',
+  phone: 'Telefone',
+  time: 'Horário',
+  email: 'E-mail',
+};
+
+export interface SelectOption {
+  label: string;
+  value: string;
+  [key: string]: string; // Index signature for JSON compatibility
+}
+
 // ============ Questions (Configurable) ============
 export interface CsOnboardingQuestion {
   id: string;
@@ -15,6 +49,15 @@ export interface CsOnboardingQuestion {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  // New typed fields
+  field_type: QuestionFieldType;
+  options_json: SelectOption[] | null;
+  placeholder: string | null;
+  help_text: string | null;
+  is_decision_field: boolean;
+  answer_key: string | null;
+  validation_json: unknown;
+  ai_extract_hint: string | null;
 }
 
 // ============ Meetings ============
@@ -43,6 +86,10 @@ export interface CsOnboardingAnswer {
   meeting_id: string;
   question_id: string;
   answer_text: string | null;
+  answer_value_json: unknown;
+  answered_by_ai: boolean;
+  confidence: number | null;
+  needs_validation: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -60,6 +107,22 @@ export interface CsOnboardingMeetingFile {
   created_at: string;
   // Joined fields
   uploaded_by_name?: string;
+}
+
+// ============ Transcripts ============
+export type TranscriptType = 'sales_call' | 'onboarding_meeting';
+export type TranscriptSource = 'paste' | 'upload' | 'integration';
+
+export interface CsTranscript {
+  id: string;
+  client_id: string;
+  onboarding_id: string | null;
+  transcript_type: TranscriptType;
+  transcript_text: string;
+  source: TranscriptSource;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 // ============ Grouped Questions by Block ============
@@ -147,4 +210,42 @@ export function groupQuestionsByBlock(questions: CsOnboardingQuestion[]): Questi
   }
   
   return blocks;
+}
+
+// ============ Helper: Get display value for typed answers ============
+export function getAnswerDisplayValue(
+  answer: CsOnboardingAnswer | undefined,
+  question: CsOnboardingQuestion
+): string {
+  if (!answer) return '';
+  
+  // For typed fields, prefer answer_value_json
+  if (answer.answer_value_json !== null && answer.answer_value_json !== undefined) {
+    const value = answer.answer_value_json;
+    
+    switch (question.field_type) {
+      case 'boolean':
+        return value === true ? 'Sim' : value === false ? 'Não' : '';
+      case 'money':
+        return typeof value === 'number' 
+          ? value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+          : String(value);
+      case 'single_select':
+        const option = question.options_json?.find(o => o.value === value);
+        return option?.label || String(value);
+      case 'multi_select':
+        if (Array.isArray(value)) {
+          return value.map(v => {
+            const opt = question.options_json?.find(o => o.value === v);
+            return opt?.label || v;
+          }).join(', ');
+        }
+        return String(value);
+      default:
+        return String(value);
+    }
+  }
+  
+  // Fallback to text
+  return answer.answer_text || '';
 }
