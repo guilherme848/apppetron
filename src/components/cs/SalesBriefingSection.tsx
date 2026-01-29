@@ -99,26 +99,7 @@ export function SalesBriefingSection({ clientId, onCompleteStep, stepCompleted }
     );
   }
 
-  // Step already completed
-  if (stepCompleted) {
-    return (
-      <Card>
-        <CardContent className="py-8">
-          <div className="flex flex-col items-center justify-center text-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <CheckCircle className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <p className="text-lg font-medium">Etapa 1 Concluída</p>
-              <p className="text-sm text-muted-foreground">
-                O briefing foi gerado e a etapa foi concluída. Prossiga para a Reunião de Onboarding.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Note: stepCompleted no longer blocks editing - users can always view/edit the briefing
 
   return (
     <div className="space-y-4">
@@ -369,7 +350,7 @@ export function SalesBriefingSection({ clientId, onCompleteStep, stepCompleted }
             </div>
 
             {/* Complete Step CTA */}
-            {onCompleteStep && (
+            {onCompleteStep && !stepCompleted && (
               <div className="pt-4 border-t">
                 <Button 
                   onClick={handleCompleteStep}
@@ -382,6 +363,19 @@ export function SalesBriefingSection({ clientId, onCompleteStep, stepCompleted }
                 </Button>
                 <p className="text-xs text-center text-muted-foreground mt-2">
                   Ao concluir, a Etapa 2 (Reunião de Onboarding) será desbloqueada automaticamente.
+                </p>
+              </div>
+            )}
+            
+            {/* Step completed indicator */}
+            {stepCompleted && (
+              <div className="pt-4 border-t">
+                <div className="flex items-center justify-center gap-2 text-primary">
+                  <CheckCircle className="h-5 w-5" />
+                  <span className="font-medium">Etapa 1 Concluída</span>
+                </div>
+                <p className="text-xs text-center text-muted-foreground mt-2">
+                  Você ainda pode editar o briefing acima. As alterações serão salvas automaticamente.
                 </p>
               </div>
             )}
