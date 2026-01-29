@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { 
@@ -8,37 +9,6 @@ import type {
   BriefingStatus,
   BriefingRiskLevel 
 } from '@/types/salesBriefing';
-
-// Type-safe wrapper to avoid deep type instantiation issues
-type SupabaseClient = {
-  from: (table: string) => {
-    select: (columns?: string) => {
-      eq: (column: string, value: string) => {
-        order: (column: string, options: { ascending: boolean }) => {
-          limit: (count: number) => {
-            maybeSingle: () => Promise<{ data: unknown; error: { message: string } | null }>;
-          };
-        };
-      };
-    };
-    insert: (data: Record<string, unknown>) => {
-      select: () => {
-        single: () => Promise<{ data: unknown; error: { message: string } | null }>;
-      };
-    };
-    update: (data: Record<string, unknown>) => {
-      eq: (column: string, value: string) => Promise<{ data: unknown; error: { message: string } | null }>;
-    };
-  };
-  auth: {
-    getUser: () => Promise<{ data: { user: { id: string } | null } }>;
-  };
-  functions: {
-    invoke: (name: string, options: { body: Record<string, unknown> }) => Promise<{ data: unknown; error: { message: string } | null }>;
-  };
-};
-
-const db = supabase as unknown as SupabaseClient;
 
 // Helper to parse briefing data
 function parseBriefingData(rawData: Record<string, unknown>): CsOnboardingBriefing {
@@ -56,92 +26,116 @@ function parseBriefingData(rawData: Record<string, unknown>): CsOnboardingBriefi
   };
 }
 
+// Generic query helper to avoid deep type instantiation
+async function queryTable<T>(
+  table: string, 
+  column: string, 
+  value: string
+): Promise<T | null> {
+  const { data, error } = await (supabase as any)
+    .from(table)
+    .select('*')
+    .eq(column, value)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  
+  if (error) throw error;
+  return data as T | null;
+}
+
+// Generic insert helper
+async function insertRow<T>(
+  table: string, 
+  row: Record<string, unknown>
+): Promise<T> {
+  const { data, error } = await (supabase as any)
+    .from(table)
+    .insert(row)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data as T;
+}
+
+// Generic update helper
+async function updateRow(
+  table: string, 
+  id: string,
+  updates: Record<string, unknown>
+): Promise<void> {
+  const { error } = await (supabase as any)
+    .from(table)
+    .update(updates)
+    .eq('id', id);
+  
+  if (error) throw error;
+}
+
 export function useSalesBriefing(clientId: string | undefined) {
   const { toast } = useToast();
-  const [transcript, setTranscript] = useState<CsSalesTranscript | null>(null);
-  const [briefing, setBriefing] = useState<CsOnboardingBriefing | null>(null);
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
   const [generating, setGenerating] = useState(false);
 
+  // Fetch transcript using React Query
+  const { 
+    data: transcript, 
+    isLoading: transcriptLoading,
+    refetch: refetchTranscript
+  } = useQuery({
+    queryKey: ['cs_sales_transcript', clientId],
+    queryFn: async () => {
+      if (!clientId) return null;
+      return queryTable<CsSalesTranscript>('cs_sales_transcripts', 'client_id', clientId);
+    },
+    enabled: !!clientId,
+  });
+
+  // Fetch briefing using React Query
+  const { 
+    data: briefing, 
+    isLoading: briefingLoading,
+    refetch: refetchBriefing
+  } = useQuery({
+    queryKey: ['cs_onboarding_briefing', clientId],
+    queryFn: async () => {
+      if (!clientId) return null;
+      const data = await queryTable<Record<string, unknown>>('cs_onboarding_briefings', 'client_id', clientId);
+      return data ? parseBriefingData(data) : null;
+    },
+    enabled: !!clientId,
+  });
+
+  const loading = transcriptLoading || briefingLoading;
+
   const fetchData = useCallback(async () => {
-    if (!clientId) return;
-    
-    setLoading(true);
-    try {
-      // Fetch latest transcript for this client
-      const transcriptResult = await db
-        .from('cs_sales_transcripts')
-        .select('*')
-        .eq('client_id', clientId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (transcriptResult.error) throw new Error(transcriptResult.error.message);
-      setTranscript(transcriptResult.data as CsSalesTranscript | null);
-
-      // Fetch latest briefing for this client
-      const briefingResult = await db
-        .from('cs_onboarding_briefings')
-        .select('*')
-        .eq('client_id', clientId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (briefingResult.error) throw new Error(briefingResult.error.message);
-      
-      if (briefingResult.data) {
-        setBriefing(parseBriefingData(briefingResult.data as Record<string, unknown>));
-      } else {
-        setBriefing(null);
-      }
-    } catch (error) {
-      console.error('Error fetching sales briefing data:', error);
-      toast({
-        title: 'Erro',
-        description: 'Falha ao carregar dados do briefing',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [clientId, toast]);
+    await Promise.all([refetchTranscript(), refetchBriefing()]);
+  }, [refetchTranscript, refetchBriefing]);
 
   const saveTranscript = useCallback(async (transcriptText: string): Promise<CsSalesTranscript | null> => {
     if (!clientId) return null;
     
     try {
       // Get current user's team_member_id
-      const authResult = await db.auth.getUser();
-      const user = authResult.data.user;
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData.user;
       let memberIdToUse: string | null = null;
       
       if (user) {
-        const memberResult = await db
-          .from('team_members')
-          .select('id')
-          .eq('auth_uid', user.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        const memberData = memberResult.data as { id: string } | null;
+        const memberData = await queryTable<{ id: string }>('team_members', 'auth_uid', user.id);
         memberIdToUse = memberData?.id || null;
       }
 
-      const insertResult = await db
-        .from('cs_sales_transcripts')
-        .insert({
-          client_id: clientId,
-          transcript_text: transcriptText,
-          created_by_member_id: memberIdToUse,
-        })
-        .select()
-        .single();
-
-      if (insertResult.error) throw new Error(insertResult.error.message);
-      const data = insertResult.data as CsSalesTranscript;
-      setTranscript(data);
+      const data = await insertRow<CsSalesTranscript>('cs_sales_transcripts', {
+        client_id: clientId,
+        transcript_text: transcriptText,
+        created_by_member_id: memberIdToUse,
+      });
+      
+      // Invalidate query to refetch
+      queryClient.invalidateQueries({ queryKey: ['cs_sales_transcript', clientId] });
+      
       return data;
     } catch (error) {
       console.error('Error saving transcript:', error);
@@ -152,7 +146,7 @@ export function useSalesBriefing(clientId: string | undefined) {
       });
       return null;
     }
-  }, [clientId, toast]);
+  }, [clientId, queryClient, toast]);
 
   const generateBriefing = useCallback(async (transcriptText: string) => {
     if (!clientId) return null;
@@ -167,42 +161,31 @@ export function useSalesBriefing(clientId: string | undefined) {
       }
 
       // Call the AI edge function
-      const functionResult = await db.functions.invoke('cs-generate-briefing', {
+      const { data: functionData, error: functionError } = await supabase.functions.invoke('cs-generate-briefing', {
         body: { transcript: transcriptText }
       });
 
-      if (functionResult.error) {
-        throw new Error(functionResult.error.message || 'Erro ao chamar função de geração');
+      if (functionError) {
+        throw new Error(functionError.message || 'Erro ao chamar função de geração');
       }
 
-      const functionData = functionResult.data as { 
-        briefing_content: BriefingContent; 
-        risk_score: number; 
-        risk_level: BriefingRiskLevel;
-        error?: string;
-      };
-
-      if (functionData.error) {
+      if (functionData?.error) {
         throw new Error(functionData.error);
       }
 
-      const briefingInsertResult = await db
-        .from('cs_onboarding_briefings')
-        .insert({
-          client_id: clientId,
-          transcript_id: savedTranscript.id,
-          briefing_content: functionData.briefing_content,
-          risk_score: functionData.risk_score,
-          risk_level: functionData.risk_level,
-          status: 'draft',
-        })
-        .select()
-        .single();
+      const newBriefingData = await insertRow<Record<string, unknown>>('cs_onboarding_briefings', {
+        client_id: clientId,
+        transcript_id: savedTranscript.id,
+        briefing_content: functionData.briefing_content,
+        risk_score: functionData.risk_score,
+        risk_level: functionData.risk_level,
+        status: 'draft',
+      });
 
-      if (briefingInsertResult.error) throw new Error(briefingInsertResult.error.message);
-
-      const newBriefing = parseBriefingData(briefingInsertResult.data as Record<string, unknown>);
-      setBriefing(newBriefing);
+      const newBriefing = parseBriefingData(newBriefingData);
+      
+      // Invalidate query to refetch
+      queryClient.invalidateQueries({ queryKey: ['cs_onboarding_briefing', clientId] });
 
       toast({
         title: 'Briefing gerado',
@@ -221,7 +204,7 @@ export function useSalesBriefing(clientId: string | undefined) {
     } finally {
       setGenerating(false);
     }
-  }, [clientId, saveTranscript, toast]);
+  }, [clientId, saveTranscript, queryClient, toast]);
 
   const updateBriefing = useCallback(async (updates: {
     briefing_content?: BriefingContent;
@@ -245,14 +228,10 @@ export function useSalesBriefing(clientId: string | undefined) {
         updatePayload.cs_notes = updates.cs_notes;
       }
 
-      const updateResult = await db
-        .from('cs_onboarding_briefings')
-        .update(updatePayload)
-        .eq('id', briefing.id);
+      await updateRow('cs_onboarding_briefings', briefing.id, updatePayload);
 
-      if (updateResult.error) throw new Error(updateResult.error.message);
-
-      setBriefing(prev => prev ? { ...prev, ...updates } : null);
+      // Invalidate query to refetch with updated data
+      queryClient.invalidateQueries({ queryKey: ['cs_onboarding_briefing', clientId] });
       
       toast({
         title: 'Salvo',
@@ -269,7 +248,7 @@ export function useSalesBriefing(clientId: string | undefined) {
       });
       return false;
     }
-  }, [briefing, toast]);
+  }, [briefing, clientId, queryClient, toast]);
 
   return {
     transcript,
