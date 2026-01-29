@@ -216,12 +216,19 @@ serve(async (req) => {
             'like',
           ]);
 
+          const spendValue = parseFloat(dayData.spend || '0');
+          
           const metricsJson = {
-            // Basic metrics
+            // Basic metrics - aligned with traffic_metric_catalog slugs
             impressions: parseInt(dayData.impressions || '0'),
-            clicks: parseInt(dayData.clicks || '0'),
-            spend: parseFloat(dayData.spend || '0'),
             reach: parseInt(dayData.reach || '0'),
+            spend: spendValue,
+            
+            // Cliques no link (link_clicks for catalog, clicks from Meta API)
+            link_clicks: parseInt(dayData.clicks || '0'),
+            
+            // Legacy fields (keeping for backwards compatibility)
+            clicks: parseInt(dayData.clicks || '0'),
             cpm: parseFloat(dayData.cpm || '0'),
             cpc: parseFloat(dayData.cpc || '0'),
             ctr: parseFloat(dayData.ctr || '0'),
@@ -229,19 +236,22 @@ serve(async (req) => {
             // Conversion metrics
             conversions: conversions,
             leads: leads,
+            purchases: 0, // Meta doesn't always return this
+            purchase_value: 0, // Meta doesn't always return this
             
             // WhatsApp/Messaging metrics
             whatsapp_clicks: whatsappClicks,
             whatsapp_conversations: totalWhatsappConversations,
             messaging_replies: messagingReplies,
+            // Custo por mensagem = Valor Investido / Conversas de WhatsApp
             cost_per_message: totalWhatsappConversations > 0 
-              ? parseFloat((parseFloat(dayData.spend || '0') / totalWhatsappConversations).toFixed(2)) 
-              : 0, // Calculate cost per message from spend / conversations
+              ? parseFloat((spendValue / totalWhatsappConversations).toFixed(2)) 
+              : 0,
             
             // Profile/Engagement metrics
             page_engagement: pageEngagement,
             profile_visits: profileVisits,
-            engagement: engagement || pageEngagement, // Use engagement or fallback to page_engagement
+            engagement: engagement || pageEngagement,
             
             // Cost metrics
             cost_per_lead: costPerLead,
