@@ -103,6 +103,18 @@ export function SalesBriefingSection({ clientId, onCompleteStep, stepCompleted }
 
   return (
     <div className="space-y-4">
+      {/* Step Completed Banner */}
+      {stepCompleted && (
+        <Alert className="border-primary/50 bg-primary/5">
+          <CheckCircle className="h-4 w-4 text-primary" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>
+              <strong>Etapa 1 Concluída.</strong> O briefing foi gerado e você pode continuar editando se necessário.
+            </span>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Info Alert - Venda sempre fechada */}
       <Alert>
         <Info className="h-4 w-4" />
