@@ -1843,6 +1843,48 @@ export type Database = {
         }
         Relationships: []
       }
+      cs_onboarding_answers: {
+        Row: {
+          answer_text: string | null
+          created_at: string
+          id: string
+          meeting_id: string
+          question_id: string
+          updated_at: string
+        }
+        Insert: {
+          answer_text?: string | null
+          created_at?: string
+          id?: string
+          meeting_id: string
+          question_id: string
+          updated_at?: string
+        }
+        Update: {
+          answer_text?: string | null
+          created_at?: string
+          id?: string
+          meeting_id?: string
+          question_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_onboarding_answers_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "cs_onboarding_meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_onboarding_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "cs_onboarding_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cs_onboarding_briefings: {
         Row: {
           briefing_content: Json
@@ -2019,6 +2061,153 @@ export type Database = {
           id?: string
           name?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      cs_onboarding_meeting_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          id: string
+          meeting_id: string
+          storage_path: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          meeting_id: string
+          storage_path: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          meeting_id?: string
+          storage_path?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_onboarding_meeting_files_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "cs_onboarding_meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_onboarding_meeting_files_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_onboarding_meetings: {
+        Row: {
+          client_id: string
+          created_at: string
+          cs_owner_id: string | null
+          general_notes: string | null
+          id: string
+          meeting_date: string
+          overall_quality_score: number | null
+          risk_level: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          cs_owner_id?: string | null
+          general_notes?: string | null
+          id?: string
+          meeting_date?: string
+          overall_quality_score?: number | null
+          risk_level?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          cs_owner_id?: string | null
+          general_notes?: string | null
+          id?: string
+          meeting_date?: string
+          overall_quality_score?: number | null
+          risk_level?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_onboarding_meetings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_onboarding_meetings_cs_owner_id_fkey"
+            columns: ["cs_owner_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_onboarding_questions: {
+        Row: {
+          block_key: string
+          block_title: string
+          created_at: string
+          id: string
+          impacts_quality: boolean
+          is_active: boolean
+          is_required: boolean
+          order_index: number
+          question_text: string
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          block_key: string
+          block_title: string
+          created_at?: string
+          id?: string
+          impacts_quality?: boolean
+          is_active?: boolean
+          is_required?: boolean
+          order_index?: number
+          question_text: string
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          block_key?: string
+          block_title?: string
+          created_at?: string
+          id?: string
+          impacts_quality?: boolean
+          is_active?: boolean
+          is_required?: boolean
+          order_index?: number
+          question_text?: string
+          updated_at?: string
+          weight?: number
         }
         Relationships: []
       }
