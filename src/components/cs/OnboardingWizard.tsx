@@ -1,9 +1,9 @@
-import { useMemo } from 'react';
-import { Check, Lock, Clock, FileText, Users, ListChecks, AlertCircle } from 'lucide-react';
+import { Check, Lock, FileText, Users, ListChecks } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { type CsOnboardingStepStatus } from '@/hooks/useCsOnboardings';
 
-export type OnboardingStepStatus = 'not_started' | 'in_progress' | 'completed';
+export type OnboardingStepStatus = CsOnboardingStepStatus;
 
 export interface OnboardingStep {
   id: number;
