@@ -15,8 +15,30 @@ interface MetaInsightsData {
   cpc?: string;
   ctr?: string;
   actions?: Array<{ action_type: string; value: string }>;
+  website_ctr?: Array<{ action_type: string; value: string }>;
+  cost_per_action_type?: Array<{ action_type: string; value: string }>;
   date_start: string;
   date_stop: string;
+}
+
+// Helper to find action value
+function findActionValue(actions: Array<{ action_type: string; value: string }> | undefined, types: string[]): number {
+  if (!actions) return 0;
+  for (const type of types) {
+    const action = actions.find(a => a.action_type === type);
+    if (action) return parseFloat(action.value) || 0;
+  }
+  return 0;
+}
+
+// Helper to find cost per action
+function findCostPerAction(costs: Array<{ action_type: string; value: string }> | undefined, types: string[]): number {
+  if (!costs) return 0;
+  for (const type of types) {
+    const cost = costs.find(c => c.action_type === type);
+    if (cost) return parseFloat(cost.value) || 0;
+  }
+  return 0;
 }
 
 serve(async (req) => {
@@ -92,8 +114,20 @@ serve(async (req) => {
 
     for (const adAccountId of accountsToFetch) {
       try {
-        // Fetch insights with daily breakdown
-        const fields = 'impressions,clicks,spend,reach,cpm,cpc,ctr,actions';
+        // Fetch insights with daily breakdown - extended fields for local business metrics
+        const fields = [
+          'impressions',
+          'clicks',
+          'spend',
+          'reach',
+          'cpm',
+          'cpc',
+          'ctr',
+          'actions',
+          'cost_per_action_type',
+          'website_ctr',
+        ].join(',');
+        
         const graphUrl = `https://graph.facebook.com/v19.0/${adAccountId}/insights?fields=${fields}&time_range={"since":"${since}","until":"${until}"}&time_increment=1&access_token=${accessToken}`;
         
         console.log(`[meta-fetch-metrics] Fetching ${adAccountId}...`);
@@ -115,14 +149,69 @@ serve(async (req) => {
         for (const dayData of data.data as MetaInsightsData[]) {
           const date = dayData.date_start;
           
-          // Extract conversions from actions
-          const conversions = dayData.actions?.find(a => 
-            a.action_type === 'omni_purchase' || 
-            a.action_type === 'purchase' ||
-            a.action_type === 'lead'
-          )?.value || '0';
+          // WhatsApp related metrics
+          const whatsappClicks = findActionValue(dayData.actions, [
+            'onsite_conversion.messaging_conversation_started_7d',
+            'onsite_conversion.messaging_first_reply',
+            'contact_total',
+          ]);
+          
+          const whatsappConversations = findActionValue(dayData.actions, [
+            'onsite_conversion.messaging_conversation_started_7d',
+            'messaging_conversation_started_7d',
+          ]);
+          
+          const messagingReplies = findActionValue(dayData.actions, [
+            'onsite_conversion.messaging_first_reply',
+            'messaging_first_reply',
+          ]);
+          
+          // Cost per messaging action
+          const costPerMessage = findCostPerAction(dayData.cost_per_action_type, [
+            'onsite_conversion.messaging_conversation_started_7d',
+            'messaging_conversation_started_7d',
+            'onsite_conversion.messaging_first_reply',
+          ]);
+          
+          // Profile/Page interactions
+          const pageEngagement = findActionValue(dayData.actions, [
+            'page_engagement',
+            'post_engagement',
+          ]);
+          
+          const profileVisits = findActionValue(dayData.actions, [
+            'landing_page_view',
+            'link_click',
+          ]);
+          
+          // Lead/Contact metrics for local business
+          const leads = findActionValue(dayData.actions, [
+            'lead',
+            'lead.fb',
+            'onsite_conversion.lead_grouped',
+          ]);
+          
+          const phoneCallClicks = findActionValue(dayData.actions, [
+            'onsite_conversion.post_save',
+            'contact_total',
+          ]);
+          
+          // Conversions (purchases, etc.)
+          const conversions = findActionValue(dayData.actions, [
+            'omni_purchase',
+            'purchase',
+            'complete_registration',
+          ]);
+          
+          // Cost per lead
+          const costPerLead = findCostPerAction(dayData.cost_per_action_type, [
+            'lead',
+            'lead.fb',
+            'onsite_conversion.lead_grouped',
+          ]);
 
           const metricsJson = {
+            // Basic metrics
             impressions: parseInt(dayData.impressions || '0'),
             clicks: parseInt(dayData.clicks || '0'),
             spend: parseFloat(dayData.spend || '0'),
@@ -130,8 +219,27 @@ serve(async (req) => {
             cpm: parseFloat(dayData.cpm || '0'),
             cpc: parseFloat(dayData.cpc || '0'),
             ctr: parseFloat(dayData.ctr || '0'),
-            conversions: parseInt(conversions),
+            
+            // Conversion metrics
+            conversions: conversions,
+            leads: leads,
+            
+            // WhatsApp/Messaging metrics
+            whatsapp_clicks: whatsappClicks,
+            whatsapp_conversations: whatsappConversations,
+            messaging_replies: messagingReplies,
+            cost_per_message: costPerMessage,
+            
+            // Profile/Engagement metrics
+            page_engagement: pageEngagement,
+            profile_visits: profileVisits,
+            
+            // Cost metrics
+            cost_per_lead: costPerLead,
+            
+            // Raw data for debugging
             raw_actions: dayData.actions || [],
+            raw_costs: dayData.cost_per_action_type || [],
           };
 
           // Upsert the daily metrics
