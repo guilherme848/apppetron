@@ -1,20 +1,22 @@
 import { useState, useEffect } from 'react';
-import { Loader2, Sparkles, AlertTriangle, CheckCircle, FileText, Edit3 } from 'lucide-react';
+import { Loader2, Sparkles, AlertTriangle, CheckCircle, FileText, Edit3, ArrowRight, Info } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useSalesBriefing } from '@/hooks/useSalesBriefing';
-import { BRIEFING_STATUS_LABELS, BRIEFING_RISK_LABELS, type BriefingStatus, type BriefingContent } from '@/types/salesBriefing';
+import { BRIEFING_RISK_LABELS, type BriefingContent } from '@/types/salesBriefing';
 import { cn } from '@/lib/utils';
 
 interface SalesBriefingSectionProps {
   clientId: string;
+  onCompleteStep?: () => void;
+  stepCompleted?: boolean;
 }
 
-export function SalesBriefingSection({ clientId }: SalesBriefingSectionProps) {
+export function SalesBriefingSection({ clientId, onCompleteStep, stepCompleted }: SalesBriefingSectionProps) {
   const { 
     transcript, 
     briefing, 
@@ -51,10 +53,6 @@ export function SalesBriefingSection({ clientId }: SalesBriefingSectionProps) {
     await generateBriefing(transcriptText);
   };
 
-  const handleStatusChange = async (status: BriefingStatus) => {
-    await updateBriefing({ status });
-  };
-
   const handleSaveNotes = async () => {
     await updateBriefing({ cs_notes: csNotes });
   };
@@ -63,6 +61,12 @@ export function SalesBriefingSection({ clientId }: SalesBriefingSectionProps) {
     if (editedContent) {
       await updateBriefing({ briefing_content: editedContent });
       setEditingSection(null);
+    }
+  };
+
+  const handleCompleteStep = () => {
+    if (onCompleteStep) {
+      onCompleteStep();
     }
   };
 
@@ -95,8 +99,37 @@ export function SalesBriefingSection({ clientId }: SalesBriefingSectionProps) {
     );
   }
 
+  // Step already completed
+  if (stepCompleted) {
+    return (
+      <Card>
+        <CardContent className="py-8">
+          <div className="flex flex-col items-center justify-center text-center gap-3">
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <CheckCircle className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <p className="text-lg font-medium">Etapa 1 Concluída</p>
+              <p className="text-sm text-muted-foreground">
+                O briefing foi gerado e a etapa foi concluída. Prossiga para a Reunião de Onboarding.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-4">
+      {/* Info Alert - Venda sempre fechada */}
+      <Alert>
+        <Info className="h-4 w-4" />
+        <AlertDescription>
+          A venda é considerada fechada, pois o cliente já está ativo no sistema. A transcrição serve para extrair contexto, expectativas e riscos operacionais.
+        </AlertDescription>
+      </Alert>
+
       {/* Transcript Input */}
       <Card>
         <CardHeader>
@@ -157,22 +190,8 @@ export function SalesBriefingSection({ clientId }: SalesBriefingSectionProps) {
                   getRiskColor(briefing.risk_level)
                 )}>
                   {getRiskIcon(briefing.risk_level)}
-                  <span>Risco: {briefing.risk_score}/100</span>
+                  <span>Risco Operacional: {briefing.risk_score}/100</span>
                 </div>
-                {/* Status Select */}
-                <Select 
-                  value={briefing.status} 
-                  onValueChange={(v) => handleStatusChange(v as BriefingStatus)}
-                >
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(BRIEFING_STATUS_LABELS).map(([key, label]) => (
-                      <SelectItem key={key} value={key}>{label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
             </div>
           </CardHeader>
@@ -181,7 +200,7 @@ export function SalesBriefingSection({ clientId }: SalesBriefingSectionProps) {
               {/* Resumo Executivo */}
               <AccordionItem value="resumo" className="border rounded-lg px-4">
                 <AccordionTrigger className="hover:no-underline">
-                  <span className="font-semibold">1. Resumo Executivo da Venda</span>
+                  <span className="font-semibold">1. Resumo Executivo</span>
                 </AccordionTrigger>
                 <AccordionContent>
                   {editingSection === 'resumo' ? (
@@ -253,7 +272,7 @@ export function SalesBriefingSection({ clientId }: SalesBriefingSectionProps) {
                 <AccordionTrigger className="hover:no-underline">
                   <span className="font-semibold flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                    4. Pontos de Atenção e Riscos
+                    4. Pontos de Atenção e Riscos Operacionais
                   </span>
                 </AccordionTrigger>
                 <AccordionContent>
@@ -314,7 +333,7 @@ export function SalesBriefingSection({ clientId }: SalesBriefingSectionProps) {
               {/* Score de Risco */}
               <AccordionItem value="score" className="border rounded-lg px-4">
                 <AccordionTrigger className="hover:no-underline">
-                  <span className="font-semibold">8. Score de Risco Inicial</span>
+                  <span className="font-semibold">8. Score de Risco Operacional</span>
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-2">
@@ -348,6 +367,24 @@ export function SalesBriefingSection({ clientId }: SalesBriefingSectionProps) {
                 onBlur={handleSaveNotes}
               />
             </div>
+
+            {/* Complete Step CTA */}
+            {onCompleteStep && (
+              <div className="pt-4 border-t">
+                <Button 
+                  onClick={handleCompleteStep}
+                  className="w-full"
+                  size="lg"
+                >
+                  <CheckCircle className="mr-2 h-5 w-5" />
+                  Concluir Briefing e Avançar para Etapa 2
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+                <p className="text-xs text-center text-muted-foreground mt-2">
+                  Ao concluir, a Etapa 2 (Reunião de Onboarding) será desbloqueada automaticamente.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
