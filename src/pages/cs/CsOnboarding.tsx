@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Loader2, Users, Search, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,9 +16,11 @@ import { OnboardingListCard } from '@/components/cs/OnboardingListCard';
 import { useCrm } from '@/contexts/CrmContext';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
 
 export default function CsOnboarding() {
   const { accounts, loading: accountsLoading } = useCrm();
+  const { toast } = useToast();
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentStep, setCurrentStep] = useState(0);
@@ -118,25 +120,49 @@ export default function CsOnboarding() {
     setCurrentStep(Math.min(onboarding.current_step - 1, 2));
   }, [selectedClientId, onboarding]);
 
-  // Sync step 1 status based on briefing
+  // Manual completion of Step 1 (Briefing)
+  const handleCompleteStep1 = useCallback(async () => {
+    if (!selectedClientId) return;
+    
+    try {
+      await updateStep.mutateAsync({ 
+        clientId: selectedClientId, 
+        step: 1, 
+        status: 'completed' 
+      });
+      
+      toast({
+        title: 'Etapa 1 concluída',
+        description: 'O briefing foi concluído e a Etapa 2 foi desbloqueada.',
+      });
+      
+      // Automatically navigate to step 2
+      setCurrentStep(1);
+      
+      // Refetch to update UI
+      refetchOnboarding();
+      refetchOnboardings();
+    } catch (error) {
+      console.error('Error completing step 1:', error);
+      toast({
+        title: 'Erro',
+        description: 'Falha ao concluir a etapa. Tente novamente.',
+        variant: 'destructive',
+      });
+    }
+  }, [selectedClientId, updateStep, toast, refetchOnboarding, refetchOnboardings]);
+
+  // Update Step 1 status to in_progress when briefing exists (without auto-completing)
   useEffect(() => {
     if (!selectedClientId || !onboarding || briefingLoading) return;
     
-    const briefingApproved = briefing?.status === 'approved';
     const briefingExists = !!briefing;
     
-    let newStatus: CsOnboardingStepStatus | null = null;
-    
-    if (briefingApproved && onboarding.step_1_status !== 'completed') {
-      newStatus = 'completed';
-    } else if (briefingExists && !briefingApproved && onboarding.step_1_status === 'not_started') {
-      newStatus = 'in_progress';
+    // Only mark as in_progress if briefing exists and step is not_started
+    if (briefingExists && onboarding.step_1_status === 'not_started') {
+      updateStep.mutate({ clientId: selectedClientId, step: 1, status: 'in_progress' });
     }
-    
-    if (newStatus) {
-      updateStep.mutate({ clientId: selectedClientId, step: 1, status: newStatus });
-    }
-  }, [briefing, onboarding, selectedClientId, briefingLoading]);
+  }, [briefing, onboarding, selectedClientId, briefingLoading, updateStep]);
 
   // Sync step 2 status based on meeting
   useEffect(() => {
@@ -157,7 +183,7 @@ export default function CsOnboarding() {
     if (newStatus) {
       updateStep.mutate({ clientId: selectedClientId, step: 2, status: newStatus });
     }
-  }, [clientMeetings, onboarding, selectedClientId, meetingsLoading]);
+  }, [clientMeetings, onboarding, selectedClientId, meetingsLoading, updateStep]);
 
   const handleSelectOnboarding = (clientId: string) => {
     setSelectedClientId(clientId);
@@ -312,7 +338,11 @@ export default function CsOnboarding() {
               {/* Step Content */}
               <div className="mt-6">
                 {currentStep === 0 && (
-                  <SalesBriefingSection clientId={selectedClientId} />
+                  <SalesBriefingSection 
+                    clientId={selectedClientId}
+                    onCompleteStep={briefing ? handleCompleteStep1 : undefined}
+                    stepCompleted={onboarding?.step_1_status === 'completed'}
+                  />
                 )}
                 
                 {currentStep === 1 && (
