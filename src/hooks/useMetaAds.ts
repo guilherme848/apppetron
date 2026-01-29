@@ -157,6 +157,20 @@ export function useMetaAds() {
     }
   };
 
+  const fetchMetricsData = async (adAccountIds?: string[], dateFrom?: string, dateTo?: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('meta-fetch-metrics', {
+        body: { adAccountIds, dateFrom, dateTo },
+      });
+      if (error) throw error;
+      toast.success(`Métricas atualizadas: ${data.successCount} contas processadas`);
+      return data;
+    } catch (error: any) {
+      console.error('Metrics fetch error:', error);
+      toast.error('Erro ao buscar métricas: ' + error.message);
+    }
+  };
+
   const linkClientToAdAccount = async (clientId: string, adAccountId: string) => {
     const { error } = await supabase
       .from('client_meta_ad_accounts')
@@ -213,6 +227,7 @@ export function useMetaAds() {
     startOAuth,
     syncAdAccounts,
     fetchFinanceData,
+    fetchMetricsData,
     linkClientToAdAccount,
     unlinkClientFromAdAccount,
     getClientAdAccounts,

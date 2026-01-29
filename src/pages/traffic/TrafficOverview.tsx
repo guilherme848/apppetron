@@ -12,6 +12,7 @@ import {
   Filter,
   ChevronDown,
   ExternalLink,
+  Activity,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ import { useCrm } from '@/contexts/CrmContext';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useMetaAds } from '@/hooks/useMetaAds';
 import { PERIOD_OPTIONS, OBJECTIVE_OPTIONS, HealthStatus, AlertSeverity } from '@/types/trafficAnalytics';
 import { cn } from '@/lib/utils';
 
@@ -79,6 +81,7 @@ export default function TrafficOverview() {
   const { accounts } = useCrm();
   const { members } = useTeamMembers();
   const { niches } = useSettings();
+  const { fetchMetricsData, connection } = useMetaAds();
   const {
     activeMetrics,
     currentLayout,
@@ -102,6 +105,7 @@ export default function TrafficOverview() {
   const [searchClient, setSearchClient] = useState('');
   const [savingView, setSavingView] = useState(false);
   const [newViewName, setNewViewName] = useState('');
+  const [fetchingMetrics, setFetchingMetrics] = useState(false);
 
   // Get traffic managers
   const trafficManagers = members.filter(m => m.active);
@@ -163,6 +167,16 @@ export default function TrafficOverview() {
     setSavingView(false);
   };
 
+  const handleFetchMetrics = async () => {
+    if (!connection) {
+      return;
+    }
+    setFetchingMetrics(true);
+    await fetchMetricsData();
+    await refetch();
+    setFetchingMetrics(false);
+  };
+
   // Get visible columns from layout
   const visibleColumns = currentLayout?.columns?.sort((a, b) => a.order - b.order) || [];
 
@@ -185,6 +199,21 @@ export default function TrafficOverview() {
           </p>
         </div>
         <div className="flex gap-2">
+          {connection && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleFetchMetrics}
+              disabled={fetchingMetrics}
+            >
+              {fetchingMetrics ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Activity className="h-4 w-4 mr-2" />
+              )}
+              Buscar Métricas
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={() => refetch()}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Atualizar
