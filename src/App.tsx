@@ -50,6 +50,7 @@ import CsMeetings from "./pages/cs/CsMeetings";
 import CsNps from "./pages/cs/CsNps";
 import CsRisk from "./pages/cs/CsRisk";
 import CsClientDetail from "./pages/cs/CsClientDetail";
+import CsOnboardingMeeting from "./pages/cs/CsOnboardingMeeting";
 
 // Settings pages
 import { SettingsLayout } from "./pages/settings/SettingsLayout";
@@ -65,6 +66,7 @@ import TrafficRoutinesPage from "./pages/settings/TrafficRoutinesPage";
 import TrafficCyclesPage from "./pages/settings/TrafficCyclesPage";
 import MetaIntegrationPage from "./pages/settings/MetaIntegrationPage";
 import { TrafficAnalyticsSettingsTab } from "./components/settings/TrafficAnalyticsSettingsTab";
+import OnboardingQuestionsPage from "./pages/settings/OnboardingQuestionsPage";
 import { AdminGuard } from "./components/auth/AdminGuard";
 import TrafficBalancesPage from "./pages/traffic/TrafficBalancesPage";
 
@@ -159,6 +161,7 @@ const App = () => (
                         {/* CS routes */}
                         <Route path="/cs" element={<CsDashboard />} />
                         <Route path="/cs/onboarding" element={<CsOnboarding />} />
+                        <Route path="/cs/onboarding/meeting/:meetingId" element={<CsOnboardingMeeting />} />
                         <Route path="/cs/meetings" element={<CsMeetings />} />
                         <Route path="/cs/nps" element={<CsNps />} />
                         <Route path="/cs/risk" element={<CsRisk />} />
@@ -189,6 +192,7 @@ const App = () => (
                           <Route path="traffic/cycles" element={<TrafficCyclesPage />} />
                           <Route path="integrations/meta" element={<MetaIntegrationPage />} />
                           <Route path="traffic/analytics" element={<TrafficAnalyticsSettingsTab />} />
+                          <Route path="cs/onboarding-questions" element={<OnboardingQuestionsPage />} />
                         </Route>
 
                         <Route path="*" element={<NotFound />} />

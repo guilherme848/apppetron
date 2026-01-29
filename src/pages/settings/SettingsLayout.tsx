@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Settings, Users, Briefcase, Shield, Layers, Package, GitBranch, Target, ChevronDown, ChevronRight, Menu, RotateCcw, RefreshCw } from 'lucide-react';
+import { Settings, Users, Briefcase, Shield, Layers, Package, GitBranch, Target, ChevronDown, ChevronRight, Menu, RotateCcw, RefreshCw, HeartHandshake } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -61,6 +61,15 @@ const SETTINGS_CATEGORIES: SettingsCategory[] = [
     items: [
       { id: 'meta-ads', label: 'Meta Ads', path: '/settings/integrations/meta' },
       { id: 'traffic-analytics', label: 'Painel Multi-Contas', path: '/settings/traffic/analytics' },
+    ],
+  },
+  {
+    id: 'cs',
+    label: 'Customer Success',
+    description: 'Configure os processos de onboarding e atendimento.',
+    icon: HeartHandshake,
+    items: [
+      { id: 'onboarding-questions', label: 'Perguntas do Onboarding', path: '/settings/cs/onboarding-questions' },
     ],
   },
 ];
