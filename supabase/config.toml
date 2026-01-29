@@ -3,6 +3,9 @@ project_id = "ucbltsnmkcxpcioetlpz"
 [functions.meta-refresh-balances-cron]
 verify_jwt = false
 
+[functions.meta-fetch-metrics]
+verify_jwt = false
+
 [functions.admin-create-user]
 verify_jwt = false
 
@@ -25,4 +28,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.cs-generate-briefing]
+verify_jwt = false
+
+[functions.cs-autofill-answers]
 verify_jwt = false
