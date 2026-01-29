@@ -166,12 +166,8 @@ serve(async (req) => {
             'messaging_first_reply',
           ]);
           
-          // Cost per messaging action
-          const costPerMessage = findCostPerAction(dayData.cost_per_action_type, [
-            'onsite_conversion.messaging_conversation_started_7d',
-            'messaging_conversation_started_7d',
-            'onsite_conversion.messaging_first_reply',
-          ]);
+          // Total WhatsApp conversations (combined)
+          const totalWhatsappConversations = whatsappConversations + messagingReplies;
           
           // Profile/Page interactions
           const pageEngagement = findActionValue(dayData.actions, [
@@ -236,9 +232,11 @@ serve(async (req) => {
             
             // WhatsApp/Messaging metrics
             whatsapp_clicks: whatsappClicks,
-            whatsapp_conversations: whatsappConversations + messagingReplies, // Combine both types
+            whatsapp_conversations: totalWhatsappConversations,
             messaging_replies: messagingReplies,
-            cost_per_message: costPerMessage,
+            cost_per_message: totalWhatsappConversations > 0 
+              ? parseFloat((parseFloat(dayData.spend || '0') / totalWhatsappConversations).toFixed(2)) 
+              : 0, // Calculate cost per message from spend / conversations
             
             // Profile/Engagement metrics
             page_engagement: pageEngagement,
