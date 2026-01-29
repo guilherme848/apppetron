@@ -112,9 +112,9 @@ export function ClientList({ getClientList, onClientClick }: ClientListProps) {
                 className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
                 {tab.label}
-                <Badge variant="outline" className="ml-1.5 text-xs">
+                <span className="ml-1.5 text-xs border rounded-full px-1.5 py-0.5">
                   {getClientList(tab.value).length}
-                </Badge>
+                </span>
               </TabsTrigger>
             ))}
           </TabsList>
