@@ -1,30 +1,155 @@
-import { useState } from 'react';
-import { Loader2, Users, CheckCircle, Clock, AlertTriangle, Plus, FileText, CalendarDays } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useState, useEffect, useMemo } from 'react';
+import { Loader2, Users, Search, Plus } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useCsClientOnboarding, useCsClientTasks } from '@/hooks/useCsData';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useCsClientOnboarding } from '@/hooks/useCsData';
 import { useOnboardingMeetings } from '@/hooks/useOnboardingMeeting';
-import { CS_ONBOARDING_STATUS_LABELS } from '@/types/cs';
-import { CS_MEETING_STATUS_LABELS, CS_RISK_LEVEL_LABELS, CS_RISK_LEVEL_COLORS } from '@/types/onboardingMeeting';
-import { Link, useNavigate } from 'react-router-dom';
+import { useSalesBriefing } from '@/hooks/useSalesBriefing';
+import { OnboardingWizard, type OnboardingStep, type OnboardingStepStatus } from '@/components/cs/OnboardingWizard';
 import { SalesBriefingSection } from '@/components/cs/SalesBriefingSection';
+import { OnboardingMeetingSection } from '@/components/cs/OnboardingMeetingSection';
+import { OnboardingActivitiesSection } from '@/components/cs/OnboardingActivitiesSection';
 import { CreateOnboardingMeetingDialog } from '@/components/cs/CreateOnboardingMeetingDialog';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { useCrm } from '@/contexts/CrmContext';
 
 export default function CsOnboarding() {
-  const { onboardings, loading } = useCsClientOnboarding();
-  const { data: meetings, isLoading: meetingsLoading } = useOnboardingMeetings();
-  const navigate = useNavigate();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { onboardings, loading: onboardingsLoading } = useCsClientOnboarding();
+  const { accounts, loading: accountsLoading } = useCrm();
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  const { tasks } = useCsClientTasks(selectedId);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentStep, setCurrentStep] = useState(0);
 
-  if (loading) {
+  // Get briefing data for selected client
+  const { briefing, loading: briefingLoading, fetchData: fetchBriefing } = useSalesBriefing(selectedClientId || undefined);
+  
+  // Get meetings for selected client
+  const { data: clientMeetings, isLoading: meetingsLoading } = useOnboardingMeetings(selectedClientId || undefined);
+
+  // Refetch briefing when client changes
+  useEffect(() => {
+    if (selectedClientId) {
+      fetchBriefing();
+    }
+  }, [selectedClientId, fetchBriefing]);
+
+  // Get clients that can have onboarding (active or in progress)
+  const activeClients = useMemo(() => {
+    return accounts.filter(a => a.status === 'active' || a.status === 'lead');
+  }, [accounts]);
+
+  // Filter clients by search
+  const filteredClients = useMemo(() => {
+    if (!searchTerm) return activeClients;
+    const term = searchTerm.toLowerCase();
+    return activeClients.filter(c => c.name.toLowerCase().includes(term));
+  }, [activeClients, searchTerm]);
+
+  // Get onboarding for selected client
+  const selectedOnboarding = useMemo(() => {
+    if (!selectedClientId) return null;
+    return onboardings.find(o => o.client_id === selectedClientId) || null;
+  }, [selectedClientId, onboardings]);
+
+  // Calculate step statuses based on data
+  const steps: OnboardingStep[] = useMemo(() => {
+    const latestMeeting = clientMeetings?.[0];
+    const meetingCompleted = latestMeeting?.status === 'completed';
+    const briefingApproved = briefing?.status === 'approved';
+    const onboardingCompleted = selectedOnboarding?.status === 'completed';
+
+    // Step 1: Briefing da Venda
+    let briefingStatus: OnboardingStepStatus = 'not_started';
+    if (briefingApproved) {
+      briefingStatus = 'completed';
+    } else if (briefing) {
+      briefingStatus = 'in_progress';
+    }
+
+    // Step 2: Reunião de Onboarding
+    let meetingStatus: OnboardingStepStatus = 'not_started';
+    if (meetingCompleted) {
+      meetingStatus = 'completed';
+    } else if (latestMeeting) {
+      meetingStatus = 'in_progress';
+    }
+
+    // Step 3: Atividades de Onboarding
+    let activitiesStatus: OnboardingStepStatus = 'not_started';
+    if (onboardingCompleted) {
+      activitiesStatus = 'completed';
+    } else if (selectedOnboarding?.status === 'in_progress') {
+      activitiesStatus = 'in_progress';
+    }
+
+    return [
+      {
+        id: 1,
+        key: 'briefing' as const,
+        title: 'Briefing da Venda',
+        description: 'Transcrição da call de vendas e geração do briefing via IA',
+        status: briefingStatus,
+        completedAt: briefingApproved ? briefing?.updated_at : undefined,
+        isLocked: false,
+      },
+      {
+        id: 2,
+        key: 'meeting' as const,
+        title: 'Reunião de Onboarding',
+        description: 'Perguntas organizadas em blocos para coleta de informações',
+        status: meetingStatus,
+        completedAt: meetingCompleted ? latestMeeting?.updated_at : undefined,
+        responsibleName: latestMeeting?.cs_owner_name,
+        isLocked: !briefingApproved,
+      },
+      {
+        id: 3,
+        key: 'activities' as const,
+        title: 'Atividades de Onboarding',
+        description: 'Tarefas automáticas geradas a partir do template do plano',
+        status: activitiesStatus,
+        completedAt: onboardingCompleted ? selectedOnboarding?.completed_at : undefined,
+        isLocked: !meetingCompleted,
+      },
+    ];
+  }, [briefing, clientMeetings, selectedOnboarding]);
+
+  // Auto-select appropriate step based on progress
+  useEffect(() => {
+    if (!selectedClientId) {
+      setCurrentStep(0);
+      return;
+    }
+    
+    // Find the first incomplete step, or the last step if all complete
+    const firstIncompleteIndex = steps.findIndex(s => s.status !== 'completed' && !s.isLocked);
+    if (firstIncompleteIndex >= 0) {
+      setCurrentStep(firstIncompleteIndex);
+    } else {
+      // All steps complete or locked - show the last completed one
+      const lastCompletedIndex = [...steps].reverse().findIndex(s => s.status === 'completed');
+      setCurrentStep(lastCompletedIndex >= 0 ? steps.length - 1 - lastCompletedIndex : 0);
+    }
+  }, [selectedClientId, steps]);
+
+  const handleClientChange = (clientId: string) => {
+    if (clientId === '_none_') {
+      setSelectedClientId(null);
+    } else {
+      setSelectedClientId(clientId);
+    }
+  };
+
+  const handleStepClick = (stepIndex: number) => {
+    if (!steps[stepIndex].isLocked) {
+      setCurrentStep(stepIndex);
+    }
+  };
+
+  const isLoading = onboardingsLoading || accountsLoading;
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -32,253 +157,106 @@ export default function CsOnboarding() {
     );
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <CheckCircle className="h-4 w-4 text-primary" />;
-      case 'attention':
-        return <AlertTriangle className="h-4 w-4 text-destructive" />;
-      case 'in_progress':
-        return <Clock className="h-4 w-4 text-secondary" />;
-      default: return <Clock className="h-4 w-4 text-muted-foreground" />;
-    }
-  };
-
-  const getProgress = (onboardingId: string) => {
-    if (selectedId !== onboardingId) return 0;
-    const done = tasks.filter(t => t.status === 'done').length;
-    return tasks.length > 0 ? (done / tasks.length) * 100 : 0;
-  };
-
-  const handleSelectClient = (value: string) => {
-    if (value === '_none_') {
-      setSelectedId(null);
-      setSelectedClientId(null);
-      return;
-    }
-    const onboarding = onboardings.find(o => o.client_id === value);
-    if (onboarding) {
-      setSelectedId(onboarding.id);
-      setSelectedClientId(onboarding.client_id);
-    }
-  };
-
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
           <Users className="h-8 w-8 text-primary" />
           <div>
             <h1 className="text-2xl font-bold">Onboarding</h1>
-            <p className="text-muted-foreground">Acompanhamento de onboarding de clientes</p>
+            <p className="text-muted-foreground">Processo completo de onboarding de clientes em 3 etapas</p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Select de cliente */}
-          <div className="w-full sm:w-72">
-            <Select value={selectedClientId || '_none_'} onValueChange={handleSelectClient}>
+          {/* Client Search & Select */}
+          <div className="w-full sm:w-80">
+            <Select value={selectedClientId || '_none_'} onValueChange={handleClientChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione um cliente..." />
               </SelectTrigger>
               <SelectContent>
+                <div className="p-2">
+                  <div className="relative">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar cliente..."
+                      className="pl-8"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                </div>
                 <SelectItem value="_none_">Nenhum cliente selecionado</SelectItem>
-                {onboardings.map((o) => (
-                  <SelectItem key={o.client_id} value={o.client_id}>
-                    {o.client_name}
+                {filteredClients.map((client) => (
+                  <SelectItem key={client.id} value={client.id}>
+                    {client.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-
-          {/* Create Meeting Button */}
-          <CreateOnboardingMeetingDialog />
         </div>
       </div>
 
-      {/* Tabs: Briefing, Tarefas, Reuniões */}
-      <Tabs defaultValue="briefing" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="briefing">
-            <FileText className="h-4 w-4 mr-2" />
-            Briefing da Venda
-          </TabsTrigger>
-          <TabsTrigger value="tasks">
-            <CheckCircle className="h-4 w-4 mr-2" />
-            Tarefas
-          </TabsTrigger>
-          <TabsTrigger value="meetings">
-            <CalendarDays className="h-4 w-4 mr-2" />
-            Reuniões de Onboarding
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="briefing">
-          {selectedClientId ? (
-            <SalesBriefingSection clientId={selectedClientId} />
-          ) : (
-            <Card>
-              <CardContent className="py-6 text-center text-muted-foreground">
-                Selecione um cliente acima para ver o Briefing da Venda.
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="tasks">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Tarefas de Onboarding</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {!selectedId ? (
-                <p className="text-center py-4 text-muted-foreground">
-                  Selecione um cliente acima para ver as tarefas.
-                </p>
-              ) : tasks.length === 0 ? (
-                <p className="text-center py-4 text-muted-foreground">Nenhuma tarefa</p>
-              ) : (
-                <div className="space-y-2">
-                  {tasks.map((task) => (
-                    <div key={task.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                      {task.status === 'done' ? (
-                        <CheckCircle className="h-5 w-5 text-primary" />
-                      ) : task.status === 'in_progress' ? (
-                        <Clock className="h-5 w-5 text-secondary" />
-                      ) : (
-                        <div className="h-5 w-5 rounded-full border-2" />
-                      )}
-                      <div className="flex-1">
-                        <p className={task.status === 'done' ? 'line-through text-muted-foreground' : ''}>
-                          {task.title}
-                        </p>
-                      </div>
-                      <Badge variant="outline">{task.status}</Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="meetings">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg">Reuniões de Onboarding</CardTitle>
-              <CreateOnboardingMeetingDialog 
-                trigger={
-                  <Button size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nova Reunião
-                  </Button>
-                }
-              />
-            </CardHeader>
-            <CardContent>
-              {meetingsLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : !meetings || meetings.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <CalendarDays className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Nenhuma reunião de onboarding registrada</p>
-                  <p className="text-sm">Clique em "Nova Reunião" para criar uma</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {meetings.map((meeting) => (
-                    <div
-                      key={meeting.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-                      onClick={() => navigate(`/cs/onboarding/meeting/${meeting.id}`)}
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{meeting.client_name}</span>
-                          <Badge variant={meeting.status === 'completed' ? 'default' : 'outline'}>
-                            {CS_MEETING_STATUS_LABELS[meeting.status]}
-                          </Badge>
-                          {meeting.risk_level && (
-                            <Badge className={CS_RISK_LEVEL_COLORS[meeting.risk_level]}>
-                              Risco: {CS_RISK_LEVEL_LABELS[meeting.risk_level]}
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="text-sm text-muted-foreground mt-1">
-                          <span>Data: {format(new Date(meeting.meeting_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
-                          {meeting.cs_owner_name && (
-                            <span className="ml-4">• CS: {meeting.cs_owner_name}</span>
-                          )}
-                          {meeting.overall_quality_score !== null && (
-                            <span className="ml-4">• Score: {meeting.overall_quality_score}%</span>
-                          )}
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="sm">
-                        Ver Reunião
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* Onboarding Cards */}
-      {onboardings.length === 0 ? (
+      {/* No client selected */}
+      {!selectedClientId && (
         <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
-            Nenhum onboarding em andamento
+          <CardContent className="py-12">
+            <div className="flex flex-col items-center justify-center text-center">
+              <Users className="h-16 w-16 text-muted-foreground/30 mb-4" />
+              <p className="text-lg font-medium text-muted-foreground">
+                Selecione um cliente para ver o onboarding
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Use o seletor acima para escolher o cliente e acompanhar o processo de onboarding
+              </p>
+            </div>
           </CardContent>
         </Card>
-      ) : (
-        <div className="grid gap-4">
-          {onboardings.map((onboarding) => (
-            <Card 
-              key={onboarding.id} 
-              className={`cursor-pointer transition-colors ${selectedId === onboarding.id ? 'ring-2 ring-primary' : 'hover:bg-muted/50'}`}
-              onClick={() => handleSelectClient(onboarding.client_id)}
-            >
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {getStatusIcon(onboarding.status)}
-                    <CardTitle className="text-base">
-                      <Link 
-                        to={`/cs/client/${onboarding.client_id}`}
-                        className="hover:underline"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {onboarding.client_name}
-                      </Link>
-                    </CardTitle>
-                  </div>
-                  <Badge variant="outline">
-                    {CS_ONBOARDING_STATUS_LABELS[onboarding.status]}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-sm text-muted-foreground mb-2">
-                  Fluxo: {onboarding.flow_name}
-                </div>
-                {selectedId === onboarding.id && (
-                  <div className="mt-4 space-y-2">
-                    <Progress value={getProgress(onboarding.id)} className="h-2" />
-                    <p className="text-xs text-muted-foreground">
-                      {tasks.filter(t => t.status === 'done').length} de {tasks.length} tarefas concluídas
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      )}
+
+      {/* Client selected - show wizard */}
+      {selectedClientId && (
+        <>
+          {/* Wizard Stepper */}
+          <Card>
+            <CardContent className="py-6">
+              <OnboardingWizard
+                steps={steps}
+                currentStep={currentStep}
+                onStepClick={handleStepClick}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Step Content */}
+          <div className="mt-6">
+            {currentStep === 0 && (
+              <SalesBriefingSection clientId={selectedClientId} />
+            )}
+            
+            {currentStep === 1 && (
+              <OnboardingMeetingSection 
+                clientId={selectedClientId} 
+                isLocked={steps[1].isLocked}
+              />
+            )}
+            
+            {currentStep === 2 && (
+              <OnboardingActivitiesSection
+                clientId={selectedClientId}
+                onboardingId={selectedOnboarding?.id || null}
+                isLocked={steps[2].isLocked}
+                onComplete={() => {
+                  // Refresh the page data
+                }}
+              />
+            )}
+          </div>
+        </>
       )}
     </div>
   );
