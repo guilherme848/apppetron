@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Plus,
   Pencil,
@@ -30,6 +31,7 @@ import {
   ChevronRight,
   GripVertical,
   Settings,
+  Sparkles,
 } from 'lucide-react';
 import {
   useOnboardingQuestions,
@@ -37,14 +39,21 @@ import {
   useUpdateOnboardingQuestion,
   useDeleteOnboardingQuestion,
 } from '@/hooks/useOnboardingMeeting';
-import { groupQuestionsByBlock, CsOnboardingQuestion } from '@/types/onboardingMeeting';
+import { groupQuestionsByBlock, CsOnboardingQuestion, FIELD_TYPE_LABELS, QuestionFieldType, SelectOption } from '@/types/onboardingMeeting';
 import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
 
 interface QuestionFormData {
   block_key: string;
   block_title: string;
   question_text: string;
+  field_type: QuestionFieldType;
+  options_json: SelectOption[] | null;
+  placeholder: string;
+  help_text: string;
+  answer_key: string;
+  ai_extract_hint: string;
   is_required: boolean;
+  is_decision_field: boolean;
   impacts_quality: boolean;
   weight: number;
   order_index: number;
@@ -63,6 +72,38 @@ const DEFAULT_BLOCKS = [
   { key: 'I', title: 'Administrativo e Cronograma' },
 ];
 
+const FIELD_TYPES: { value: QuestionFieldType; label: string }[] = [
+  { value: 'long_text', label: 'Texto Longo' },
+  { value: 'short_text', label: 'Texto Curto' },
+  { value: 'number', label: 'Número' },
+  { value: 'money', label: 'Valor (R$)' },
+  { value: 'boolean', label: 'Sim/Não' },
+  { value: 'single_select', label: 'Seleção Única' },
+  { value: 'multi_select', label: 'Seleção Múltipla' },
+  { value: 'date', label: 'Data' },
+  { value: 'time', label: 'Horário' },
+  { value: 'phone', label: 'Telefone' },
+  { value: 'email', label: 'E-mail' },
+];
+
+const emptyFormData: QuestionFormData = {
+  block_key: 'A',
+  block_title: 'Governança',
+  question_text: '',
+  field_type: 'long_text',
+  options_json: null,
+  placeholder: '',
+  help_text: '',
+  answer_key: '',
+  ai_extract_hint: '',
+  is_required: false,
+  is_decision_field: false,
+  impacts_quality: true,
+  weight: 3,
+  order_index: 0,
+  is_active: true,
+};
+
 export default function OnboardingQuestionsPage() {
   const { data: questions = [], isLoading } = useOnboardingQuestions(false);
   const createQuestion = useCreateOnboardingQuestion();
@@ -74,17 +115,8 @@ export default function OnboardingQuestionsPage() {
   const [editingQuestion, setEditingQuestion] = useState<CsOnboardingQuestion | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [questionToDelete, setQuestionToDelete] = useState<CsOnboardingQuestion | null>(null);
-
-  const [formData, setFormData] = useState<QuestionFormData>({
-    block_key: 'A',
-    block_title: 'Governança',
-    question_text: '',
-    is_required: false,
-    impacts_quality: true,
-    weight: 3,
-    order_index: 0,
-    is_active: true,
-  });
+  const [formData, setFormData] = useState<QuestionFormData>(emptyFormData);
+  const [optionsText, setOptionsText] = useState('');
 
   const blocks = useMemo(() => groupQuestionsByBlock(questions), [questions]);
 
@@ -114,6 +146,23 @@ export default function OnboardingQuestionsPage() {
     });
   };
 
+  const parseOptionsText = (text: string): SelectOption[] | null => {
+    if (!text.trim()) return null;
+    return text
+      .split('\n')
+      .map(line => line.trim())
+      .filter(Boolean)
+      .map(line => ({
+        label: line,
+        value: line.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, ''),
+      }));
+  };
+
+  const optionsToText = (options: SelectOption[] | null): string => {
+    if (!options || !Array.isArray(options)) return '';
+    return options.map(o => o.label).join('\n');
+  };
+
   const openNewDialog = (blockKey?: string, blockTitle?: string) => {
     const maxOrder = questions
       .filter(q => q.block_key === (blockKey || 'A'))
@@ -121,15 +170,12 @@ export default function OnboardingQuestionsPage() {
 
     setEditingQuestion(null);
     setFormData({
+      ...emptyFormData,
       block_key: blockKey || 'A',
       block_title: blockTitle || 'Governança',
-      question_text: '',
-      is_required: false,
-      impacts_quality: true,
-      weight: 3,
       order_index: maxOrder + 1,
-      is_active: true,
     });
+    setOptionsText('');
     setDialogOpen(true);
   };
 
@@ -139,12 +185,20 @@ export default function OnboardingQuestionsPage() {
       block_key: question.block_key,
       block_title: question.block_title,
       question_text: question.question_text,
+      field_type: (question.field_type as QuestionFieldType) || 'long_text',
+      options_json: question.options_json as SelectOption[] | null,
+      placeholder: question.placeholder || '',
+      help_text: question.help_text || '',
+      answer_key: question.answer_key || '',
+      ai_extract_hint: question.ai_extract_hint || '',
       is_required: question.is_required,
+      is_decision_field: question.is_decision_field || false,
       impacts_quality: question.impacts_quality,
       weight: question.weight,
       order_index: question.order_index,
       is_active: question.is_active,
     });
+    setOptionsText(optionsToText(question.options_json as SelectOption[] | null));
     setDialogOpen(true);
   };
 
@@ -160,13 +214,19 @@ export default function OnboardingQuestionsPage() {
   const handleSubmit = async () => {
     if (!formData.question_text.trim()) return;
 
+    const options = parseOptionsText(optionsText);
+    const payload = {
+      ...formData,
+      options_json: options,
+    };
+
     if (editingQuestion) {
       await updateQuestion.mutateAsync({
         id: editingQuestion.id,
-        ...formData,
+        ...payload,
       });
     } else {
-      await createQuestion.mutateAsync(formData);
+      await createQuestion.mutateAsync(payload);
     }
 
     setDialogOpen(false);
@@ -178,6 +238,8 @@ export default function OnboardingQuestionsPage() {
     setDeleteDialogOpen(false);
     setQuestionToDelete(null);
   };
+
+  const showOptionsField = formData.field_type === 'single_select' || formData.field_type === 'multi_select';
 
   if (isLoading) {
     return (
@@ -268,12 +330,26 @@ export default function OnboardingQuestionsPage() {
                                 {idx + 1}. {question.question_text}
                               </p>
                               <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                <Badge variant="secondary" className="text-xs">
+                                  {FIELD_TYPE_LABELS[question.field_type as QuestionFieldType] || 'Texto'}
+                                </Badge>
                                 {question.is_required && (
                                   <Badge variant="destructive" className="text-xs">Obrigatória</Badge>
                                 )}
                                 {question.impacts_quality && (
                                   <Badge variant="outline" className="text-xs">
                                     Peso: {question.weight}
+                                  </Badge>
+                                )}
+                                {question.answer_key && (
+                                  <Badge variant="outline" className="text-xs font-mono">
+                                    {question.answer_key}
+                                  </Badge>
+                                )}
+                                {question.ai_extract_hint && (
+                                  <Badge variant="outline" className="text-xs gap-1">
+                                    <Sparkles className="h-3 w-3" />
+                                    IA
                                   </Badge>
                                 )}
                                 {!question.is_active && (
@@ -314,94 +390,195 @@ export default function OnboardingQuestionsPage() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingQuestion ? 'Editar Pergunta' : 'Nova Pergunta'}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          <Tabs defaultValue="basic" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="basic">Básico</TabsTrigger>
+              <TabsTrigger value="type">Tipo e Opções</TabsTrigger>
+              <TabsTrigger value="ai">IA e Avançado</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="basic" className="space-y-4 mt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Bloco</Label>
+                  <Select value={formData.block_key} onValueChange={handleBlockChange}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableBlocks.map(b => (
+                        <SelectItem key={b.key} value={b.key}>
+                          {b.key} — {b.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Título do Bloco</Label>
+                  <Input
+                    value={formData.block_title}
+                    onChange={(e) => setFormData(prev => ({ ...prev, block_title: e.target.value }))}
+                  />
+                </div>
+              </div>
+
               <div className="space-y-2">
-                <Label>Bloco</Label>
-                <Select value={formData.block_key} onValueChange={handleBlockChange}>
+                <Label>Pergunta</Label>
+                <Textarea
+                  value={formData.question_text}
+                  onChange={(e) => setFormData(prev => ({ ...prev, question_text: e.target.value }))}
+                  placeholder="Digite a pergunta..."
+                  className="min-h-[80px]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Ordem</Label>
+                  <Input
+                    type="number"
+                    value={formData.order_index}
+                    onChange={(e) => setFormData(prev => ({ ...prev, order_index: parseInt(e.target.value) || 0 }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Peso (1-10)</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={10}
+                    value={formData.weight}
+                    onChange={(e) => setFormData(prev => ({ ...prev, weight: parseInt(e.target.value) || 1 }))}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>Obrigatória</Label>
+                  <Switch
+                    checked={formData.is_required}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_required: checked }))}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label>Impacta Qualidade</Label>
+                  <Switch
+                    checked={formData.impacts_quality}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, impacts_quality: checked }))}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label>Ativa</Label>
+                  <Switch
+                    checked={formData.is_active}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
+                  />
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="type" className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label>Tipo de Campo</Label>
+                <Select 
+                  value={formData.field_type} 
+                  onValueChange={(val) => setFormData(prev => ({ ...prev, field_type: val as QuestionFieldType }))}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableBlocks.map(b => (
-                      <SelectItem key={b.key} value={b.key}>
-                        {b.key} — {b.title}
+                    {FIELD_TYPES.map(ft => (
+                      <SelectItem key={ft.value} value={ft.value}>
+                        {ft.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label>Título do Bloco</Label>
-                <Input
-                  value={formData.block_title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, block_title: e.target.value }))}
-                />
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label>Pergunta</Label>
-              <Textarea
-                value={formData.question_text}
-                onChange={(e) => setFormData(prev => ({ ...prev, question_text: e.target.value }))}
-                placeholder="Digite a pergunta..."
-                className="min-h-[80px]"
-              />
-            </div>
+              {showOptionsField && (
+                <div className="space-y-2">
+                  <Label>Opções (uma por linha)</Label>
+                  <Textarea
+                    value={optionsText}
+                    onChange={(e) => setOptionsText(e.target.value)}
+                    placeholder="WhatsApp&#10;E-mail&#10;Telefone&#10;..."
+                    className="min-h-[120px] font-mono text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Digite uma opção por linha. O valor será gerado automaticamente.
+                  </p>
+                </div>
+              )}
 
-            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Ordem</Label>
+                <Label>Placeholder</Label>
                 <Input
-                  type="number"
-                  value={formData.order_index}
-                  onChange={(e) => setFormData(prev => ({ ...prev, order_index: parseInt(e.target.value) || 0 }))}
+                  value={formData.placeholder}
+                  onChange={(e) => setFormData(prev => ({ ...prev, placeholder: e.target.value }))}
+                  placeholder="Texto de exemplo no campo..."
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Peso (1-10)</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  max={10}
-                  value={formData.weight}
-                  onChange={(e) => setFormData(prev => ({ ...prev, weight: parseInt(e.target.value) || 1 }))}
-                />
-              </div>
-            </div>
 
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label>Obrigatória</Label>
-                <Switch
-                  checked={formData.is_required}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_required: checked }))}
+              <div className="space-y-2">
+                <Label>Texto de Ajuda</Label>
+                <Input
+                  value={formData.help_text}
+                  onChange={(e) => setFormData(prev => ({ ...prev, help_text: e.target.value }))}
+                  placeholder="Dica exibida ao usuário..."
                 />
               </div>
+
               <div className="flex items-center justify-between">
-                <Label>Impacta Qualidade</Label>
+                <div>
+                  <Label>Campo de Decisão</Label>
+                  <p className="text-xs text-muted-foreground">Marca como decisão obrigatória</p>
+                </div>
                 <Switch
-                  checked={formData.impacts_quality}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, impacts_quality: checked }))}
+                  checked={formData.is_decision_field}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_decision_field: checked }))}
                 />
               </div>
-              <div className="flex items-center justify-between">
-                <Label>Ativa</Label>
-                <Switch
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
+            </TabsContent>
+
+            <TabsContent value="ai" className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label>Chave de Resposta (answer_key)</Label>
+                <Input
+                  value={formData.answer_key}
+                  onChange={(e) => setFormData(prev => ({ ...prev, answer_key: e.target.value.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') }))}
+                  placeholder="ex: approval_sla_hours"
+                  className="font-mono"
                 />
+                <p className="text-xs text-muted-foreground">
+                  Identificador único para uso em relatórios e integração com IA. Use snake_case.
+                </p>
               </div>
-            </div>
-          </div>
+
+              <div className="space-y-2">
+                <Label>Dica para Extração IA</Label>
+                <Textarea
+                  value={formData.ai_extract_hint}
+                  onChange={(e) => setFormData(prev => ({ ...prev, ai_extract_hint: e.target.value }))}
+                  placeholder="ex: Extrair número de horas do SLA de aprovação mencionado pelo cliente..."
+                  className="min-h-[80px]"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Instrução para a IA sobre como extrair esta informação da transcrição.
+                </p>
+              </div>
+            </TabsContent>
+          </Tabs>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>

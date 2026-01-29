@@ -211,17 +211,24 @@ export function useSaveOnboardingAnswer() {
       meeting_id: string;
       question_id: string;
       answer_text: string | null;
+      answer_value_json?: unknown;
+      answered_by_ai?: boolean;
+      needs_validation?: boolean;
+      confidence?: number;
     }) => {
-      const { error } = await supabase
+      const upsertPayload = {
+        meeting_id: data.meeting_id,
+        question_id: data.question_id,
+        answer_text: data.answer_text,
+        answer_value_json: data.answer_value_json ?? null,
+        answered_by_ai: data.answered_by_ai ?? false,
+        needs_validation: data.needs_validation ?? false,
+        confidence: data.confidence ?? null,
+      };
+
+      const { error } = await (supabase as any)
         .from('cs_onboarding_answers')
-        .upsert(
-          {
-            meeting_id: data.meeting_id,
-            question_id: data.question_id,
-            answer_text: data.answer_text,
-          },
-          { onConflict: 'meeting_id,question_id' }
-        );
+        .upsert(upsertPayload, { onConflict: 'meeting_id,question_id' });
 
       if (error) throw error;
     },
@@ -314,13 +321,20 @@ export function useCreateOnboardingQuestion() {
       block_key: string;
       block_title: string;
       question_text: string;
+      field_type?: string;
+      options_json?: unknown;
+      placeholder?: string;
+      help_text?: string;
+      answer_key?: string;
+      ai_extract_hint?: string;
       is_required?: boolean;
+      is_decision_field?: boolean;
       impacts_quality?: boolean;
       weight?: number;
       order_index?: number;
       is_active?: boolean;
     }) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('cs_onboarding_questions')
         .insert([data]);
 
@@ -330,7 +344,7 @@ export function useCreateOnboardingQuestion() {
       queryClient.invalidateQueries({ queryKey: ['cs-onboarding-questions'] });
       toast({ title: 'Pergunta criada com sucesso' });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({ title: 'Erro ao criar pergunta', description: error.message, variant: 'destructive' });
     },
   });
