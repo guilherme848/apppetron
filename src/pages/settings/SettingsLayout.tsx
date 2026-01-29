@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Settings, Users, Briefcase, Shield, Layers, Package, GitBranch, Target, ChevronDown, ChevronRight, Menu, RotateCcw, RefreshCw, HeartHandshake } from 'lucide-react';
+import { Settings, Users, Briefcase, Shield, Layers, Package, GitBranch, Target, ChevronDown, ChevronRight, Menu, RotateCcw, RefreshCw, HeartHandshake, MessageSquareText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -82,6 +82,8 @@ function getCategoryIcon(categoryId: string) {
       return Layers;
     case 'general':
       return Settings;
+    case 'cs':
+      return HeartHandshake;
     default:
       return Settings;
   }
@@ -107,6 +109,8 @@ function getItemIcon(itemId: string) {
       return RotateCcw;
     case 'traffic-cycles':
       return RefreshCw;
+    case 'onboarding-questions':
+      return MessageSquareText;
     default:
       return Settings;
   }
