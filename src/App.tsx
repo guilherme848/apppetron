@@ -45,6 +45,7 @@ import TrafficBenchmarks from "./pages/traffic/TrafficBenchmarks";
 
 // CS pages
 import CsDashboard from "./pages/cs/CsDashboard";
+import CsCommandCenter from "./pages/cs/CsCommandCenter";
 import CsOnboarding from "./pages/cs/CsOnboarding";
 import CsMeetings from "./pages/cs/CsMeetings";
 import CsNps from "./pages/cs/CsNps";
@@ -159,7 +160,8 @@ const App = () => (
                         <Route path="/traffic/creative-requests/:id" element={<CreativeRequestDetail />} />
 
                         {/* CS routes */}
-                        <Route path="/cs" element={<CsDashboard />} />
+                        <Route path="/cs" element={<CsCommandCenter />} />
+                        <Route path="/cs/dashboard" element={<CsDashboard />} />
                         <Route path="/cs/onboarding" element={<CsOnboarding />} />
                         <Route path="/cs/onboarding/meeting/:meetingId" element={<CsOnboardingMeeting />} />
                         <Route path="/cs/meetings" element={<CsMeetings />} />

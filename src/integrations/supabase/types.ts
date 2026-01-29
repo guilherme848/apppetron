@@ -31,12 +31,16 @@ export type Database = {
           cs_member_id: string | null
           deleted_at: string | null
           designer_member_id: string | null
+          health_score: number | null
+          health_status: string | null
           id: string
+          last_contact_at: string | null
           monthly_value: number | null
           name: string
           neighborhood: string | null
           niche: string | null
           niche_id: string | null
+          origin: string | null
           postal_code: string | null
           service_contracted: string | null
           service_id: string | null
@@ -70,12 +74,16 @@ export type Database = {
           cs_member_id?: string | null
           deleted_at?: string | null
           designer_member_id?: string | null
+          health_score?: number | null
+          health_status?: string | null
           id?: string
+          last_contact_at?: string | null
           monthly_value?: number | null
           name: string
           neighborhood?: string | null
           niche?: string | null
           niche_id?: string | null
+          origin?: string | null
           postal_code?: string | null
           service_contracted?: string | null
           service_id?: string | null
@@ -109,12 +117,16 @@ export type Database = {
           cs_member_id?: string | null
           deleted_at?: string | null
           designer_member_id?: string | null
+          health_score?: number | null
+          health_status?: string | null
           id?: string
+          last_contact_at?: string | null
           monthly_value?: number | null
           name?: string
           neighborhood?: string | null
           niche?: string | null
           niche_id?: string | null
+          origin?: string | null
           postal_code?: string | null
           service_contracted?: string | null
           service_id?: string | null
@@ -1333,6 +1345,36 @@ export type Database = {
           },
         ]
       }
+      cs_alert_config: {
+        Row: {
+          alert_type: string
+          created_at: string
+          enabled: boolean
+          id: string
+          threshold_days: number | null
+          threshold_value: number | null
+          updated_at: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          threshold_days?: number | null
+          threshold_value?: number | null
+          updated_at?: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          threshold_days?: number | null
+          threshold_value?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cs_audit_log: {
         Row: {
           action: string
@@ -1476,6 +1518,113 @@ export type Database = {
           },
         ]
       }
+      cs_churn_events: {
+        Row: {
+          cancel_date: string
+          client_id: string
+          created_at: string
+          id: string
+          lifetime_days: number | null
+          mrr_lost: number
+          notes_rich: string | null
+          owner_member_id: string | null
+          previous_nps: number | null
+          reason: string
+          retention_attempted: boolean
+          retention_offer: string | null
+          retention_result: string | null
+          sub_reason: string | null
+        }
+        Insert: {
+          cancel_date: string
+          client_id: string
+          created_at?: string
+          id?: string
+          lifetime_days?: number | null
+          mrr_lost?: number
+          notes_rich?: string | null
+          owner_member_id?: string | null
+          previous_nps?: number | null
+          reason: string
+          retention_attempted?: boolean
+          retention_offer?: string | null
+          retention_result?: string | null
+          sub_reason?: string | null
+        }
+        Update: {
+          cancel_date?: string
+          client_id?: string
+          created_at?: string
+          id?: string
+          lifetime_days?: number | null
+          mrr_lost?: number
+          notes_rich?: string | null
+          owner_member_id?: string | null
+          previous_nps?: number | null
+          reason?: string
+          retention_attempted?: boolean
+          retention_offer?: string | null
+          retention_result?: string | null
+          sub_reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_churn_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_churn_events_owner_member_id_fkey"
+            columns: ["owner_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_client_health_scores: {
+        Row: {
+          calculated_at: string
+          client_id: string
+          created_at: string
+          id: string
+          main_reason: string | null
+          score: number
+          signals: Json
+          status: string
+        }
+        Insert: {
+          calculated_at?: string
+          client_id: string
+          created_at?: string
+          id?: string
+          main_reason?: string | null
+          score: number
+          signals?: Json
+          status: string
+        }
+        Update: {
+          calculated_at?: string
+          client_id?: string
+          created_at?: string
+          id?: string
+          main_reason?: string | null
+          score?: number
+          signals?: Json
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_client_health_scores_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cs_client_onboarding: {
         Row: {
           client_id: string
@@ -1602,6 +1751,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cs_health_weights: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          signal_key: string
+          signal_label: string
+          threshold_days: number | null
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          signal_key: string
+          signal_label: string
+          threshold_days?: number | null
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          signal_key?: string
+          signal_label?: string
+          threshold_days?: number | null
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: []
       }
       cs_meeting_actions: {
         Row: {
@@ -2384,6 +2566,117 @@ export type Database = {
           {
             foreignKeyName: "cs_onboardings_cs_owner_id_fkey"
             columns: ["cs_owner_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_playbook_tasks: {
+        Row: {
+          assignee_member_id: string | null
+          completed_at: string | null
+          created_at: string
+          description_rich: string | null
+          due_at: string | null
+          id: string
+          playbook_id: string
+          sort_order: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_member_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description_rich?: string | null
+          due_at?: string | null
+          id?: string
+          playbook_id: string
+          sort_order?: number
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_member_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description_rich?: string | null
+          due_at?: string | null
+          id?: string
+          playbook_id?: string
+          sort_order?: number
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_playbook_tasks_assignee_member_id_fkey"
+            columns: ["assignee_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_playbook_tasks_playbook_id_fkey"
+            columns: ["playbook_id"]
+            isOneToOne: false
+            referencedRelation: "cs_playbooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cs_playbooks: {
+        Row: {
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          due_at: string | null
+          id: string
+          notes_rich: string | null
+          responsible_member_id: string | null
+          status: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          completed_at?: string | null
+          created_at?: string
+          due_at?: string | null
+          id?: string
+          notes_rich?: string | null
+          responsible_member_id?: string | null
+          status?: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string
+          due_at?: string | null
+          id?: string
+          notes_rich?: string | null
+          responsible_member_id?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cs_playbooks_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_playbooks_responsible_member_id_fkey"
+            columns: ["responsible_member_id"]
             isOneToOne: false
             referencedRelation: "team_members"
             referencedColumns: ["id"]
