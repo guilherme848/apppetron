@@ -1,17 +1,25 @@
 import { useState } from 'react';
-import { Loader2, Users, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+import { Loader2, Users, CheckCircle, Clock, AlertTriangle, Plus, FileText, CalendarDays } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { useCsClientOnboarding, useCsClientTasks } from '@/hooks/useCsData';
+import { useOnboardingMeetings } from '@/hooks/useOnboardingMeeting';
 import { CS_ONBOARDING_STATUS_LABELS } from '@/types/cs';
-import { Link } from 'react-router-dom';
+import { CS_MEETING_STATUS_LABELS, CS_RISK_LEVEL_LABELS, CS_RISK_LEVEL_COLORS } from '@/types/onboardingMeeting';
+import { Link, useNavigate } from 'react-router-dom';
 import { SalesBriefingSection } from '@/components/cs/SalesBriefingSection';
+import { CreateOnboardingMeetingDialog } from '@/components/cs/CreateOnboardingMeetingDialog';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export default function CsOnboarding() {
   const { onboardings, loading } = useCsClientOnboarding();
+  const { data: meetings, isLoading: meetingsLoading } = useOnboardingMeetings();
+  const navigate = useNavigate();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const { tasks } = useCsClientTasks(selectedId);
@@ -66,29 +74,44 @@ export default function CsOnboarding() {
           </div>
         </div>
 
-        {/* Select de cliente */}
-        <div className="w-full sm:w-72">
-          <Select value={selectedClientId || '_none_'} onValueChange={handleSelectClient}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione um cliente..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_none_">Nenhum cliente selecionado</SelectItem>
-              {onboardings.map((o) => (
-                <SelectItem key={o.client_id} value={o.client_id}>
-                  {o.client_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex items-center gap-3">
+          {/* Select de cliente */}
+          <div className="w-full sm:w-72">
+            <Select value={selectedClientId || '_none_'} onValueChange={handleSelectClient}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um cliente..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none_">Nenhum cliente selecionado</SelectItem>
+                {onboardings.map((o) => (
+                  <SelectItem key={o.client_id} value={o.client_id}>
+                    {o.client_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Create Meeting Button */}
+          <CreateOnboardingMeetingDialog />
         </div>
       </div>
 
-      {/* Briefing/Tarefas sempre visíveis (com estado vazio quando nada selecionado) */}
+      {/* Tabs: Briefing, Tarefas, Reuniões */}
       <Tabs defaultValue="briefing" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="briefing">Briefing da Venda</TabsTrigger>
-          <TabsTrigger value="tasks">Tarefas</TabsTrigger>
+          <TabsTrigger value="briefing">
+            <FileText className="h-4 w-4 mr-2" />
+            Briefing da Venda
+          </TabsTrigger>
+          <TabsTrigger value="tasks">
+            <CheckCircle className="h-4 w-4 mr-2" />
+            Tarefas
+          </TabsTrigger>
+          <TabsTrigger value="meetings">
+            <CalendarDays className="h-4 w-4 mr-2" />
+            Reuniões de Onboarding
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="briefing">
@@ -97,7 +120,7 @@ export default function CsOnboarding() {
           ) : (
             <Card>
               <CardContent className="py-6 text-center text-muted-foreground">
-                Selecione um cliente abaixo para ver o Briefing da Venda.
+                Selecione um cliente acima para ver o Briefing da Venda.
               </CardContent>
             </Card>
           )}
@@ -111,7 +134,7 @@ export default function CsOnboarding() {
             <CardContent>
               {!selectedId ? (
                 <p className="text-center py-4 text-muted-foreground">
-                  Selecione um cliente abaixo para ver as tarefas.
+                  Selecione um cliente acima para ver as tarefas.
                 </p>
               ) : tasks.length === 0 ? (
                 <p className="text-center py-4 text-muted-foreground">Nenhuma tarefa</p>
@@ -139,8 +162,74 @@ export default function CsOnboarding() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="meetings">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-lg">Reuniões de Onboarding</CardTitle>
+              <CreateOnboardingMeetingDialog 
+                trigger={
+                  <Button size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nova Reunião
+                  </Button>
+                }
+              />
+            </CardHeader>
+            <CardContent>
+              {meetingsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : !meetings || meetings.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <CalendarDays className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Nenhuma reunião de onboarding registrada</p>
+                  <p className="text-sm">Clique em "Nova Reunião" para criar uma</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {meetings.map((meeting) => (
+                    <div
+                      key={meeting.id}
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                      onClick={() => navigate(`/cs/onboarding/meeting/${meeting.id}`)}
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{meeting.client_name}</span>
+                          <Badge variant={meeting.status === 'completed' ? 'default' : 'outline'}>
+                            {CS_MEETING_STATUS_LABELS[meeting.status]}
+                          </Badge>
+                          {meeting.risk_level && (
+                            <Badge className={CS_RISK_LEVEL_COLORS[meeting.risk_level]}>
+                              Risco: {CS_RISK_LEVEL_LABELS[meeting.risk_level]}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1">
+                          <span>Data: {format(new Date(meeting.meeting_date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
+                          {meeting.cs_owner_name && (
+                            <span className="ml-4">• CS: {meeting.cs_owner_name}</span>
+                          )}
+                          {meeting.overall_quality_score !== null && (
+                            <span className="ml-4">• Score: {meeting.overall_quality_score}%</span>
+                          )}
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm">
+                        Ver Reunião
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
+      {/* Onboarding Cards */}
       {onboardings.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
