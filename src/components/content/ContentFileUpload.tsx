@@ -1,11 +1,18 @@
 import { useState, useRef } from 'react';
-import { Upload, X, FileIcon, Loader2, ExternalLink, Download } from 'lucide-react';
+import { Upload, X, FileIcon, Loader2, ExternalLink, Download, FolderArchive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { downloadFile, downloadFilesAsZip, formatDateForFileName } from '@/lib/fileDownload';
 
 interface ContentFile {
   id: string;
@@ -29,6 +36,7 @@ interface ContentFileUploadProps {
     public_url: string;
   }) => Promise<void>;
   onFileDeleted: (fileId: string, storagePath: string) => Promise<void>;
+  clientName?: string;
 }
 
 export function ContentFileUpload({ 
@@ -36,10 +44,13 @@ export function ContentFileUpload({
   postId, 
   context, 
   onFileUploaded, 
-  onFileDeleted 
+  onFileDeleted,
+  clientName,
 }: ContentFileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [downloadingAll, setDownloadingAll] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,6 +126,44 @@ export function ContentFileUpload({
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  const handleDownloadSingle = async (file: ContentFile) => {
+    const url = getFileUrl(file);
+    if (!url) return;
+    setDownloadingId(file.id);
+    try {
+      await downloadFile(url, file.file_name);
+      toast.success(`${file.file_name} baixado`);
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Erro ao baixar arquivo');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
+  const handleDownloadAll = async () => {
+    if (files.length < 2) return;
+    setDownloadingAll(true);
+    try {
+      const contextLabel = context === 'briefing' ? 'briefing' : 'alteracoes';
+      const sanitizedClient = clientName?.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase() || '';
+      const dateStr = formatDateForFileName();
+      const zipName = ['anexos', sanitizedClient, contextLabel, dateStr].filter(Boolean).join('-') + '.zip';
+
+      const filesForZip = files.map((f) => ({
+        name: f.file_name,
+        url: getFileUrl(f),
+      }));
+      await downloadFilesAsZip(filesForZip, zipName);
+      toast.success(`${files.length} arquivos baixados como ZIP`);
+    } catch (error) {
+      console.error('ZIP download error:', error);
+      toast.error('Erro ao criar arquivo ZIP');
+    } finally {
+      setDownloadingAll(false);
+    }
+  };
+
   const getFileIcon = (fileType: string | null) => {
     if (!fileType) return 'file';
     if (fileType.startsWith('image/')) return 'image';
@@ -159,77 +208,123 @@ export function ContentFileUpload({
           </p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {files.map((file) => {
-            const storagePath = file.storage_path || file.file_path || '';
-            return (
-              <div
-                key={file.id}
-                className="flex items-center gap-3 p-3 bg-muted/50 rounded-md border"
-              >
-                <FileIcon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">{file.file_name}</p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>{formatFileSize(file.file_size)}</span>
-                    <span>•</span>
-                    <span>{format(new Date(file.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    asChild
-                  >
-                    <a
-                      href={getFileUrl(file)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title="Abrir arquivo"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    asChild
-                  >
-                    <a
-                      href={getFileUrl(file)}
-                      download={file.file_name}
-                      title="Baixar arquivo"
-                    >
-                      <Download className="h-4 w-4" />
-                    </a>
-                  </Button>
-                  <ConfirmDeleteDialog
-                    itemName={file.file_name}
-                    onConfirm={() => handleDelete(file.id, storagePath)}
-                  >
+        <div className="space-y-3">
+          {/* Download all button */}
+          {files.length >= 2 && (
+            <div className="flex justify-end">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
                     <Button
                       type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
-                      disabled={deleting === file.id}
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDownloadAll}
+                      disabled={downloadingAll}
                     >
-                      {deleting === file.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                      {downloadingAll ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       ) : (
-                        <X className="h-4 w-4" />
+                        <FolderArchive className="h-4 w-4 mr-2" />
                       )}
+                      Baixar todos ({files.length})
                     </Button>
-                  </ConfirmDeleteDialog>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Baixar todos os arquivos em um único ZIP</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          )}
+          <div className="space-y-2">
+            {files.map((file) => {
+              const storagePath = file.storage_path || file.file_path || '';
+              return (
+                <div
+                  key={file.id}
+                  className="flex items-center gap-3 p-3 bg-muted/50 rounded-md border"
+                >
+                  <FileIcon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{file.file_name}</p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>{formatFileSize(file.file_size)}</span>
+                      <span>•</span>
+                      <span>{format(new Date(file.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            asChild
+                          >
+                            <a
+                              href={getFileUrl(file)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Abrir arquivo</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleDownloadSingle(file)}
+                            disabled={downloadingId === file.id}
+                          >
+                            {downloadingId === file.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Download className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Baixar arquivo</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <ConfirmDeleteDialog
+                      itemName={file.file_name}
+                      onConfirm={() => handleDelete(file.id, storagePath)}
+                    >
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        disabled={deleting === file.id}
+                      >
+                        {deleting === file.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <X className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </ConfirmDeleteDialog>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { Upload, X, FileIcon, Loader2, ExternalLink, Download, AlertCircle, RotateCcw } from 'lucide-react';
+import { Upload, X, FileIcon, Loader2, ExternalLink, Download, AlertCircle, RotateCcw, FolderArchive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -7,6 +7,13 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
 import { cn } from '@/lib/utils';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { downloadFile, downloadFilesAsZip, formatDateForFileName } from '@/lib/fileDownload';
 
 interface ContentFile {
   id: string;
@@ -39,6 +46,7 @@ interface MultiFileUploadProps {
   }) => Promise<void>;
   onFileDeleted: (fileId: string, storagePath: string) => Promise<void>;
   maxFileSizeMb?: number;
+  clientName?: string;
 }
 
 export function MultiFileUpload({ 
@@ -48,10 +56,13 @@ export function MultiFileUpload({
   onFileUploaded, 
   onFileDeleted,
   maxFileSizeMb = 20,
+  clientName,
 }: MultiFileUploadProps) {
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [downloadingAll, setDownloadingAll] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const maxFileSize = maxFileSizeMb * 1024 * 1024;
@@ -251,6 +262,44 @@ export function MultiFileUpload({
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  const handleDownloadSingle = async (file: ContentFile) => {
+    const url = getFileUrl(file);
+    if (!url) return;
+    setDownloadingId(file.id);
+    try {
+      await downloadFile(url, file.file_name);
+      toast.success(`${file.file_name} baixado`);
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Erro ao baixar arquivo');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
+  const handleDownloadAll = async () => {
+    if (files.length < 2) return;
+    setDownloadingAll(true);
+    try {
+      const contextLabel = context === 'briefing' ? 'briefing' : 'alteracoes';
+      const sanitizedClient = clientName?.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase() || '';
+      const dateStr = formatDateForFileName();
+      const zipName = ['anexos', sanitizedClient, contextLabel, dateStr].filter(Boolean).join('-') + '.zip';
+
+      const filesForZip = files.map((f) => ({
+        name: f.file_name,
+        url: getFileUrl(f),
+      }));
+      await downloadFilesAsZip(filesForZip, zipName);
+      toast.success(`${files.length} arquivos baixados como ZIP`);
+    } catch (error) {
+      console.error('ZIP download error:', error);
+      toast.error('Erro ao criar arquivo ZIP');
+    } finally {
+      setDownloadingAll(false);
+    }
+  };
+
   const hasUploading = uploadingFiles.length > 0;
 
   return (
@@ -356,7 +405,36 @@ export function MultiFileUpload({
           Nenhum arquivo anexado
         </div>
       ) : files.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-3">
+          {/* Download all button */}
+          {files.length >= 2 && (
+            <div className="flex justify-end">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDownloadAll}
+                      disabled={downloadingAll}
+                    >
+                      {downloadingAll ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <FolderArchive className="h-4 w-4 mr-2" />
+                      )}
+                      Baixar todos ({files.length})
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Baixar todos os arquivos em um único ZIP</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          )}
+          <div className="space-y-2">
           {files.map((file) => {
             const storagePath = file.storage_path || file.file_path || '';
             return (
@@ -390,21 +468,29 @@ export function MultiFileUpload({
                       <ExternalLink className="h-4 w-4" />
                     </a>
                   </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    asChild
-                  >
-                    <a
-                      href={getFileUrl(file)}
-                      download={file.file_name}
-                      title="Baixar arquivo"
-                    >
-                      <Download className="h-4 w-4" />
-                    </a>
-                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleDownloadSingle(file)}
+                          disabled={downloadingId === file.id}
+                        >
+                          {downloadingId === file.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Download className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Baixar arquivo</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <ConfirmDeleteDialog
                     itemName={file.file_name}
                     onConfirm={() => handleDelete(file.id, storagePath)}
@@ -427,6 +513,7 @@ export function MultiFileUpload({
               </div>
             );
           })}
+          </div>
         </div>
       )}
     </div>
