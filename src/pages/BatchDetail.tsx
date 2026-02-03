@@ -38,7 +38,9 @@ export default function BatchDetail() {
   // Change requests data for visual indicators
   const { 
     hasPendingChanges: postHasPendingChanges, 
+    hasAnyChanges: postHasAnyChanges,
     getPendingCount, 
+    getDoneCount,
     postsWithPendingCount,
     refetch: refetchChangeRequests,
   } = useBatchChangeRequests(id);
@@ -472,7 +474,9 @@ export default function BatchDetail() {
               onDeletePost={handleDeletePost}
               onOrderChange={updatePostsOrder}
               hasPendingChanges={postHasPendingChanges}
+              hasAnyChanges={postHasAnyChanges}
               getPendingCount={getPendingCount}
+              getDoneCount={getDoneCount}
             />
           )}
         </CardContent>
