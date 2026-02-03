@@ -2,10 +2,12 @@ import { Loader2, Target } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSalesFunnel } from '@/hooks/useSalesFunnel';
+import { useFunnelBenchmarks } from '@/hooks/useFunnelBenchmarks';
 import { FunnelFiltersComponent } from '@/components/commercial/FunnelFilters';
 import { FunnelTargetsTable } from '@/components/commercial/FunnelTargetsTable';
 import { FunnelActualsTable } from '@/components/commercial/FunnelActualsTable';
 import { FunnelDashboard } from '@/components/commercial/FunnelDashboard';
+import { FunnelBenchmarksDialog } from '@/components/commercial/FunnelBenchmarksDialog';
 
 export default function SalesFunnelPage() {
   const {
@@ -20,6 +22,13 @@ export default function SalesFunnelPage() {
     saveTarget,
     saveActual,
   } = useSalesFunnel();
+
+  const {
+    benchmarks,
+    canEdit: canEditBenchmarks,
+    updateBenchmark,
+    getValueLevel,
+  } = useFunnelBenchmarks();
 
   if (loading) {
     return (
@@ -73,8 +82,13 @@ export default function SalesFunnelPage() {
 
         <TabsContent value="actuals">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Realizado Mensal - {filters.year}</CardTitle>
+              <FunnelBenchmarksDialog 
+                benchmarks={benchmarks}
+                canEdit={canEditBenchmarks}
+                onUpdate={updateBenchmark}
+              />
             </CardHeader>
             <CardContent>
               <FunnelActualsTable
@@ -83,6 +97,8 @@ export default function SalesFunnelPage() {
                 year={filters.year}
                 canEdit={canEdit}
                 onSave={saveActual}
+                benchmarks={benchmarks}
+                getValueLevel={getValueLevel}
               />
             </CardContent>
           </Card>

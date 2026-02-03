@@ -3181,6 +3181,45 @@ export type Database = {
           },
         ]
       }
+      petron_funnel_benchmarks: {
+        Row: {
+          bad_threshold: number
+          created_at: string
+          good_threshold: number
+          id: string
+          is_higher_better: boolean
+          is_percentage: boolean
+          metric_key: string
+          metric_label: string
+          regular_threshold: number
+          updated_at: string
+        }
+        Insert: {
+          bad_threshold: number
+          created_at?: string
+          good_threshold: number
+          id?: string
+          is_higher_better?: boolean
+          is_percentage?: boolean
+          metric_key: string
+          metric_label: string
+          regular_threshold: number
+          updated_at?: string
+        }
+        Update: {
+          bad_threshold?: number
+          created_at?: string
+          good_threshold?: number
+          id?: string
+          is_higher_better?: boolean
+          is_percentage?: boolean
+          metric_key?: string
+          metric_label?: string
+          regular_threshold?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       petron_sales_funnel_actuals: {
         Row: {
           appointments_actual: number | null
