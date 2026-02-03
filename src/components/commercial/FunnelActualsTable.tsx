@@ -7,6 +7,7 @@ import { SalesFunnelActual, formatCurrency, formatPercent, formatNumber, formatR
 import { FunnelActualModal } from './FunnelActualModal';
 import { parseISO, setMonth, setYear } from 'date-fns';
 import { ClientMetricsByMonth } from '@/hooks/useSalesFunnel';
+import { FunnelBenchmark } from '@/hooks/useFunnelBenchmarks';
 
 interface Props {
   actuals: SalesFunnelActual[];
@@ -14,15 +15,9 @@ interface Props {
   year: number;
   canEdit: boolean;
   onSave: (month: Date, data: Partial<SalesFunnelActual>) => Promise<boolean>;
+  benchmarks: FunnelBenchmark[];
+  getValueLevel: (metricKey: string, value: number | null) => 'bad' | 'regular' | 'good' | null;
 }
-
-// Benchmarks de mercado para taxas
-const BENCHMARKS: Record<string, number> = {
-  rate_scheduling_actual: 0.30, // 30% - taxa de agendamento
-  rate_attendance_actual: 0.70, // 70% - taxa de comparecimento
-  rate_close_actual: 0.20, // 20% - taxa de conversão
-  roas_actual: 5, // 5x ROAS
-};
 
 // Define metrics rows configuration - rates after their source data
 // Metrics marked as 'fromClients' are derived from accounts table
@@ -33,6 +28,7 @@ interface MetricConfig {
   computed?: boolean;
   fromClients?: boolean;
   hasBenchmark?: boolean;
+  benchmarkKey?: string;
 }
 
 const METRICS_CONFIG: MetricConfig[] = [
@@ -40,22 +36,22 @@ const METRICS_CONFIG: MetricConfig[] = [
   { key: 'leads_actual', label: 'Leads', format: formatNumber },
   { key: 'cpl_actual', label: 'CPL', format: formatCurrency, computed: true },
   { key: 'appointments_actual', label: 'Agendamentos', format: formatNumber },
-  { key: 'rate_scheduling_actual', label: 'Tx Agend.', format: formatPercent, computed: true, hasBenchmark: true },
+  { key: 'rate_scheduling_actual', label: 'Tx Agend.', format: formatPercent, computed: true, hasBenchmark: true, benchmarkKey: 'rate_scheduling' },
   { key: 'meetings_held_actual', label: 'Reuniões', format: formatNumber },
-  { key: 'rate_attendance_actual', label: 'Tx Comp.', format: formatPercent, computed: true, hasBenchmark: true },
+  { key: 'rate_attendance_actual', label: 'Tx Comp.', format: formatPercent, computed: true, hasBenchmark: true, benchmarkKey: 'rate_attendance' },
   { key: 'cost_per_attendance_actual', label: 'Custo/Comp.', format: formatCurrency, computed: true },
   { key: 'sales_actual', label: 'Vendas', format: formatNumber, fromClients: true },
-  { key: 'rate_close_actual', label: 'Tx Conv.', format: formatPercent, computed: true, hasBenchmark: true },
+  { key: 'rate_close_actual', label: 'Tx Conv.', format: formatPercent, computed: true, hasBenchmark: true, benchmarkKey: 'rate_close' },
   { key: 'cost_per_sale_actual', label: 'CAC', format: formatCurrency, computed: true },
   { key: 'avg_ticket_actual', label: 'Ticket Médio', format: formatCurrency, fromClients: true },
   { key: 'revenue_actual', label: 'Receita', format: formatCurrency, fromClients: true },
-  { key: 'roas_actual', label: 'ROAS', format: formatRoas, computed: true, hasBenchmark: true },
+  { key: 'roas_actual', label: 'ROAS', format: formatRoas, computed: true, hasBenchmark: true, benchmarkKey: 'roas' },
 ];
 
 // Short month names for column headers
 const SHORT_MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
-export function FunnelActualsTable({ actuals, clientMetrics, year, canEdit, onSave }: Props) {
+export function FunnelActualsTable({ actuals, clientMetrics, year, canEdit, onSave, benchmarks, getValueLevel }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(null);
   const [selectedActual, setSelectedActual] = useState<SalesFunnelActual | undefined>();
@@ -215,42 +211,54 @@ export function FunnelActualsTable({ actuals, clientMetrics, year, canEdit, onSa
           </TableRow>
         </TableHeader>
         <TableBody>
-          {METRICS_CONFIG.map((metric) => (
-            <TableRow key={metric.key}>
-              <TableCell className="sticky left-0 bg-background font-medium">
-                <div className="flex flex-col">
-                  <span>{metric.label}</span>
-                  {metric.hasBenchmark && BENCHMARKS[metric.key] && (
-                    <span className="text-xs text-muted-foreground">
-                      Bench: {metric.key === 'roas_actual' 
-                        ? formatRoas(BENCHMARKS[metric.key]) 
-                        : formatPercent(BENCHMARKS[metric.key])}
-                    </span>
-                  )}
-                </div>
-              </TableCell>
-              {Array.from({ length: 12 }, (_, monthIndex) => {
-                const actual = getActualForMonth(monthIndex);
-                const clientData = getClientMetricsForMonth(monthIndex);
-                const value = (metric.computed || metric.fromClients)
-                  ? getComputedValue(actual, clientData, metric.key)
-                  : (actual ? actual[metric.key as keyof SalesFunnelActual] as number | null : null);
-                
-                // Determine color based on benchmark comparison
-                let valueColor = '';
-                if (metric.hasBenchmark && value !== null && BENCHMARKS[metric.key]) {
-                  const benchmark = BENCHMARKS[metric.key];
-                  valueColor = value >= benchmark ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400';
-                }
-                
-                return (
-                  <TableCell key={monthIndex} className={`text-center ${valueColor}`}>
-                    {metric.format(value)}
-                  </TableCell>
-                );
-              })}
-            </TableRow>
-          ))}
+          {METRICS_CONFIG.map((metric) => {
+            const benchmark = metric.benchmarkKey 
+              ? benchmarks.find(b => b.metric_key === metric.benchmarkKey)
+              : undefined;
+            
+            return (
+              <TableRow key={metric.key}>
+                <TableCell className="sticky left-0 bg-background font-medium">
+                  <div className="flex flex-col">
+                    <span>{metric.label}</span>
+                    {metric.hasBenchmark && benchmark && (
+                      <span className="text-xs text-muted-foreground">
+                        Bench: {benchmark.is_percentage 
+                          ? formatPercent(benchmark.good_threshold) 
+                          : formatRoas(benchmark.good_threshold)}
+                      </span>
+                    )}
+                  </div>
+                </TableCell>
+                {Array.from({ length: 12 }, (_, monthIndex) => {
+                  const actual = getActualForMonth(monthIndex);
+                  const clientData = getClientMetricsForMonth(monthIndex);
+                  const value = (metric.computed || metric.fromClients)
+                    ? getComputedValue(actual, clientData, metric.key)
+                    : (actual ? actual[metric.key as keyof SalesFunnelActual] as number | null : null);
+                  
+                  // Determine color based on benchmark comparison using levels
+                  let valueColor = '';
+                  if (metric.hasBenchmark && value !== null) {
+                    const level = getValueLevel(metric.key, value);
+                    if (level === 'good') {
+                      valueColor = 'text-green-600 dark:text-green-400';
+                    } else if (level === 'regular') {
+                      valueColor = 'text-amber-600 dark:text-amber-400';
+                    } else if (level === 'bad') {
+                      valueColor = 'text-red-600 dark:text-red-400';
+                    }
+                  }
+                  
+                  return (
+                    <TableCell key={monthIndex} className={`text-center ${valueColor}`}>
+                      {metric.format(value)}
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>
