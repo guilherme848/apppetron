@@ -47,6 +47,11 @@ export default function PostDetail() {
   // Track initial data load to avoid triggering saves on mount
   const initialLoadComplete = useRef(false);
 
+  // Keep UI tab stable even if the page re-renders (e.g. when browser tab focus changes)
+  const TAB_STORAGE_KEY = postId ? `postDetailTab:${postId}` : null;
+  type PostDetailTab = 'post' | 'briefing' | 'caption' | 'files' | 'changes';
+  const [activeTab, setActiveTab] = useState<PostDetailTab>('post');
+
   // Basic post fields
   const [title, setTitle] = useState('');
   const [channel, setChannel] = useState('');
@@ -148,6 +153,17 @@ export default function PostDetail() {
       fetchChangeRequests();
     }
   }, [postId, fetchAttachments, fetchContentFiles, fetchChangeRequests]);
+
+  useEffect(() => {
+    if (!TAB_STORAGE_KEY) return;
+    const saved = sessionStorage.getItem(TAB_STORAGE_KEY);
+    if (saved === 'post' || saved === 'briefing' || saved === 'caption' || saved === 'files' || saved === 'changes') {
+      setActiveTab(saved);
+    } else {
+      setActiveTab('post');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [TAB_STORAGE_KEY]);
 
   useEffect(() => {
     if (post) {
@@ -432,7 +448,15 @@ export default function PostDetail() {
       </div>
 
       {/* Main Tabs */}
-      <Tabs defaultValue="post" className="w-full">
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => {
+          const next = v as PostDetailTab;
+          setActiveTab(next);
+          if (TAB_STORAGE_KEY) sessionStorage.setItem(TAB_STORAGE_KEY, next);
+        }}
+        className="w-full"
+      >
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="post">Post</TabsTrigger>
           <TabsTrigger value="briefing" className="flex items-center gap-1">
