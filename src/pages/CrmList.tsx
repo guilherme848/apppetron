@@ -89,10 +89,9 @@ export default function CrmList() {
   };
 
   const sortedAndFilteredAccounts = useMemo(() => {
-    // Filter first - also exclude archived accounts from the list
+    // Filter by search only - show all accounts regardless of status
     const filtered = accounts.filter((account) =>
-      account.name.toLowerCase().includes(search.toLowerCase()) &&
-      account.status !== 'archived'
+      account.name.toLowerCase().includes(search.toLowerCase())
     );
 
     // Then sort
