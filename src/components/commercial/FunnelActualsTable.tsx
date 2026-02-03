@@ -18,16 +18,18 @@ interface Props {
 const METRICS_CONFIG: { key: string; label: string; format: (v: number | null) => string; computed?: boolean }[] = [
   { key: 'investment_actual', label: 'Investimento', format: formatCurrency },
   { key: 'leads_actual', label: 'Leads', format: formatNumber },
-  { key: 'cpl_actual', label: 'CPL', format: formatCurrency },
+  { key: 'cpl_actual', label: 'CPL', format: formatCurrency, computed: true },
   { key: 'rate_scheduling_actual', label: 'Tx Agend.', format: formatPercent, computed: true },
   { key: 'appointments_actual', label: 'Agendamentos', format: formatNumber },
   { key: 'rate_attendance_actual', label: 'Tx Comp.', format: formatPercent, computed: true },
+  { key: 'cost_per_attendance_actual', label: 'Custo/Comp.', format: formatCurrency, computed: true },
   { key: 'meetings_held_actual', label: 'Reuniões', format: formatNumber },
   { key: 'rate_close_actual', label: 'Tx Conv.', format: formatPercent, computed: true },
   { key: 'sales_actual', label: 'Vendas', format: formatNumber },
+  { key: 'cost_per_sale_actual', label: 'CAC', format: formatCurrency, computed: true },
   { key: 'avg_ticket_actual', label: 'Ticket Médio', format: formatCurrency },
   { key: 'revenue_actual', label: 'Receita', format: formatCurrency },
-  { key: 'roas_actual', label: 'ROAS', format: formatRoas },
+  { key: 'roas_actual', label: 'ROAS', format: formatRoas, computed: true },
 ];
 
 // Short month names for column headers
@@ -62,6 +64,10 @@ export function FunnelActualsTable({ actuals, year, canEdit, onSave }: Props) {
     if (!actual) return null;
     
     switch (key) {
+      case 'cpl_actual':
+        return actual.investment_actual && actual.leads_actual
+          ? actual.investment_actual / actual.leads_actual
+          : null;
       case 'rate_scheduling_actual':
         return actual.leads_actual && actual.appointments_actual
           ? actual.appointments_actual / actual.leads_actual
@@ -70,9 +76,21 @@ export function FunnelActualsTable({ actuals, year, canEdit, onSave }: Props) {
         return actual.appointments_actual && actual.meetings_held_actual
           ? actual.meetings_held_actual / actual.appointments_actual
           : null;
+      case 'cost_per_attendance_actual':
+        return actual.investment_actual && actual.meetings_held_actual
+          ? actual.investment_actual / actual.meetings_held_actual
+          : null;
       case 'rate_close_actual':
         return actual.meetings_held_actual && actual.sales_actual
           ? actual.sales_actual / actual.meetings_held_actual
+          : null;
+      case 'cost_per_sale_actual':
+        return actual.investment_actual && actual.sales_actual
+          ? actual.investment_actual / actual.sales_actual
+          : null;
+      case 'roas_actual':
+        return actual.revenue_actual && actual.investment_actual
+          ? actual.revenue_actual / actual.investment_actual
           : null;
       default:
         return actual[key as keyof SalesFunnelActual] as number | null;

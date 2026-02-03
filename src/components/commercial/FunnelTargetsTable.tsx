@@ -15,20 +15,22 @@ interface Props {
 }
 
 // Define metrics rows configuration
-const METRICS_CONFIG = [
+const METRICS_CONFIG: { key: string; label: string; format: (v: number | null) => string; computed?: boolean }[] = [
   { key: 'investment_target', label: 'Investimento', format: formatCurrency },
   { key: 'leads_target', label: 'Leads', format: formatNumber },
-  { key: 'cpl_target', label: 'CPL', format: formatCurrency },
-  { key: 'rate_scheduling_target', label: 'Tx Agend.', format: formatPercent },
+  { key: 'cpl_target', label: 'CPL', format: formatCurrency, computed: true },
+  { key: 'rate_scheduling_target', label: 'Tx Agend.', format: formatPercent, computed: true },
   { key: 'appointments_target', label: 'Agendamentos', format: formatNumber },
-  { key: 'rate_attendance_target', label: 'Tx Comp.', format: formatPercent },
+  { key: 'rate_attendance_target', label: 'Tx Comp.', format: formatPercent, computed: true },
+  { key: 'cost_per_attendance_target', label: 'Custo/Comp.', format: formatCurrency, computed: true },
   { key: 'meetings_held_target', label: 'Reuniões', format: formatNumber },
-  { key: 'rate_close_target', label: 'Tx Conv.', format: formatPercent },
+  { key: 'rate_close_target', label: 'Tx Conv.', format: formatPercent, computed: true },
   { key: 'sales_target', label: 'Vendas', format: formatNumber },
+  { key: 'cost_per_sale_target', label: 'CAC', format: formatCurrency, computed: true },
   { key: 'avg_ticket_target', label: 'Ticket Médio', format: formatCurrency },
   { key: 'revenue_target', label: 'Receita', format: formatCurrency },
-  { key: 'roas_target', label: 'ROAS', format: formatRoas },
-] as const;
+  { key: 'roas_target', label: 'ROAS', format: formatRoas, computed: true },
+];
 
 // Short month names for column headers
 const SHORT_MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -55,6 +57,44 @@ export function FunnelTargetsTable({ targets, year, canEdit, onSave }: Props) {
       const tMonth = parseISO(t.month);
       return tMonth.getMonth() === monthIndex && tMonth.getFullYear() === year;
     });
+  };
+
+  // Calculate derived values for targets
+  const getComputedValue = (target: SalesFunnelTarget | undefined, key: string): number | null => {
+    if (!target) return null;
+    
+    switch (key) {
+      case 'cpl_target':
+        return target.investment_target && target.leads_target
+          ? target.investment_target / target.leads_target
+          : null;
+      case 'rate_scheduling_target':
+        return target.leads_target && target.appointments_target
+          ? target.appointments_target / target.leads_target
+          : null;
+      case 'rate_attendance_target':
+        return target.appointments_target && target.meetings_held_target
+          ? target.meetings_held_target / target.appointments_target
+          : null;
+      case 'cost_per_attendance_target':
+        return target.investment_target && target.meetings_held_target
+          ? target.investment_target / target.meetings_held_target
+          : null;
+      case 'rate_close_target':
+        return target.meetings_held_target && target.sales_target
+          ? target.sales_target / target.meetings_held_target
+          : null;
+      case 'cost_per_sale_target':
+        return target.investment_target && target.sales_target
+          ? target.investment_target / target.sales_target
+          : null;
+      case 'roas_target':
+        return target.revenue_target && target.investment_target
+          ? target.revenue_target / target.investment_target
+          : null;
+      default:
+        return target[key as keyof SalesFunnelTarget] as number | null;
+    }
   };
 
   // Mobile card view
@@ -146,10 +186,12 @@ export function FunnelTargetsTable({ targets, year, canEdit, onSave }: Props) {
               </TableCell>
               {Array.from({ length: 12 }, (_, monthIndex) => {
                 const target = getTargetForMonth(monthIndex);
-                const value = target ? target[metric.key as keyof SalesFunnelTarget] : null;
+                const value = metric.computed 
+                  ? getComputedValue(target, metric.key)
+                  : (target ? target[metric.key as keyof SalesFunnelTarget] as number | null : null);
                 return (
                   <TableCell key={monthIndex} className="text-center">
-                    {metric.format(value as number | null)}
+                    {metric.format(value)}
                   </TableCell>
                 );
               })}
