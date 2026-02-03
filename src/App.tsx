@@ -80,6 +80,9 @@ import CreativeRequestDetail from "./pages/traffic/CreativeRequestDetail";
 import ContractsList from "./pages/contracts/ContractsList";
 import ContractDetail from "./pages/contracts/ContractDetail";
 
+// Commercial pages
+import SalesFunnelPage from "./pages/commercial/SalesFunnelPage";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -179,6 +182,9 @@ const App = () => (
                         {/* Contracts routes */}
                         <Route path="/contracts" element={<ContractsList />} />
                         <Route path="/contracts/:id" element={<ContractDetail />} />
+
+                        {/* Commercial routes */}
+                        <Route path="/commercial/funnel" element={<SalesFunnelPage />} />
 
                         {/* Settings - Admin only with internal navigation */}
                         <Route

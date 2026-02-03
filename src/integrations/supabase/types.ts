@@ -438,6 +438,27 @@ export type Database = {
           },
         ]
       }
+      commercial_user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["commercial_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["commercial_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["commercial_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       content_batches: {
         Row: {
           archived: boolean
@@ -3160,6 +3181,132 @@ export type Database = {
           },
         ]
       }
+      petron_sales_funnel_actuals: {
+        Row: {
+          appointments_actual: number | null
+          avg_ticket_actual: number | null
+          cpl_actual: number | null
+          created_at: string
+          created_by: string | null
+          id: string
+          investment_actual: number | null
+          leads_actual: number | null
+          meetings_held_actual: number | null
+          month: string
+          notes: string | null
+          rate_attendance_actual: number | null
+          rate_close_actual: number | null
+          rate_scheduling_actual: number | null
+          revenue_actual: number | null
+          roas_actual: number | null
+          sales_actual: number | null
+          updated_at: string
+        }
+        Insert: {
+          appointments_actual?: number | null
+          avg_ticket_actual?: number | null
+          cpl_actual?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          investment_actual?: number | null
+          leads_actual?: number | null
+          meetings_held_actual?: number | null
+          month: string
+          notes?: string | null
+          rate_attendance_actual?: number | null
+          rate_close_actual?: number | null
+          rate_scheduling_actual?: number | null
+          revenue_actual?: number | null
+          roas_actual?: number | null
+          sales_actual?: number | null
+          updated_at?: string
+        }
+        Update: {
+          appointments_actual?: number | null
+          avg_ticket_actual?: number | null
+          cpl_actual?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          investment_actual?: number | null
+          leads_actual?: number | null
+          meetings_held_actual?: number | null
+          month?: string
+          notes?: string | null
+          rate_attendance_actual?: number | null
+          rate_close_actual?: number | null
+          rate_scheduling_actual?: number | null
+          revenue_actual?: number | null
+          roas_actual?: number | null
+          sales_actual?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      petron_sales_funnel_targets: {
+        Row: {
+          appointments_target: number | null
+          avg_ticket_target: number | null
+          cpl_target: number | null
+          created_at: string
+          created_by: string | null
+          id: string
+          investment_target: number | null
+          leads_target: number | null
+          meetings_held_target: number | null
+          month: string
+          notes: string | null
+          rate_attendance_target: number | null
+          rate_close_target: number | null
+          rate_scheduling_target: number | null
+          revenue_target: number | null
+          roas_target: number | null
+          sales_target: number | null
+          updated_at: string
+        }
+        Insert: {
+          appointments_target?: number | null
+          avg_ticket_target?: number | null
+          cpl_target?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          investment_target?: number | null
+          leads_target?: number | null
+          meetings_held_target?: number | null
+          month: string
+          notes?: string | null
+          rate_attendance_target?: number | null
+          rate_close_target?: number | null
+          rate_scheduling_target?: number | null
+          revenue_target?: number | null
+          roas_target?: number | null
+          sales_target?: number | null
+          updated_at?: string
+        }
+        Update: {
+          appointments_target?: number | null
+          avg_ticket_target?: number | null
+          cpl_target?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          investment_target?: number | null
+          leads_target?: number | null
+          meetings_held_target?: number | null
+          month?: string
+          notes?: string | null
+          rate_attendance_target?: number | null
+          rate_close_target?: number | null
+          rate_scheduling_target?: number | null
+          revenue_target?: number | null
+          roas_target?: number | null
+          sales_target?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       post_attachments: {
         Row: {
           created_at: string
@@ -4362,9 +4509,58 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      petron_sales_funnel_kpis_monthly: {
+        Row: {
+          actual_notes: string | null
+          appointments_actual: number | null
+          appointments_target: number | null
+          avg_ticket_actual: number | null
+          avg_ticket_target: number | null
+          conv_appointments_to_meetings: number | null
+          conv_leads_to_appointments: number | null
+          conv_leads_to_sales: number | null
+          conv_meetings_to_sales: number | null
+          cpl_actual: number | null
+          cpl_target: number | null
+          investment_actual: number | null
+          investment_target: number | null
+          leads_achievement: number | null
+          leads_actual: number | null
+          leads_mom_change: number | null
+          leads_target: number | null
+          meetings_held_actual: number | null
+          meetings_held_target: number | null
+          meetings_mom_change: number | null
+          month: string | null
+          prev_leads: number | null
+          prev_meetings: number | null
+          prev_roas: number | null
+          prev_sales: number | null
+          rate_attendance_actual: number | null
+          rate_attendance_target: number | null
+          rate_close_actual: number | null
+          rate_close_target: number | null
+          rate_scheduling_actual: number | null
+          rate_scheduling_target: number | null
+          revenue_achievement: number | null
+          revenue_actual: number | null
+          revenue_target: number | null
+          roas_achievement: number | null
+          roas_actual: number | null
+          roas_mom_change: number | null
+          roas_target: number | null
+          sales_achievement: number | null
+          sales_actual: number | null
+          sales_mom_change: number | null
+          sales_target: number | null
+          target_notes: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      can_edit_commercial: { Args: { _user_id: string }; Returns: boolean }
+      can_view_commercial: { Args: { _user_id: string }; Returns: boolean }
       generate_contract_number: { Args: never; Returns: string }
       get_batch_status: { Args: { p_batch_id: string }; Returns: string }
       get_client_id_from_batch: {
@@ -4388,6 +4584,13 @@ export type Database = {
       get_stage_default_role_key: {
         Args: { p_stage_key: string }
         Returns: string
+      }
+      has_commercial_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["commercial_role"]
+          _user_id: string
+        }
+        Returns: boolean
       }
       is_admin: { Args: { _auth_user_id: string }; Returns: boolean }
       reassign_batch_posts_by_format: {
@@ -4423,7 +4626,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      commercial_role: "admin" | "commercial_manager" | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4550,6 +4753,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      commercial_role: ["admin", "commercial_manager", "viewer"],
+    },
   },
 } as const
