@@ -741,6 +741,7 @@ export function getRoutesForAccessControl(): Record<string, Record<string, Route
 export const MODULE_ORDER: string[] = [
   MODULES.MAIN,
   MODULES.CRM,
+  MODULES.COMMERCIAL,
   MODULES.CONTENT,
   MODULES.TRAFFIC,
   MODULES.CS,
