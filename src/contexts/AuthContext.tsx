@@ -30,11 +30,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profileError, setProfileError] = useState<Error | null>(null);
   const initialSessionResolvedRef = useRef(false);
   const isMountedRef = useRef(true);
+  const memberRef = useRef<TeamMember | null>(null);
 
-  const fetchMemberData = useCallback(async (userId: string): Promise<TeamMember | null> => {
+  // Keep ref in sync with state for use in callbacks
+  useEffect(() => {
+    memberRef.current = member;
+  }, [member]);
+
+  const fetchMemberData = useCallback(async (userId: string, showLoading = true): Promise<TeamMember | null> => {
     if (!isMountedRef.current) return null;
     
-    setLoadingProfile(true);
+    // Only show loading spinner if we don't have member data yet
+    // This prevents flash of "Carregando perfil" on background refreshes (e.g., tab focus)
+    if (showLoading) {
+      setLoadingProfile(true);
+    }
     setProfileError(null);
     
     try {
@@ -142,9 +152,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Handle session changes after initial load
         if (currentSession?.user) {
           // Use setTimeout to avoid Supabase auth deadlock
+          // Don't show loading if we already have member data (background refresh)
           setTimeout(async () => {
             if (!isMountedRef.current) return;
-            await fetchMemberData(currentSession.user.id);
+            const shouldShowLoading = !memberRef.current;
+            await fetchMemberData(currentSession.user.id, shouldShowLoading);
             if (isMountedRef.current) {
               setLoading(false);
             }
