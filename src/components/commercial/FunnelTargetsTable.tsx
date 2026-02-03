@@ -5,8 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Edit, Plus } from 'lucide-react';
 import { SalesFunnelTarget, formatCurrency, formatPercent, formatNumber, formatRoas, MONTH_NAMES } from '@/types/salesFunnel';
 import { FunnelTargetModal } from './FunnelTargetModal';
-import { format, parseISO, startOfMonth, setMonth, setYear } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { parseISO, setMonth, setYear } from 'date-fns';
 
 interface Props {
   targets: SalesFunnelTarget[];
@@ -14,6 +13,25 @@ interface Props {
   canEdit: boolean;
   onSave: (month: Date, data: Partial<SalesFunnelTarget>) => Promise<boolean>;
 }
+
+// Define metrics rows configuration
+const METRICS_CONFIG = [
+  { key: 'investment_target', label: 'Investimento', format: formatCurrency },
+  { key: 'leads_target', label: 'Leads', format: formatNumber },
+  { key: 'cpl_target', label: 'CPL', format: formatCurrency },
+  { key: 'rate_scheduling_target', label: 'Tx Agend.', format: formatPercent },
+  { key: 'appointments_target', label: 'Agendamentos', format: formatNumber },
+  { key: 'rate_attendance_target', label: 'Tx Comp.', format: formatPercent },
+  { key: 'meetings_held_target', label: 'Reuniões', format: formatNumber },
+  { key: 'rate_close_target', label: 'Tx Conv.', format: formatPercent },
+  { key: 'sales_target', label: 'Vendas', format: formatNumber },
+  { key: 'avg_ticket_target', label: 'Ticket Médio', format: formatCurrency },
+  { key: 'revenue_target', label: 'Receita', format: formatCurrency },
+  { key: 'roas_target', label: 'ROAS', format: formatRoas },
+] as const;
+
+// Short month names for column headers
+const SHORT_MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
 export function FunnelTargetsTable({ targets, year, canEdit, onSave }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
@@ -94,58 +112,49 @@ export function FunnelTargetsTable({ targets, year, canEdit, onSave }: Props) {
     </div>
   );
 
-  // Desktop table view
+  // Desktop table view - inverted: metrics as rows, months as columns
   const DesktopView = () => (
     <div className="hidden md:block overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="sticky left-0 bg-background">Mês</TableHead>
-            <TableHead className="text-right">Investimento</TableHead>
-            <TableHead className="text-right">Leads</TableHead>
-            <TableHead className="text-right">CPL</TableHead>
-            <TableHead className="text-right">Tx Agend.</TableHead>
-            <TableHead className="text-right">Agend.</TableHead>
-            <TableHead className="text-right">Tx Comp.</TableHead>
-            <TableHead className="text-right">Reuniões</TableHead>
-            <TableHead className="text-right">Tx Conv.</TableHead>
-            <TableHead className="text-right">Vendas</TableHead>
-            <TableHead className="text-right">TKM</TableHead>
-            <TableHead className="text-right">Receita</TableHead>
-            <TableHead className="text-right">ROAS</TableHead>
-            {canEdit && <TableHead className="w-12"></TableHead>}
+            <TableHead className="sticky left-0 bg-background min-w-[120px]">Métrica</TableHead>
+            {SHORT_MONTHS.map((month, i) => (
+              <TableHead key={i} className="text-center min-w-[80px]">
+                <div className="flex flex-col items-center gap-1">
+                  <span>{month}</span>
+                  {canEdit && (
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      className="h-6 w-6"
+                      onClick={() => handleEdit(i)}
+                    >
+                      {getTargetForMonth(i) ? <Edit className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
+                    </Button>
+                  )}
+                </div>
+              </TableHead>
+            ))}
           </TableRow>
         </TableHeader>
         <TableBody>
-          {Array.from({ length: 12 }, (_, i) => {
-            const target = getTargetForMonth(i);
-            return (
-              <TableRow key={i}>
-                <TableCell className="sticky left-0 bg-background font-medium">
-                  {MONTH_NAMES[i]}
-                </TableCell>
-                <TableCell className="text-right">{formatCurrency(target?.investment_target)}</TableCell>
-                <TableCell className="text-right">{formatNumber(target?.leads_target)}</TableCell>
-                <TableCell className="text-right">{formatCurrency(target?.cpl_target)}</TableCell>
-                <TableCell className="text-right">{formatPercent(target?.rate_scheduling_target)}</TableCell>
-                <TableCell className="text-right">{formatNumber(target?.appointments_target)}</TableCell>
-                <TableCell className="text-right">{formatPercent(target?.rate_attendance_target)}</TableCell>
-                <TableCell className="text-right">{formatNumber(target?.meetings_held_target)}</TableCell>
-                <TableCell className="text-right">{formatPercent(target?.rate_close_target)}</TableCell>
-                <TableCell className="text-right">{formatNumber(target?.sales_target)}</TableCell>
-                <TableCell className="text-right">{formatCurrency(target?.avg_ticket_target)}</TableCell>
-                <TableCell className="text-right">{formatCurrency(target?.revenue_target)}</TableCell>
-                <TableCell className="text-right">{formatRoas(target?.roas_target)}</TableCell>
-                {canEdit && (
-                  <TableCell>
-                    <Button size="icon" variant="ghost" onClick={() => handleEdit(i)}>
-                      {target ? <Edit className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                    </Button>
+          {METRICS_CONFIG.map((metric) => (
+            <TableRow key={metric.key}>
+              <TableCell className="sticky left-0 bg-background font-medium">
+                {metric.label}
+              </TableCell>
+              {Array.from({ length: 12 }, (_, monthIndex) => {
+                const target = getTargetForMonth(monthIndex);
+                const value = target ? target[metric.key as keyof SalesFunnelTarget] : null;
+                return (
+                  <TableCell key={monthIndex} className="text-center">
+                    {metric.format(value as number | null)}
                   </TableCell>
-                )}
-              </TableRow>
-            );
-          })}
+                );
+              })}
+            </TableRow>
+          ))}
         </TableBody>
       </Table>
     </div>
