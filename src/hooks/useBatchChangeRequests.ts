@@ -7,11 +7,14 @@ export interface PostChangeRequestSummary {
   open_count: number;
   in_progress_count: number;
   pending_count: number; // open + in_progress
+  done_count: number;
+  total_count: number; // all requests for this post
 }
 
 export interface BatchChangeRequestData {
   byPostId: Map<string, PostChangeRequestSummary>;
   postsWithPending: Set<string>;
+  postsWithAnyChanges: Set<string>; // posts that have any change requests (including resolved)
   totalPendingCount: number;
 }
 
@@ -23,6 +26,7 @@ export function useBatchChangeRequests(batchId: string | undefined) {
   const [data, setData] = useState<BatchChangeRequestData>({
     byPostId: new Map(),
     postsWithPending: new Set(),
+    postsWithAnyChanges: new Set(),
     totalPendingCount: 0,
   });
   const [loading, setLoading] = useState(false);
@@ -51,6 +55,7 @@ export function useBatchChangeRequests(batchId: string | undefined) {
         setData({
           byPostId: new Map(),
           postsWithPending: new Set(),
+          postsWithAnyChanges: new Set(),
           totalPendingCount: 0,
         });
         setLoading(false);
@@ -72,12 +77,14 @@ export function useBatchChangeRequests(batchId: string | undefined) {
       // Aggregate by post_id
       const byPostId = new Map<string, PostChangeRequestSummary>();
       const postsWithPending = new Set<string>();
+      const postsWithAnyChanges = new Set<string>();
       let totalPendingCount = 0;
 
       for (const req of requests || []) {
         const status = req.status as ChangeRequestStatus;
         const isOpen = status === 'open';
         const isInProgress = status === 'in_progress';
+        const isDone = status === 'done';
         const isPending = isOpen || isInProgress;
 
         if (!byPostId.has(req.post_id)) {
@@ -86,12 +93,18 @@ export function useBatchChangeRequests(batchId: string | undefined) {
             open_count: 0,
             in_progress_count: 0,
             pending_count: 0,
+            done_count: 0,
+            total_count: 0,
           });
         }
 
         const summary = byPostId.get(req.post_id)!;
+        summary.total_count++;
+        postsWithAnyChanges.add(req.post_id);
+        
         if (isOpen) summary.open_count++;
         if (isInProgress) summary.in_progress_count++;
+        if (isDone) summary.done_count++;
         if (isPending) {
           summary.pending_count++;
           postsWithPending.add(req.post_id);
@@ -102,6 +115,7 @@ export function useBatchChangeRequests(batchId: string | undefined) {
       setData({
         byPostId,
         postsWithPending,
+        postsWithAnyChanges,
         totalPendingCount,
       });
     } catch (error) {
@@ -121,9 +135,19 @@ export function useBatchChangeRequests(batchId: string | undefined) {
     return data.postsWithPending.has(postId);
   }, [data.postsWithPending]);
 
+  // Helper to check if a post has any changes (including resolved)
+  const hasAnyChanges = useCallback((postId: string): boolean => {
+    return data.postsWithAnyChanges.has(postId);
+  }, [data.postsWithAnyChanges]);
+
   // Helper to get pending count for a post
   const getPendingCount = useCallback((postId: string): number => {
     return data.byPostId.get(postId)?.pending_count || 0;
+  }, [data.byPostId]);
+
+  // Helper to get done count for a post
+  const getDoneCount = useCallback((postId: string): number => {
+    return data.byPostId.get(postId)?.done_count || 0;
   }, [data.byPostId]);
 
   return {
@@ -131,7 +155,10 @@ export function useBatchChangeRequests(batchId: string | undefined) {
     loading,
     refetch: fetchChangeRequests,
     hasPendingChanges,
+    hasAnyChanges,
     getPendingCount,
+    getDoneCount,
     postsWithPendingCount: data.postsWithPending.size,
+    postsWithAnyChangesCount: data.postsWithAnyChanges.size,
   };
 }

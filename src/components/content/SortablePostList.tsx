@@ -17,7 +17,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Eye, Trash2, ChevronUp, ChevronDown, Lock, AlertCircle, ExternalLink, MessageSquareWarning } from 'lucide-react';
+import { GripVertical, Eye, Trash2, ChevronUp, ChevronDown, Lock, AlertCircle, ExternalLink, MessageSquareWarning, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -47,7 +47,9 @@ interface SortablePostListProps {
   onDeletePost: (postId: string) => Promise<void>;
   onOrderChange: (posts: ContentPost[]) => void;
   hasPendingChanges?: (postId: string) => boolean;
+  hasAnyChanges?: (postId: string) => boolean;
   getPendingCount?: (postId: string) => number;
+  getDoneCount?: (postId: string) => number;
 }
 
 interface SortableRowProps {
@@ -67,7 +69,9 @@ interface SortableRowProps {
   canMoveUp: boolean;
   canMoveDown: boolean;
   hasPendingChanges: boolean;
+  hasAnyChanges: boolean;
   pendingCount: number;
+  doneCount: number;
 }
 
 const getChannelLabel = (value: string | null) =>
@@ -94,7 +98,9 @@ function SortableRow({
   canMoveUp,
   canMoveDown,
   hasPendingChanges,
+  hasAnyChanges,
   pendingCount,
+  doneCount,
 }: SortableRowProps) {
   const navigate = useNavigate();
   const {
@@ -112,11 +118,15 @@ function SortableRow({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  // Determine the visual state: pending (attention), completed (muted/neutral), or none
+  const showPendingIndicator = hasPendingChanges;
+  const showCompletedIndicator = !hasPendingChanges && hasAnyChanges && doneCount > 0;
+
   return (
     <TableRow 
       ref={setNodeRef} 
       style={style} 
-      className={`${isDragging ? 'bg-muted' : ''} ${hasPendingChanges ? 'border-l-2 border-l-attention' : ''}`}
+      className={`${isDragging ? 'bg-muted' : ''} ${showPendingIndicator ? 'border-l-2 border-l-attention' : showCompletedIndicator ? 'border-l-2 border-l-primary/50' : ''}`}
     >
       <TableCell className="w-10">
         <div className="flex items-center gap-1">
@@ -155,7 +165,7 @@ function SortableRow({
       <TableCell className="font-medium">
         <div className="flex items-center gap-2">
           {post.title || <span className="text-muted-foreground italic">Sem título</span>}
-          {hasPendingChanges && (
+          {showPendingIndicator && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -166,6 +176,21 @@ function SortableRow({
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>{pendingCount} alteração(ões) pendente(s)</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          {showCompletedIndicator && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="muted" className="flex items-center gap-1 text-xs h-5">
+                    <CheckCircle2 className="h-3 w-3" />
+                    {doneCount}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{doneCount} alteração(ões) concluída(s) - revisar</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -334,7 +359,9 @@ export function SortablePostList({
   onDeletePost,
   onOrderChange,
   hasPendingChanges,
+  hasAnyChanges,
   getPendingCount,
+  getDoneCount,
 }: SortablePostListProps) {
   const { getMemberById } = useTeamMembers();
   const [isSaving, setIsSaving] = useState(false);
@@ -448,7 +475,9 @@ export function SortablePostList({
                 canMoveUp={index > 0}
                 canMoveDown={index < posts.length - 1}
                 hasPendingChanges={hasPendingChanges?.(post.id) ?? false}
+                hasAnyChanges={hasAnyChanges?.(post.id) ?? false}
                 pendingCount={getPendingCount?.(post.id) ?? 0}
+                doneCount={getDoneCount?.(post.id) ?? 0}
               />
             ))}
           </TableBody>
