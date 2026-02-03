@@ -37,8 +37,6 @@ export function SelectClientDialog({
       supabase
         .from('accounts')
         .select('id, name, status, health_status')
-        .is('deleted_at', null)
-        .eq('status', 'active')
         .order('name')
         .then(({ data }) => {
           if (data) setAccounts(data);

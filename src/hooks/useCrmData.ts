@@ -73,7 +73,6 @@ export function useCrmData() {
     const { data, error } = await supabase
       .from('accounts')
       .select('*, services(name)')
-      .is('deleted_at', null) // Exclude soft-deleted accounts
       .order('created_at', { ascending: false });
     if (error) {
       console.error('Error fetching accounts:', error);
