@@ -29,6 +29,7 @@ import {
   Zap,
   User,
   FilePen,
+  Target,
 } from 'lucide-react';
 
 // Action types for permissions
@@ -52,6 +53,7 @@ export interface RouteDefinition {
 export const MODULES = {
   MAIN: 'Principal',
   CRM: 'CRM',
+  COMMERCIAL: 'Comercial',
   CONTENT: 'Conteúdo',
   TRAFFIC: 'Tráfego',
   CS: 'Customer Success',
@@ -470,6 +472,20 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view'], // Only view action, no edit
     hideInMenu: true, // Not a navigation item, just a permission
     order: 7,
+  },
+
+  // ============================================
+  // COMMERCIAL MODULE
+  // ============================================
+  {
+    id: 'commercial.funnel',
+    path: '/commercial/funnel',
+    label: 'Funil Comercial',
+    category: CATEGORIES.ANALYTICS,
+    module: MODULES.COMMERCIAL,
+    permissions: ['view', 'edit'],
+    icon: Target,
+    order: 1,
   },
 
   // ============================================
