@@ -14,18 +14,18 @@ interface Props {
   onSave: (month: Date, data: Partial<SalesFunnelActual>) => Promise<boolean>;
 }
 
-// Define metrics rows configuration
+// Define metrics rows configuration - rates after their source data
 const METRICS_CONFIG: { key: string; label: string; format: (v: number | null) => string; computed?: boolean }[] = [
   { key: 'investment_actual', label: 'Investimento', format: formatCurrency },
   { key: 'leads_actual', label: 'Leads', format: formatNumber },
   { key: 'cpl_actual', label: 'CPL', format: formatCurrency, computed: true },
-  { key: 'rate_scheduling_actual', label: 'Tx Agend.', format: formatPercent, computed: true },
   { key: 'appointments_actual', label: 'Agendamentos', format: formatNumber },
+  { key: 'rate_scheduling_actual', label: 'Tx Agend.', format: formatPercent, computed: true },
+  { key: 'meetings_held_actual', label: 'Reuniões', format: formatNumber },
   { key: 'rate_attendance_actual', label: 'Tx Comp.', format: formatPercent, computed: true },
   { key: 'cost_per_attendance_actual', label: 'Custo/Comp.', format: formatCurrency, computed: true },
-  { key: 'meetings_held_actual', label: 'Reuniões', format: formatNumber },
-  { key: 'rate_close_actual', label: 'Tx Conv.', format: formatPercent, computed: true },
   { key: 'sales_actual', label: 'Vendas', format: formatNumber },
+  { key: 'rate_close_actual', label: 'Tx Conv.', format: formatPercent, computed: true },
   { key: 'cost_per_sale_actual', label: 'CAC', format: formatCurrency, computed: true },
   { key: 'avg_ticket_actual', label: 'Ticket Médio', format: formatCurrency },
   { key: 'revenue_actual', label: 'Receita', format: formatCurrency },
