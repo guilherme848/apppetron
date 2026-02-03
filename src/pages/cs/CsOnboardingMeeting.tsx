@@ -20,11 +20,21 @@ import {
   Calendar,
   User,
   Star,
+  Download,
+  Loader2,
+  FolderArchive,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { downloadFile, downloadFilesAsZip, formatDateForFileName } from '@/lib/fileDownload';
 import {
   useOnboardingMeeting,
   useOnboardingQuestions,
@@ -80,6 +90,8 @@ export default function CsOnboardingMeeting() {
   const [localAnswersJson, setLocalAnswersJson] = useState<Record<string, unknown>>({});
   const [generalNotes, setGeneralNotes] = useState('');
   const [pendingSaves, setPendingSaves] = useState<Set<string>>(new Set());
+  const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
+  const [downloadingAll, setDownloadingAll] = useState(false);
 
   // Group questions by block
   const blocks = useMemo(() => groupQuestionsByBlock(questions), [questions]);
@@ -248,6 +260,41 @@ export default function CsOnboardingMeeting() {
       storage_path: file.storage_path,
       meeting_id: meetingId,
     });
+  };
+
+  // Handle single file download
+  const handleDownloadSingle = async (file: { id: string; file_name: string; file_url: string }) => {
+    setDownloadingFileId(file.id);
+    try {
+      await downloadFile(file.file_url, file.file_name);
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({ title: 'Erro', description: 'Falha ao baixar arquivo', variant: 'destructive' });
+    } finally {
+      setDownloadingFileId(null);
+    }
+  };
+
+  // Handle all files download as ZIP
+  const handleDownloadAllFiles = async () => {
+    if (files.length < 2) return;
+    setDownloadingAll(true);
+    try {
+      const sanitizedClient = meeting?.client_name?.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase() || 'cliente';
+      const dateStr = formatDateForFileName();
+      const zipName = `anexos-${sanitizedClient}-onboarding-${dateStr}.zip`;
+
+      const filesForZip = files.map((f) => ({
+        name: f.file_name,
+        url: f.file_url,
+      }));
+      await downloadFilesAsZip(filesForZip, zipName);
+    } catch (error) {
+      console.error('ZIP download error:', error);
+      toast({ title: 'Erro', description: 'Falha ao criar arquivo ZIP', variant: 'destructive' });
+    } finally {
+      setDownloadingAll(false);
+    }
   };
 
   // Complete meeting
@@ -505,40 +552,92 @@ export default function CsOnboardingMeeting() {
           {files.length === 0 ? (
             <p className="text-sm text-muted-foreground">Nenhum arquivo anexado</p>
           ) : (
-            <div className="space-y-2">
-              {files.map(file => (
-                <div
-                  key={file.id}
-                  className="flex items-center justify-between p-3 bg-muted rounded-lg"
-                >
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <a
-                        href={file.file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-medium hover:underline"
-                      >
-                        {file.file_name}
-                      </a>
-                      <p className="text-xs text-muted-foreground">
-                        {file.uploaded_by_name && `Enviado por ${file.uploaded_by_name} • `}
-                        {format(new Date(file.created_at), 'dd/MM/yyyy HH:mm')}
-                      </p>
+            <div className="space-y-3">
+              {/* Download all button */}
+              {files.length >= 2 && (
+                <div className="flex justify-end">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleDownloadAllFiles}
+                          disabled={downloadingAll}
+                        >
+                          {downloadingAll ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <FolderArchive className="h-4 w-4 mr-2" />
+                          )}
+                          Baixar todos ({files.length})
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Baixar todos os arquivos em um único ZIP</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              )}
+              <div className="space-y-2">
+                {files.map(file => (
+                  <div
+                    key={file.id}
+                    className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                  >
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <a
+                          href={file.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium hover:underline"
+                        >
+                          {file.file_name}
+                        </a>
+                        <p className="text-xs text-muted-foreground">
+                          {file.uploaded_by_name && `Enviado por ${file.uploaded_by_name} • `}
+                          {format(new Date(file.created_at), 'dd/MM/yyyy HH:mm')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDownloadSingle(file)}
+                              disabled={downloadingFileId === file.id}
+                            >
+                              {downloadingFileId === file.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Download className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Baixar arquivo</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      {!isCompleted && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleFileDelete(file)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      )}
                     </div>
                   </div>
-                  {!isCompleted && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleFileDelete(file)}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </CardContent>
