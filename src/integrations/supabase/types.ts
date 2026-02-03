@@ -4532,10 +4532,6 @@ export type Database = {
           meetings_held_target: number | null
           meetings_mom_change: number | null
           month: string | null
-          prev_leads: number | null
-          prev_meetings: number | null
-          prev_roas: number | null
-          prev_sales: number | null
           rate_attendance_actual: number | null
           rate_attendance_target: number | null
           rate_close_actual: number | null
