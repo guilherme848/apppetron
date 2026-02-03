@@ -2,16 +2,18 @@ import { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Edit, Plus } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Edit, Plus, HelpCircle } from 'lucide-react';
 import { SalesFunnelActual, formatCurrency, formatPercent, formatNumber, formatRoas, MONTH_NAMES } from '@/types/salesFunnel';
 import { FunnelActualModal } from './FunnelActualModal';
 import { parseISO, setMonth, setYear } from 'date-fns';
-import { ClientMetricsByMonth } from '@/hooks/useSalesFunnel';
+import { ClientMetricsByMonth, BaseMetrics } from '@/hooks/useSalesFunnel';
 import { FunnelBenchmark } from '@/hooks/useFunnelBenchmarks';
 
 interface Props {
   actuals: SalesFunnelActual[];
   clientMetrics: ClientMetricsByMonth[];
+  baseMetrics: BaseMetrics;
   year: number;
   canEdit: boolean;
   onSave: (month: Date, data: Partial<SalesFunnelActual>) => Promise<boolean>;
@@ -29,6 +31,7 @@ interface MetricConfig {
   fromClients?: boolean;
   hasBenchmark?: boolean;
   benchmarkKey?: string;
+  hasTooltip?: boolean;
 }
 
 const METRICS_CONFIG: MetricConfig[] = [
@@ -46,12 +49,13 @@ const METRICS_CONFIG: MetricConfig[] = [
   { key: 'avg_ticket_actual', label: 'Ticket Médio', format: formatCurrency, fromClients: true },
   { key: 'revenue_actual', label: 'Receita', format: formatCurrency, fromClients: true },
   { key: 'roas_actual', label: 'ROAS', format: formatRoas, computed: true, hasBenchmark: true, benchmarkKey: 'roas' },
+  { key: 'roas_expected', label: 'ROAS (Exp.)', format: formatRoas, computed: true, hasTooltip: true },
 ];
 
 // Short month names for column headers
 const SHORT_MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
-export function FunnelActualsTable({ actuals, clientMetrics, year, canEdit, onSave, benchmarks, getValueLevel }: Props) {
+export function FunnelActualsTable({ actuals, clientMetrics, baseMetrics, year, canEdit, onSave, benchmarks, getValueLevel }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(null);
   const [selectedActual, setSelectedActual] = useState<SalesFunnelActual | undefined>();
@@ -123,6 +127,15 @@ export function FunnelActualsTable({ actuals, clientMetrics, year, canEdit, onSa
         return totalRevenue && investment
           ? totalRevenue / investment
           : null;
+      case 'roas_expected':
+        // ROAS Expectativa = (LT médio * Ticket médio) / CAC
+        // LTV = avgLtMonths * avgTicket, CAC = investment / salesCount
+        if (baseMetrics.avgLtMonths > 0 && avgTicket > 0 && investment && salesCount > 0) {
+          const ltv = baseMetrics.avgLtMonths * avgTicket;
+          const cac = investment / salesCount;
+          return ltv / cac;
+        }
+        return null;
       default:
         return actual ? actual[key as keyof SalesFunnelActual] as number | null : null;
     }
@@ -220,11 +233,37 @@ export function FunnelActualsTable({ actuals, clientMetrics, year, canEdit, onSa
               <TableRow key={metric.key}>
                 <TableCell className="sticky left-0 bg-background font-medium">
                   <div className="flex flex-col">
-                    <span>{metric.label}</span>
+                    <div className="flex items-center gap-1">
+                      <span>{metric.label}</span>
+                      {metric.hasTooltip && metric.key === 'roas_expected' && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              <p className="font-medium">ROAS Expectativa (LTV-based)</p>
+                              <p className="mt-1 text-xs">
+                                Fórmula: LTV / CAC
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                LTV = LT médio × Ticket médio do mês
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                LT médio atual: {baseMetrics.avgLtMonths.toFixed(1).replace('.', ',')} meses
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Base: {baseMetrics.activeClientsCount} clientes ativos
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
                     {metric.hasBenchmark && benchmark && (
                       <span className="text-xs text-muted-foreground">
                         Bench: {benchmark.is_percentage 
-                          ? formatPercent(benchmark.good_threshold) 
+                          ? formatPercent(benchmark.good_threshold)
                           : formatRoas(benchmark.good_threshold)}
                       </span>
                     )}

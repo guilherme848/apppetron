@@ -17,12 +17,19 @@ export interface ClientMetricsByMonth {
   avg_ticket: number;
 }
 
+// Global metrics for base health
+export interface BaseMetrics {
+  avgLtMonths: number; // Average lifetime in months for active clients
+  activeClientsCount: number;
+}
+
 export function useSalesFunnel() {
   const { toast } = useToast();
   const [targets, setTargets] = useState<SalesFunnelTarget[]>([]);
   const [actuals, setActuals] = useState<SalesFunnelActual[]>([]);
   const [kpis, setKpis] = useState<SalesFunnelKPI[]>([]);
   const [clientMetrics, setClientMetrics] = useState<ClientMetricsByMonth[]>([]);
+  const [baseMetrics, setBaseMetrics] = useState<BaseMetrics>({ avgLtMonths: 0, activeClientsCount: 0 });
   const [loading, setLoading] = useState(true);
   const [canEdit, setCanEdit] = useState(false);
   
@@ -161,11 +168,50 @@ export function useSalesFunnel() {
     setClientMetrics(metricsByMonth);
   }, [filters.year]);
 
+  // Fetch average LT for active clients (for ROAS Expectativa calculation)
+  const fetchBaseMetrics = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('accounts')
+      .select('start_date')
+      .eq('status', 'active')
+      .is('deleted_at', null)
+      .not('start_date', 'is', null);
+
+    if (error) {
+      console.error('Error fetching base metrics:', error);
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      setBaseMetrics({ avgLtMonths: 0, activeClientsCount: 0 });
+      return;
+    }
+
+    const now = new Date();
+    let totalMonths = 0;
+    let validCount = 0;
+
+    data.forEach(account => {
+      if (account.start_date) {
+        const startDate = parseISO(account.start_date);
+        const diffMs = now.getTime() - startDate.getTime();
+        const months = diffMs / (1000 * 60 * 60 * 24 * 30.44); // Average days per month
+        if (months > 0) {
+          totalMonths += months;
+          validCount++;
+        }
+      }
+    });
+
+    const avgLtMonths = validCount > 0 ? totalMonths / validCount : 0;
+    setBaseMetrics({ avgLtMonths, activeClientsCount: validCount });
+  }, []);
+
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    await Promise.all([fetchTargets(), fetchActuals(), fetchKpis(), fetchClientMetrics()]);
+    await Promise.all([fetchTargets(), fetchActuals(), fetchKpis(), fetchClientMetrics(), fetchBaseMetrics()]);
     setLoading(false);
-  }, [fetchTargets, fetchActuals, fetchKpis, fetchClientMetrics]);
+  }, [fetchTargets, fetchActuals, fetchKpis, fetchClientMetrics, fetchBaseMetrics]);
 
   useEffect(() => {
     fetchAll();
@@ -292,6 +338,7 @@ export function useSalesFunnel() {
     actuals,
     kpis,
     clientMetrics,
+    baseMetrics,
     loading,
     canEdit,
     filters,
