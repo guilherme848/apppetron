@@ -12,6 +12,7 @@ export default function SalesFunnelPage() {
     targets,
     actuals,
     kpis,
+    clientMetrics,
     loading,
     canEdit,
     filters,
@@ -78,6 +79,7 @@ export default function SalesFunnelPage() {
             <CardContent>
               <FunnelActualsTable
                 actuals={actuals}
+                clientMetrics={clientMetrics}
                 year={filters.year}
                 canEdit={canEdit}
                 onSave={saveActual}

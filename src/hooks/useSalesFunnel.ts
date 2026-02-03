@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   SalesFunnelTarget, 
@@ -7,13 +7,22 @@ import {
   FunnelFilters 
 } from '@/types/salesFunnel';
 import { useToast } from '@/hooks/use-toast';
-import { startOfMonth, format, parseISO } from 'date-fns';
+import { startOfMonth, format, parseISO, endOfMonth } from 'date-fns';
+
+// Client metrics derived from accounts table
+export interface ClientMetricsByMonth {
+  month: number; // 0-11
+  sales_count: number;
+  total_revenue: number;
+  avg_ticket: number;
+}
 
 export function useSalesFunnel() {
   const { toast } = useToast();
   const [targets, setTargets] = useState<SalesFunnelTarget[]>([]);
   const [actuals, setActuals] = useState<SalesFunnelActual[]>([]);
   const [kpis, setKpis] = useState<SalesFunnelKPI[]>([]);
+  const [clientMetrics, setClientMetrics] = useState<ClientMetricsByMonth[]>([]);
   const [loading, setLoading] = useState(true);
   const [canEdit, setCanEdit] = useState(false);
   
@@ -111,11 +120,52 @@ export function useSalesFunnel() {
     setKpis((data || []) as SalesFunnelKPI[]);
   }, [filters.year]);
 
+  // Fetch client metrics from accounts table (sales, revenue, ticket)
+  const fetchClientMetrics = useCallback(async () => {
+    const startDate = `${filters.year}-01-01`;
+    const endDate = `${filters.year}-12-31`;
+    
+    const { data, error } = await supabase
+      .from('accounts')
+      .select('start_date, monthly_value')
+      .gte('start_date', startDate)
+      .lte('start_date', endDate)
+      .is('deleted_at', null);
+
+    if (error) {
+      console.error('Error fetching client metrics:', error);
+      return;
+    }
+
+    // Group by month and calculate metrics
+    const metricsByMonth: ClientMetricsByMonth[] = Array.from({ length: 12 }, (_, i) => ({
+      month: i,
+      sales_count: 0,
+      total_revenue: 0,
+      avg_ticket: 0,
+    }));
+
+    (data || []).forEach(account => {
+      if (account.start_date) {
+        const monthIndex = parseISO(account.start_date).getMonth();
+        metricsByMonth[monthIndex].sales_count += 1;
+        metricsByMonth[monthIndex].total_revenue += account.monthly_value || 0;
+      }
+    });
+
+    // Calculate avg ticket
+    metricsByMonth.forEach(m => {
+      m.avg_ticket = m.sales_count > 0 ? m.total_revenue / m.sales_count : 0;
+    });
+
+    setClientMetrics(metricsByMonth);
+  }, [filters.year]);
+
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    await Promise.all([fetchTargets(), fetchActuals(), fetchKpis()]);
+    await Promise.all([fetchTargets(), fetchActuals(), fetchKpis(), fetchClientMetrics()]);
     setLoading(false);
-  }, [fetchTargets, fetchActuals, fetchKpis]);
+  }, [fetchTargets, fetchActuals, fetchKpis, fetchClientMetrics]);
 
   useEffect(() => {
     fetchAll();
@@ -232,10 +282,16 @@ export function useSalesFunnel() {
     return actuals.find(a => a.month === normalizedMonth);
   };
 
+  // Get client metrics for a specific month
+  const getClientMetricsForMonth = (monthIndex: number): ClientMetricsByMonth | undefined => {
+    return clientMetrics.find(m => m.month === monthIndex);
+  };
+
   return {
     targets,
     actuals,
     kpis,
+    clientMetrics,
     loading,
     canEdit,
     filters,
@@ -244,6 +300,7 @@ export function useSalesFunnel() {
     saveActual,
     getTargetForMonth,
     getActualForMonth,
+    getClientMetricsForMonth,
     refetch: fetchAll,
   };
 }

@@ -6,16 +6,19 @@ import { Edit, Plus } from 'lucide-react';
 import { SalesFunnelActual, formatCurrency, formatPercent, formatNumber, formatRoas, MONTH_NAMES } from '@/types/salesFunnel';
 import { FunnelActualModal } from './FunnelActualModal';
 import { parseISO, setMonth, setYear } from 'date-fns';
+import { ClientMetricsByMonth } from '@/hooks/useSalesFunnel';
 
 interface Props {
   actuals: SalesFunnelActual[];
+  clientMetrics: ClientMetricsByMonth[];
   year: number;
   canEdit: boolean;
   onSave: (month: Date, data: Partial<SalesFunnelActual>) => Promise<boolean>;
 }
 
 // Define metrics rows configuration - rates after their source data
-const METRICS_CONFIG: { key: string; label: string; format: (v: number | null) => string; computed?: boolean }[] = [
+// Metrics marked as 'fromClients' are derived from accounts table
+const METRICS_CONFIG: { key: string; label: string; format: (v: number | null) => string; computed?: boolean; fromClients?: boolean }[] = [
   { key: 'investment_actual', label: 'Investimento', format: formatCurrency },
   { key: 'leads_actual', label: 'Leads', format: formatNumber },
   { key: 'cpl_actual', label: 'CPL', format: formatCurrency, computed: true },
@@ -24,18 +27,18 @@ const METRICS_CONFIG: { key: string; label: string; format: (v: number | null) =
   { key: 'meetings_held_actual', label: 'Reuniões', format: formatNumber },
   { key: 'rate_attendance_actual', label: 'Tx Comp.', format: formatPercent, computed: true },
   { key: 'cost_per_attendance_actual', label: 'Custo/Comp.', format: formatCurrency, computed: true },
-  { key: 'sales_actual', label: 'Vendas', format: formatNumber },
+  { key: 'sales_actual', label: 'Vendas', format: formatNumber, fromClients: true },
   { key: 'rate_close_actual', label: 'Tx Conv.', format: formatPercent, computed: true },
   { key: 'cost_per_sale_actual', label: 'CAC', format: formatCurrency, computed: true },
-  { key: 'avg_ticket_actual', label: 'Ticket Médio', format: formatCurrency },
-  { key: 'revenue_actual', label: 'Receita', format: formatCurrency },
+  { key: 'avg_ticket_actual', label: 'Ticket Médio', format: formatCurrency, fromClients: true },
+  { key: 'revenue_actual', label: 'Receita', format: formatCurrency, fromClients: true },
   { key: 'roas_actual', label: 'ROAS', format: formatRoas, computed: true },
 ];
 
 // Short month names for column headers
 const SHORT_MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
-export function FunnelActualsTable({ actuals, year, canEdit, onSave }: Props) {
+export function FunnelActualsTable({ actuals, clientMetrics, year, canEdit, onSave }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(null);
   const [selectedActual, setSelectedActual] = useState<SalesFunnelActual | undefined>();
@@ -59,49 +62,65 @@ export function FunnelActualsTable({ actuals, year, canEdit, onSave }: Props) {
     });
   };
 
-  // Calculate derived rates for a given actual
-  const getComputedValue = (actual: SalesFunnelActual | undefined, key: string): number | null => {
-    if (!actual) return null;
+  const getClientMetricsForMonth = (monthIndex: number): ClientMetricsByMonth | undefined => {
+    return clientMetrics.find(m => m.month === monthIndex);
+  };
+
+  // Get value considering client metrics for sales, ticket, revenue
+  const getComputedValue = (actual: SalesFunnelActual | undefined, clientData: ClientMetricsByMonth | undefined, key: string): number | null => {
+    // For client-derived metrics, use client data
+    const salesCount = clientData?.sales_count || 0;
+    const totalRevenue = clientData?.total_revenue || 0;
+    const avgTicket = clientData?.avg_ticket || 0;
+    const investment = actual?.investment_actual || null;
+    const meetingsHeld = actual?.meetings_held_actual || null;
     
     switch (key) {
+      case 'sales_actual':
+        return salesCount > 0 ? salesCount : null;
+      case 'avg_ticket_actual':
+        return avgTicket > 0 ? avgTicket : null;
+      case 'revenue_actual':
+        return totalRevenue > 0 ? totalRevenue : null;
       case 'cpl_actual':
-        return actual.investment_actual && actual.leads_actual
+        return actual?.investment_actual && actual?.leads_actual
           ? actual.investment_actual / actual.leads_actual
           : null;
       case 'rate_scheduling_actual':
-        return actual.leads_actual && actual.appointments_actual
+        return actual?.leads_actual && actual?.appointments_actual
           ? actual.appointments_actual / actual.leads_actual
           : null;
       case 'rate_attendance_actual':
-        return actual.appointments_actual && actual.meetings_held_actual
+        return actual?.appointments_actual && actual?.meetings_held_actual
           ? actual.meetings_held_actual / actual.appointments_actual
           : null;
       case 'cost_per_attendance_actual':
-        return actual.investment_actual && actual.meetings_held_actual
-          ? actual.investment_actual / actual.meetings_held_actual
+        return investment && meetingsHeld
+          ? investment / meetingsHeld
           : null;
       case 'rate_close_actual':
-        return actual.meetings_held_actual && actual.sales_actual
-          ? actual.sales_actual / actual.meetings_held_actual
+        return meetingsHeld && salesCount
+          ? salesCount / meetingsHeld
           : null;
       case 'cost_per_sale_actual':
-        return actual.investment_actual && actual.sales_actual
-          ? actual.investment_actual / actual.sales_actual
+        return investment && salesCount
+          ? investment / salesCount
           : null;
       case 'roas_actual':
-        return actual.revenue_actual && actual.investment_actual
-          ? actual.revenue_actual / actual.investment_actual
+        return totalRevenue && investment
+          ? totalRevenue / investment
           : null;
       default:
-        return actual[key as keyof SalesFunnelActual] as number | null;
+        return actual ? actual[key as keyof SalesFunnelActual] as number | null : null;
     }
   };
 
-  // Mobile card view - keep as before
+  // Mobile card view
   const MobileView = () => (
     <div className="space-y-4 md:hidden">
       {Array.from({ length: 12 }, (_, i) => {
         const actual = getActualForMonth(i);
+        const clientData = getClientMetricsForMonth(i);
         return (
           <Card key={i}>
             <CardHeader className="pb-2">
@@ -115,31 +134,31 @@ export function FunnelActualsTable({ actuals, year, canEdit, onSave }: Props) {
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              {actual ? (
+              {actual || (clientData && clientData.sales_count > 0) ? (
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
                     <span className="text-muted-foreground">Investimento:</span>
-                    <span className="ml-1 font-medium">{formatCurrency(actual.investment_actual)}</span>
+                    <span className="ml-1 font-medium">{formatCurrency(actual?.investment_actual ?? null)}</span>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Leads:</span>
-                    <span className="ml-1 font-medium">{formatNumber(actual.leads_actual)}</span>
+                    <span className="ml-1 font-medium">{formatNumber(actual?.leads_actual ?? null)}</span>
                   </div>
                   <div>
                     <span className="text-muted-foreground">CPL:</span>
-                    <span className="ml-1 font-medium">{formatCurrency(actual.cpl_actual)}</span>
+                    <span className="ml-1 font-medium">{formatCurrency(getComputedValue(actual, clientData, 'cpl_actual'))}</span>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Vendas:</span>
-                    <span className="ml-1 font-medium">{formatNumber(actual.sales_actual)}</span>
+                    <span className="ml-1 font-medium">{formatNumber(clientData?.sales_count ?? null)}</span>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Receita:</span>
-                    <span className="ml-1 font-medium">{formatCurrency(actual.revenue_actual)}</span>
+                    <span className="ml-1 font-medium">{formatCurrency(clientData?.total_revenue ?? null)}</span>
                   </div>
                   <div>
                     <span className="text-muted-foreground">ROAS:</span>
-                    <span className="ml-1 font-medium">{formatRoas(actual.roas_actual)}</span>
+                    <span className="ml-1 font-medium">{formatRoas(getComputedValue(actual, clientData, 'roas_actual'))}</span>
                   </div>
                 </div>
               ) : (
@@ -186,8 +205,9 @@ export function FunnelActualsTable({ actuals, year, canEdit, onSave }: Props) {
               </TableCell>
               {Array.from({ length: 12 }, (_, monthIndex) => {
                 const actual = getActualForMonth(monthIndex);
-                const value = metric.computed 
-                  ? getComputedValue(actual, metric.key)
+                const clientData = getClientMetricsForMonth(monthIndex);
+                const value = (metric.computed || metric.fromClients)
+                  ? getComputedValue(actual, clientData, metric.key)
                   : (actual ? actual[metric.key as keyof SalesFunnelActual] as number | null : null);
                 return (
                   <TableCell key={monthIndex} className="text-center">
