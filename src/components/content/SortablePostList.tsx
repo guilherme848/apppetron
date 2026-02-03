@@ -17,7 +17,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Eye, Trash2, ChevronUp, ChevronDown, Lock, AlertCircle, ExternalLink } from 'lucide-react';
+import { GripVertical, Eye, Trash2, ChevronUp, ChevronDown, Lock, AlertCircle, ExternalLink, MessageSquareWarning } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -46,6 +46,8 @@ interface SortablePostListProps {
   onPostResponsibleChange: (postId: string, roleId: string) => Promise<void>;
   onDeletePost: (postId: string) => Promise<void>;
   onOrderChange: (posts: ContentPost[]) => void;
+  hasPendingChanges?: (postId: string) => boolean;
+  getPendingCount?: (postId: string) => number;
 }
 
 interface SortableRowProps {
@@ -64,6 +66,8 @@ interface SortableRowProps {
   onMoveDown: () => void;
   canMoveUp: boolean;
   canMoveDown: boolean;
+  hasPendingChanges: boolean;
+  pendingCount: number;
 }
 
 const getChannelLabel = (value: string | null) =>
@@ -89,6 +93,8 @@ function SortableRow({
   onMoveDown,
   canMoveUp,
   canMoveDown,
+  hasPendingChanges,
+  pendingCount,
 }: SortableRowProps) {
   const navigate = useNavigate();
   const {
@@ -107,7 +113,11 @@ function SortableRow({
   };
 
   return (
-    <TableRow ref={setNodeRef} style={style} className={isDragging ? 'bg-muted' : ''}>
+    <TableRow 
+      ref={setNodeRef} 
+      style={style} 
+      className={`${isDragging ? 'bg-muted' : ''} ${hasPendingChanges ? 'border-l-2 border-l-attention' : ''}`}
+    >
       <TableCell className="w-10">
         <div className="flex items-center gap-1">
           {/* Drag handle for desktop */}
@@ -143,7 +153,24 @@ function SortableRow({
         </div>
       </TableCell>
       <TableCell className="font-medium">
-        {post.title || <span className="text-muted-foreground italic">Sem título</span>}
+        <div className="flex items-center gap-2">
+          {post.title || <span className="text-muted-foreground italic">Sem título</span>}
+          {hasPendingChanges && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="attention" className="flex items-center gap-1 text-xs h-5">
+                    <MessageSquareWarning className="h-3 w-3" />
+                    {pendingCount}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{pendingCount} alteração(ões) pendente(s)</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
       </TableCell>
       <TableCell>
         {getChannelLabel(post.channel) ? (
@@ -306,6 +333,8 @@ export function SortablePostList({
   onPostResponsibleChange,
   onDeletePost,
   onOrderChange,
+  hasPendingChanges,
+  getPendingCount,
 }: SortablePostListProps) {
   const { getMemberById } = useTeamMembers();
   const [isSaving, setIsSaving] = useState(false);
@@ -418,6 +447,8 @@ export function SortablePostList({
                 onMoveDown={() => handleMoveDown(index)}
                 canMoveUp={index > 0}
                 canMoveDown={index < posts.length - 1}
+                hasPendingChanges={hasPendingChanges?.(post.id) ?? false}
+                pendingCount={getPendingCount?.(post.id) ?? 0}
               />
             ))}
           </TableBody>

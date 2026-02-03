@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Loader2, AlertTriangle, Archive, AlertCircle, Trash2, Lock } from 'lucide-react';
+import { ArrowLeft, Plus, Loader2, AlertTriangle, Archive, AlertCircle, Trash2, Lock, MessageSquareWarning, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,6 +22,8 @@ import { useAutoSave, useAutoSaveNavigation } from '@/hooks/useAutoSave';
 import { BATCH_STATUS_OPTIONS, BatchStatus, BatchAttachment, ContentPost } from '@/types/contentProduction';
 import { isFormatAssignmentStage } from '@/lib/formatRoleMapping';
 import { ROLE_KEY_LABELS } from '@/lib/accountTeam';
+import { useBatchChangeRequests } from '@/hooks/useBatchChangeRequests';
+import { Toggle } from '@/components/ui/toggle';
 
 export default function BatchDetail() {
   const { id } = useParams<{ id: string }>();
@@ -32,23 +34,42 @@ export default function BatchDetail() {
   } = useContentProduction();
   const { roles, getRoleById } = useJobRoles();
   const { responsibilities, getRoleKeyForStage, getRoleForStage } = useStageResponsibilities();
+  
+  // Change requests data for visual indicators
+  const { 
+    hasPendingChanges: postHasPendingChanges, 
+    getPendingCount, 
+    postsWithPendingCount,
+    refetch: refetchChangeRequests,
+  } = useBatchChangeRequests(id);
 
   const initialLoadComplete = useRef(false);
   const [notes, setNotes] = useState('');
   const [planningDueDate, setPlanningDueDate] = useState('');
   const [attachments, setAttachments] = useState<BatchAttachment[]>([]);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
+  const [showOnlyWithChanges, setShowOnlyWithChanges] = useState(false);
 
   const batch = batches.find((b) => b.id === id);
   
   // Sort posts by sort_order, then by created_at
   const batchPosts = useMemo(() => {
-    return posts
-      .filter((p) => p.batch_id === id)
-      .sort((a, b) => {
-        if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order;
-        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-      });
+    let filtered = posts.filter((p) => p.batch_id === id);
+    
+    // Filter to show only posts with pending changes if toggle is on
+    if (showOnlyWithChanges) {
+      filtered = filtered.filter((p) => postHasPendingChanges(p.id));
+    }
+    
+    return filtered.sort((a, b) => {
+      if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order;
+      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    });
+  }, [posts, id, showOnlyWithChanges, postHasPendingChanges]);
+
+  // Total posts count (without filter)
+  const totalPostsCount = useMemo(() => {
+    return posts.filter((p) => p.batch_id === id).length;
   }, [posts, id]);
 
   // AutoSave setup
@@ -393,9 +414,17 @@ export default function BatchDetail() {
 
       {/* Posts */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-base">Posts do Mês ({batchPosts.length})</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-3">
+              <CardTitle className="text-base">Posts do Mês ({totalPostsCount})</CardTitle>
+              {postsWithPendingCount > 0 && (
+                <Badge variant="attention" className="flex items-center gap-1">
+                  <MessageSquareWarning className="h-3 w-3" />
+                  {postsWithPendingCount} com alteração
+                </Badge>
+              )}
+            </div>
             {isVariableStage && (
               <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
                 <Lock className="h-3 w-3" />
@@ -403,15 +432,31 @@ export default function BatchDetail() {
               </div>
             )}
           </div>
-          <Button size="sm" onClick={handleNewPost}>
-            <Plus className="h-4 w-4 mr-1" />
-            Novo Post
-          </Button>
+          <div className="flex items-center gap-2">
+            {postsWithPendingCount > 0 && (
+              <Toggle
+                pressed={showOnlyWithChanges}
+                onPressedChange={setShowOnlyWithChanges}
+                variant="outline"
+                size="sm"
+                className="data-[state=on]:bg-attention/20 data-[state=on]:text-attention data-[state=on]:border-attention"
+              >
+                <Filter className="h-4 w-4 mr-1" />
+                Só alterações
+              </Toggle>
+            )}
+            <Button size="sm" onClick={handleNewPost}>
+              <Plus className="h-4 w-4 mr-1" />
+              Novo Post
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {batchPosts.length === 0 ? (
             <p className="text-center py-8 text-muted-foreground">
-              Nenhum post cadastrado
+              {showOnlyWithChanges 
+                ? 'Nenhum post com alteração pendente' 
+                : 'Nenhum post cadastrado'}
             </p>
           ) : (
             <SortablePostList
@@ -426,6 +471,8 @@ export default function BatchDetail() {
               onPostResponsibleChange={handlePostResponsibleChange}
               onDeletePost={handleDeletePost}
               onOrderChange={updatePostsOrder}
+              hasPendingChanges={postHasPendingChanges}
+              getPendingCount={getPendingCount}
             />
           )}
         </CardContent>
