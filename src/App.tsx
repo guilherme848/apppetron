@@ -80,7 +80,14 @@ import CreativeRequestDetail from "./pages/traffic/CreativeRequestDetail";
 import ContractsList from "./pages/contracts/ContractsList";
 import ContractDetail from "./pages/contracts/ContractDetail";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    },
+  },
+});
 
 function AuthOnlyLayout() {
   return (
