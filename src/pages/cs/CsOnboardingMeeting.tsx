@@ -301,22 +301,6 @@ export default function CsOnboardingMeeting() {
   const handleCompleteMeeting = async () => {
     if (!meetingId) return;
 
-    // Check required questions
-    const requiredQuestions = questions.filter(q => q.is_required && q.is_active);
-    const unanswered = requiredQuestions.filter(q => {
-      const answer = localAnswers[q.id];
-      return !answer || answer.trim().length === 0;
-    });
-
-    if (unanswered.length > 0) {
-      toast({
-        title: 'Perguntas obrigatórias não respondidas',
-        description: `Existem ${unanswered.length} perguntas obrigatórias sem resposta.`,
-        variant: 'destructive',
-      });
-      return;
-    }
-
     await updateMeeting.mutateAsync({
       id: meetingId,
       status: 'completed',
