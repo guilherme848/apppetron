@@ -1,63 +1,56 @@
 import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Plus, Loader2, LayoutGrid, RefreshCw } from 'lucide-react';
+import { Loader2, LayoutGrid, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useContentBoardData } from '@/hooks/useContentBoardData';
+import { useContentBoardBatches } from '@/hooks/useContentBoardBatches';
 import { ContentBoardFilters } from '@/components/content-board/ContentBoardFilters';
-import { ContentBoardKanban } from '@/components/content-board/ContentBoardKanban';
-import { ContentBoardMobileList } from '@/components/content-board/ContentBoardMobileList';
-import { ContentJobModal } from '@/components/content-board/ContentJobModal';
-import { AddJobDialog } from '@/components/content-board/AddJobDialog';
-import { ContentJobWithPendingCount } from '@/types/contentBoard';
+import { BatchBoardKanban } from '@/components/content-board/BatchBoardKanban';
+import { BatchBoardMobileList } from '@/components/content-board/BatchBoardMobileList';
+import { BatchDetailModal } from '@/components/content-board/BatchDetailModal';
+import { ContentBatch, BatchStatus } from '@/types/contentProduction';
 import { useIsMobile } from '@/hooks/use-mobile';
 
+interface TeamMember {
+  id: string;
+  name: string;
+}
+
+interface BatchWithDetails extends ContentBatch {
+  client: {
+    id: string;
+    name: string;
+    service_id: string | null;
+    social_member_id: string | null;
+  } | null;
+  socialMember: TeamMember | null;
+  pending_count: number;
+}
+
 export default function ContentBoardPage() {
-  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const {
     stages,
-    jobs,
-    jobsByStage,
+    batchesByStage,
     services,
     teamMembers,
     loading,
     filters,
     setFilters,
     monthOptions,
-    moveJobToStage,
-    createJob,
-    updateJob,
-    deleteJob,
-    fetchJobHistory,
+    moveBatchToStage,
     refresh,
-  } = useContentBoardData();
+  } = useContentBoardBatches();
 
-  const [selectedJob, setSelectedJob] = useState<ContentJobWithPendingCount | null>(null);
+  const [selectedBatch, setSelectedBatch] = useState<BatchWithDetails | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
-  const handleCardClick = useCallback((job: ContentJobWithPendingCount) => {
-    setSelectedJob(job);
+  const handleCardClick = useCallback((batch: BatchWithDetails) => {
+    setSelectedBatch(batch);
     setModalOpen(true);
   }, []);
 
-  const handleMoveJob = useCallback(async (jobId: string, newStageId: string) => {
-    await moveJobToStage(jobId, newStageId);
-  }, [moveJobToStage]);
-
-  const handleUpdateJob = useCallback(async (jobId: string, updates: Partial<ContentJobWithPendingCount>) => {
-    await updateJob(jobId, updates);
-    // Update selected job state
-    setSelectedJob((prev) =>
-      prev && prev.id === jobId ? { ...prev, ...updates } : prev
-    );
-  }, [updateJob]);
-
-  const handleDeleteJob = useCallback(async (jobId: string) => {
-    await deleteJob(jobId);
-    setModalOpen(false);
-    setSelectedJob(null);
-  }, [deleteJob]);
+  const handleMoveBatch = useCallback(async (batchId: string, newStatus: BatchStatus) => {
+    await moveBatchToStage(batchId, newStatus);
+  }, [moveBatchToStage]);
 
   if (loading) {
     return (
@@ -77,17 +70,13 @@ export default function ContentBoardPage() {
             Quadro Resumo
           </h1>
           <p className="text-muted-foreground">
-            Visualize e gerencie o status de produção dos clientes
+            Visualize o status dos planejamentos dos clientes
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={refresh}>
             <RefreshCw className="h-4 w-4 mr-1" />
             Atualizar
-          </Button>
-          <Button onClick={() => setAddDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar Cliente
           </Button>
         </div>
       </div>
@@ -104,42 +93,28 @@ export default function ContentBoardPage() {
       {/* Board */}
       {stages.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
-          Nenhuma etapa configurada. Configure as etapas em Configurações.
+          Nenhuma etapa configurada.
         </div>
       ) : isMobile ? (
-        <ContentBoardMobileList
+        <BatchBoardMobileList
           stages={stages}
-          jobsByStage={jobsByStage}
+          batchesByStage={batchesByStage}
           onCardClick={handleCardClick}
         />
       ) : (
-        <ContentBoardKanban
+        <BatchBoardKanban
           stages={stages}
-          jobsByStage={jobsByStage}
-          onMoveJob={handleMoveJob}
+          batchesByStage={batchesByStage}
+          onMoveBatch={handleMoveBatch}
           onCardClick={handleCardClick}
         />
       )}
 
-      {/* Job Detail Modal */}
-      <ContentJobModal
+      {/* Batch Detail Modal */}
+      <BatchDetailModal
         open={modalOpen}
         onOpenChange={setModalOpen}
-        job={selectedJob}
-        stages={stages}
-        teamMembers={teamMembers}
-        onUpdate={handleUpdateJob}
-        onDelete={handleDeleteJob}
-        fetchHistory={fetchJobHistory}
-      />
-
-      {/* Add Job Dialog */}
-      <AddJobDialog
-        open={addDialogOpen}
-        onOpenChange={setAddDialogOpen}
-        stages={stages}
-        monthOptions={monthOptions}
-        onSubmit={createJob}
+        batch={selectedBatch}
       />
     </div>
   );
