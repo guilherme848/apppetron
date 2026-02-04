@@ -378,22 +378,12 @@ export const routeRegistry: RouteDefinition[] = [
   {
     id: 'cs.dashboard',
     path: '/cs',
-    label: 'Visão Geral',
-    category: CATEGORIES.DASHBOARD,
-    module: MODULES.CS,
-    permissions: ['view'],
-    icon: HeartHandshake,
-    order: 0, // Always first in module
-  },
-  {
-    id: 'cs.command_center',
-    path: '/cs/command-center',
     label: 'Command Center',
     category: CATEGORIES.DASHBOARD,
     module: MODULES.CS,
     permissions: ['view', 'manage'],
-    icon: LayoutDashboard,
-    order: 1,
+    icon: HeartHandshake,
+    order: 0, // Always first in module
   },
   {
     id: 'cs.onboarding',

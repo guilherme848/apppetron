@@ -174,7 +174,6 @@ const App = () => (
 
                         {/* CS routes */}
                         <Route path="/cs" element={<CsCommandCenter />} />
-                        <Route path="/cs/command-center" element={<CsCommandCenter />} />
                         <Route path="/cs/dashboard" element={<CsDashboard />} />
                         <Route path="/cs/onboarding" element={<CsOnboarding />} />
                         <Route path="/cs/onboarding/meeting/:meetingId" element={<CsOnboardingMeeting />} />
