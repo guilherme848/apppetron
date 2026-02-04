@@ -72,6 +72,17 @@ const SETTINGS_CATEGORIES: SettingsCategory[] = [
       { id: 'onboarding-questions', label: 'Perguntas do Onboarding', path: '/settings/cs/onboarding-questions' },
     ],
   },
+  {
+    id: 'petron-onboarding',
+    label: 'Onboarding (Petron)',
+    description: 'Configure planos, atividades e sequências de onboarding.',
+    icon: Settings,
+    items: [
+      { id: 'petron-plans', label: 'Planos', path: '/settings/petron/plans' },
+      { id: 'petron-activities', label: 'Atividades', path: '/settings/petron/activities' },
+      { id: 'petron-sequences', label: 'Sequências', path: '/settings/petron/sequences' },
+    ],
+  },
 ];
 
 function getCategoryIcon(categoryId: string) {
