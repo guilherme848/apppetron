@@ -104,7 +104,7 @@ function SidebarSkeleton() {
 
 export function AppSidebar() {
   const { canAccess, loading: permissionsLoading } = useRouteAccess();
-  const { isAdmin, loading: authLoading } = useAuth();
+  const { loading: authLoading } = useAuth();
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -120,9 +120,6 @@ export function AppSidebar() {
   
   if (!isLoading) {
     for (const route of menuRoutes) {
-      // Settings module is admin-only
-      if (route.module === MODULES.SETTINGS && !isAdmin) continue;
-      
       // Check if user can view this route
       if (!canAccess(route.id, 'view')) continue;
 
