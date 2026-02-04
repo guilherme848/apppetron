@@ -11,7 +11,7 @@ import { useSalesBriefing } from '@/hooks/useSalesBriefing';
 import { OnboardingWizard, type OnboardingStep } from '@/components/cs/OnboardingWizard';
 import { SalesBriefingSection } from '@/components/cs/SalesBriefingSection';
 import { OnboardingMeetingSection } from '@/components/cs/OnboardingMeetingSection';
-import { OnboardingActivitiesSection } from '@/components/cs/OnboardingActivitiesSection';
+import { PetronActivitiesSection } from '@/components/cs/PetronActivitiesSection';
 import { OnboardingListCard } from '@/components/cs/OnboardingListCard';
 import { useCrm } from '@/contexts/CrmContext';
 import { cn } from '@/lib/utils';
@@ -357,13 +357,14 @@ export default function CsOnboarding() {
                 )}
                 
                 {currentStep === 2 && (
-                  <OnboardingActivitiesSection
+                  <PetronActivitiesSection
                     clientId={selectedClientId}
-                    onboardingId={onboarding?.id || null}
                     isLocked={steps[2].isLocked}
                     onComplete={() => {
                       if (selectedClientId) {
                         updateStep.mutate({ clientId: selectedClientId, step: 3, status: 'completed' });
+                        refetchOnboarding();
+                        refetchOnboardings();
                       }
                     }}
                   />
