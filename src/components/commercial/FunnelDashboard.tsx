@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { SalesFunnelKPI, formatCurrency, formatPercent, formatNumber, formatRoas, MONTH_NAMES } from '@/types/salesFunnel';
-import { TrendingUp, TrendingDown, Minus, DollarSign, Users, Target, BarChart3 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, DollarSign, Users, Target, BarChart3, Filter } from 'lucide-react';
 import { parseISO } from 'date-fns';
 import {
   LineChart,
@@ -15,6 +15,9 @@ import {
   BarChart,
   Bar,
 } from 'recharts';
+import { SalesFunnelActual } from './SalesFunnelActual';
+import { useState } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Props {
   kpis: SalesFunnelKPI[];
@@ -22,6 +25,7 @@ interface Props {
 }
 
 export function FunnelDashboard({ kpis, year }: Props) {
+  const [selectedFunnelMonth, setSelectedFunnelMonth] = useState<number | undefined>(undefined);
   // Calculate YTD metrics
   const ytdMetrics = kpis.reduce((acc, kpi) => {
     return {
@@ -126,6 +130,35 @@ export function FunnelDashboard({ kpis, year }: Props) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Sales Funnel Visualization */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Funil de Vendas (Realizado)
+          </CardTitle>
+          <Select 
+            value={selectedFunnelMonth?.toString() ?? 'ytd'} 
+            onValueChange={(v) => setSelectedFunnelMonth(v === 'ytd' ? undefined : parseInt(v))}
+          >
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ytd">Ano (YTD)</SelectItem>
+              {MONTH_NAMES.map((name, index) => (
+                <SelectItem key={index} value={index.toString()}>
+                  {name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </CardHeader>
+        <CardContent>
+          <SalesFunnelActual kpis={kpis} selectedMonth={selectedFunnelMonth} />
+        </CardContent>
+      </Card>
 
       {/* Charts */}
       <div className="grid gap-6 lg:grid-cols-2">
