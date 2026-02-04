@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Loader2, Archive, RotateCcw } from 'lucide-react';
+import { Plus, Loader2, Archive, RotateCcw, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useContentProduction } from '@/contexts/ContentProductionContext';
@@ -13,8 +13,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useJobRoles } from '@/hooks/useJobRoles';
 import { useStageResponsibilities } from '@/hooks/useStageResponsibilities';
-
-const VARIABLE_STAGES = ['production', 'changes'];
 
 export default function ContentProduction() {
   const navigate = useNavigate();
@@ -158,6 +156,8 @@ export default function ContentProduction() {
     );
   }
 
+  const VARIABLE_STAGES = ['production', 'changes'];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -166,10 +166,16 @@ export default function ContentProduction() {
           <p className="text-muted-foreground">Gerencie pacotes mensais de conteúdo por cliente</p>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <Button onClick={() => setBatchFormOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Planejamento
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => navigate('/content/production/board')}>
+              <LayoutGrid className="h-4 w-4 mr-2" />
+              Quadro Resumo
+            </Button>
+            <Button onClick={() => setBatchFormOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Planejamento
+            </Button>
+          </div>
           <Button
             variant="ghost"
             size="sm"

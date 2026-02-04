@@ -3181,6 +3181,159 @@ export type Database = {
           },
         ]
       }
+      petron_content_job_history: {
+        Row: {
+          changed_by_member_id: string | null
+          created_at: string
+          from_stage_id: string | null
+          id: string
+          job_id: string
+          notes: string | null
+          to_stage_id: string
+        }
+        Insert: {
+          changed_by_member_id?: string | null
+          created_at?: string
+          from_stage_id?: string | null
+          id?: string
+          job_id: string
+          notes?: string | null
+          to_stage_id: string
+        }
+        Update: {
+          changed_by_member_id?: string | null
+          created_at?: string
+          from_stage_id?: string | null
+          id?: string
+          job_id?: string
+          notes?: string | null
+          to_stage_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "petron_content_job_history_changed_by_member_id_fkey"
+            columns: ["changed_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petron_content_job_history_from_stage_id_fkey"
+            columns: ["from_stage_id"]
+            isOneToOne: false
+            referencedRelation: "petron_content_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petron_content_job_history_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "petron_content_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petron_content_job_history_to_stage_id_fkey"
+            columns: ["to_stage_id"]
+            isOneToOne: false
+            referencedRelation: "petron_content_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      petron_content_jobs: {
+        Row: {
+          assigned_to: string | null
+          client_id: string
+          created_at: string
+          due_date: string | null
+          id: string
+          month_ref: string
+          notes: string | null
+          priority: Database["public"]["Enums"]["content_job_priority"] | null
+          stage_id: string
+          status_label: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          client_id: string
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          month_ref: string
+          notes?: string | null
+          priority?: Database["public"]["Enums"]["content_job_priority"] | null
+          stage_id: string
+          status_label?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          client_id?: string
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          month_ref?: string
+          notes?: string | null
+          priority?: Database["public"]["Enums"]["content_job_priority"] | null
+          stage_id?: string
+          status_label?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "petron_content_jobs_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petron_content_jobs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petron_content_jobs_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "petron_content_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      petron_content_stages: {
+        Row: {
+          active: boolean
+          color: string | null
+          created_at: string
+          id: string
+          name: string
+          position: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          color?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          position?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          color?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          position?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       petron_customer_onboardings: {
         Row: {
           created_at: string
@@ -4886,6 +5039,28 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _auth_user_id: string }; Returns: boolean }
+      move_content_job_to_stage: {
+        Args: { p_job_id: string; p_new_stage_id: string; p_notes?: string }
+        Returns: {
+          assigned_to: string | null
+          client_id: string
+          created_at: string
+          due_date: string | null
+          id: string
+          month_ref: string
+          notes: string | null
+          priority: Database["public"]["Enums"]["content_job_priority"] | null
+          stage_id: string
+          status_label: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "petron_content_jobs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       reassign_batch_posts_by_format: {
         Args: { p_batch_id: string }
         Returns: Json
@@ -4920,6 +5095,7 @@ export type Database = {
     }
     Enums: {
       commercial_role: "admin" | "commercial_manager" | "viewer"
+      content_job_priority: "low" | "medium" | "high" | "urgent"
       petron_onboarding_status:
         | "draft"
         | "in_progress"
@@ -5054,6 +5230,7 @@ export const Constants = {
   public: {
     Enums: {
       commercial_role: ["admin", "commercial_manager", "viewer"],
+      content_job_priority: ["low", "medium", "high", "urgent"],
       petron_onboarding_status: [
         "draft",
         "in_progress",

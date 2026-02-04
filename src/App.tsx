@@ -21,6 +21,7 @@ import TaskList from "./pages/TaskList";
 import ContentPage from "./pages/ContentPage";
 import ContentDetail from "./pages/ContentDetail";
 import ContentProduction from "./pages/ContentProduction";
+import ContentBoardPage from "./pages/ContentBoardPage";
 import ContentDashboard from "./pages/ContentDashboard";
 import ContentTasks from "./pages/ContentTasks";
 import BatchDetail from "./pages/BatchDetail";
@@ -29,7 +30,6 @@ import ExtraRequestsList from "./pages/content/ExtraRequestsList";
 import ExtraRequestNew from "./pages/content/ExtraRequestNew";
 import ExtraRequestDetail from "./pages/content/ExtraRequestDetail";
 import NotFound from "./pages/NotFound";
-
 
 // Profile pages
 import ProfilePage from "./pages/profile/ProfilePage";
@@ -150,13 +150,13 @@ const App = () => (
                         <Route path="/content" element={<ContentPage />} />
                         <Route path="/content/:id" element={<ContentDetail />} />
                         <Route path="/content/production" element={<ContentProduction />} />
+                        <Route path="/content/production/board" element={<ContentBoardPage />} />
                         <Route path="/content/production/:id" element={<BatchDetail />} />
                         <Route path="/content/production/:batchId/posts/:postId" element={<PostDetail />} />
                         <Route path="/content/dashboard" element={<ContentDashboard />} />
                         <Route path="/content/tasks" element={<ContentTasks />} />
                         <Route path="/content/extra-requests" element={<ExtraRequestsList />} />
                         <Route path="/content/extra-requests/new" element={<ExtraRequestNew />} />
-                        <Route path="/content/extra-requests/:id" element={<ExtraRequestDetail />} />
 
                         {/* Traffic routes */}
                         <Route path="/traffic" element={<TrafficDashboard />} />
