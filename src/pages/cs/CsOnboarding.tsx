@@ -123,6 +123,7 @@ export default function CsOnboarding() {
   // Manual completion of Step 1 (Briefing)
   const handleCompleteStep1 = useCallback(async () => {
     if (!selectedClientId) return;
+    if (updateStep.isPending) return;
     
     try {
       await updateStep.mutateAsync({ 
@@ -342,6 +343,7 @@ export default function CsOnboarding() {
                     clientId={selectedClientId}
                     onCompleteStep={briefing ? handleCompleteStep1 : undefined}
                     stepCompleted={onboarding?.step_1_status === 'completed'}
+                    completeLoading={updateStep.isPending}
                   />
                 )}
                 
