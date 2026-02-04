@@ -3,17 +3,23 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Edit, Plus, HelpCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Edit, Plus, HelpCircle, Zap, RefreshCw } from 'lucide-react';
 import { SalesFunnelActual, formatCurrency, formatPercent, formatNumber, formatRoas, MONTH_NAMES } from '@/types/salesFunnel';
 import { FunnelActualModal } from './FunnelActualModal';
-import { parseISO, setMonth, setYear } from 'date-fns';
+import { parseISO, setMonth, setYear, formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { ClientMetricsByMonth, BaseMetrics } from '@/hooks/useSalesFunnel';
 import { FunnelBenchmark } from '@/hooks/useFunnelBenchmarks';
+import { FunnelMetaMetrics } from '@/hooks/useFunnelMetaMetrics';
 
 interface Props {
   actuals: SalesFunnelActual[];
   clientMetrics: ClientMetricsByMonth[];
   baseMetrics: BaseMetrics;
+  metaMetrics: FunnelMetaMetrics[];
+  metaLastSync: Date | null;
+  onRefreshMeta?: () => void;
   year: number;
   canEdit: boolean;
   onSave: (month: Date, data: Partial<SalesFunnelActual>) => Promise<boolean>;
@@ -23,20 +29,22 @@ interface Props {
 
 // Define metrics rows configuration - rates after their source data
 // Metrics marked as 'fromClients' are derived from accounts table
+// Metrics marked as 'fromMeta' come from Meta Ads API in real-time
 interface MetricConfig {
   key: string;
   label: string;
   format: (v: number | null) => string;
   computed?: boolean;
   fromClients?: boolean;
+  fromMeta?: boolean;
   hasBenchmark?: boolean;
   benchmarkKey?: string;
   hasTooltip?: boolean;
 }
 
 const METRICS_CONFIG: MetricConfig[] = [
-  { key: 'investment_actual', label: 'Investimento', format: formatCurrency },
-  { key: 'leads_actual', label: 'Leads', format: formatNumber },
+  { key: 'investment_actual', label: 'Investimento', format: formatCurrency, fromMeta: true },
+  { key: 'leads_actual', label: 'Leads', format: formatNumber, fromMeta: true },
   { key: 'cpl_actual', label: 'CPL', format: formatCurrency, computed: true },
   { key: 'appointments_actual', label: 'Agendamentos', format: formatNumber },
   { key: 'rate_scheduling_actual', label: 'Tx Agend.', format: formatPercent, computed: true, hasBenchmark: true, benchmarkKey: 'rate_scheduling' },
@@ -55,7 +63,19 @@ const METRICS_CONFIG: MetricConfig[] = [
 // Short month names for column headers
 const SHORT_MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
-export function FunnelActualsTable({ actuals, clientMetrics, baseMetrics, year, canEdit, onSave, benchmarks, getValueLevel }: Props) {
+export function FunnelActualsTable({ 
+  actuals, 
+  clientMetrics, 
+  baseMetrics, 
+  metaMetrics,
+  metaLastSync,
+  onRefreshMeta,
+  year, 
+  canEdit, 
+  onSave, 
+  benchmarks, 
+  getValueLevel 
+}: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(null);
   const [selectedActual, setSelectedActual] = useState<SalesFunnelActual | undefined>();
@@ -83,16 +103,39 @@ export function FunnelActualsTable({ actuals, clientMetrics, baseMetrics, year, 
     return clientMetrics.find(m => m.month === monthIndex);
   };
 
-  // Get value considering client metrics for sales, ticket, revenue
-  const getComputedValue = (actual: SalesFunnelActual | undefined, clientData: ClientMetricsByMonth | undefined, key: string): number | null => {
+  const getMetaMetricsForMonth = (monthIndex: number): FunnelMetaMetrics | undefined => {
+    const monthDate = new Date(year, monthIndex, 1);
+    const monthKey = monthDate.toISOString().split('T')[0].slice(0, 7) + '-01';
+    return metaMetrics.find(m => m.month === monthKey);
+  };
+
+  // Get value considering client metrics, Meta metrics, and manual data
+  const getComputedValue = (
+    actual: SalesFunnelActual | undefined, 
+    clientData: ClientMetricsByMonth | undefined, 
+    metaData: FunnelMetaMetrics | undefined,
+    key: string
+  ): number | null => {
     // For client-derived metrics, use client data
     const salesCount = clientData?.sales_count || 0;
     const totalRevenue = clientData?.total_revenue || 0;
     const avgTicket = clientData?.avg_ticket || 0;
-    const investment = actual?.investment_actual || null;
+    
+    // For Meta-derived metrics, use Meta data (priority over manual)
+    const investment = metaData?.investment && metaData.investment > 0 
+      ? metaData.investment 
+      : actual?.investment_actual || null;
+    const leads = metaData?.leads && metaData.leads > 0 
+      ? metaData.leads 
+      : actual?.leads_actual || null;
+    
     const meetingsHeld = actual?.meetings_held_actual || null;
     
     switch (key) {
+      case 'investment_actual':
+        return investment;
+      case 'leads_actual':
+        return leads;
       case 'sales_actual':
         return salesCount > 0 ? salesCount : null;
       case 'avg_ticket_actual':
@@ -100,12 +143,13 @@ export function FunnelActualsTable({ actuals, clientMetrics, baseMetrics, year, 
       case 'revenue_actual':
         return totalRevenue > 0 ? totalRevenue : null;
       case 'cpl_actual':
-        return actual?.investment_actual && actual?.leads_actual
-          ? actual.investment_actual / actual.leads_actual
+        return investment && leads
+          ? investment / leads
           : null;
       case 'rate_scheduling_actual':
-        return actual?.leads_actual && actual?.appointments_actual
-          ? actual.appointments_actual / actual.leads_actual
+        const appointments = actual?.appointments_actual || null;
+        return leads && appointments
+          ? appointments / leads
           : null;
       case 'rate_attendance_actual':
         return actual?.appointments_actual && actual?.meetings_held_actual
@@ -147,6 +191,10 @@ export function FunnelActualsTable({ actuals, clientMetrics, baseMetrics, year, 
       {Array.from({ length: 12 }, (_, i) => {
         const actual = getActualForMonth(i);
         const clientData = getClientMetricsForMonth(i);
+        const metaData = getMetaMetricsForMonth(i);
+        const investment = getComputedValue(actual, clientData, metaData, 'investment_actual');
+        const leads = getComputedValue(actual, clientData, metaData, 'leads_actual');
+        
         return (
           <Card key={i}>
             <CardHeader className="pb-2">
@@ -160,19 +208,25 @@ export function FunnelActualsTable({ actuals, clientMetrics, baseMetrics, year, 
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              {actual || (clientData && clientData.sales_count > 0) ? (
+              {actual || (clientData && clientData.sales_count > 0) || (metaData && metaData.investment > 0) ? (
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
                     <span className="text-muted-foreground">Investimento:</span>
-                    <span className="ml-1 font-medium">{formatCurrency(actual?.investment_actual ?? null)}</span>
+                    <span className="ml-1 font-medium">{formatCurrency(investment)}</span>
+                    {metaData?.investment && metaData.investment > 0 && (
+                      <Zap className="h-3 w-3 inline-block ml-1 text-primary" />
+                    )}
                   </div>
                   <div>
                     <span className="text-muted-foreground">Leads:</span>
-                    <span className="ml-1 font-medium">{formatNumber(actual?.leads_actual ?? null)}</span>
+                    <span className="ml-1 font-medium">{formatNumber(leads)}</span>
+                    {metaData?.leads && metaData.leads > 0 && (
+                      <Zap className="h-3 w-3 inline-block ml-1 text-primary" />
+                    )}
                   </div>
                   <div>
                     <span className="text-muted-foreground">CPL:</span>
-                    <span className="ml-1 font-medium">{formatCurrency(getComputedValue(actual, clientData, 'cpl_actual'))}</span>
+                    <span className="ml-1 font-medium">{formatCurrency(getComputedValue(actual, clientData, metaData, 'cpl_actual'))}</span>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Vendas:</span>
@@ -184,7 +238,7 @@ export function FunnelActualsTable({ actuals, clientMetrics, baseMetrics, year, 
                   </div>
                   <div>
                     <span className="text-muted-foreground">ROAS:</span>
-                    <span className="ml-1 font-medium">{formatRoas(getComputedValue(actual, clientData, 'roas_actual'))}</span>
+                    <span className="ml-1 font-medium">{formatRoas(getComputedValue(actual, clientData, metaData, 'roas_actual'))}</span>
                   </div>
                 </div>
               ) : (
@@ -272,9 +326,17 @@ export function FunnelActualsTable({ actuals, clientMetrics, baseMetrics, year, 
                 {Array.from({ length: 12 }, (_, monthIndex) => {
                   const actual = getActualForMonth(monthIndex);
                   const clientData = getClientMetricsForMonth(monthIndex);
-                  const value = (metric.computed || metric.fromClients)
-                    ? getComputedValue(actual, clientData, metric.key)
+                  const metaData = getMetaMetricsForMonth(monthIndex);
+                  
+                  const value = (metric.computed || metric.fromClients || metric.fromMeta)
+                    ? getComputedValue(actual, clientData, metaData, metric.key)
                     : (actual ? actual[metric.key as keyof SalesFunnelActual] as number | null : null);
+                  
+                  // Check if this value comes from Meta (real-time)
+                  const isFromMeta = metric.fromMeta && metaData && (
+                    (metric.key === 'investment_actual' && metaData.investment > 0) ||
+                    (metric.key === 'leads_actual' && metaData.leads > 0)
+                  );
                   
                   // Determine color based on benchmark comparison using levels
                   let valueColor = '';
@@ -291,7 +353,21 @@ export function FunnelActualsTable({ actuals, clientMetrics, baseMetrics, year, 
                   
                   return (
                     <TableCell key={monthIndex} className={`text-center ${valueColor}`}>
-                      {metric.format(value)}
+                      <div className="flex items-center justify-center gap-1">
+                        {metric.format(value)}
+                        {isFromMeta && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Zap className="h-3 w-3 text-primary" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">Dados em tempo real do Meta Ads</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </div>
                     </TableCell>
                   );
                 })}
@@ -305,6 +381,29 @@ export function FunnelActualsTable({ actuals, clientMetrics, baseMetrics, year, 
 
   return (
     <>
+      {/* Meta sync status */}
+      {metaLastSync && (
+        <div className="flex items-center justify-between mb-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <Zap className="h-3.5 w-3.5 text-primary" />
+            <span>
+              Dados Meta atualizados {formatDistanceToNow(metaLastSync, { addSuffix: true, locale: ptBR })}
+            </span>
+          </div>
+          {onRefreshMeta && (
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              className="h-7 text-xs"
+              onClick={onRefreshMeta}
+            >
+              <RefreshCw className="h-3 w-3 mr-1" />
+              Atualizar
+            </Button>
+          )}
+        </div>
+      )}
+
       <MobileView />
       <DesktopView />
       
