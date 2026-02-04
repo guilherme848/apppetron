@@ -34,7 +34,6 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
-  usePetronPlans,
   usePetronSequences,
   usePetronSequenceSteps,
   usePetronActivityTemplates,
@@ -46,6 +45,7 @@ import {
   useDeletePetronSequenceStep,
   useReorderPetronSequenceSteps,
 } from '@/hooks/usePetronOnboarding';
+import { useSettingsData } from '@/hooks/useSettingsData';
 import { OWNER_ROLE_LABELS } from '@/types/petronOnboarding';
 import type { PetronSequence, PetronSequenceStep } from '@/types/petronOnboarding';
 
@@ -113,13 +113,14 @@ function SortableStepRow({
 }
 
 export default function PetronOnboardingSequencesPage() {
-  const { data: plans = [], isLoading: loadingPlans } = usePetronPlans(true);
+  const { services = [], loading: isLoadingServices } = useSettingsData();
+  const activeServices = services.filter((s) => s.active);
   const { data: templates = [] } = usePetronActivityTemplates(true);
 
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [selectedSequenceId, setSelectedSequenceId] = useState<string | null>(null);
 
-  const { data: sequences = [], isLoading: loadingSequences } = usePetronSequences(selectedPlanId || undefined);
+  const { data: sequences = [], isLoading: loadingSequences } = usePetronSequences(selectedServiceId || undefined);
   const { data: steps = [] } = usePetronSequenceSteps(selectedSequenceId || undefined);
 
   const createSequence = useCreatePetronSequence();
@@ -153,7 +154,7 @@ export default function PetronOnboardingSequencesPage() {
   }, [templates, steps]);
 
   const openCreateSeqDialog = () => {
-    if (!selectedPlanId) return;
+    if (!selectedServiceId) return;
     setEditingSeq(null);
     setSeqFormData({ name: '', active: true });
     setSeqDialogOpen(true);
@@ -168,8 +169,8 @@ export default function PetronOnboardingSequencesPage() {
   const handleSeqSubmit = async () => {
     if (editingSeq) {
       await updateSequence.mutateAsync({ id: editingSeq.id, ...seqFormData });
-    } else if (selectedPlanId) {
-      const newSeq = await createSequence.mutateAsync({ plan_id: selectedPlanId, ...seqFormData });
+    } else if (selectedServiceId) {
+      const newSeq = await createSequence.mutateAsync({ plan_id: selectedServiceId, ...seqFormData });
       setSelectedSequenceId(newSeq.id);
     }
     setSeqDialogOpen(false);
@@ -220,7 +221,7 @@ export default function PetronOnboardingSequencesPage() {
     await reorderSteps.mutateAsync({ sequence_id: selectedSequenceId, updates });
   };
 
-  if (loadingPlans) {
+  if (isLoadingServices) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-10 w-64" />
@@ -237,14 +238,14 @@ export default function PetronOnboardingSequencesPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Plan Selector + Sequences List */}
+        {/* Service Selector + Sequences List */}
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Selecione o Plano</label>
+            <label className="text-sm font-medium">Selecione o Plano/Serviço</label>
             <Select
-              value={selectedPlanId || ''}
+              value={selectedServiceId || ''}
               onValueChange={(value) => {
-                setSelectedPlanId(value);
+                setSelectedServiceId(value);
                 setSelectedSequenceId(null);
               }}
             >
@@ -252,16 +253,16 @@ export default function PetronOnboardingSequencesPage() {
                 <SelectValue placeholder="Escolha um plano..." />
               </SelectTrigger>
               <SelectContent>
-                {plans.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name}
+                {activeServices.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {selectedPlanId && (
+          {selectedServiceId && (
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
