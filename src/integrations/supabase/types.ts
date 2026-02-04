@@ -3234,7 +3234,7 @@ export type Database = {
             foreignKeyName: "petron_customer_onboardings_plan_id_fkey"
             columns: ["plan_id"]
             isOneToOne: false
-            referencedRelation: "petron_plans"
+            referencedRelation: "services"
             referencedColumns: ["id"]
           },
           {
@@ -3393,7 +3393,7 @@ export type Database = {
             foreignKeyName: "petron_onboarding_sequences_plan_id_fkey"
             columns: ["plan_id"]
             isOneToOne: false
-            referencedRelation: "petron_plans"
+            referencedRelation: "services"
             referencedColumns: ["id"]
           },
         ]
@@ -3464,33 +3464,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      petron_plans: {
-        Row: {
-          active: boolean
-          created_at: string
-          description: string | null
-          id: string
-          name: string
-          updated_at: string
-        }
-        Insert: {
-          active?: boolean
-          created_at?: string
-          description?: string | null
-          id?: string
-          name: string
-          updated_at?: string
-        }
-        Update: {
-          active?: boolean
-          created_at?: string
-          description?: string | null
-          id?: string
-          name?: string
-          updated_at?: string
-        }
-        Relationships: []
       }
       petron_sales_funnel_actuals: {
         Row: {

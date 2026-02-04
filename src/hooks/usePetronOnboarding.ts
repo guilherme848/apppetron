@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type {
-  PetronPlan,
   PetronActivityTemplate,
   PetronSequence,
   PetronSequenceStep,
@@ -12,89 +11,7 @@ import type {
   PetronTaskStatus,
 } from '@/types/petronOnboarding';
 
-// ============ Plans ============
-export function usePetronPlans(onlyActive = false) {
-  return useQuery({
-    queryKey: ['petron-plans', onlyActive],
-    queryFn: async () => {
-      let query = supabase
-        .from('petron_plans')
-        .select('*')
-        .order('name');
-
-      if (onlyActive) {
-        query = query.eq('active', true);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as PetronPlan[];
-    },
-  });
-}
-
-export function useCreatePetronPlan() {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  return useMutation({
-    mutationFn: async (data: { name: string; description?: string; active?: boolean }) => {
-      const { data: plan, error } = await supabase
-        .from('petron_plans')
-        .insert(data)
-        .select()
-        .single();
-      if (error) throw error;
-      return plan;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['petron-plans'] });
-      toast({ title: 'Plano criado com sucesso' });
-    },
-    onError: (error: Error) => {
-      toast({ title: 'Erro ao criar plano', description: error.message, variant: 'destructive' });
-    },
-  });
-}
-
-export function useUpdatePetronPlan() {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  return useMutation({
-    mutationFn: async (data: { id: string; name?: string; description?: string; active?: boolean }) => {
-      const { id, ...updates } = data;
-      const { error } = await supabase.from('petron_plans').update(updates).eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['petron-plans'] });
-      toast({ title: 'Plano atualizado' });
-    },
-    onError: (error: Error) => {
-      toast({ title: 'Erro ao atualizar plano', description: error.message, variant: 'destructive' });
-    },
-  });
-}
-
-export function useDeletePetronPlan() {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('petron_plans').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['petron-plans'] });
-      toast({ title: 'Plano removido' });
-    },
-    onError: (error: Error) => {
-      toast({ title: 'Erro ao remover plano', description: error.message, variant: 'destructive' });
-    },
-  });
-}
+// Note: Plans are now fetched from the services table via useSettingsData
 
 // ============ Activity Templates ============
 export function usePetronActivityTemplates(onlyActive = false) {
@@ -202,7 +119,7 @@ export function usePetronSequences(planId?: string) {
         .from('petron_onboarding_sequences')
         .select(`
           *,
-          petron_plans!inner(name)
+          services!inner(name)
         `)
         .order('created_at', { ascending: false });
 
@@ -215,7 +132,7 @@ export function usePetronSequences(planId?: string) {
 
       return data.map((s: any) => ({
         ...s,
-        plan_name: s.petron_plans?.name,
+        plan_name: s.services?.name,
       })) as PetronSequence[];
     },
   });
@@ -413,7 +330,7 @@ export function usePetronCustomerOnboardings(status?: PetronOnboardingStatus) {
         .select(`
           *,
           accounts!inner(name),
-          petron_plans!inner(name),
+          services(name),
           petron_onboarding_sequences(name),
           team_members(name)
         `)
@@ -429,7 +346,7 @@ export function usePetronCustomerOnboardings(status?: PetronOnboardingStatus) {
       return data.map((o: any) => ({
         ...o,
         customer_name: o.accounts?.name,
-        plan_name: o.petron_plans?.name,
+        plan_name: o.services?.name,
         sequence_name: o.petron_onboarding_sequences?.name,
         created_by_name: o.team_members?.name,
       })) as PetronCustomerOnboarding[];
@@ -448,7 +365,7 @@ export function usePetronCustomerOnboarding(id: string | undefined) {
         .select(`
           *,
           accounts!inner(name),
-          petron_plans!inner(name),
+          services(name),
           petron_onboarding_sequences(name),
           team_members(name)
         `)
@@ -460,7 +377,7 @@ export function usePetronCustomerOnboarding(id: string | undefined) {
       return {
         ...data,
         customer_name: (data as any).accounts?.name,
-        plan_name: (data as any).petron_plans?.name,
+        plan_name: (data as any).services?.name,
         sequence_name: (data as any).petron_onboarding_sequences?.name,
         created_by_name: (data as any).team_members?.name,
       } as PetronCustomerOnboarding;
