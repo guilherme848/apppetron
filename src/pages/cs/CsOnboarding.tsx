@@ -155,7 +155,7 @@ export default function CsOnboarding() {
 
   // Update Step 1 status to in_progress when briefing exists (without auto-completing)
   useEffect(() => {
-    if (!selectedClientId || !onboarding || briefingLoading) return;
+    if (!selectedClientId || !onboarding || briefingLoading || updateStep.isPending) return;
     
     const briefingExists = !!briefing;
     
@@ -163,11 +163,12 @@ export default function CsOnboarding() {
     if (briefingExists && onboarding.step_1_status === 'not_started') {
       updateStep.mutate({ clientId: selectedClientId, step: 1, status: 'in_progress' });
     }
-  }, [briefing, onboarding, selectedClientId, briefingLoading, updateStep]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [briefing, onboarding, selectedClientId, briefingLoading]);
 
   // Sync step 2 status based on meeting
   useEffect(() => {
-    if (!selectedClientId || !onboarding || meetingsLoading) return;
+    if (!selectedClientId || !onboarding || meetingsLoading || updateStep.isPending) return;
     
     const latestMeeting = clientMeetings?.[0];
     const meetingCompleted = latestMeeting?.status === 'completed';
@@ -184,7 +185,8 @@ export default function CsOnboarding() {
     if (newStatus) {
       updateStep.mutate({ clientId: selectedClientId, step: 2, status: newStatus });
     }
-  }, [clientMeetings, onboarding, selectedClientId, meetingsLoading, updateStep]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clientMeetings, onboarding, selectedClientId, meetingsLoading]);
 
   const handleSelectOnboarding = (clientId: string) => {
     setSelectedClientId(clientId);
