@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Loader2, Layers, RotateCcw } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Layers, RotateCcw, ChevronDown, ChevronRight } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -219,71 +220,79 @@ export default function ServicesPage() {
         </CardContent>
       </Card>
 
-      {/* Legacy Plans Section */}
+      {/* Legacy Plans Section - Collapsible */}
       {legacyServices.length > 0 && (
-        <Card className="border-dashed">
-          <CardHeader className="flex flex-row items-center justify-between py-4">
-            <div>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Badge variant="outline" className="text-muted-foreground">Legacy</Badge>
-                Planos Descontinuados
-              </CardTitle>
-              <CardDescription>
-                Planos que não são mais foco comercial.
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead className="text-center">Conteúdo</TableHead>
-                  <TableHead className="w-[100px]">Ativo</TableHead>
-                  <TableHead className="w-[120px]">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {legacyServices.map((service) => (
-                  <TableRow key={service.id} className="opacity-70">
-                    <TableCell className="font-medium">{service.name}</TableCell>
-                    <TableCell className="text-center">
-                      {service.has_content ? (
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">Sim</Badge>
-                      ) : (
-                        <span className="text-muted-foreground text-xs">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Switch
-                        checked={service.active}
-                        onCheckedChange={() => toggleServiceActive(service.id)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleOpenEdit(service)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(service.id, service.name)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <Collapsible>
+          <Card className="border-dashed">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="flex flex-row items-center justify-between py-3 cursor-pointer hover:bg-muted/50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-90 [&[data-state=open]>svg]:rotate-90" />
+                  <div>
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Badge variant="outline" className="text-muted-foreground text-xs">Legacy</Badge>
+                      Planos Descontinuados
+                      <span className="text-muted-foreground font-normal">({legacyServices.length})</span>
+                    </CardTitle>
+                  </div>
+                </div>
+                <span className="text-xs text-muted-foreground">Clique para expandir</span>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="pt-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead className="text-center">Conteúdo</TableHead>
+                      <TableHead className="w-[100px]">Ativo</TableHead>
+                      <TableHead className="w-[120px]">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {legacyServices.map((service) => (
+                      <TableRow key={service.id} className="opacity-70">
+                        <TableCell className="font-medium">{service.name}</TableCell>
+                        <TableCell className="text-center">
+                          {service.has_content ? (
+                            <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">Sim</Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Switch
+                            checked={service.active}
+                            onCheckedChange={() => toggleServiceActive(service.id)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleOpenEdit(service)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(service.id, service.name)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
       )}
 
 
