@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Loader2, Target, Zap } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,11 +6,13 @@ import { Badge } from '@/components/ui/badge';
 import { useSalesFunnel } from '@/hooks/useSalesFunnel';
 import { useFunnelBenchmarks } from '@/hooks/useFunnelBenchmarks';
 import { useFunnelMetaMetrics } from '@/hooks/useFunnelMetaMetrics';
+import { useMetaAds } from '@/hooks/useMetaAds';
 import { FunnelFiltersComponent } from '@/components/commercial/FunnelFilters';
 import { FunnelTargetsTable } from '@/components/commercial/FunnelTargetsTable';
 import { FunnelActualsTable } from '@/components/commercial/FunnelActualsTable';
 import { FunnelDashboard } from '@/components/commercial/FunnelDashboard';
 import { FunnelBenchmarksDialog } from '@/components/commercial/FunnelBenchmarksDialog';
+import { FunnelAdAccountSelector } from '@/components/commercial/FunnelAdAccountSelector';
 
 export default function SalesFunnelPage() {
   const {
@@ -33,12 +36,24 @@ export default function SalesFunnelPage() {
     getValueLevel,
   } = useFunnelBenchmarks();
 
+  const { adAccounts, loading: metaAccountsLoading } = useMetaAds();
+  
+  // Selected ad account IDs for filtering - default to all
+  const [selectedAdAccountIds, setSelectedAdAccountIds] = useState<string[]>([]);
+  
+  // Initialize with all accounts when they load
+  useEffect(() => {
+    if (adAccounts.length > 0 && selectedAdAccountIds.length === 0) {
+      setSelectedAdAccountIds(adAccounts.map(a => a.ad_account_id));
+    }
+  }, [adAccounts]);
+
   const {
     metrics: metaMetrics,
     loading: metaLoading,
     lastSync: metaLastSync,
     refetch: refetchMeta,
-  } = useFunnelMetaMetrics(filters.year);
+  } = useFunnelMetaMetrics(filters.year, selectedAdAccountIds);
 
   if (loading) {
     return (
@@ -60,7 +75,15 @@ export default function SalesFunnelPage() {
             Acompanhamento de metas e resultados do comercial Petron
           </p>
         </div>
-        <FunnelFiltersComponent filters={filters} onChange={setFilters} />
+        <div className="flex flex-wrap items-center gap-4">
+          <FunnelAdAccountSelector
+            adAccounts={adAccounts}
+            selectedIds={selectedAdAccountIds}
+            onChange={setSelectedAdAccountIds}
+            loading={metaAccountsLoading}
+          />
+          <FunnelFiltersComponent filters={filters} onChange={setFilters} />
+        </div>
       </div>
 
       <Tabs defaultValue="dashboard" className="space-y-4">
