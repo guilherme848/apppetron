@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useTraffic } from '@/contexts/TrafficContext';
@@ -21,12 +22,16 @@ export function ServicesTab() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
+  const [hasContent, setHasContent] = useState(true);
+  const [hasTraffic, setHasTraffic] = useState(true);
   const [trafficRoutineId, setTrafficRoutineId] = useState<string>('');
   const [showInactive, setShowInactive] = useState(false);
 
   const handleOpenNew = () => {
     setEditingId(null);
     setName('');
+    setHasContent(true);
+    setHasTraffic(true);
     setTrafficRoutineId('');
     setFormOpen(true);
   };
@@ -34,6 +39,8 @@ export function ServicesTab() {
   const handleOpenEdit = (service: typeof services[0]) => {
     setEditingId(service.id);
     setName(service.name);
+    setHasContent(service.has_content);
+    setHasTraffic(service.has_traffic);
     setTrafficRoutineId(service.traffic_routine_id || '');
     setFormOpen(true);
   };
@@ -44,10 +51,12 @@ export function ServicesTab() {
     if (editingId) {
       result = await updateService(editingId, { 
         name, 
-        traffic_routine_id: trafficRoutineId || null 
+        has_content: hasContent,
+        has_traffic: hasTraffic,
+        traffic_routine_id: hasTraffic ? (trafficRoutineId || null) : null 
       });
     } else {
-      result = await addService(name, trafficRoutineId || null);
+      result = await addService(name, hasTraffic ? (trafficRoutineId || null) : null, hasContent, hasTraffic);
     }
     if (result.success) {
       toast.success(editingId ? 'Plano atualizado' : 'Plano criado');
@@ -111,6 +120,8 @@ export function ServicesTab() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
+                  <TableHead className="text-center">Conteúdo</TableHead>
+                  <TableHead className="text-center">Tráfego</TableHead>
                   <TableHead>Rotina de Tráfego</TableHead>
                   <TableHead className="w-[80px]">Ativo</TableHead>
                   <TableHead className="w-[100px]">Ações</TableHead>
@@ -120,11 +131,25 @@ export function ServicesTab() {
                 {filteredServices.map((service) => (
                   <TableRow key={service.id}>
                     <TableCell className="font-medium">{service.name}</TableCell>
+                    <TableCell className="text-center">
+                      {service.has_content ? (
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">Sim</Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {service.has_traffic ? (
+                        <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">Sim</Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
+                    </TableCell>
                     <TableCell>
-                      {getRoutineName(service.traffic_routine_id) ? (
+                      {service.has_traffic && getRoutineName(service.traffic_routine_id) ? (
                         <Badge variant="outline">{getRoutineName(service.traffic_routine_id)}</Badge>
                       ) : (
-                        <span className="text-muted-foreground text-xs">-</span>
+                        <span className="text-muted-foreground text-xs">—</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -163,18 +188,47 @@ export function ServicesTab() {
               <Label htmlFor="serviceName">Nome *</Label>
               <Input id="serviceName" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Plano Básico" required />
             </div>
-            <div className="space-y-2">
-              <Label>Rotina de Tráfego</Label>
-              <Select value={trafficRoutineId} onValueChange={setTrafficRoutineId}>
-                <SelectTrigger><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Nenhuma</SelectItem>
-                  {activeRoutines.map((r) => (
-                    <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            
+            <div className="space-y-3">
+              <Label>Serviços Inclusos</Label>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="hasContent" 
+                    checked={hasContent} 
+                    onCheckedChange={(checked) => setHasContent(checked === true)}
+                  />
+                  <Label htmlFor="hasContent" className="font-normal cursor-pointer">Conteúdo</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="hasTraffic" 
+                    checked={hasTraffic} 
+                    onCheckedChange={(checked) => {
+                      setHasTraffic(checked === true);
+                      if (!checked) setTrafficRoutineId('');
+                    }}
+                  />
+                  <Label htmlFor="hasTraffic" className="font-normal cursor-pointer">Tráfego Pago</Label>
+                </div>
+              </div>
             </div>
+
+            {hasTraffic && (
+              <div className="space-y-2">
+                <Label>Rotina de Tráfego</Label>
+                <Select value={trafficRoutineId} onValueChange={setTrafficRoutineId}>
+                  <SelectTrigger><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Nenhuma</SelectItem>
+                    {activeRoutines.map((r) => (
+                      <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>Cancelar</Button>
               <Button type="submit">Salvar</Button>
