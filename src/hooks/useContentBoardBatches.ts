@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ContentBatch, BatchStatus, BATCH_STATUS_OPTIONS } from '@/types/contentProduction';
+import { ContentBatch, BatchStatus } from '@/types/contentProduction';
 import { toast } from 'sonner';
 
 interface TeamMember {
@@ -74,10 +74,11 @@ export function useContentBoardBatches() {
 
     if (error) {
       console.error('Error fetching team members:', error);
-      return;
+      return [];
     }
 
     setTeamMembers(data || []);
+    return data || [];
   }, []);
 
   const fetchServices = useCallback(async () => {
@@ -95,7 +96,8 @@ export function useContentBoardBatches() {
     setServices(data || []);
   }, []);
 
-  const fetchBatches = useCallback(async () => {
+  const fetchBatches = useCallback(async (membersData?: TeamMember[]) => {
+    // Single query to get batches with client info
     let query = supabase
       .from('content_batches')
       .select(`
@@ -114,42 +116,51 @@ export function useContentBoardBatches() {
       query = query.eq('month_ref', filters.monthRef);
     }
 
-    const { data, error } = await query;
+    const { data: batchesData, error: batchesError } = await query;
 
-    if (error) {
-      console.error('Error fetching batches:', error);
+    if (batchesError) {
+      console.error('Error fetching batches:', batchesError);
       return;
     }
 
-    // Process batches with additional data
-    const processedBatches = await Promise.all(
-      (data || []).map(async (batch: any) => {
-        // Get pending posts count
-        const { count: pendingCount } = await supabase
-          .from('content_posts')
-          .select('*', { count: 'exact', head: true })
-          .eq('batch_id', batch.id)
-          .neq('status', 'done');
+    if (!batchesData || batchesData.length === 0) {
+      setBatches([]);
+      return;
+    }
 
-        // Get social member info if exists
-        let socialMember: TeamMember | null = null;
-        if (batch.client?.social_member_id) {
-          const { data: memberData } = await supabase
-            .from('team_members')
-            .select('id, name')
-            .eq('id', batch.client.social_member_id)
-            .single();
-          socialMember = memberData;
-        }
+    // Get all batch IDs for a single pending count query
+    const batchIds = batchesData.map((b: any) => b.id);
 
-        return {
-          ...batch,
-          status: batch.status as BatchStatus,
-          socialMember,
-          pending_count: pendingCount || 0,
-        };
-      })
-    );
+    // Single query to get pending counts for all batches
+    const { data: pendingData } = await supabase
+      .from('content_posts')
+      .select('batch_id')
+      .in('batch_id', batchIds)
+      .neq('status', 'done');
+
+    // Count pending posts per batch
+    const pendingCountMap: Record<string, number> = {};
+    (pendingData || []).forEach((post: any) => {
+      pendingCountMap[post.batch_id] = (pendingCountMap[post.batch_id] || 0) + 1;
+    });
+
+    // Use provided members data or current state
+    const members = membersData || teamMembers;
+    const membersMap = new Map(members.map(m => [m.id, m]));
+
+    // Process batches with pre-fetched data (no additional queries)
+    const processedBatches: BatchWithDetails[] = batchesData.map((batch: any) => {
+      const socialMember = batch.client?.social_member_id 
+        ? membersMap.get(batch.client.social_member_id) || null 
+        : null;
+
+      return {
+        ...batch,
+        status: batch.status as BatchStatus,
+        socialMember,
+        pending_count: pendingCountMap[batch.id] || 0,
+      };
+    });
 
     // Apply filters
     let filteredBatches = processedBatches;
@@ -167,21 +178,30 @@ export function useContentBoardBatches() {
     }
 
     setBatches(filteredBatches);
-  }, [filters]);
+  }, [filters, teamMembers]);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    await Promise.all([fetchBatches(), fetchTeamMembers(), fetchServices()]);
+    // Fetch team members first so we can use them for batch processing
+    const [membersData] = await Promise.all([
+      fetchTeamMembers(),
+      fetchServices(),
+    ]);
+    // Pass members data to avoid stale state
+    await fetchBatches(membersData);
     setLoading(false);
-  }, [fetchBatches, fetchTeamMembers, fetchServices]);
+  }, [fetchTeamMembers, fetchServices, fetchBatches]);
 
   useEffect(() => {
     fetchAll();
-  }, [fetchAll]);
+  }, []);
 
+  // Re-fetch only batches when filters change (not on initial mount)
   useEffect(() => {
-    fetchBatches();
-  }, [filters, fetchBatches]);
+    if (!loading && teamMembers.length > 0) {
+      fetchBatches();
+    }
+  }, [filters.monthRef, filters.serviceId, filters.assignedTo]);
 
   const moveBatchToStage = useCallback(async (batchId: string, newStatus: BatchStatus) => {
     const { error } = await supabase
