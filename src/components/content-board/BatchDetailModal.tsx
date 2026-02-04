@@ -188,15 +188,15 @@ export function BatchDetailModal({ open, onOpenChange, batch }: BatchDetailModal
                 {pendingPosts.map((post) => (
                   <div
                     key={post.id}
-                    className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
+                    className="flex items-center justify-between gap-2 p-3 bg-muted/30 rounded-lg overflow-hidden"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="text-sm font-medium truncate">{post.title}</span>
+                    <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+                      <span className="text-sm font-medium truncate block max-w-full">{post.title}</span>
                       {post.assignee && (
                         <MemberAvatar name={post.assignee.name} photoPath={null} size="sm" />
                       )}
                     </div>
-                    <Badge variant={STATUS_VARIANT_MAP[post.status]} className="text-xs shrink-0">
+                    <Badge variant={STATUS_VARIANT_MAP[post.status]} className="text-xs shrink-0 ml-2">
                       {STATUS_LABEL_MAP[post.status]}
                     </Badge>
                   </div>
@@ -217,13 +217,13 @@ export function BatchDetailModal({ open, onOpenChange, batch }: BatchDetailModal
                 {completedPosts.map((post) => (
                   <div
                     key={post.id}
-                    className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
+                    className="flex items-center justify-between gap-2 p-3 bg-muted/30 rounded-lg overflow-hidden"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
                       <CheckCircle className="h-4 w-4 text-primary shrink-0" />
-                      <span className="text-sm truncate">{post.title}</span>
+                      <span className="text-sm truncate block max-w-full">{post.title}</span>
                     </div>
-                    <Badge variant="strong" className="text-xs shrink-0">
+                    <Badge variant="strong" className="text-xs shrink-0 ml-2">
                       Feito
                     </Badge>
                   </div>
@@ -253,11 +253,13 @@ export function BatchDetailModal({ open, onOpenChange, batch }: BatchDetailModal
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg overflow-hidden">
         <DialogHeader>
-          <DialogTitle>{batch?.client?.name || 'Cliente'}</DialogTitle>
+          <DialogTitle className="truncate pr-8">{batch?.client?.name || 'Cliente'}</DialogTitle>
         </DialogHeader>
-        {content}
+        <div className="overflow-hidden">
+          {content}
+        </div>
       </DialogContent>
     </Dialog>
   );
