@@ -3181,6 +3181,71 @@ export type Database = {
           },
         ]
       }
+      petron_customer_onboardings: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          id: string
+          plan_id: string
+          sequence_id: string | null
+          start_date: string
+          status: Database["public"]["Enums"]["petron_onboarding_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          id?: string
+          plan_id: string
+          sequence_id?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["petron_onboarding_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          id?: string
+          plan_id?: string
+          sequence_id?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["petron_onboarding_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "petron_customer_onboardings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petron_customer_onboardings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petron_customer_onboardings_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "petron_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petron_customer_onboardings_sequence_id_fkey"
+            columns: ["sequence_id"]
+            isOneToOne: false
+            referencedRelation: "petron_onboarding_sequences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       petron_funnel_benchmarks: {
         Row: {
           bad_threshold: number
@@ -3216,6 +3281,213 @@ export type Database = {
           metric_key?: string
           metric_label?: string
           regular_threshold?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      petron_onboarding_activity_templates: {
+        Row: {
+          active: boolean
+          created_at: string
+          default_owner_role: string
+          default_sla_days: number
+          description: string | null
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          default_owner_role?: string
+          default_sla_days?: number
+          description?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          default_owner_role?: string
+          default_sla_days?: number
+          description?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      petron_onboarding_sequence_steps: {
+        Row: {
+          activity_template_id: string
+          created_at: string
+          id: string
+          offset_days: number | null
+          required: boolean
+          sequence_id: string
+          step_order: number
+        }
+        Insert: {
+          activity_template_id: string
+          created_at?: string
+          id?: string
+          offset_days?: number | null
+          required?: boolean
+          sequence_id: string
+          step_order?: number
+        }
+        Update: {
+          activity_template_id?: string
+          created_at?: string
+          id?: string
+          offset_days?: number | null
+          required?: boolean
+          sequence_id?: string
+          step_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "petron_onboarding_sequence_steps_activity_template_id_fkey"
+            columns: ["activity_template_id"]
+            isOneToOne: false
+            referencedRelation: "petron_onboarding_activity_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petron_onboarding_sequence_steps_sequence_id_fkey"
+            columns: ["sequence_id"]
+            isOneToOne: false
+            referencedRelation: "petron_onboarding_sequences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      petron_onboarding_sequences: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          plan_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          plan_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          plan_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "petron_onboarding_sequences_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "petron_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      petron_onboarding_tasks: {
+        Row: {
+          activity_template_id: string | null
+          assigned_to: string | null
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          onboarding_id: string
+          status: Database["public"]["Enums"]["petron_task_status"]
+          step_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          activity_template_id?: string | null
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          onboarding_id: string
+          status?: Database["public"]["Enums"]["petron_task_status"]
+          step_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          activity_template_id?: string | null
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          onboarding_id?: string
+          status?: Database["public"]["Enums"]["petron_task_status"]
+          step_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "petron_onboarding_tasks_activity_template_id_fkey"
+            columns: ["activity_template_id"]
+            isOneToOne: false
+            referencedRelation: "petron_onboarding_activity_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petron_onboarding_tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petron_onboarding_tasks_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "petron_customer_onboardings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      petron_plans: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
           updated_at?: string
         }
         Relationships: []
@@ -4606,6 +4878,10 @@ export type Database = {
       can_edit_commercial: { Args: { _user_id: string }; Returns: boolean }
       can_view_commercial: { Args: { _user_id: string }; Returns: boolean }
       generate_contract_number: { Args: never; Returns: string }
+      generate_petron_onboarding_tasks: {
+        Args: { p_onboarding_id: string }
+        Returns: number
+      }
       get_batch_status: { Args: { p_batch_id: string }; Returns: string }
       get_client_id_from_batch: {
         Args: { p_batch_id: string }
@@ -4671,6 +4947,12 @@ export type Database = {
     }
     Enums: {
       commercial_role: "admin" | "commercial_manager" | "viewer"
+      petron_onboarding_status:
+        | "draft"
+        | "in_progress"
+        | "completed"
+        | "cancelled"
+      petron_task_status: "todo" | "doing" | "blocked" | "done"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4799,6 +5081,13 @@ export const Constants = {
   public: {
     Enums: {
       commercial_role: ["admin", "commercial_manager", "viewer"],
+      petron_onboarding_status: [
+        "draft",
+        "in_progress",
+        "completed",
+        "cancelled",
+      ],
+      petron_task_status: ["todo", "doing", "blocked", "done"],
     },
   },
 } as const
