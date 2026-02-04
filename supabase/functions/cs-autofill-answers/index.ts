@@ -113,11 +113,17 @@ ${JSON.stringify(questionsForPrompt, null, 2)}
 Transcrição da reunião:
 ${transcript_text}`;
 
-    // Call OpenAI API via Lovable AI proxy
-    const response = await fetch("https://llm.lovable.ai/v1/chat/completions", {
+    // Call AI via Lovable AI gateway
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY não configurada");
+    }
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
       },
       body: JSON.stringify({
         model: "openai/gpt-5.2",
