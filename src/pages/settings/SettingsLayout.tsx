@@ -16,6 +16,8 @@ interface SettingsCategory {
     id: string;
     label: string;
     path: string;
+    isGroup?: boolean;
+    parent?: string;
   }[];
 }
 
@@ -69,9 +71,10 @@ const SETTINGS_CATEGORIES: SettingsCategory[] = [
     description: 'Configure os processos de onboarding e atendimento.',
     icon: HeartHandshake,
     items: [
-      { id: 'petron-activities', label: 'Atividades de Onboarding', path: '/settings/cs/onboarding/activities' },
-      { id: 'petron-sequences', label: 'Sequências de Onboarding', path: '/settings/cs/onboarding/sequences' },
-      { id: 'onboarding-questions', label: 'Perguntas do Onboarding', path: '/settings/cs/onboarding/questions' },
+      { id: 'onboarding', label: 'Onboarding', path: '', isGroup: true },
+      { id: 'petron-sequences', label: 'Sequências', path: '/settings/cs/onboarding/sequences', parent: 'onboarding' },
+      { id: 'petron-activities', label: 'Atividades', path: '/settings/cs/onboarding/activities', parent: 'onboarding' },
+      { id: 'onboarding-questions', label: 'Perguntas', path: '/settings/cs/onboarding/questions', parent: 'onboarding' },
     ],
   },
 ];
@@ -124,7 +127,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
   const getActiveCategoryId = () => {
     for (const cat of SETTINGS_CATEGORIES) {
-      if (cat.items.some(item => location.pathname === item.path)) {
+      if (cat.items.some(item => item.path && location.pathname === item.path)) {
         return cat.id;
       }
     }
@@ -159,7 +162,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           {SETTINGS_CATEGORIES.map((category) => {
             const CategoryIcon = getCategoryIcon(category.id);
             const isOpen = openCategories.includes(category.id);
-            const isActiveCategory = category.items.some(item => location.pathname === item.path);
+            const isActiveCategory = category.items.some(item => item.path && location.pathname === item.path);
 
             return (
               <Collapsible
@@ -187,9 +190,40 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                   </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="pl-4 space-y-1 mt-1">
-                  {category.items.map((item) => {
+                  {category.items.filter(item => !item.parent).map((item) => {
                     const ItemIcon = getItemIcon(item.id);
                     const isActive = location.pathname === item.path;
+                    const childItems = category.items.filter(child => child.parent === item.id);
+
+                    if (item.isGroup && childItems.length > 0) {
+                      return (
+                        <div key={item.id} className="space-y-1">
+                          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 py-2 block">
+                            {item.label}
+                          </span>
+                          {childItems.map((child) => {
+                            const ChildIcon = getItemIcon(child.id);
+                            const isChildActive = location.pathname === child.path;
+
+                            return (
+                              <Button
+                                key={child.id}
+                                variant="ghost"
+                                size="sm"
+                                className={cn(
+                                  "w-full justify-start px-3 ml-2",
+                                  isChildActive && "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
+                                )}
+                                onClick={() => handleNavigate(child.path)}
+                              >
+                                <ChildIcon className="h-4 w-4 mr-2" />
+                                {child.label}
+                              </Button>
+                            );
+                          })}
+                        </div>
+                      );
+                    }
 
                     return (
                       <Button
