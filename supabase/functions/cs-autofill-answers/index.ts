@@ -30,6 +30,83 @@ interface AIAnswer {
   confidence: number;
 }
 
+function detectRefusalLikeText(content: string): boolean {
+  const refusalIndicators = [
+    "i cannot",
+    "i can't",
+    "i dont have the ability",
+    "i don't have the ability",
+    "cannot complete this request",
+    "i'm unable to",
+    "as a language model",
+    "my limitations",
+    "i apologize",
+    "não posso",
+    "não consigo",
+    "não tenho como",
+  ];
+  const lowered = content.toLowerCase();
+  return refusalIndicators.some((i) => lowered.includes(i));
+}
+
+function coerceMessageContent(message: any): string {
+  // Chat Completions usually returns { content: string }, but some gateways/models may return
+  // content as array parts: [{ type: "text", text: "..." }] or similar.
+  const c = message?.content;
+  if (typeof c === "string") return c;
+  if (Array.isArray(c)) {
+    return c
+      .map((p: any) => {
+        if (typeof p === "string") return p;
+        if (typeof p?.text === "string") return p.text;
+        if (typeof p?.content === "string") return p.content;
+        return "";
+      })
+      .join("")
+      .trim();
+  }
+  return "";
+}
+
+function extractJsonFromResponse(response: string): unknown {
+  // 1) Strip markdown fences
+  let cleaned = response
+    .replace(/```json\s*/gi, "")
+    .replace(/```\s*/g, "")
+    .trim();
+
+  // 2) Locate JSON object boundaries
+  const jsonStart = cleaned.indexOf("{");
+  const jsonEnd = cleaned.lastIndexOf("}");
+  if (jsonStart === -1 || jsonEnd === -1) {
+    if (detectRefusalLikeText(cleaned)) {
+      throw new Error("IA recusou ou não pôde processar o pedido");
+    }
+    throw new Error("Nenhum objeto JSON encontrado na resposta da IA");
+  }
+  cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+
+  // 3) Parse, then repair common issues and retry
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    const repaired = cleaned
+      .replace(/,\s*}/g, "}")
+      .replace(/,\s*]/g, "]")
+      .replace(/[\x00-\x1F\x7F]/g, "");
+    try {
+      return JSON.parse(repaired);
+    } catch (e) {
+      if (detectRefusalLikeText(response)) {
+        throw new Error("IA recusou ou não pôde processar o pedido");
+      }
+      throw new Error(
+        `Resposta da IA em formato inválido (não foi possível parsear JSON): ${e instanceof Error ? e.message : String(e)}`
+      );
+    }
+  }
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -119,22 +196,27 @@ ${transcript_text}`;
       throw new Error("LOVABLE_API_KEY não configurada");
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "openai/gpt-5",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        max_completion_tokens: 4000,
-        response_format: { type: "json_object" },
-      }),
-    });
+    async function callAiOnce() {
+      return await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "openai/gpt-5",
+          messages: [
+            { role: "system", content: systemPrompt + "\n\nResponda APENAS com JSON válido (sem markdown, sem texto extra)." },
+            { role: "user", content: userPrompt },
+          ],
+          max_completion_tokens: 4000,
+          // NOTE: We intentionally avoid response_format here because some gateway/model combos
+          // may return an empty content field. We parse JSON ourselves robustly.
+        }),
+      });
+    }
+
+    let response = await callAiOnce();
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -142,14 +224,7 @@ ${transcript_text}`;
       throw new Error("Falha ao chamar API de IA");
     }
 
-    const aiResult = await response.json();
-    console.log("AI response structure:", JSON.stringify({
-      choices_length: aiResult.choices?.length,
-      finish_reason: aiResult.choices?.[0]?.finish_reason,
-      has_content: !!aiResult.choices?.[0]?.message?.content,
-      has_refusal: !!aiResult.choices?.[0]?.message?.refusal,
-    }));
-
+    let aiResult = await response.json();
     const message = aiResult.choices?.[0]?.message;
     
     // Check for refusal (OpenAI models can refuse)
@@ -158,19 +233,49 @@ ${transcript_text}`;
       throw new Error("IA recusou processar o pedido");
     }
 
-    const content = message?.content;
+    const content = coerceMessageContent(message);
+
+    console.log(
+      "AI response structure:",
+      JSON.stringify({
+        choices_length: aiResult.choices?.length,
+        finish_reason: aiResult.choices?.[0]?.finish_reason,
+        has_content: !!content,
+        content_preview: content ? content.slice(0, 200) : null,
+        has_refusal: !!message?.refusal,
+        has_tool_calls: Array.isArray(message?.tool_calls) ? message.tool_calls.length : 0,
+      })
+    );
 
     if (!content) {
       console.error("Empty AI response. Full result:", JSON.stringify(aiResult));
-      throw new Error("Resposta vazia da IA");
+      // Simple retry once (intermittent gateway hiccup)
+      console.warn("Retrying AI call once due to empty content...");
+      response = await callAiOnce();
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("AI API error (retry):", errorText);
+        throw new Error("Falha ao chamar API de IA");
+      }
+      aiResult = await response.json();
+      const msg2 = aiResult.choices?.[0]?.message;
+      const content2 = coerceMessageContent(msg2);
+      if (!content2) {
+        console.error("Empty AI response after retry. Full result:", JSON.stringify(aiResult));
+        throw new Error("Resposta vazia da IA");
+      }
+      // overwrite for downstream parsing
+      (aiResult as any).__content_override = content2;
     }
 
     let parsedResponse: { answers: AIAnswer[] };
     try {
-      parsedResponse = JSON.parse(content);
+      const effectiveContent = (aiResult as any).__content_override ?? content;
+      const extracted = extractJsonFromResponse(effectiveContent);
+      parsedResponse = extracted as { answers: AIAnswer[] };
     } catch (e) {
-      console.error("Failed to parse AI response:", content);
-      throw new Error("Resposta da IA em formato inválido");
+      console.error("Failed to parse AI response. Raw content:", (aiResult as any).__content_override ?? content);
+      throw e instanceof Error ? e : new Error("Resposta da IA em formato inválido");
     }
 
     // Filter out null values and validate
