@@ -68,7 +68,7 @@ import TrafficCyclesPage from "./pages/settings/TrafficCyclesPage";
 import MetaIntegrationPage from "./pages/settings/MetaIntegrationPage";
 import { TrafficAnalyticsSettingsTab } from "./components/settings/TrafficAnalyticsSettingsTab";
 import OnboardingQuestionsPage from "./pages/settings/OnboardingQuestionsPage";
-import PetronOnboardingPlansPage from "./pages/settings/PetronOnboardingPlansPage";
+
 import PetronOnboardingActivitiesPage from "./pages/settings/PetronOnboardingActivitiesPage";
 import PetronOnboardingSequencesPage from "./pages/settings/PetronOnboardingSequencesPage";
 import { AdminGuard } from "./components/auth/AdminGuard";
@@ -210,10 +210,9 @@ const App = () => (
                           <Route path="traffic/cycles" element={<TrafficCyclesPage />} />
                           <Route path="integrations/meta" element={<MetaIntegrationPage />} />
                           <Route path="traffic/analytics" element={<TrafficAnalyticsSettingsTab />} />
-                          <Route path="cs/onboarding-questions" element={<OnboardingQuestionsPage />} />
-                          <Route path="petron/plans" element={<PetronOnboardingPlansPage />} />
-                          <Route path="petron/activities" element={<PetronOnboardingActivitiesPage />} />
-                          <Route path="petron/sequences" element={<PetronOnboardingSequencesPage />} />
+                          <Route path="cs/onboarding/activities" element={<PetronOnboardingActivitiesPage />} />
+                          <Route path="cs/onboarding/sequences" element={<PetronOnboardingSequencesPage />} />
+                          <Route path="cs/onboarding/questions" element={<OnboardingQuestionsPage />} />
                         </Route>
 
                         <Route path="*" element={<NotFound />} />
