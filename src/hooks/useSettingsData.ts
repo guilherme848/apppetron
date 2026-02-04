@@ -46,7 +46,8 @@ export function useSettingsData() {
     name: string, 
     trafficRoutineId?: string | null,
     hasContent: boolean = true,
-    hasTraffic: boolean = true
+    hasTraffic: boolean = true,
+    isLegacy: boolean = false
   ): Promise<{ success: boolean; error?: string }> => {
     const trimmedName = name.trim();
     if (!trimmedName) return { success: false, error: 'Nome é obrigatório' };
@@ -60,10 +61,12 @@ export function useSettingsData() {
       traffic_routine_id?: string | null;
       has_content: boolean;
       has_traffic: boolean;
+      is_legacy: boolean;
     } = { 
       name: trimmedName,
       has_content: hasContent,
-      has_traffic: hasTraffic
+      has_traffic: hasTraffic,
+      is_legacy: isLegacy
     };
     
     if (trafficRoutineId !== undefined) {

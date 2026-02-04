@@ -3499,6 +3499,7 @@ export type Database = {
           has_content: boolean
           has_traffic: boolean
           id: string
+          is_legacy: boolean
           name: string
           traffic_cycle_id: string | null
           traffic_routine_id: string | null
@@ -3509,6 +3510,7 @@ export type Database = {
           has_content?: boolean
           has_traffic?: boolean
           id?: string
+          is_legacy?: boolean
           name: string
           traffic_cycle_id?: string | null
           traffic_routine_id?: string | null
@@ -3519,6 +3521,7 @@ export type Database = {
           has_content?: boolean
           has_traffic?: boolean
           id?: string
+          is_legacy?: boolean
           name?: string
           traffic_cycle_id?: string | null
           traffic_routine_id?: string | null

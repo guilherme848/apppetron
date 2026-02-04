@@ -24,6 +24,7 @@ export default function ServicesPage() {
   const [name, setName] = useState('');
   const [hasContent, setHasContent] = useState(true);
   const [hasTraffic, setHasTraffic] = useState(true);
+  const [isLegacy, setIsLegacy] = useState(false);
   const [trafficRoutineId, setTrafficRoutineId] = useState<string>('');
   const [showInactive, setShowInactive] = useState(false);
 
@@ -34,6 +35,7 @@ export default function ServicesPage() {
     setName('');
     setHasContent(true);
     setHasTraffic(true);
+    setIsLegacy(false);
     setTrafficRoutineId('');
     setFormOpen(true);
   };
@@ -43,6 +45,7 @@ export default function ServicesPage() {
     setName(service.name);
     setHasContent(service.has_content);
     setHasTraffic(service.has_traffic);
+    setIsLegacy(service.is_legacy);
     setTrafficRoutineId(service.traffic_routine_id || '');
     setFormOpen(true);
   };
@@ -58,10 +61,11 @@ export default function ServicesPage() {
         name,
         has_content: hasContent,
         has_traffic: hasTraffic,
+        is_legacy: isLegacy,
         traffic_routine_id: routineId
       });
     } else {
-      result = await addService(name, routineId, hasContent, hasTraffic);
+      result = await addService(name, routineId, hasContent, hasTraffic, isLegacy);
     }
 
     if (result.success) {
@@ -142,6 +146,7 @@ export default function ServicesPage() {
                   <TableHead className="text-center">Conteúdo</TableHead>
                   <TableHead className="text-center">Tráfego</TableHead>
                   <TableHead>Rotina de Tráfego</TableHead>
+                  <TableHead className="text-center">Legacy</TableHead>
                   <TableHead className="w-[100px]">Ativo</TableHead>
                   <TableHead className="w-[120px]">Ações</TableHead>
                 </TableRow>
@@ -177,6 +182,13 @@ export default function ServicesPage() {
                           </Link>
                         ) : (
                           <span className="text-sm text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {service.is_legacy ? (
+                          <Badge variant="outline" className="text-muted-foreground">Legacy</Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">—</span>
                         )}
                       </TableCell>
                       <TableCell>
@@ -250,6 +262,18 @@ export default function ServicesPage() {
                   />
                   <Label htmlFor="hasTraffic" className="font-normal cursor-pointer">Tráfego Pago</Label>
                 </div>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2 pt-2 border-t">
+              <Checkbox 
+                id="isLegacy" 
+                checked={isLegacy} 
+                onCheckedChange={(checked) => setIsLegacy(checked === true)}
+              />
+              <div>
+                <Label htmlFor="isLegacy" className="font-normal cursor-pointer">Plano Legacy</Label>
+                <p className="text-xs text-muted-foreground">Marque se este plano não é foco comercial atual</p>
               </div>
             </div>
 

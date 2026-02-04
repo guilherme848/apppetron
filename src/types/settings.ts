@@ -7,6 +7,7 @@ export interface Service {
   traffic_routine_id: string | null; // New - links to traffic_routines (master)
   has_content: boolean;
   has_traffic: boolean;
+  is_legacy: boolean;
 }
 
 export interface Niche {
