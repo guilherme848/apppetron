@@ -6,6 +6,7 @@ import { ContentBoardFilters } from '@/components/content-board/ContentBoardFilt
 import { BatchBoardKanban } from '@/components/content-board/BatchBoardKanban';
 import { BatchBoardMobileList } from '@/components/content-board/BatchBoardMobileList';
 import { BatchDetailModal } from '@/components/content-board/BatchDetailModal';
+import { BoardOverviewStats } from '@/components/content-board/BoardOverviewStats';
 import { ContentBatch, BatchStatus } from '@/types/contentProduction';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -61,25 +62,28 @@ export default function ContentBoardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <LayoutGrid className="h-6 w-6" />
+          <h1 className="text-xl font-bold flex items-center gap-2">
+            <LayoutGrid className="h-5 w-5" />
             Quadro Resumo
           </h1>
-          <p className="text-muted-foreground">
-            Visualize o status dos planejamentos dos clientes
+          <p className="text-sm text-muted-foreground">
+            Status dos planejamentos
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={refresh}>
-            <RefreshCw className="h-4 w-4 mr-1" />
+            <RefreshCw className="h-3.5 w-3.5 mr-1" />
             Atualizar
           </Button>
         </div>
       </div>
+
+      {/* Overview Stats */}
+      <BoardOverviewStats stages={stages} batchesByStage={batchesByStage} />
 
       {/* Filters */}
       <ContentBoardFilters
@@ -92,7 +96,7 @@ export default function ContentBoardPage() {
 
       {/* Board */}
       {stages.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
+        <div className="text-center py-8 text-muted-foreground">
           Nenhuma etapa configurada.
         </div>
       ) : isMobile ? (

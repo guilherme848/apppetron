@@ -56,26 +56,26 @@ export function BatchBoardColumn({ stage, batches, onCardClick }: BatchBoardColu
     <div
       ref={setNodeRef}
       className={cn(
-        'flex flex-col rounded-lg border-2 min-w-[280px] max-w-[320px] h-full',
+        'flex flex-col rounded-lg border min-w-[200px] max-w-[240px] h-full',
         colorClasses,
-        isOver && 'ring-2 ring-primary ring-offset-2'
+        isOver && 'ring-2 ring-primary ring-offset-1'
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-inherit">
-        <h3 className="font-semibold text-sm">{stage.name}</h3>
-        <span className="text-xs text-muted-foreground bg-background/80 px-2 py-0.5 rounded-full">
+      <div className="flex items-center justify-between px-2 py-1.5 border-b border-inherit">
+        <h3 className="font-medium text-xs truncate">{stage.name}</h3>
+        <span className="text-[10px] text-muted-foreground bg-background/80 px-1.5 py-0.5 rounded-full">
           {batches.length}
         </span>
       </div>
 
       {/* Cards */}
-      <ScrollArea className="flex-1 p-2">
+      <ScrollArea className="flex-1 p-1.5">
         <SortableContext items={batches.map((b) => b.id)} strategy={verticalListSortingStrategy}>
-          <div className="space-y-2 min-h-[100px]">
+          <div className="space-y-1.5 min-h-[60px]">
             {batches.length === 0 ? (
-              <div className="text-center text-xs text-muted-foreground py-8">
-                Nenhum cliente
+              <div className="text-center text-[10px] text-muted-foreground py-4">
+                Vazio
               </div>
             ) : (
               batches.map((batch) => (
