@@ -143,9 +143,25 @@ ${transcript_text}`;
     }
 
     const aiResult = await response.json();
-    const content = aiResult.choices?.[0]?.message?.content;
+    console.log("AI response structure:", JSON.stringify({
+      choices_length: aiResult.choices?.length,
+      finish_reason: aiResult.choices?.[0]?.finish_reason,
+      has_content: !!aiResult.choices?.[0]?.message?.content,
+      has_refusal: !!aiResult.choices?.[0]?.message?.refusal,
+    }));
+
+    const message = aiResult.choices?.[0]?.message;
+    
+    // Check for refusal (OpenAI models can refuse)
+    if (message?.refusal) {
+      console.error("AI refused:", message.refusal);
+      throw new Error("IA recusou processar o pedido");
+    }
+
+    const content = message?.content;
 
     if (!content) {
+      console.error("Empty AI response. Full result:", JSON.stringify(aiResult));
       throw new Error("Resposta vazia da IA");
     }
 
