@@ -164,9 +164,13 @@ export function usePermissionSync() {
       }
 
       if (rolePermissionsToInsert.length > 0) {
+        // Use upsert with onConflict to avoid duplicate key errors
         const { error: rpInsertError } = await supabase
           .from('role_permissions' as any)
-          .insert(rolePermissionsToInsert);
+          .upsert(rolePermissionsToInsert, { 
+            onConflict: 'role_key,permission_key',
+            ignoreDuplicates: true 
+          });
 
         if (rpInsertError) {
           report.errors.push(`Error inserting role_permissions: ${rpInsertError.message}`);
