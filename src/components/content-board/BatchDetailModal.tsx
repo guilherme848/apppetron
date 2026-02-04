@@ -188,7 +188,11 @@ export function BatchDetailModal({ open, onOpenChange, batch }: BatchDetailModal
                 {pendingPosts.map((post) => (
                   <div
                     key={post.id}
-                    className="flex items-center justify-between gap-2 p-3 bg-muted/30 rounded-lg overflow-hidden"
+                    onClick={() => {
+                      onOpenChange(false);
+                      navigate(`/content/production/${batch.id}/post/${post.id}`);
+                    }}
+                    className="flex items-center justify-between gap-2 p-3 bg-muted/30 rounded-lg overflow-hidden cursor-pointer hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
                       <span className="text-sm font-medium truncate block max-w-full">{post.title}</span>
@@ -217,7 +221,11 @@ export function BatchDetailModal({ open, onOpenChange, batch }: BatchDetailModal
                 {completedPosts.map((post) => (
                   <div
                     key={post.id}
-                    className="flex items-center justify-between gap-2 p-3 bg-muted/30 rounded-lg overflow-hidden"
+                    onClick={() => {
+                      onOpenChange(false);
+                      navigate(`/content/production/${batch.id}/post/${post.id}`);
+                    }}
+                    className="flex items-center justify-between gap-2 p-3 bg-muted/30 rounded-lg overflow-hidden cursor-pointer hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
                       <CheckCircle className="h-4 w-4 text-primary shrink-0" />
