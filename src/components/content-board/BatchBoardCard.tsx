@@ -1,7 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Badge } from '@/components/ui/badge';
-import { MemberAvatar } from '@/components/common/MemberAvatar';
 import { GripVertical } from 'lucide-react';
 import { ContentBatch } from '@/types/contentProduction';
 import { format, isPast, isToday } from 'date-fns';
@@ -95,12 +94,6 @@ export function BatchBoardCard({ batch, onClick }: BatchBoardCardProps) {
 
         {/* Info row */}
         <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-          {batch.socialMember && (
-            <div className="flex items-center gap-1 truncate">
-              <MemberAvatar name={batch.socialMember.name} photoPath={null} size="xs" />
-              <span className="truncate max-w-[80px]">{batch.socialMember.name.split(' ')[0]}</span>
-            </div>
-          )}
           {dueDate && (
             <span
               className={cn(
