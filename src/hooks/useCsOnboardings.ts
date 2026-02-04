@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { withAbortRetry } from '@/lib/withAbortRetry';
 
 // ============ Types ============
 export type CsOnboardingStatus = 'not_started' | 'in_progress' | 'completed';
@@ -105,11 +106,13 @@ export function useUpdateOnboardingStep() {
       step: 1 | 2 | 3;
       status: CsOnboardingStepStatus;
     }) => {
-      const { data, error } = await supabase.rpc('update_onboarding_step', {
-        p_client_id: clientId,
-        p_step: step,
-        p_new_status: status,
-      });
+      const { data, error } = await withAbortRetry(() =>
+        supabase.rpc('update_onboarding_step', {
+          p_client_id: clientId,
+          p_step: step,
+          p_new_status: status,
+        })
+      );
 
       if (error) throw error;
       return data;

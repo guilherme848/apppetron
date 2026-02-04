@@ -14,9 +14,10 @@ interface SalesBriefingSectionProps {
   clientId: string;
   onCompleteStep?: () => void;
   stepCompleted?: boolean;
+  completeLoading?: boolean;
 }
 
-export function SalesBriefingSection({ clientId, onCompleteStep, stepCompleted }: SalesBriefingSectionProps) {
+export function SalesBriefingSection({ clientId, onCompleteStep, stepCompleted, completeLoading }: SalesBriefingSectionProps) {
   const { 
     transcript, 
     briefing, 
@@ -366,12 +367,22 @@ export function SalesBriefingSection({ clientId, onCompleteStep, stepCompleted }
               <div className="pt-4 border-t">
                 <Button 
                   onClick={handleCompleteStep}
+                  disabled={!!completeLoading}
                   className="w-full"
                   size="lg"
                 >
-                  <CheckCircle className="mr-2 h-5 w-5" />
-                  Concluir Briefing e Avançar para Etapa 2
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  {completeLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Concluindo...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="mr-2 h-5 w-5" />
+                      Concluir Briefing e Avançar para Etapa 2
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </>
+                  )}
                 </Button>
                 <p className="text-xs text-center text-muted-foreground mt-2">
                   Ao concluir, a Etapa 2 (Reunião de Onboarding) será desbloqueada automaticamente.
