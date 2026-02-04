@@ -126,13 +126,13 @@ ${transcript_text}`;
         "Authorization": `Bearer ${LOVABLE_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "openai/gpt-5.2",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
         temperature: 0.3,
-        max_tokens: 4000,
+        max_completion_tokens: 4000,
         response_format: { type: "json_object" },
       }),
     });
