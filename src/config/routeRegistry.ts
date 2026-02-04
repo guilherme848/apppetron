@@ -454,7 +454,6 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.CS,
     permissions: ['view', 'edit'],
     hideInMenu: true,
-    parentId: 'cs.onboarding',
     order: 91,
   },
   {
@@ -465,7 +464,6 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.CS,
     permissions: ['view', 'edit'],
     hideInMenu: true,
-    parentId: 'cs.onboarding',
     order: 92,
   },
 
@@ -665,7 +663,6 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.SETTINGS,
     permissions: ['view', 'edit', 'manage'],
     hideInMenu: true,
-    parentId: 'settings.home',
     order: 13,
   },
   {
@@ -676,7 +673,6 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.SETTINGS,
     permissions: ['view', 'edit', 'manage'],
     hideInMenu: true,
-    parentId: 'settings.home',
     order: 14,
   },
   {
@@ -687,7 +683,6 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.SETTINGS,
     permissions: ['view', 'edit', 'manage'],
     hideInMenu: true,
-    parentId: 'settings.home',
     order: 15,
   },
 ];
