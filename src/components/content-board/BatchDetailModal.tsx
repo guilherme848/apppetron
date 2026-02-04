@@ -175,8 +175,8 @@ export function BatchDetailModal({ open, onOpenChange, batch }: BatchDetailModal
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="pending" className="mt-4">
-          <ScrollArea className="h-[300px]">
+        <TabsContent value="pending" className="mt-4 max-h-[300px] overflow-hidden">
+          <ScrollArea className="h-full max-h-[300px]">
             {loadingPosts ? (
               <div className="text-center py-8 text-muted-foreground">Carregando...</div>
             ) : pendingPosts.length === 0 ? (
@@ -184,7 +184,7 @@ export function BatchDetailModal({ open, onOpenChange, batch }: BatchDetailModal
                 Nenhum post pendente
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-2 pr-2">
                 {pendingPosts.map((post) => (
                   <div
                     key={post.id}
@@ -206,14 +206,14 @@ export function BatchDetailModal({ open, onOpenChange, batch }: BatchDetailModal
           </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="completed" className="mt-4">
-          <ScrollArea className="h-[300px]">
+        <TabsContent value="completed" className="mt-4 max-h-[300px] overflow-hidden">
+          <ScrollArea className="h-full max-h-[300px]">
             {completedPosts.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 Nenhum post concluído
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-2 pr-2">
                 {completedPosts.map((post) => (
                   <div
                     key={post.id}
