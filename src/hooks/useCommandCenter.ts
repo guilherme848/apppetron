@@ -115,7 +115,7 @@ export function useCommandCenter() {
       supabase.from('cs_playbooks').select('*, accounts:client_id(name), team_members:responsible_member_id(name)'),
       supabase.from('cs_churn_events').select('*, accounts:client_id(name, niche_id, service_id, state), team_members:owner_member_id(name)'),
       supabase.from('cs_cancellations').select('*, accounts:client_id(name)'),
-      supabase.from('team_members').select('id, name').not('cs_member_id', 'is', null),
+      supabase.from('team_members').select('id, name'),
       supabase.from('services').select('id, name').order('name'),
       supabase.from('niches').select('id, name').order('name'),
       supabase.from('cs_alert_config').select('*'),
