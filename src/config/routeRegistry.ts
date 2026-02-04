@@ -386,6 +386,16 @@ export const routeRegistry: RouteDefinition[] = [
     order: 0, // Always first in module
   },
   {
+    id: 'cs.command_center',
+    path: '/cs/command-center',
+    label: 'Command Center',
+    category: CATEGORIES.DASHBOARD,
+    module: MODULES.CS,
+    permissions: ['view', 'manage'],
+    icon: LayoutDashboard,
+    order: 1,
+  },
+  {
     id: 'cs.onboarding',
     path: '/cs/onboarding',
     label: 'Onboarding',
@@ -393,7 +403,7 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.CS,
     permissions: ['view', 'edit'],
     icon: Users,
-    order: 1,
+    order: 2,
   },
   {
     id: 'cs.meetings',
@@ -403,7 +413,7 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.CS,
     permissions: ['view', 'edit'],
     icon: LayoutDashboard,
-    order: 2,
+    order: 3,
   },
   {
     id: 'cs.nps',
@@ -413,7 +423,7 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.CS,
     permissions: ['view', 'edit'],
     icon: BarChart3,
-    order: 3,
+    order: 4,
   },
   {
     id: 'cs.risk',
@@ -423,7 +433,7 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.CS,
     permissions: ['view', 'edit'],
     icon: TrendingUp,
-    order: 4,
+    order: 5,
   },
   {
     id: 'cs.client_detail',
@@ -435,6 +445,28 @@ export const routeRegistry: RouteDefinition[] = [
     hideInMenu: true,
     parentId: 'cs.dashboard',
     order: 90,
+  },
+  {
+    id: 'cs.onboarding_detail',
+    path: '/cs/onboarding/:id',
+    label: 'Detalhes do Onboarding',
+    category: CATEGORIES.CLIENTS,
+    module: MODULES.CS,
+    permissions: ['view', 'edit'],
+    hideInMenu: true,
+    parentId: 'cs.onboarding',
+    order: 91,
+  },
+  {
+    id: 'cs.onboarding_meeting',
+    path: '/cs/onboarding/:id/meeting',
+    label: 'Reunião de Onboarding',
+    category: CATEGORIES.MEETINGS,
+    module: MODULES.CS,
+    permissions: ['view', 'edit'],
+    hideInMenu: true,
+    parentId: 'cs.onboarding',
+    order: 92,
   },
 
   // ============================================
@@ -623,6 +655,40 @@ export const routeRegistry: RouteDefinition[] = [
     hideInMenu: true,
     parentId: 'settings.home',
     order: 12,
+  },
+  // CS Settings
+  {
+    id: 'settings.cs_sequences',
+    path: '/settings/cs/onboarding/sequences',
+    label: 'Sequências de Onboarding',
+    category: CATEGORIES.CLIENTS,
+    module: MODULES.SETTINGS,
+    permissions: ['view', 'edit', 'manage'],
+    hideInMenu: true,
+    parentId: 'settings.home',
+    order: 13,
+  },
+  {
+    id: 'settings.cs_activities',
+    path: '/settings/cs/onboarding/activities',
+    label: 'Atividades de Onboarding',
+    category: CATEGORIES.CLIENTS,
+    module: MODULES.SETTINGS,
+    permissions: ['view', 'edit', 'manage'],
+    hideInMenu: true,
+    parentId: 'settings.home',
+    order: 14,
+  },
+  {
+    id: 'settings.cs_questions',
+    path: '/settings/cs/onboarding/questions',
+    label: 'Perguntas de Onboarding',
+    category: CATEGORIES.CLIENTS,
+    module: MODULES.SETTINGS,
+    permissions: ['view', 'edit', 'manage'],
+    hideInMenu: true,
+    parentId: 'settings.home',
+    order: 15,
   },
 ];
 
