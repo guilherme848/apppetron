@@ -38,15 +38,44 @@ export default function SalesFunnelPage() {
 
   const { adAccounts, loading: metaAccountsLoading } = useMetaAds();
   
-  // Selected ad account IDs for filtering - default to all
-  const [selectedAdAccountIds, setSelectedAdAccountIds] = useState<string[]>([]);
+  const STORAGE_KEY = 'funnel_selected_ad_accounts';
   
-  // Initialize with all accounts when they load
+  // Selected ad account IDs for filtering - load from localStorage
+  const [selectedAdAccountIds, setSelectedAdAccountIds] = useState<string[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  // Initialize with saved selection or default to "CA1 - PETRON PERFORMANCE" if available
   useEffect(() => {
     if (adAccounts.length > 0 && selectedAdAccountIds.length === 0) {
-      setSelectedAdAccountIds(adAccounts.map(a => a.ad_account_id));
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const savedIds = JSON.parse(saved);
+        // Validate that saved IDs still exist
+        const validIds = savedIds.filter((id: string) => 
+          adAccounts.some(a => a.ad_account_id === id)
+        );
+        if (validIds.length > 0) {
+          setSelectedAdAccountIds(validIds);
+          return;
+        }
+      }
+      // Default to CA1 - PETRON PERFORMANCE if available
+      const petronAccount = adAccounts.find(a => a.name.includes('PETRON'));
+      if (petronAccount) {
+        setSelectedAdAccountIds([petronAccount.ad_account_id]);
+      } else {
+        setSelectedAdAccountIds(adAccounts.map(a => a.ad_account_id));
+      }
     }
   }, [adAccounts]);
+  
+  // Persist selection to localStorage
+  const handleAdAccountChange = (ids: string[]) => {
+    setSelectedAdAccountIds(ids);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+  };
 
   const {
     metrics: metaMetrics,
@@ -79,7 +108,7 @@ export default function SalesFunnelPage() {
           <FunnelAdAccountSelector
             adAccounts={adAccounts}
             selectedIds={selectedAdAccountIds}
-            onChange={setSelectedAdAccountIds}
+            onChange={handleAdAccountChange}
             loading={metaAccountsLoading}
           />
           <FunnelFiltersComponent filters={filters} onChange={setFilters} />
