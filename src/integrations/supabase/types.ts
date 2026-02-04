@@ -3496,6 +3496,8 @@ export type Database = {
         Row: {
           active: boolean
           created_at: string
+          has_content: boolean
+          has_traffic: boolean
           id: string
           name: string
           traffic_cycle_id: string | null
@@ -3504,6 +3506,8 @@ export type Database = {
         Insert: {
           active?: boolean
           created_at?: string
+          has_content?: boolean
+          has_traffic?: boolean
           id?: string
           name: string
           traffic_cycle_id?: string | null
@@ -3512,6 +3516,8 @@ export type Database = {
         Update: {
           active?: boolean
           created_at?: string
+          has_content?: boolean
+          has_traffic?: boolean
           id?: string
           name?: string
           traffic_cycle_id?: string | null

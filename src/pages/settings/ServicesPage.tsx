@@ -42,14 +42,17 @@ export default function ServicesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    const routineId = trafficRoutineId === 'none' ? null : (trafficRoutineId || null);
+    
     let result;
     if (editingId) {
       result = await updateService(editingId, { 
         name,
-        traffic_routine_id: trafficRoutineId || null 
+        traffic_routine_id: routineId,
+        has_traffic: !!routineId
       });
     } else {
-      result = await addService(name, undefined, trafficRoutineId || null);
+      result = await addService(name, routineId, true, !!routineId);
     }
 
     if (result.success) {
