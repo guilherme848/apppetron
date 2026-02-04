@@ -8,6 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useTraffic } from '@/contexts/TrafficContext';
@@ -20,6 +22,8 @@ export default function ServicesPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
+  const [hasContent, setHasContent] = useState(true);
+  const [hasTraffic, setHasTraffic] = useState(true);
   const [trafficRoutineId, setTrafficRoutineId] = useState<string>('');
   const [showInactive, setShowInactive] = useState(false);
 
@@ -28,31 +32,36 @@ export default function ServicesPage() {
   const handleOpenNew = () => {
     setEditingId(null);
     setName('');
+    setHasContent(true);
+    setHasTraffic(true);
     setTrafficRoutineId('');
     setFormOpen(true);
   };
 
-  const handleOpenEdit = (id: string, currentName: string, currentRoutineId: string | null) => {
-    setEditingId(id);
-    setName(currentName);
-    setTrafficRoutineId(currentRoutineId || '');
+  const handleOpenEdit = (service: typeof services[0]) => {
+    setEditingId(service.id);
+    setName(service.name);
+    setHasContent(service.has_content);
+    setHasTraffic(service.has_traffic);
+    setTrafficRoutineId(service.traffic_routine_id || '');
     setFormOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const routineId = trafficRoutineId === 'none' ? null : (trafficRoutineId || null);
+    const routineId = hasTraffic ? (trafficRoutineId === 'none' ? null : (trafficRoutineId || null)) : null;
     
     let result;
     if (editingId) {
       result = await updateService(editingId, { 
         name,
-        traffic_routine_id: routineId,
-        has_traffic: !!routineId
+        has_content: hasContent,
+        has_traffic: hasTraffic,
+        traffic_routine_id: routineId
       });
     } else {
-      result = await addService(name, routineId, true, !!routineId);
+      result = await addService(name, routineId, hasContent, hasTraffic);
     }
 
     if (result.success) {
@@ -130,6 +139,8 @@ export default function ServicesPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
+                  <TableHead className="text-center">Conteúdo</TableHead>
+                  <TableHead className="text-center">Tráfego</TableHead>
                   <TableHead>Rotina de Tráfego</TableHead>
                   <TableHead className="w-[100px]">Ativo</TableHead>
                   <TableHead className="w-[120px]">Ações</TableHead>
@@ -141,8 +152,22 @@ export default function ServicesPage() {
                   return (
                     <TableRow key={service.id}>
                       <TableCell className="font-medium">{service.name}</TableCell>
+                      <TableCell className="text-center">
+                        {service.has_content ? (
+                          <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">Sim</Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {service.has_traffic ? (
+                          <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">Sim</Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        )}
+                      </TableCell>
                       <TableCell>
-                        {routine ? (
+                        {service.has_traffic && routine ? (
                           <Link 
                             to={`/settings/traffic/routines?routine=${routine.id}`}
                             className="text-sm hover:underline flex items-center gap-1"
@@ -151,7 +176,7 @@ export default function ServicesPage() {
                             {routine.name}
                           </Link>
                         ) : (
-                          <span className="text-sm text-muted-foreground">Não definida</span>
+                          <span className="text-sm text-muted-foreground">—</span>
                         )}
                       </TableCell>
                       <TableCell>
@@ -165,7 +190,7 @@ export default function ServicesPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleOpenEdit(service.id, service.name, service.traffic_routine_id)}
+                            onClick={() => handleOpenEdit(service)}
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -203,30 +228,58 @@ export default function ServicesPage() {
                 required
               />
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="trafficRoutine">Rotina de Tráfego</Label>
-                <Link to="/settings/traffic/routines" className="text-xs text-muted-foreground hover:text-primary">
-                  Gerenciar rotinas
-                </Link>
+            <div className="space-y-3">
+              <Label>Serviços Inclusos</Label>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="hasContent" 
+                    checked={hasContent} 
+                    onCheckedChange={(checked) => setHasContent(checked === true)}
+                  />
+                  <Label htmlFor="hasContent" className="font-normal cursor-pointer">Conteúdo</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="hasTraffic" 
+                    checked={hasTraffic} 
+                    onCheckedChange={(checked) => {
+                      setHasTraffic(checked === true);
+                      if (!checked) setTrafficRoutineId('');
+                    }}
+                  />
+                  <Label htmlFor="hasTraffic" className="font-normal cursor-pointer">Tráfego Pago</Label>
+                </div>
               </div>
-              <Select value={trafficRoutineId} onValueChange={setTrafficRoutineId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma rotina (opcional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhuma</SelectItem>
-                  {activeRoutines.map((routine) => (
-                    <SelectItem key={routine.id} value={routine.id}>
-                      {routine.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Rotina padrão de tráfego para clientes deste plano.
-              </p>
             </div>
+
+            {hasTraffic && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="trafficRoutine">Rotina de Tráfego</Label>
+                  <Link to="/settings/traffic/routines" className="text-xs text-muted-foreground hover:text-primary">
+                    Gerenciar rotinas
+                  </Link>
+                </div>
+                <Select value={trafficRoutineId} onValueChange={setTrafficRoutineId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma rotina (opcional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhuma</SelectItem>
+                    {activeRoutines.map((routine) => (
+                      <SelectItem key={routine.id} value={routine.id}>
+                        {routine.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Rotina padrão de tráfego para clientes deste plano.
+                </p>
+              </div>
+            )}
+            
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>
                 Cancelar
