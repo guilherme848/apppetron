@@ -71,7 +71,7 @@ import OnboardingQuestionsPage from "./pages/settings/OnboardingQuestionsPage";
 
 import PetronOnboardingActivitiesPage from "./pages/settings/PetronOnboardingActivitiesPage";
 import PetronOnboardingSequencesPage from "./pages/settings/PetronOnboardingSequencesPage";
-import { AdminGuard } from "./components/auth/AdminGuard";
+import { RouteGuard } from "./components/auth/RouteGuard";
 import TrafficBalancesPage from "./pages/traffic/TrafficBalancesPage";
 
 // Traffic Creative Requests
@@ -193,9 +193,9 @@ const App = () => (
                         <Route
                           path="/settings"
                           element={
-                            <AdminGuard>
+                            <RouteGuard routeId="settings.home" action="view" fallback="forbidden">
                               <SettingsLayout />
-                            </AdminGuard>
+                            </RouteGuard>
                           }
                         >
                           <Route index element={<SettingsHome />} />
