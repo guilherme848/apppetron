@@ -98,7 +98,7 @@ export function useContentBoardBatches() {
 
   const fetchBatches = useCallback(async (membersData?: TeamMember[]) => {
     // Single query to get batches with client info
-    // Exclude 'delivered' (finalized) batches from the board
+    // Exclude finalized batches (delivered and scheduling) from the board
     let query = supabase
       .from('content_batches')
       .select(`
@@ -111,7 +111,7 @@ export function useContentBoardBatches() {
         )
       `)
       .eq('archived', false)
-      .neq('status', 'delivered')
+      .not('status', 'in', '("delivered","scheduling")')
       .order('planning_due_date', { ascending: true, nullsFirst: false });
 
     if (filters.monthRef) {
