@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { startOfMonth, endOfMonth, format } from 'date-fns';
+import { startOfMonth, format } from 'date-fns';
 
 export interface FunnelMetaMetrics {
   month: string; // yyyy-MM-dd
@@ -9,7 +9,7 @@ export interface FunnelMetaMetrics {
   cpl: number; // calculated: investment / leads
 }
 
-export function useFunnelMetaMetrics(year: number) {
+export function useFunnelMetaMetrics(year: number, selectedAdAccountIds: string[] = []) {
   const [metrics, setMetrics] = useState<FunnelMetaMetrics[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastSync, setLastSync] = useState<Date | null>(null);
@@ -21,13 +21,20 @@ export function useFunnelMetaMetrics(year: number) {
       const startDate = `${year}-01-01`;
       const endDate = `${year}-12-31`;
       
-      // Fetch all daily metrics for the year from ALL ad accounts
-      const { data, error } = await supabase
+      // Build query
+      let query = supabase
         .from('ad_account_metrics_daily')
-        .select('date, metrics_json')
+        .select('ad_account_id, date, metrics_json')
         .gte('date', startDate)
         .lte('date', endDate)
         .eq('platform', 'meta');
+
+      // Filter by selected ad accounts if any are selected
+      if (selectedAdAccountIds.length > 0) {
+        query = query.in('ad_account_id', selectedAdAccountIds);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('Error fetching Meta metrics:', error);
@@ -89,7 +96,7 @@ export function useFunnelMetaMetrics(year: number) {
     } finally {
       setLoading(false);
     }
-  }, [year]);
+  }, [year, selectedAdAccountIds]);
 
   useEffect(() => {
     fetchMetrics();
