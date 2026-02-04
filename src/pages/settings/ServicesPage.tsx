@@ -86,6 +86,8 @@ export default function ServicesPage() {
   };
 
   const filteredServices = showInactive ? services : services.filter(s => s.active);
+  const legacyServices = filteredServices.filter(s => s.is_legacy);
+  const currentServices = filteredServices.filter(s => !s.is_legacy);
 
   if (loading) {
     return (
@@ -105,10 +107,103 @@ export default function ServicesPage() {
         <p className="text-muted-foreground">Serviços contratados pelos clientes.</p>
       </div>
 
+      {/* Legacy Plans Section */}
+      {legacyServices.length > 0 && (
+        <Card className="mb-6 border-dashed">
+          <CardHeader className="flex flex-row items-center justify-between py-4">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Badge variant="outline" className="text-muted-foreground">Legacy</Badge>
+                Planos Descontinuados
+              </CardTitle>
+              <CardDescription>
+                Planos que não são mais foco comercial.
+              </CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead className="text-center">Conteúdo</TableHead>
+                  <TableHead className="text-center">Tráfego</TableHead>
+                  <TableHead>Rotina de Tráfego</TableHead>
+                  <TableHead className="w-[100px]">Ativo</TableHead>
+                  <TableHead className="w-[120px]">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {legacyServices.map((service) => {
+                  const routine = getTrafficRoutineById(service.traffic_routine_id);
+                  return (
+                    <TableRow key={service.id} className="opacity-70">
+                      <TableCell className="font-medium">{service.name}</TableCell>
+                      <TableCell className="text-center">
+                        {service.has_content ? (
+                          <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">Sim</Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {service.has_traffic ? (
+                          <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">Sim</Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {service.has_traffic && routine ? (
+                          <Link 
+                            to={`/settings/traffic/routines?routine=${routine.id}`}
+                            className="text-sm hover:underline flex items-center gap-1"
+                          >
+                            <RotateCcw className="h-3 w-3" />
+                            {routine.name}
+                          </Link>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Switch
+                          checked={service.active}
+                          onCheckedChange={() => toggleServiceActive(service.id)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleOpenEdit(service)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(service.id, service.name)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Current Plans Section */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-base">Lista de Serviços</CardTitle>
+            <CardTitle className="text-base">Planos Ativos</CardTitle>
             <CardDescription>
               Serviços ativos aparecem no cadastro de clientes.
             </CardDescription>
@@ -129,7 +224,7 @@ export default function ServicesPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {filteredServices.length === 0 ? (
+          {currentServices.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground">
                 {showInactive ? 'Nenhum serviço cadastrado' : 'Nenhum serviço ativo'}
@@ -146,13 +241,12 @@ export default function ServicesPage() {
                   <TableHead className="text-center">Conteúdo</TableHead>
                   <TableHead className="text-center">Tráfego</TableHead>
                   <TableHead>Rotina de Tráfego</TableHead>
-                  <TableHead className="text-center">Legacy</TableHead>
                   <TableHead className="w-[100px]">Ativo</TableHead>
                   <TableHead className="w-[120px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredServices.map((service) => {
+                {currentServices.map((service) => {
                   const routine = getTrafficRoutineById(service.traffic_routine_id);
                   return (
                     <TableRow key={service.id}>
@@ -182,13 +276,6 @@ export default function ServicesPage() {
                           </Link>
                         ) : (
                           <span className="text-sm text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {service.is_legacy ? (
-                          <Badge variant="outline" className="text-muted-foreground">Legacy</Badge>
-                        ) : (
-                          <span className="text-muted-foreground text-xs">—</span>
                         )}
                       </TableCell>
                       <TableCell>
