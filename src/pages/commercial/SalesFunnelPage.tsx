@@ -1,8 +1,10 @@
-import { Loader2, Target } from 'lucide-react';
+import { Loader2, Target, Zap } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useSalesFunnel } from '@/hooks/useSalesFunnel';
 import { useFunnelBenchmarks } from '@/hooks/useFunnelBenchmarks';
+import { useFunnelMetaMetrics } from '@/hooks/useFunnelMetaMetrics';
 import { FunnelFiltersComponent } from '@/components/commercial/FunnelFilters';
 import { FunnelTargetsTable } from '@/components/commercial/FunnelTargetsTable';
 import { FunnelActualsTable } from '@/components/commercial/FunnelActualsTable';
@@ -30,6 +32,13 @@ export default function SalesFunnelPage() {
     updateBenchmark,
     getValueLevel,
   } = useFunnelBenchmarks();
+
+  const {
+    metrics: metaMetrics,
+    loading: metaLoading,
+    lastSync: metaLastSync,
+    refetch: refetchMeta,
+  } = useFunnelMetaMetrics(filters.year);
 
   if (loading) {
     return (
@@ -84,7 +93,18 @@ export default function SalesFunnelPage() {
         <TabsContent value="actuals">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Realizado Mensal - {filters.year}</CardTitle>
+              <div className="space-y-1">
+                <CardTitle className="flex items-center gap-2">
+                  Realizado Mensal - {filters.year}
+                  <Badge variant="outline" className="text-xs font-normal">
+                    <Zap className="h-3 w-3 mr-1" />
+                    Meta Ads
+                  </Badge>
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  Investimento e Leads sincronizados em tempo real das contas Meta Ads
+                </p>
+              </div>
               <FunnelBenchmarksDialog 
                 benchmarks={benchmarks}
                 canEdit={canEditBenchmarks}
@@ -96,6 +116,9 @@ export default function SalesFunnelPage() {
                 actuals={actuals}
                 clientMetrics={clientMetrics}
                 baseMetrics={baseMetrics}
+                metaMetrics={metaMetrics}
+                metaLastSync={metaLastSync}
+                onRefreshMeta={refetchMeta}
                 year={filters.year}
                 canEdit={canEdit}
                 onSave={saveActual}
