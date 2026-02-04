@@ -378,7 +378,7 @@ export const routeRegistry: RouteDefinition[] = [
   {
     id: 'cs.dashboard',
     path: '/cs',
-    label: 'Command Center',
+    label: 'Visão Geral',
     category: CATEGORIES.DASHBOARD,
     module: MODULES.CS,
     permissions: ['view', 'manage'],
