@@ -123,7 +123,7 @@ export function useSalesBriefing(clientId: string | undefined) {
       let memberIdToUse: string | null = null;
       
       if (user) {
-        const memberData = await queryTable<{ id: string }>('team_members', 'auth_uid', user.id);
+        const memberData = await queryTable<{ id: string }>('team_members', 'auth_user_id', user.id);
         memberIdToUse = memberData?.id || null;
       }
 
