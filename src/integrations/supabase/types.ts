@@ -4094,6 +4094,9 @@ export type Database = {
           notes: string | null
           updated_at: string | null
           updated_by: string | null
+          weekly_assigned_at: string | null
+          weekly_workday: number
+          weekly_workday_locked: boolean | null
         }
         Insert: {
           campaign_status?:
@@ -4103,6 +4106,9 @@ export type Database = {
           notes?: string | null
           updated_at?: string | null
           updated_by?: string | null
+          weekly_assigned_at?: string | null
+          weekly_workday?: number
+          weekly_workday_locked?: boolean | null
         }
         Update: {
           campaign_status?:
@@ -4112,6 +4118,9 @@ export type Database = {
           notes?: string | null
           updated_at?: string | null
           updated_by?: string | null
+          weekly_assigned_at?: string | null
+          weekly_workday?: number
+          weekly_workday_locked?: boolean | null
         }
         Relationships: [
           {
