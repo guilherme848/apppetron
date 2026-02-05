@@ -279,7 +279,7 @@ export const routeRegistry: RouteDefinition[] = [
   },
   {
     id: 'traffic.tasks',
-    path: '/traffic/tasks',
+    path: '/traffic/playbook-tasks',
     label: 'Tarefas de Tráfego',
     category: CATEGORIES.TASKS,
     module: MODULES.TRAFFIC,
@@ -371,17 +371,6 @@ export const routeRegistry: RouteDefinition[] = [
     parentId: 'traffic.overview',
     order: 93,
   },
- {
-   id: 'traffic.playbook_tasks',
-   path: '/traffic/playbook-tasks',
-   label: 'Tarefas do Playbook',
-   category: CATEGORIES.TASKS,
-   module: MODULES.TRAFFIC,
-   permissions: ['view', 'edit'],
-   icon: CheckSquare,
-   order: 6,
- },
-
   // ============================================
   // CUSTOMER SUCCESS MODULE
   // ============================================
