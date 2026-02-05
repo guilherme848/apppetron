@@ -1,33 +1,43 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Loader2, AlertTriangle, Clock, CheckCircle, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { useTraffic } from '@/contexts/TrafficContext';
+import { useTrafficPlaybook } from '@/hooks/useTrafficPlaybook';
 import { useCrm } from '@/contexts/CrmContext';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { Link } from 'react-router-dom';
+import { PRIORITY_OPTIONS, CAMPAIGN_STATUS_OPTIONS } from '@/types/trafficPlaybook';
 
 export default function TrafficDashboard() {
-  const { overdueTasks, todayTasks, openTasks, activePeriods, tasks, getCycleById, loading } = useTraffic();
+  const { tasks, clientStatuses, overdueTasks, todayTasks, pendingTasks, loading } = useTrafficPlaybook();
   const { accounts, getAccountById } = useCrm();
   const { members, getMemberById } = useTeamMembers();
 
   const [filterAssignee, setFilterAssignee] = useState<string>('all');
   const [filterClient, setFilterClient] = useState<string>('all');
 
-  // Get team members who are traffic managers
-  const trafficManagers = members.filter((m) => m.active);
+  const today = new Date().toISOString().split('T')[0];
 
-  // Apply filters
+  const trafficManagers = members.filter((m) => m.active);
+  
+  // Get active client count (clients with active campaign status)
+  const activeClients = useMemo(() => {
+    return clientStatuses.filter(cs => cs.campaign_status === 'active').length;
+  }, [clientStatuses]);
+
+  // Filter pending tasks (todo, doing, blocked)
+  const openTasks = useMemo(() => {
+    return tasks.filter(t => t.status !== 'done' && t.status !== 'skipped');
+  }, [tasks]);
+
   const filteredTasks = openTasks.filter((task) => {
-    if (filterAssignee !== 'all' && task.assignee_id !== filterAssignee) return false;
+    if (filterAssignee !== 'all' && task.assigned_to !== filterAssignee) return false;
     if (filterClient !== 'all' && task.client_id !== filterClient) return false;
     return true;
   });
 
-  const today = new Date().toISOString().split('T')[0];
   const filteredOverdue = filteredTasks.filter((t) => t.due_date && t.due_date < today);
   const filteredToday = filteredTasks.filter((t) => t.due_date === today);
 
@@ -37,19 +47,8 @@ export default function TrafficDashboard() {
   };
 
   const getPriorityBadge = (priority: string) => {
-    const variants: Record<string, string> = {
-      urgent: 'bg-red-500 text-white',
-      high: 'bg-orange-500 text-white',
-      medium: 'bg-yellow-500 text-black',
-      low: 'bg-gray-400 text-white',
-    };
-    const labels: Record<string, string> = {
-      urgent: 'Urgente',
-      high: 'Alta',
-      medium: 'Média',
-      low: 'Baixa',
-    };
-    return <Badge className={variants[priority] || 'bg-gray-400'}>{labels[priority] || priority}</Badge>;
+    const option = PRIORITY_OPTIONS.find(p => p.value === priority);
+    return <Badge className={option?.color || 'bg-gray-100 text-gray-800'}>{option?.label || priority}</Badge>;
   };
 
   if (loading) {
@@ -107,7 +106,7 @@ export default function TrafficDashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Tarefas Vencidas</CardTitle>
+            <CardTitle className="text-sm font-medium">Vencidas</CardTitle>
             <AlertTriangle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
@@ -117,7 +116,7 @@ export default function TrafficDashboard() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Tarefas Hoje</CardTitle>
+            <CardTitle className="text-sm font-medium">Hoje</CardTitle>
             <Clock className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
@@ -127,7 +126,7 @@ export default function TrafficDashboard() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Em Aberto</CardTitle>
+            <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -137,12 +136,12 @@ export default function TrafficDashboard() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Períodos Ativos</CardTitle>
+            <CardTitle className="text-sm font-medium">Clientes Ativos</CardTitle>
             <Users className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{activePeriods.length}</div>
-            <p className="text-xs text-muted-foreground">Clientes com ciclo ativo</p>
+            <div className="text-2xl font-bold">{activeClients}</div>
+            <p className="text-xs text-muted-foreground">Com campanhas ativas</p>
           </CardContent>
         </Card>
       </div>
@@ -170,7 +169,7 @@ export default function TrafficDashboard() {
               <TableBody>
                 {filteredOverdue.slice(0, 5).map((task) => {
                   const account = getAccountById(task.client_id);
-                  const assignee = getMemberById(task.assignee_id);
+                  const assignee = task.assigned_to ? getMemberById(task.assigned_to) : null;
                   return (
                     <TableRow key={task.id}>
                       <TableCell className="font-medium">{task.title}</TableCell>
@@ -189,7 +188,7 @@ export default function TrafficDashboard() {
             </Table>
             {filteredOverdue.length > 5 && (
               <div className="mt-4 text-center">
-                <Link to="/traffic/tasks?filter=overdue" className="text-sm text-primary hover:underline">
+                <Link to="/traffic/playbook-tasks" className="text-sm text-primary hover:underline">
                   Ver todas as {filteredOverdue.length} tarefas vencidas
                 </Link>
               </div>
@@ -222,7 +221,7 @@ export default function TrafficDashboard() {
               <TableBody>
                 {filteredToday.map((task) => {
                   const account = getAccountById(task.client_id);
-                  const assignee = getMemberById(task.assignee_id);
+                  const assignee = task.assigned_to ? getMemberById(task.assigned_to) : null;
                   return (
                     <TableRow key={task.id}>
                       <TableCell className="font-medium">{task.title}</TableCell>
