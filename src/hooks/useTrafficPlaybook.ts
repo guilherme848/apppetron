@@ -9,6 +9,10 @@
    TrafficTaskStatus,
    TrafficCampaignStatus,
   ChecklistJson,
+  WeeklyLoadByDay,
+  RebalanceLogEntry,
+  RebalanceParams,
+  RebalanceResult,
  } from '@/types/trafficPlaybook';
  import { toast } from 'sonner';
  
@@ -18,6 +22,8 @@
    const [tasks, setTasks] = useState<TrafficPlaybookTask[]>([]);
    const [clientStatuses, setClientStatuses] = useState<TrafficClientStatus[]>([]);
    const [loading, setLoading] = useState(true);
+  const [weeklyLoads, setWeeklyLoads] = useState<WeeklyLoadByDay[]>([]);
+  const [rebalanceLogs, setRebalanceLogs] = useState<RebalanceLogEntry[]>([]);
  
    // Fetch all data
    const fetchTemplates = useCallback(async () => {
@@ -54,6 +60,27 @@
      else setClientStatuses((data || []) as TrafficClientStatus[]);
    }, []);
  
+  const fetchWeeklyLoads = useCallback(async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
+      .from('traffic_weekly_load_by_day')
+      .select('*')
+      .order('weekday');
+    if (error) console.error('Error fetching weekly loads:', error);
+    else setWeeklyLoads((data || []) as WeeklyLoadByDay[]);
+  }, []);
+
+  const fetchRebalanceLogs = useCallback(async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
+      .from('traffic_workday_rebalance_log')
+      .select('*')
+      .order('moved_at', { ascending: false })
+      .limit(50);
+    if (error) console.error('Error fetching rebalance logs:', error);
+    else setRebalanceLogs((data || []) as RebalanceLogEntry[]);
+  }, []);
+
    const fetchAll = useCallback(async () => {
      setLoading(true);
      await Promise.all([
@@ -61,9 +88,11 @@
        fetchOverrides(),
        fetchTasks(),
        fetchClientStatuses(),
+      fetchWeeklyLoads(),
+      fetchRebalanceLogs(),
      ]);
      setLoading(false);
-   }, [fetchTemplates, fetchOverrides, fetchTasks, fetchClientStatuses]);
+  }, [fetchTemplates, fetchOverrides, fetchTasks, fetchClientStatuses, fetchWeeklyLoads, fetchRebalanceLogs]);
  
    useEffect(() => {
      fetchAll();
@@ -202,6 +231,7 @@
         campaign_status: currentStatus,
         notes: currentNotes,
         weekly_workday: weeklyWorkday,
+        weekly_assigned_at: new Date().toISOString(),
       })
       .select()
       .single();
@@ -224,6 +254,65 @@
     
     toast.success('Dia semanal atualizado');
     return { data: data as TrafficClientStatus, error: null };
+  };
+
+  // Toggle workday lock
+  const toggleClientWorkdayLock = async (clientId: string) => {
+    const existing = clientStatuses.find(s => s.client_id === clientId);
+    const currentLocked = existing?.weekly_workday_locked || false;
+
+    const { data, error } = await supabase
+      .from('traffic_client_status')
+      .upsert({
+        client_id: clientId,
+        campaign_status: existing?.campaign_status || 'active',
+        weekly_workday_locked: !currentLocked,
+      }, { onConflict: 'client_id' })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error toggling lock:', error);
+      toast.error('Erro ao alterar bloqueio');
+      return { data: null, error };
+    }
+    
+    setClientStatuses(prev => {
+      const existingIdx = prev.findIndex(s => s.client_id === clientId);
+      if (existingIdx >= 0) {
+        const updated = [...prev];
+        updated[existingIdx] = data as TrafficClientStatus;
+        return updated;
+      }
+      return [...prev, data as TrafficClientStatus];
+    });
+    
+    toast.success(currentLocked ? 'Dia desbloqueado' : 'Dia bloqueado');
+    return { data: data as TrafficClientStatus, error: null };
+  };
+
+  // Rebalance weekly workdays via edge function
+  const rebalanceWeeklyWorkdays = async (params: RebalanceParams): Promise<RebalanceResult> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('rebalance-weekly-workdays', {
+        body: params,
+      });
+      if (error) throw error;
+      
+      if (data.success && data.moves?.length > 0 && !params.dry_run) {
+        await Promise.all([fetchClientStatuses(), fetchWeeklyLoads(), fetchRebalanceLogs()]);
+        toast.success(`${data.moves.length} cliente(s) movido(s)`);
+      } else if (data.skipped_reason) {
+        toast.info(data.skipped_reason);
+      }
+      
+      return data as RebalanceResult;
+    } catch (error: unknown) {
+      console.error('Error rebalancing:', error);
+      const message = error instanceof Error ? error.message : 'Erro desconhecido';
+      toast.error('Erro ao rebalancear');
+      return { success: false, moves: [], load_before: {}, load_after: {}, error: message };
+    }
   };
 
    // Generate tasks via edge function
@@ -316,6 +405,8 @@
      // Client Status
      upsertClientStatus,
     updateClientWeeklyWorkday,
+    toggleClientWorkdayLock,
+    rebalanceWeeklyWorkdays,
      // Override
      upsertOverride,
      // Generate
@@ -333,6 +424,9 @@
      overdueTasks,
      todayTasks,
      pendingTasks,
+    // Weekly loads
+    weeklyLoads,
+    rebalanceLogs,
      // Refetch
      refetch: fetchAll,
    };

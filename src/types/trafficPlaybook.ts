@@ -73,6 +73,8 @@ export interface TrafficPlaybookTemplate {
    updated_at: string;
    updated_by: string | null;
   weekly_workday: number; // 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday
+  weekly_workday_locked: boolean;
+  weekly_assigned_at: string | null;
  }
  
  // UI Constants
@@ -121,3 +123,41 @@ export const WORKDAY_OPTIONS = [
   { value: 4, label: 'Quinta', short: 'Qui' },
   { value: 5, label: 'Sexta', short: 'Sex' },
 ];
+
+export interface WeeklyLoadByDay {
+  weekday: number;
+  total_load: number;
+  client_count: number;
+}
+
+export interface RebalanceLogEntry {
+  id: string;
+  client_id: string;
+  old_workday: number;
+  new_workday: number;
+  reason: string | null;
+  moved_by: string | null;
+  moved_at: string;
+}
+
+export interface RebalanceParams {
+  max_moves: number;
+  cooldown_days: number;
+  threshold_percent: number;
+  dry_run?: boolean;
+}
+
+export interface RebalanceResult {
+  success: boolean;
+  moves: {
+    client_id: string;
+    client_name: string;
+    old_workday: number;
+    new_workday: number;
+    reason: string;
+  }[];
+  load_before: Record<number, { load: number; clients: number }>;
+  load_after: Record<number, { load: number; clients: number }>;
+  skipped_reason?: string;
+  error?: string;
+}

@@ -12,18 +12,32 @@
  import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
  import { Textarea } from '@/components/ui/textarea';
  import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
  import { 
    Search, Filter, Calendar, Clock, CheckCircle2, Circle, AlertCircle, 
-  Play, RotateCcw, RefreshCw, ChevronDown, ChevronUp, User, CalendarDays
+  Play, RotateCcw, RefreshCw, ChevronDown, ChevronUp, User, CalendarDays, Lock
  } from 'lucide-react';
  import { format, isToday, isPast, isFuture, parseISO } from 'date-fns';
  import { ptBR } from 'date-fns/locale';
 import { TrafficPlaybookTask, TrafficTaskStatus, TASK_STATUS_OPTIONS, CADENCE_OPTIONS, CAMPAIGN_STATUS_OPTIONS, WORKDAY_OPTIONS } from '@/types/trafficPlaybook';
  import { toast } from 'sonner';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import WeeklyLoadPanel from '@/components/traffic/WeeklyLoadPanel';
  
  export default function TrafficPlaybookTasksPage() {
-  const { tasks, updateTaskStatus, generateTasks, clientStatuses, upsertClientStatus, updateClientWeeklyWorkday, loading, refetch } = useTrafficPlaybook();
+  const { 
+    tasks, 
+    updateTaskStatus, 
+    generateTasks, 
+    clientStatuses, 
+    updateClientWeeklyWorkday,
+    toggleClientWorkdayLock,
+    rebalanceWeeklyWorkdays,
+    weeklyLoads,
+    rebalanceLogs,
+    loading, 
+    refetch 
+  } = useTrafficPlaybook();
    const { accounts } = useCrm();
  
    // Fetch team members directly
@@ -50,6 +64,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
   // Client workday edit modal
   const [editingClientWorkday, setEditingClientWorkday] = useState<string | null>(null);
   const [pendingWorkday, setPendingWorkday] = useState<number>(2);
+  const [pendingLocked, setPendingLocked] = useState<boolean>(false);
  
    // Filtered and sorted tasks
    const filteredTasks = useMemo(() => {
@@ -168,16 +183,32 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
   const handleEditClientWorkday = (clientId: string) => {
     const currentDay = getClientWeeklyWorkday(clientId);
+    const status = clientStatuses.find(s => s.client_id === clientId);
     setPendingWorkday(currentDay);
+    setPendingLocked(status?.weekly_workday_locked ?? false);
     setEditingClientWorkday(clientId);
   };
 
   const handleSaveClientWorkday = async () => {
     if (!editingClientWorkday) return;
+    const status = clientStatuses.find(s => s.client_id === editingClientWorkday);
+    const currentLocked = status?.weekly_workday_locked ?? false;
+    
     await updateClientWeeklyWorkday(editingClientWorkday, pendingWorkday);
+    
+    // Update lock if changed
+    if (pendingLocked !== currentLocked) {
+      await toggleClientWorkdayLock(editingClientWorkday);
+    }
+    
     setEditingClientWorkday(null);
   };
  
+  const isClientWorkdayLocked = (clientId: string): boolean => {
+    const status = clientStatuses.find(s => s.client_id === clientId);
+    return status?.weekly_workday_locked ?? false;
+  };
+
    const getDateLabel = (dateStr: string) => {
      const date = parseISO(dateStr);
      if (isToday(date)) return 'Hoje';
@@ -251,6 +282,14 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
          </Card>
        </div>
  
+       {/* Weekly Load Panel */}
+       <WeeklyLoadPanel
+         weeklyLoads={weeklyLoads}
+         rebalanceLogs={rebalanceLogs}
+         onRebalance={rebalanceWeeklyWorkdays}
+         clients={accounts.map(a => ({ id: a.id, name: a.name }))}
+       />
+
        {/* Filters */}
        <Card>
          <CardContent className="pt-6">
@@ -420,18 +459,23 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
                                  {getAssigneeName(task.assigned_to)}
                                </span>
                               {task.cadence === 'weekly' && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 px-2 text-xs"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEditClientWorkday(task.client_id);
-                                  }}
-                                >
-                                  <CalendarDays className="h-3 w-3 mr-1" />
-                                  {WORKDAY_OPTIONS.find(o => o.value === getClientWeeklyWorkday(task.client_id))?.short || 'Ter'}
-                                </Button>
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 px-2 text-xs"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleEditClientWorkday(task.client_id);
+                                    }}
+                                  >
+                                    <CalendarDays className="h-3 w-3 mr-1" />
+                                    {WORKDAY_OPTIONS.find(o => o.value === getClientWeeklyWorkday(task.client_id))?.short || 'Ter'}
+                                  </Button>
+                                  {isClientWorkdayLocked(task.client_id) && (
+                                    <Lock className="h-3 w-3 text-muted-foreground" />
+                                  )}
+                                </div>
                               )}
                              </div>
  
@@ -520,6 +564,23 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
               </div>
             ))}
           </RadioGroup>
+
+          <div className="flex items-center justify-between py-2">
+            <div className="space-y-0.5">
+              <Label htmlFor="lock-day" className="flex items-center gap-2">
+                <Lock className="h-4 w-4" />
+                Bloquear dia
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Impede alteração automática pelo rebalanceamento
+              </p>
+            </div>
+            <Switch
+              id="lock-day"
+              checked={pendingLocked}
+              onCheckedChange={setPendingLocked}
+            />
+          </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingClientWorkday(null)}>

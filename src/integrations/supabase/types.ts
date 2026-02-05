@@ -5271,9 +5271,21 @@ export type Database = {
         }
         Relationships: []
       }
+      traffic_weekly_load_by_day: {
+        Row: {
+          client_count: number | null
+          total_load: number | null
+          weekday: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       assign_balanced_weekly_workday: { Args: never; Returns: number }
+      assign_optimal_weekly_workday: {
+        Args: { p_client_id: string }
+        Returns: number
+      }
       can_edit_commercial: { Args: { _user_id: string }; Returns: boolean }
       can_view_commercial: { Args: { _user_id: string }; Returns: boolean }
       generate_contract_number: { Args: never; Returns: string }
@@ -5297,6 +5309,10 @@ export type Database = {
       get_client_id_from_risk_case: {
         Args: { p_risk_case_id: string }
         Returns: string
+      }
+      get_client_weekly_weight: {
+        Args: { p_client_id: string }
+        Returns: number
       }
       get_current_member_id: { Args: never; Returns: string }
       get_role_key_from_format: { Args: { p_format: string }; Returns: string }
