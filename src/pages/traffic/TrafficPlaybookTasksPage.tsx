@@ -22,7 +22,6 @@ import { Switch } from '@/components/ui/switch';
 import { TrafficPlaybookTask, TrafficTaskStatus, TASK_STATUS_OPTIONS, CADENCE_OPTIONS, CAMPAIGN_STATUS_OPTIONS, WORKDAY_OPTIONS } from '@/types/trafficPlaybook';
  import { toast } from 'sonner';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import WeeklyLoadPanel from '@/components/traffic/WeeklyLoadPanel';
  
  export default function TrafficPlaybookTasksPage() {
   const { 
@@ -32,9 +31,6 @@ import WeeklyLoadPanel from '@/components/traffic/WeeklyLoadPanel';
     clientStatuses, 
     updateClientWeeklyWorkday,
     toggleClientWorkdayLock,
-    rebalanceWeeklyWorkdays,
-    weeklyLoads,
-    rebalanceLogs,
     loading, 
     refetch 
   } = useTrafficPlaybook();
@@ -282,14 +278,6 @@ import WeeklyLoadPanel from '@/components/traffic/WeeklyLoadPanel';
          </Card>
        </div>
  
-       {/* Weekly Load Panel */}
-       <WeeklyLoadPanel
-         weeklyLoads={weeklyLoads}
-         rebalanceLogs={rebalanceLogs}
-         onRebalance={rebalanceWeeklyWorkdays}
-         clients={accounts.map(a => ({ id: a.id, name: a.name }))}
-       />
-
        {/* Filters */}
        <Card>
          <CardContent className="pt-6">
