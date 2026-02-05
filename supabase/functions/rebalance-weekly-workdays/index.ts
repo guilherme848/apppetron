@@ -16,6 +16,11 @@
    weight: number;
  }
  
+interface DayLoad {
+  load: number;
+  clients: number;
+}
+
  interface RebalanceResult {
    success: boolean;
    moves: {
@@ -25,13 +30,37 @@
      new_workday: number;
      reason: string;
    }[];
-   load_before: Record<number, { load: number; clients: number }>;
-   load_after: Record<number, { load: number; clients: number }>;
+  load_before: Record<number, DayLoad>;
+  load_after: Record<number, DayLoad>;
    skipped_reason?: string;
  }
  
  const WEEKDAY_NAMES = ['', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
  
+function calculateLoads(clientList: ClientLoad[]): Record<number, DayLoad> {
+  const dayLoads: Record<number, DayLoad> = {
+    1: { load: 0, clients: 0 },
+    2: { load: 0, clients: 0 },
+    3: { load: 0, clients: 0 },
+    4: { load: 0, clients: 0 },
+    5: { load: 0, clients: 0 },
+  };
+  
+  for (const c of clientList) {
+    const day = c.weekly_workday;
+    if (day >= 1 && day <= 5) {
+      dayLoads[day].load += c.weight;
+      dayLoads[day].clients += 1;
+    }
+  }
+  
+  return dayLoads;
+}
+
+function getLoadValues(dayLoads: Record<number, DayLoad>): number[] {
+  return [1, 2, 3, 4, 5].map(d => dayLoads[d]?.load ?? 0);
+}
+
  serve(async (req) => {
    if (req.method === "OPTIONS") {
      return new Response("ok", { headers: corsHeaders });
@@ -73,7 +102,7 @@
      // 2. Calculate weight for each client
      const clientLoads: ClientLoad[] = [];
      
-     for (const client of clients || []) {
+    for (const client of (clients || [])) {
        // Get weight = count of active weekly templates for this client's plan
        const { data: templates, error: templatesError } = await supabase
          .from("traffic_playbook_templates")
@@ -97,7 +126,9 @@
        const activeTemplates = (templates || []).filter(t => !disabledTemplates.has(t.id));
        const weight = activeTemplates.length;
  
-       const status = client.traffic_client_status?.[0] || client.traffic_client_status;
+      // Handle both array and object response formats
+      const statusData = client.traffic_client_status;
+      const status = Array.isArray(statusData) ? statusData[0] : statusData;
  
        clientLoads.push({
          client_id: client.id,
@@ -109,45 +140,31 @@
        });
      }
  
-     // 3. Calculate load per day
-    const calculateLoads = (clientList: ClientLoad[]) => {
-       const dayLoads: Record<number, { load: number; clients: number }> = {};
-       for (let d = 1; d <= 5; d++) {
-         dayLoads[d] = { load: 0, clients: 0 };
-       }
-      for (const c of clientList) {
-         if (dayLoads[c.weekly_workday]) {
-           dayLoads[c.weekly_workday].load += c.weight;
-           dayLoads[c.weekly_workday].clients += 1;
-         }
-       }
-       return dayLoads;
-     };
- 
+    console.log(`Processing ${clientLoads.length} clients`);
+    
+    // 3. Calculate load per day
      const loadBefore = calculateLoads(clientLoads);
      console.log("Load before:", loadBefore);
  
      // 4. Check if rebalancing is needed
-    const loadValues = Object.values(loadBefore).map(l => l.load);
+    const loadValues = getLoadValues(loadBefore);
     const maxLoad = Math.max(...loadValues);
     const minLoad = Math.min(...loadValues);
  
-     if (minLoad > 0) {
-       const imbalance = ((maxLoad - minLoad) / minLoad) * 100;
-       console.log(`Imbalance: ${imbalance.toFixed(1)}%`);
+    console.log(`Load values: ${loadValues.join(', ')}, max=${maxLoad}, min=${minLoad}`);
  
-       if (imbalance < threshold_percent) {
-         const result: RebalanceResult = {
-           success: true,
-           moves: [],
-           load_before: loadBefore,
-           load_after: loadBefore,
-           skipped_reason: `Imbalance ${imbalance.toFixed(1)}% is below threshold ${threshold_percent}%`,
-         };
-         return new Response(JSON.stringify(result), {
-           headers: { ...corsHeaders, "Content-Type": "application/json" },
-         });
-       }
+    if (minLoad > 0 && ((maxLoad - minLoad) / minLoad) * 100 < threshold_percent) {
+      const imbalance = ((maxLoad - minLoad) / minLoad) * 100;
+      const result: RebalanceResult = {
+        success: true,
+        moves: [],
+        load_before: loadBefore,
+        load_after: loadBefore,
+        skipped_reason: `Desequilíbrio ${imbalance.toFixed(1)}% está abaixo do limiar ${threshold_percent}%`,
+      };
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
      }
  
      // 5. Perform rebalancing
@@ -160,20 +177,22 @@
  
      for (let moveCount = 0; moveCount < max_moves; moveCount++) {
       const dayLoads = calculateLoads(currentClientList);
+      const currentLoadValues = getLoadValues(dayLoads);
        
        // Find most and least loaded days
        let mostLoadedDay = 1;
        let leastLoadedDay = 1;
-       let maxL = 0;
-       let minL = Infinity;
+      let maxL = currentLoadValues[0];
+      let minL = currentLoadValues[0];
  
        for (let d = 1; d <= 5; d++) {
-         if (dayLoads[d].load > maxL) {
-           maxL = dayLoads[d].load;
+        const load = dayLoads[d]?.load ?? 0;
+        if (load > maxL) {
+          maxL = load;
            mostLoadedDay = d;
          }
-         if (dayLoads[d].load < minL) {
-           minL = dayLoads[d].load;
+        if (load < minL) {
+          minL = load;
            leastLoadedDay = d;
          }
        }
@@ -207,8 +226,8 @@
        const newDay = leastLoadedDay;
  
        // Would this move reduce imbalance?
-       const newMaxLoad = dayLoads[mostLoadedDay].load - clientToMove.weight;
-       const newMinLoad = dayLoads[leastLoadedDay].load + clientToMove.weight;
+      const newMaxLoad = (dayLoads[mostLoadedDay]?.load ?? 0) - clientToMove.weight;
+      const newMinLoad = (dayLoads[leastLoadedDay]?.load ?? 0) + clientToMove.weight;
        
        // Only move if it improves balance
        if (newMaxLoad >= newMinLoad) {
@@ -233,7 +252,7 @@
                client_id: clientToMove.client_id,
                old_workday: oldDay,
                new_workday: newDay,
-               reason: `Auto-rebalance: moved from ${WEEKDAY_NAMES[oldDay]} (load=${dayLoads[oldDay].load}) to ${WEEKDAY_NAMES[newDay]} (load=${dayLoads[newDay].load})`,
+              reason: `Auto-rebalance: ${WEEKDAY_NAMES[oldDay]} (carga=${dayLoads[oldDay]?.load ?? 0}) → ${WEEKDAY_NAMES[newDay]} (carga=${dayLoads[newDay]?.load ?? 0})`,
                moved_by: "auto",
              });
  
