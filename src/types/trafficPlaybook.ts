@@ -4,6 +4,7 @@
  export type TrafficAnchorRule = 'weekday' | 'biweekly_days' | 'month_day' | 'quarter_day';
  export type TrafficTaskStatus = 'todo' | 'doing' | 'blocked' | 'done' | 'skipped';
  export type TrafficCampaignStatus = 'active' | 'paused' | 'no_budget' | 'onboarding' | 'waiting_creatives';
+export type TrafficBlockedReason = 'waiting_creatives' | 'waiting_approval' | 'no_budget' | 'access_issue' | 'billing_issue' | 'other';
  
 export interface ChecklistItem {
   id: string;
@@ -64,6 +65,8 @@ export interface TrafficPlaybookTemplate {
    created_at: string;
    updated_at: string;
    completed_at: string | null;
+  blocked_reason: TrafficBlockedReason | null;
+  blocked_at: string | null;
  }
  
  export interface TrafficClientStatus {
@@ -108,6 +111,31 @@ export interface TrafficPlaybookTemplate {
    { value: 'skipped', label: 'Ignorado', color: 'bg-yellow-100 text-yellow-800' },
  ];
  
+export const BLOCKED_REASON_OPTIONS: { value: TrafficBlockedReason; label: string }[] = [
+  { value: 'waiting_creatives', label: 'Aguardando Criativos' },
+  { value: 'waiting_approval', label: 'Aguardando Aprovação' },
+  { value: 'no_budget', label: 'Sem Verba' },
+  { value: 'access_issue', label: 'Problema de Acesso' },
+  { value: 'billing_issue', label: 'Problema de Faturamento' },
+  { value: 'other', label: 'Outro' },
+];
+
+export const WORKLOAD_WEIGHTS: Record<TrafficCadence, number> = {
+  daily: 1,
+  weekly: 2,
+  biweekly: 3,
+  monthly: 5,
+  quarterly: 8,
+};
+
+export const PERIOD_OPTIONS = [
+  { value: 'today', label: 'Hoje' },
+  { value: 'week', label: 'Esta Semana' },
+  { value: 'next7', label: 'Próximos 7 dias' },
+  { value: 'next14', label: 'Próximos 14 dias' },
+  { value: 'month', label: 'Este Mês' },
+];
+
  export const WEEKDAY_OPTIONS = [
    { value: 1, label: 'Segunda-feira' },
    { value: 2, label: 'Terça-feira' },
