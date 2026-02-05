@@ -75,7 +75,7 @@ export function TrafficRoutinesTab() {
 
   const handleOpenAddCycle = () => {
     setSelectedCycleId('');
-    setFrequency('weekly');
+    setFrequency('weekly'); 
     setCycleFormOpen(true);
   };
 
