@@ -4085,6 +4085,51 @@ export type Database = {
           },
         ]
       }
+      traffic_client_status: {
+        Row: {
+          campaign_status:
+            | Database["public"]["Enums"]["traffic_campaign_status"]
+            | null
+          client_id: string
+          notes: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          campaign_status?:
+            | Database["public"]["Enums"]["traffic_campaign_status"]
+            | null
+          client_id: string
+          notes?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          campaign_status?:
+            | Database["public"]["Enums"]["traffic_campaign_status"]
+            | null
+          client_id?: string
+          notes?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traffic_client_status_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traffic_client_status_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       traffic_creative_request_files: {
         Row: {
           created_at: string
@@ -4545,6 +4590,224 @@ export type Database = {
             columns: ["cycle_id"]
             isOneToOne: false
             referencedRelation: "traffic_cycles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      traffic_playbook_overrides: {
+        Row: {
+          cadence_override:
+            | Database["public"]["Enums"]["traffic_cadence"]
+            | null
+          client_id: string
+          created_at: string | null
+          id: string
+          is_disabled: boolean | null
+          notes_override: string | null
+          owner_override: string | null
+          template_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          cadence_override?:
+            | Database["public"]["Enums"]["traffic_cadence"]
+            | null
+          client_id: string
+          created_at?: string | null
+          id?: string
+          is_disabled?: boolean | null
+          notes_override?: string | null
+          owner_override?: string | null
+          template_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          cadence_override?:
+            | Database["public"]["Enums"]["traffic_cadence"]
+            | null
+          client_id?: string
+          created_at?: string | null
+          id?: string
+          is_disabled?: boolean | null
+          notes_override?: string | null
+          owner_override?: string | null
+          template_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traffic_playbook_overrides_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traffic_playbook_overrides_owner_override_fkey"
+            columns: ["owner_override"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traffic_playbook_overrides_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_playbook_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      traffic_playbook_tasks: {
+        Row: {
+          assigned_to: string | null
+          cadence: Database["public"]["Enums"]["traffic_cadence"] | null
+          checklist: Json | null
+          client_id: string
+          completed_at: string | null
+          created_at: string | null
+          description: string | null
+          due_date: string
+          evidence_links: Json | null
+          id: string
+          notes: string | null
+          period_end: string | null
+          period_start: string
+          priority: string | null
+          status: Database["public"]["Enums"]["traffic_task_status"] | null
+          template_id: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          cadence?: Database["public"]["Enums"]["traffic_cadence"] | null
+          checklist?: Json | null
+          client_id: string
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date: string
+          evidence_links?: Json | null
+          id?: string
+          notes?: string | null
+          period_end?: string | null
+          period_start: string
+          priority?: string | null
+          status?: Database["public"]["Enums"]["traffic_task_status"] | null
+          template_id?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          cadence?: Database["public"]["Enums"]["traffic_cadence"] | null
+          checklist?: Json | null
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string
+          evidence_links?: Json | null
+          id?: string
+          notes?: string | null
+          period_end?: string | null
+          period_start?: string
+          priority?: string | null
+          status?: Database["public"]["Enums"]["traffic_task_status"] | null
+          template_id?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traffic_playbook_tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traffic_playbook_tasks_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traffic_playbook_tasks_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_playbook_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      traffic_playbook_templates: {
+        Row: {
+          active: boolean | null
+          anchor_day_of_month: number | null
+          anchor_day_of_week: number | null
+          anchor_rule: Database["public"]["Enums"]["traffic_anchor_rule"] | null
+          cadence: Database["public"]["Enums"]["traffic_cadence"]
+          checklist: Json | null
+          created_at: string | null
+          default_owner_role: string | null
+          description: string | null
+          id: string
+          name: string
+          offset_days: number | null
+          priority: string | null
+          service_id: string
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          anchor_day_of_month?: number | null
+          anchor_day_of_week?: number | null
+          anchor_rule?:
+            | Database["public"]["Enums"]["traffic_anchor_rule"]
+            | null
+          cadence: Database["public"]["Enums"]["traffic_cadence"]
+          checklist?: Json | null
+          created_at?: string | null
+          default_owner_role?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          offset_days?: number | null
+          priority?: string | null
+          service_id: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          anchor_day_of_month?: number | null
+          anchor_day_of_week?: number | null
+          anchor_rule?:
+            | Database["public"]["Enums"]["traffic_anchor_rule"]
+            | null
+          cadence?: Database["public"]["Enums"]["traffic_cadence"]
+          checklist?: Json | null
+          created_at?: string | null
+          default_owner_role?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          offset_days?: number | null
+          priority?: string | null
+          service_id?: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traffic_playbook_templates_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
             referencedColumns: ["id"]
           },
         ]
@@ -5102,6 +5365,19 @@ export type Database = {
         | "completed"
         | "cancelled"
       petron_task_status: "todo" | "doing" | "blocked" | "done"
+      traffic_anchor_rule:
+        | "weekday"
+        | "biweekly_days"
+        | "month_day"
+        | "quarter_day"
+      traffic_cadence: "daily" | "weekly" | "biweekly" | "monthly" | "quarterly"
+      traffic_campaign_status:
+        | "active"
+        | "paused"
+        | "no_budget"
+        | "onboarding"
+        | "waiting_creatives"
+      traffic_task_status: "todo" | "doing" | "blocked" | "done" | "skipped"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -5238,6 +5514,21 @@ export const Constants = {
         "cancelled",
       ],
       petron_task_status: ["todo", "doing", "blocked", "done"],
+      traffic_anchor_rule: [
+        "weekday",
+        "biweekly_days",
+        "month_day",
+        "quarter_day",
+      ],
+      traffic_cadence: ["daily", "weekly", "biweekly", "monthly", "quarterly"],
+      traffic_campaign_status: [
+        "active",
+        "paused",
+        "no_budget",
+        "onboarding",
+        "waiting_creatives",
+      ],
+      traffic_task_status: ["todo", "doing", "blocked", "done", "skipped"],
     },
   },
 } as const

@@ -65,6 +65,8 @@ import PipelinePage from "./pages/settings/PipelinePage";
 import NichesPage from "./pages/settings/NichesPage";
 import TrafficRoutinesPage from "./pages/settings/TrafficRoutinesPage";
 import TrafficCyclesPage from "./pages/settings/TrafficCyclesPage";
+import TrafficPlaybookPage from "./pages/settings/TrafficPlaybookPage";
+import TrafficPlaybookTasksPage from "./pages/traffic/TrafficPlaybookTasksPage";
 import MetaIntegrationPage from "./pages/settings/MetaIntegrationPage";
 import { TrafficAnalyticsSettingsTab } from "./components/settings/TrafficAnalyticsSettingsTab";
 import OnboardingQuestionsPage from "./pages/settings/OnboardingQuestionsPage";
@@ -161,6 +163,7 @@ const App = () => (
                         {/* Traffic routes */}
                         <Route path="/traffic" element={<TrafficDashboard />} />
                         <Route path="/traffic/tasks" element={<TrafficTasks />} />
+                        <Route path="/traffic/playbook-tasks" element={<TrafficPlaybookTasksPage />} />
                         <Route path="/traffic/clients/:id" element={<TrafficClientDetail />} />
                         <Route path="/traffic/balances" element={<TrafficBalancesPage />} />
                         <Route path="/traffic/overview" element={<TrafficOverview />} />
@@ -208,6 +211,7 @@ const App = () => (
                           <Route path="general/niches" element={<NichesPage />} />
                           <Route path="traffic/routines" element={<TrafficRoutinesPage />} />
                           <Route path="traffic/cycles" element={<TrafficCyclesPage />} />
+                          <Route path="traffic/playbook" element={<TrafficPlaybookPage />} />
                           <Route path="integrations/meta" element={<MetaIntegrationPage />} />
                           <Route path="traffic/analytics" element={<TrafficAnalyticsSettingsTab />} />
                           <Route path="cs/onboarding/activities" element={<PetronOnboardingActivitiesPage />} />
