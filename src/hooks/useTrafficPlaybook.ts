@@ -151,32 +151,81 @@
    };
  
    // Client Status CRUD
-   const upsertClientStatus = async (clientId: string, status: TrafficCampaignStatus, notes?: string) => {
-     const { data, error } = await supabase
+  const upsertClientStatus = async (
+    clientId: string, 
+    status: TrafficCampaignStatus, 
+    notes?: string,
+    weeklyWorkday?: number
+  ) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updateData: any = {
+      client_id: clientId,
+      campaign_status: status,
+      notes: notes || null,
+    };
+    
+    if (weeklyWorkday !== undefined) {
+      updateData.weekly_workday = weeklyWorkday;
+    }
+
+    const { data, error } = await supabase
        .from('traffic_client_status')
-       .upsert({
-         client_id: clientId,
-         campaign_status: status,
-         notes: notes || null,
-       })
+      .upsert(updateData)
        .select()
        .single();
-     if (error) {
+    if (error) {
        console.error('Error upserting client status:', error);
        toast.error('Erro ao atualizar status do cliente');
        return { data: null, error };
      }
-     setClientStatuses(prev => {
+    setClientStatuses(prev => {
        const existing = prev.find(s => s.client_id === clientId);
        if (existing) {
          return prev.map(s => s.client_id === clientId ? data as TrafficClientStatus : s);
        }
        return [...prev, data as TrafficClientStatus];
      });
-     toast.success('Status atualizado');
-     return { data: data as TrafficClientStatus, error: null };
+    toast.success('Status atualizado');
+    return { data: data as TrafficClientStatus, error: null };
    };
  
+  // Update just the weekly workday
+  const updateClientWeeklyWorkday = async (clientId: string, weeklyWorkday: number) => {
+    const existing = clientStatuses.find(s => s.client_id === clientId);
+    const currentStatus = existing?.campaign_status || 'active';
+    const currentNotes = existing?.notes || null;
+
+    const { data, error } = await supabase
+      .from('traffic_client_status')
+      .upsert({
+        client_id: clientId,
+        campaign_status: currentStatus,
+        notes: currentNotes,
+        weekly_workday: weeklyWorkday,
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error updating weekly workday:', error);
+      toast.error('Erro ao atualizar dia semanal');
+      return { data: null, error };
+    }
+    
+    setClientStatuses(prev => {
+      const existingIdx = prev.findIndex(s => s.client_id === clientId);
+      if (existingIdx >= 0) {
+        const updated = [...prev];
+        updated[existingIdx] = data as TrafficClientStatus;
+        return updated;
+      }
+      return [...prev, data as TrafficClientStatus];
+    });
+    
+    toast.success('Dia semanal atualizado');
+    return { data: data as TrafficClientStatus, error: null };
+  };
+
    // Generate tasks via edge function
    const generateTasks = async (windowDays = 30, clientId?: string) => {
      try {
@@ -266,6 +315,7 @@
      updateTaskChecklist,
      // Client Status
      upsertClientStatus,
+    updateClientWeeklyWorkday,
      // Override
      upsertOverride,
      // Generate

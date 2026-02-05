@@ -72,6 +72,7 @@ export interface TrafficPlaybookTemplate {
    notes: string | null;
    updated_at: string;
    updated_by: string | null;
+  weekly_workday: number; // 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday
  }
  
  // UI Constants
@@ -106,11 +107,17 @@ export interface TrafficPlaybookTemplate {
  ];
  
  export const WEEKDAY_OPTIONS = [
-   { value: 0, label: 'Domingo' },
    { value: 1, label: 'Segunda-feira' },
    { value: 2, label: 'Terça-feira' },
    { value: 3, label: 'Quarta-feira' },
    { value: 4, label: 'Quinta-feira' },
    { value: 5, label: 'Sexta-feira' },
-   { value: 6, label: 'Sábado' },
  ];
+
+export const WORKDAY_OPTIONS = [
+  { value: 1, label: 'Segunda', short: 'Seg' },
+  { value: 2, label: 'Terça', short: 'Ter' },
+  { value: 3, label: 'Quarta', short: 'Qua' },
+  { value: 4, label: 'Quinta', short: 'Qui' },
+  { value: 5, label: 'Sexta', short: 'Sex' },
+];

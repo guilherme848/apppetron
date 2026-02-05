@@ -5264,6 +5264,7 @@ export type Database = {
       }
     }
     Functions: {
+      assign_balanced_weekly_workday: { Args: never; Returns: number }
       can_edit_commercial: { Args: { _user_id: string }; Returns: boolean }
       can_view_commercial: { Args: { _user_id: string }; Returns: boolean }
       generate_contract_number: { Args: never; Returns: string }
