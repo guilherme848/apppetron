@@ -39,8 +39,41 @@
  interface ClientStatus {
    client_id: string;
    campaign_status: string;
+  weekly_workday: number;
  }
  
+// Check if a date is a weekday (Monday=1 to Friday=5)
+function isWeekday(date: Date): boolean {
+  const day = date.getDay();
+  return day >= 1 && day <= 5;
+}
+
+// Get next weekday if current date is weekend
+function getNextWeekday(date: Date): Date {
+  const result = new Date(date);
+  while (!isWeekday(result)) {
+    result.setDate(result.getDate() + 1);
+  }
+  return result;
+}
+
+// Get the next occurrence of a specific weekday (1=Monday...5=Friday)
+function getNextWeekdayOccurrence(startDate: Date, targetWeekday: number): Date {
+  const result = new Date(startDate);
+  // Convert JS day (0=Sunday) to our format (1=Monday)
+  const jsTargetDay = targetWeekday === 7 ? 0 : targetWeekday; // Just in case
+  
+  while (true) {
+    const currentDay = result.getDay();
+    // Convert JS day to our format: JS 0=Sunday, 1=Monday... we want 1=Monday, 5=Friday
+    const ourDay = currentDay === 0 ? 7 : currentDay;
+    if (ourDay === targetWeekday && isWeekday(result)) {
+      return result;
+    }
+    result.setDate(result.getDate() + 1);
+  }
+}
+
  // Calculate next occurrence dates based on cadence
  function calculateOccurrences(
    cadence: string,
@@ -49,7 +82,8 @@
    anchorRule: string | null,
    anchorDayOfWeek: number | null,
    anchorDayOfMonth: number | null,
-   offsetDays: number
+  offsetDays: number,
+  clientWeeklyWorkday?: number
  ): Date[] {
    const occurrences: Date[] = [];
    const current = new Date(startDate);
@@ -64,16 +98,25 @@
  
      switch (cadence) {
        case "daily":
-         shouldAdd = true;
+        // Only weekdays (Monday-Friday)
+        shouldAdd = isWeekday(current);
          nextIncrement = 1;
          break;
  
        case "weekly":
-         if (anchorRule === "weekday" && anchorDayOfWeek !== null) {
-           shouldAdd = current.getDay() === anchorDayOfWeek;
-         } else {
-           // Default to Monday
-           shouldAdd = current.getDay() === 1;
+        // Use client's weekly_workday (1=Monday...5=Friday)
+        if (clientWeeklyWorkday !== undefined && clientWeeklyWorkday >= 1 && clientWeeklyWorkday <= 5) {
+          const currentDay = current.getDay();
+          const ourDay = currentDay === 0 ? 7 : currentDay;
+          shouldAdd = ourDay === clientWeeklyWorkday;
+        } else if (anchorRule === "weekday" && anchorDayOfWeek !== null) {
+          const currentDay = current.getDay();
+          const ourDay = currentDay === 0 ? 7 : currentDay;
+          shouldAdd = ourDay === anchorDayOfWeek;
+        } else {
+          // Default to Tuesday (2)
+          const currentDay = current.getDay();
+          shouldAdd = currentDay === 2;
          }
          nextIncrement = 1;
          break;
@@ -81,21 +124,21 @@
        case "biweekly":
          if (anchorRule === "biweekly_days" && anchorDayOfMonth !== null) {
            const day = current.getDate();
-           shouldAdd = day === 1 || day === 15;
+          shouldAdd = (day === 1 || day === 15) && isWeekday(current);
          } else {
-           // Default: 1st and 15th
+          // Default: 1st and 15th, but only on weekdays
            const day = current.getDate();
-           shouldAdd = day === 1 || day === 15;
+          shouldAdd = (day === 1 || day === 15) && isWeekday(current);
          }
          nextIncrement = 1;
          break;
  
        case "monthly":
          if (anchorRule === "month_day" && anchorDayOfMonth !== null) {
-           shouldAdd = current.getDate() === anchorDayOfMonth;
+          shouldAdd = current.getDate() === anchorDayOfMonth && isWeekday(current);
          } else {
-           // Default to 1st
-           shouldAdd = current.getDate() === 1;
+          // Default to 1st, only on weekdays
+          shouldAdd = current.getDate() === 1 && isWeekday(current);
          }
          nextIncrement = 1;
          break;
@@ -104,12 +147,12 @@
          if (anchorRule === "quarter_day" && anchorDayOfMonth !== null) {
            const month = current.getMonth();
            const isQuarterStart = month === 0 || month === 3 || month === 6 || month === 9;
-           shouldAdd = isQuarterStart && current.getDate() === anchorDayOfMonth;
+          shouldAdd = isQuarterStart && current.getDate() === anchorDayOfMonth && isWeekday(current);
          } else {
            // Default: 1st day of quarter months (Jan, Apr, Jul, Oct)
            const month = current.getMonth();
            const isQuarterStart = month === 0 || month === 3 || month === 6 || month === 9;
-           shouldAdd = isQuarterStart && current.getDate() === 1;
+          shouldAdd = isQuarterStart && current.getDate() === 1 && isWeekday(current);
          }
          nextIncrement = 1;
          break;
@@ -122,6 +165,54 @@
      current.setDate(current.getDate() + nextIncrement);
    }
  
+  // For biweekly/monthly/quarterly: if date falls on weekend, shift to next weekday
+  if (cadence === "biweekly" || cadence === "monthly" || cadence === "quarterly") {
+    // Re-process to handle weekend shifts
+    const adjusted: Date[] = [];
+    const current2 = new Date(startDate);
+    current2.setHours(0, 0, 0, 0);
+    current2.setDate(current2.getDate() + offsetDays);
+
+    while (current2 <= endDate) {
+      let targetDate: Date | null = null;
+
+      if (cadence === "biweekly") {
+        const day = current2.getDate();
+        if (day === 1 || day === 15) {
+          targetDate = new Date(current2);
+        }
+      } else if (cadence === "monthly") {
+        const targetDay = anchorDayOfMonth || 1;
+        if (current2.getDate() === targetDay) {
+          targetDate = new Date(current2);
+        }
+      } else if (cadence === "quarterly") {
+        const month = current2.getMonth();
+        const isQuarterStart = month === 0 || month === 3 || month === 6 || month === 9;
+        const targetDay = anchorDayOfMonth || 1;
+        if (isQuarterStart && current2.getDate() === targetDay) {
+          targetDate = new Date(current2);
+        }
+      }
+
+      if (targetDate) {
+        // Shift to next weekday if on weekend
+        const adjustedDate = getNextWeekday(targetDate);
+        if (adjustedDate >= startDate && adjustedDate <= endDate) {
+          // Avoid duplicates
+          const dateStr = adjustedDate.toISOString().split("T")[0];
+          if (!adjusted.some(d => d.toISOString().split("T")[0] === dateStr)) {
+            adjusted.push(adjustedDate);
+          }
+        }
+      }
+
+      current2.setDate(current2.getDate() + 1);
+    }
+
+    return adjusted;
+  }
+
    return occurrences;
  }
  
@@ -170,6 +261,28 @@
      const statusMap = new Map<string, ClientStatus>();
      (statuses || []).forEach((s: ClientStatus) => statusMap.set(s.client_id, s));
  
+    // 2.1 Auto-assign weekly_workday for new clients without status
+    for (const client of clients || []) {
+      if (!statusMap.has(client.id)) {
+        console.log(`Creating traffic_client_status for client ${client.id}`);
+        const { data: newStatus, error: createError } = await supabase
+          .from("traffic_client_status")
+          .insert({
+            client_id: client.id,
+            campaign_status: "active",
+          })
+          .select()
+          .single();
+        
+        if (createError) {
+          console.error(`Error creating status for client ${client.id}:`, createError);
+        } else if (newStatus) {
+          statusMap.set(client.id, newStatus as ClientStatus);
+          console.log(`Assigned weekly_workday=${newStatus.weekly_workday} to client ${client.id}`);
+        }
+      }
+    }
+
      // 3. Fetch active templates
      const { data: templates, error: templatesError } = await supabase
        .from("traffic_playbook_templates")
@@ -241,6 +354,9 @@
          }
  
          // Calculate occurrences
+          const clientStatus = statusMap.get(client.id);
+          const weeklyWorkday = clientStatus?.weekly_workday ?? 2; // Default Tuesday
+
          const occurrences = calculateOccurrences(
            effectiveCadence,
            today,
@@ -248,7 +364,8 @@
            template.anchor_rule,
            template.anchor_day_of_week,
            template.anchor_day_of_month,
-           template.offset_days
+            template.offset_days,
+            effectiveCadence === "weekly" ? weeklyWorkday : undefined
          );
  
          for (const occurrence of occurrences) {

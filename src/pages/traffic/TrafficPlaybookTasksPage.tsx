@@ -14,15 +14,16 @@
  import { Label } from '@/components/ui/label';
  import { 
    Search, Filter, Calendar, Clock, CheckCircle2, Circle, AlertCircle, 
-   Play, RotateCcw, RefreshCw, ChevronDown, ChevronUp, User
+  Play, RotateCcw, RefreshCw, ChevronDown, ChevronUp, User, CalendarDays
  } from 'lucide-react';
  import { format, isToday, isPast, isFuture, parseISO } from 'date-fns';
  import { ptBR } from 'date-fns/locale';
- import { TrafficPlaybookTask, TrafficTaskStatus, TASK_STATUS_OPTIONS, CADENCE_OPTIONS, CAMPAIGN_STATUS_OPTIONS } from '@/types/trafficPlaybook';
+import { TrafficPlaybookTask, TrafficTaskStatus, TASK_STATUS_OPTIONS, CADENCE_OPTIONS, CAMPAIGN_STATUS_OPTIONS, WORKDAY_OPTIONS } from '@/types/trafficPlaybook';
  import { toast } from 'sonner';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
  
  export default function TrafficPlaybookTasksPage() {
-   const { tasks, updateTaskStatus, generateTasks, clientStatuses, upsertClientStatus, loading, refetch } = useTrafficPlaybook();
+  const { tasks, updateTaskStatus, generateTasks, clientStatuses, upsertClientStatus, updateClientWeeklyWorkday, loading, refetch } = useTrafficPlaybook();
    const { accounts } = useCrm();
  
    // Fetch team members directly
@@ -38,12 +39,17 @@
    const [cadenceFilter, setCadenceFilter] = useState<string>('all');
    const [clientFilter, setClientFilter] = useState<string>('all');
    const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
+  const [weekdayFilter, setWeekdayFilter] = useState<string>('all');
    const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
    const [generating, setGenerating] = useState(false);
  
    // Task detail modal
    const [selectedTask, setSelectedTask] = useState<TrafficPlaybookTask | null>(null);
    const [taskNotes, setTaskNotes] = useState('');
+  
+  // Client workday edit modal
+  const [editingClientWorkday, setEditingClientWorkday] = useState<string | null>(null);
+  const [pendingWorkday, setPendingWorkday] = useState<number>(2);
  
    // Filtered and sorted tasks
    const filteredTasks = useMemo(() => {
@@ -80,17 +86,28 @@
          return false;
        }
  
+      // Weekday filter (for due_date)
+      if (weekdayFilter !== 'all') {
+        const dueDate = parseISO(task.due_date);
+        const dayOfWeek = dueDate.getDay();
+        // Convert JS day (0=Sunday, 1=Monday...) to our format (1=Monday...5=Friday)
+        const ourDay = dayOfWeek === 0 ? 7 : dayOfWeek;
+        if (ourDay !== parseInt(weekdayFilter)) {
+          return false;
+        }
+      }
+
        return true;
      }).sort((a, b) => {
-       // Sort by due date, then by priority
-       const dateA = new Date(a.due_date).getTime();
-       const dateB = new Date(b.due_date).getTime();
-       if (dateA !== dateB) return dateA - dateB;
-       
        const priorityOrder = { high: 0, medium: 1, low: 2 };
-       return priorityOrder[a.priority] - priorityOrder[b.priority];
+      // Sort by due date, then by priority
+      const dateA = new Date(a.due_date).getTime();
+      const dateB = new Date(b.due_date).getTime();
+      if (dateA !== dateB) return dateA - dateB;
+      
+      return priorityOrder[a.priority] - priorityOrder[b.priority];
      });
-   }, [tasks, search, statusFilter, cadenceFilter, clientFilter, assigneeFilter, accounts]);
+  }, [tasks, search, statusFilter, cadenceFilter, clientFilter, assigneeFilter, weekdayFilter, accounts]);
  
    // Group tasks by date
    const groupedTasks = useMemo(() => {
@@ -143,6 +160,23 @@
    const getClientStatus = (clientId: string) => {
      return clientStatuses.find(s => s.client_id === clientId);
    };
+
+  const getClientWeeklyWorkday = (clientId: string): number => {
+    const status = clientStatuses.find(s => s.client_id === clientId);
+    return status?.weekly_workday ?? 2;
+  };
+
+  const handleEditClientWorkday = (clientId: string) => {
+    const currentDay = getClientWeeklyWorkday(clientId);
+    setPendingWorkday(currentDay);
+    setEditingClientWorkday(clientId);
+  };
+
+  const handleSaveClientWorkday = async () => {
+    if (!editingClientWorkday) return;
+    await updateClientWeeklyWorkday(editingClientWorkday, pendingWorkday);
+    setEditingClientWorkday(null);
+  };
  
    const getDateLabel = (dateStr: string) => {
      const date = parseISO(dateStr);
@@ -281,6 +315,19 @@
                  ))}
                </SelectContent>
              </Select>
+
+              <Select value={weekdayFilter} onValueChange={setWeekdayFilter}>
+                <SelectTrigger className="w-[140px]">
+                  <CalendarDays className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Dia" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os dias</SelectItem>
+                  {WORKDAY_OPTIONS.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value.toString()}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
            </div>
          </CardContent>
        </Card>
@@ -372,6 +419,20 @@
                                  <User className="h-3 w-3" />
                                  {getAssigneeName(task.assigned_to)}
                                </span>
+                              {task.cadence === 'weekly' && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 px-2 text-xs"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditClientWorkday(task.client_id);
+                                  }}
+                                >
+                                  <CalendarDays className="h-3 w-3 mr-1" />
+                                  {WORKDAY_OPTIONS.find(o => o.value === getClientWeeklyWorkday(task.client_id))?.short || 'Ter'}
+                                </Button>
+                              )}
                              </div>
  
                              {/* Expanded content */}
@@ -423,6 +484,53 @@
            ))}
          </div>
        )}
+
+      {/* Client Workday Edit Dialog */}
+      <Dialog open={!!editingClientWorkday} onOpenChange={(open) => !open && setEditingClientWorkday(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Dia Semanal do Cliente</DialogTitle>
+            <DialogDescription>
+              Defina o dia fixo da semana para as tarefas semanais de {editingClientWorkday ? getClientName(editingClientWorkday) : ''}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <RadioGroup
+            value={pendingWorkday.toString()}
+            onValueChange={(v) => setPendingWorkday(parseInt(v))}
+            className="grid grid-cols-5 gap-2"
+          >
+            {WORKDAY_OPTIONS.map(opt => (
+              <div key={opt.value} className="flex flex-col items-center">
+                <RadioGroupItem 
+                  value={opt.value.toString()} 
+                  id={`day-${opt.value}`}
+                  className="sr-only"
+                />
+                <Label 
+                  htmlFor={`day-${opt.value}`}
+                  className={`cursor-pointer px-3 py-2 rounded-md border text-center w-full transition-colors ${
+                    pendingWorkday === opt.value 
+                      ? 'bg-primary text-primary-foreground border-primary' 
+                      : 'hover:bg-muted'
+                  }`}
+                >
+                  {opt.short}
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingClientWorkday(null)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveClientWorkday}>
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
      </div>
    );
  }
