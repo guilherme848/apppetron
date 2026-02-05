@@ -132,7 +132,7 @@ export const TRAFFIC_PERIOD_STATUS_OPTIONS: { value: TrafficPeriodStatus; label:
 ];
 
 export const ANCHOR_RULE_OPTIONS: { value: string; label: string; description: string }[] = [
-  { value: '', label: 'Nenhum', description: 'Sem regra específica' },
+  { value: '_none', label: 'Nenhum', description: 'Sem regra específica' },
   { value: 'weekday:mon', label: 'Segunda-feira', description: 'Todo início de semana (segunda)' },
   { value: 'day:1', label: 'Dia 1 do mês', description: 'Primeiro dia de cada mês' },
   { value: 'days:1,15', label: 'Dias 1 e 15', description: 'Quinzenal nos dias 1 e 15' },

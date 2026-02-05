@@ -84,7 +84,7 @@ export default function TrafficRoutinesPage() {
     setEditingCycleId(null);
     setSelectedCycleId('');
     setFrequency('weekly');
-    setAnchorRule('');
+    setAnchorRule('_none');
     setSortOrder(getRoutineCyclesByRoutine(routineId).length);
     setCycleFormOpen(true);
   };
@@ -98,7 +98,7 @@ export default function TrafficRoutinesPage() {
       result = await updateRoutineCycle(editingCycleId, { 
         cycle_id: selectedCycleId, 
         frequency, 
-        anchor_rule: anchorRule || null,
+        anchor_rule: anchorRule === '_none' ? null : anchorRule,
         sort_order: sortOrder 
       });
     } else {
@@ -106,7 +106,7 @@ export default function TrafficRoutinesPage() {
         routine_id: selectedRoutineId, 
         cycle_id: selectedCycleId, 
         frequency,
-        anchor_rule: anchorRule || undefined,
+        anchor_rule: anchorRule === '_none' ? undefined : anchorRule,
         sort_order: sortOrder 
       });
     }
