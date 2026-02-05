@@ -4670,6 +4670,8 @@ export type Database = {
       traffic_playbook_tasks: {
         Row: {
           assigned_to: string | null
+          blocked_at: string | null
+          blocked_reason: string | null
           cadence: Database["public"]["Enums"]["traffic_cadence"] | null
           checklist: Json | null
           client_id: string
@@ -4690,6 +4692,8 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          blocked_at?: string | null
+          blocked_reason?: string | null
           cadence?: Database["public"]["Enums"]["traffic_cadence"] | null
           checklist?: Json | null
           client_id: string
@@ -4710,6 +4714,8 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          blocked_at?: string | null
+          blocked_reason?: string | null
           cadence?: Database["public"]["Enums"]["traffic_cadence"] | null
           checklist?: Json | null
           client_id?: string
