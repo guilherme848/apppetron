@@ -51,6 +51,7 @@ const SETTINGS_CATEGORIES: SettingsCategory[] = [
     items: [
       { id: 'pipeline', label: 'Pipeline', path: '/settings/general/pipeline' },
       { id: 'niches', label: 'Nichos', path: '/settings/general/niches' },
+      { id: 'traffic-playbook', label: 'Playbook de Tráfego', path: '/settings/traffic/playbook' },
       { id: 'traffic-routines', label: 'Rotinas de Tráfego', path: '/settings/traffic/routines' },
       { id: 'traffic-cycles', label: 'Ciclos de Tráfego', path: '/settings/traffic/cycles' },
     ],
