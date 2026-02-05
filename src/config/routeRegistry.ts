@@ -371,6 +371,16 @@ export const routeRegistry: RouteDefinition[] = [
     parentId: 'traffic.overview',
     order: 93,
   },
+ {
+   id: 'traffic.playbook_tasks',
+   path: '/traffic/playbook-tasks',
+   label: 'Tarefas do Playbook',
+   category: CATEGORIES.TASKS,
+   module: MODULES.TRAFFIC,
+   permissions: ['view', 'edit'],
+   icon: CheckSquare,
+   order: 6,
+ },
 
   // ============================================
   // CUSTOMER SUCCESS MODULE
@@ -622,6 +632,17 @@ export const routeRegistry: RouteDefinition[] = [
     parentId: 'settings.home',
     order: 10,
   },
+ {
+   id: 'settings.traffic_playbook',
+   path: '/settings/traffic/playbook',
+   label: 'Playbook de Tráfego',
+   category: CATEGORIES.PIPELINE,
+   module: MODULES.SETTINGS,
+   permissions: ['view', 'edit', 'manage'],
+   hideInMenu: true,
+   parentId: 'settings.home',
+   order: 11,
+ },
   {
     id: 'settings.meta_integration',
     path: '/settings/integrations/meta',
