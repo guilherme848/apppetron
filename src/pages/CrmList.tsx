@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Eye, Pencil, Trash2, Loader2, ArrowUpDown, ArrowUp, ArrowDown, Lock } from 'lucide-react';
+import { Plus, Search, Eye, Pencil, Trash2, Loader2, ArrowUpDown, ArrowUp, ArrowDown, Lock, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -11,6 +11,8 @@ import { AccountRemoveDialog, RemovalType } from '@/components/crm/AccountRemove
 import { useCrm } from '@/contexts/CrmContext';
 import { toast } from '@/hooks/use-toast';
 import { useSensitivePermission } from '@/hooks/useSensitivePermission';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import {
   Tooltip,
   TooltipContent,
@@ -44,6 +46,22 @@ const getStoredSort = (): SortConfig => {
   return { key: 'name', direction: 'asc' };
 };
 
+type StatusFilter = 'active' | 'active+churned';
+
+const FILTER_STORAGE_KEY = 'petron_crm_status_filter';
+
+const getStoredFilter = (): StatusFilter => {
+  try {
+    const stored = localStorage.getItem(FILTER_STORAGE_KEY);
+    if (stored === 'active' || stored === 'active+churned') {
+      return stored;
+    }
+  } catch {
+    // ignore
+  }
+  return 'active';
+};
+
 export default function CrmList() {
   const navigate = useNavigate();
   const { accounts, addAccount, updateAccount, softDeleteAccount, churnAccount, loading } = useCrm();
@@ -54,6 +72,7 @@ export default function CrmList() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | undefined>();
   const [sortConfig, setSortConfig] = useState<SortConfig>(getStoredSort);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(getStoredFilter);
   
   // Remove dialog state
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
@@ -81,6 +100,11 @@ export default function CrmList() {
     localStorage.setItem(SORT_STORAGE_KEY, JSON.stringify(sortConfig));
   }, [sortConfig]);
 
+  // Persist filter preference
+  useEffect(() => {
+    localStorage.setItem(FILTER_STORAGE_KEY, statusFilter);
+  }, [statusFilter]);
+
   const handleSort = (key: SortKey) => {
     setSortConfig((prev) => ({
       key,
@@ -89,10 +113,21 @@ export default function CrmList() {
   };
 
   const sortedAndFilteredAccounts = useMemo(() => {
-    // Filter by search only - show all accounts regardless of status
-    const filtered = accounts.filter((account) =>
-      account.name.toLowerCase().includes(search.toLowerCase())
-    );
+    // Filter by status (never show archived) and search
+    const filtered = accounts.filter((account) => {
+      // Never show archived accounts
+      if (account.status === 'archived') return false;
+      
+      // Filter by status preference
+      if (statusFilter === 'active') {
+        if (account.status !== 'active') return false;
+      } else if (statusFilter === 'active+churned') {
+        if (account.status !== 'active' && account.status !== 'churned') return false;
+      }
+      
+      // Filter by search
+      return account.name.toLowerCase().includes(search.toLowerCase());
+    });
 
     // Then sort
     return [...filtered].sort((a, b) => {
@@ -137,7 +172,11 @@ export default function CrmList() {
           return 0;
       }
     });
-  }, [accounts, search, sortConfig]);
+  }, [accounts, search, sortConfig, statusFilter]);
+
+  const handleShowChurnedChange = (checked: boolean) => {
+    setStatusFilter(checked ? 'active+churned' : 'active');
+  };
 
   const handleSubmit = async (data: Partial<Account>) => {
     if (editingAccount) {
@@ -282,6 +321,16 @@ export default function CrmList() {
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
           />
+        </div>
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="show-churned"
+            checked={statusFilter === 'active+churned'}
+            onCheckedChange={handleShowChurnedChange}
+          />
+          <Label htmlFor="show-churned" className="text-sm text-muted-foreground cursor-pointer">
+            Mostrar cancelados
+          </Label>
         </div>
       </div>
 
