@@ -89,6 +89,7 @@ import ContractDetail from "./pages/contracts/ContractDetail";
 import SalesFunnelPage from "./pages/commercial/SalesFunnelPage";
 import MarketingProduction from "./pages/commercial/MarketingProduction";
 import MarketingBatchDetail from "./pages/commercial/MarketingBatchDetail";
+import MarketingPostDetail from "./pages/commercial/MarketingPostDetail";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -196,7 +197,7 @@ const App = () => (
                         <Route path="/commercial/funnel" element={<SalesFunnelPage />} />
                         <Route path="/commercial/marketing" element={<MarketingProduction />} />
                         <Route path="/commercial/marketing/:id" element={<MarketingBatchDetail />} />
-                        <Route path="/commercial/marketing/:batchId/posts/:postId" element={<PostDetail />} />
+                        <Route path="/commercial/marketing/:batchId/posts/:postId" element={<MarketingPostDetail />} />
 
                         {/* Settings - Admin only with internal navigation */}
                         <Route
