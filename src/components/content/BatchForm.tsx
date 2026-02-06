@@ -15,17 +15,32 @@ interface BatchFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   accounts: SimpleAccount[];
-  onSubmit: (data: { client_id: string; month_ref: string }) => Promise<{ data: any; error: any }>;
+  onSubmit: (data: { client_id: string | null; month_ref: string }) => Promise<any>;
+  hideClientField?: boolean;
+  title?: string;
 }
 
-export function BatchForm({ open, onOpenChange, accounts, onSubmit }: BatchFormProps) {
+export function BatchForm({ 
+  open, 
+  onOpenChange, 
+  accounts, 
+  onSubmit,
+  hideClientField = false,
+  title = 'Novo Pacote do Mês',
+}: BatchFormProps) {
   const [clientId, setClientId] = useState('');
   const [monthRef, setMonthRef] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
-    if (!clientId || !monthRef) {
-      toast.error('Preencha todos os campos');
+    // Only require client if not hidden
+    if (!hideClientField && !clientId) {
+      toast.error('Selecione um cliente');
+      return;
+    }
+    
+    if (!monthRef) {
+      toast.error('Preencha o mês');
       return;
     }
 
@@ -36,51 +51,57 @@ export function BatchForm({ open, onOpenChange, accounts, onSubmit }: BatchFormP
     }
 
     setLoading(true);
-    const { data, error } = await onSubmit({ client_id: clientId, month_ref: monthRef });
-    setLoading(false);
-
-    if (error) {
-      if (error.code === '23505') {
-        toast.error('Já existe um pacote para este cliente neste mês');
-      } else {
-        toast.error('Erro ao criar pacote');
+    try {
+      const result = await onSubmit({ 
+        client_id: hideClientField ? null : clientId, 
+        month_ref: monthRef 
+      });
+      
+      // Handle different return types
+      if (result && result.error) {
+        if (result.error.code === '23505') {
+          toast.error('Já existe um pacote para este mês');
+        } else {
+          toast.error('Erro ao criar pacote');
+        }
+        return;
       }
-      return;
+
+      setClientId('');
+      setMonthRef('');
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error creating batch:', error);
+      toast.error('Erro ao criar pacote');
+    } finally {
+      setLoading(false);
     }
-
-    toast.success('Pacote criado com sucesso');
-    setClientId('');
-    setMonthRef('');
-    onOpenChange(false);
-  };
-
-  const getCurrentMonth = () => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Novo Pacote do Mês</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="client">Cliente *</Label>
-            <Select value={clientId} onValueChange={setClientId}>
-              <SelectTrigger className="bg-background">
-                <SelectValue placeholder="Selecione o cliente" />
-              </SelectTrigger>
-              <SelectContent className="bg-popover z-50">
-                {accounts.map((account) => (
-                  <SelectItem key={account.id} value={account.id}>
-                    {account.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {!hideClientField && (
+            <div className="space-y-2">
+              <Label htmlFor="client">Cliente *</Label>
+              <Select value={clientId} onValueChange={setClientId}>
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="Selecione o cliente" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50">
+                  {accounts.map((account) => (
+                    <SelectItem key={account.id} value={account.id}>
+                      {account.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="month">Mês (YYYY-MM) *</Label>
             <Input
@@ -88,7 +109,6 @@ export function BatchForm({ open, onOpenChange, accounts, onSubmit }: BatchFormP
               type="month"
               value={monthRef}
               onChange={(e) => setMonthRef(e.target.value)}
-              placeholder={getCurrentMonth()}
             />
           </div>
         </div>

@@ -469,6 +469,7 @@ export type Database = {
           month_ref: string
           notes: string | null
           planning_due_date: string | null
+          scope: Database["public"]["Enums"]["content_scope"]
           status: string
           updated_at: string
         }
@@ -481,6 +482,7 @@ export type Database = {
           month_ref: string
           notes?: string | null
           planning_due_date?: string | null
+          scope?: Database["public"]["Enums"]["content_scope"]
           status?: string
           updated_at?: string
         }
@@ -493,6 +495,7 @@ export type Database = {
           month_ref?: string
           notes?: string | null
           planning_due_date?: string | null
+          scope?: Database["public"]["Enums"]["content_scope"]
           status?: string
           updated_at?: string
         }
@@ -5391,6 +5394,7 @@ export type Database = {
     Enums: {
       commercial_role: "admin" | "commercial_manager" | "viewer"
       content_job_priority: "low" | "medium" | "high" | "urgent"
+      content_scope: "client" | "agency"
       petron_onboarding_status:
         | "draft"
         | "in_progress"
@@ -5539,6 +5543,7 @@ export const Constants = {
     Enums: {
       commercial_role: ["admin", "commercial_manager", "viewer"],
       content_job_priority: ["low", "medium", "high", "urgent"],
+      content_scope: ["client", "agency"],
       petron_onboarding_status: [
         "draft",
         "in_progress",

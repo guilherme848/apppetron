@@ -43,7 +43,7 @@ function getRouteIcon(route: RouteDefinition): React.ElementType {
 const moduleConfig: { module: string; label: string | null }[] = [
   { module: MODULES.MAIN, label: null }, // No label for main items
   { module: MODULES.CRM, label: 'CRM' },
-  { module: MODULES.COMMERCIAL, label: 'Comercial' },
+  { module: MODULES.COMMERCIAL, label: 'Comercial & Marketing' },
   { module: MODULES.CONTENT, label: 'Criação' },
   { module: MODULES.TRAFFIC, label: 'Tráfego Pago' },
   { module: MODULES.CS, label: 'Customer Success' },

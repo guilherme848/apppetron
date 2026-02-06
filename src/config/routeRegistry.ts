@@ -30,6 +30,7 @@ import {
   User,
   FilePen,
   Target,
+  Megaphone,
 } from 'lucide-react';
 
 // Action types for permissions
@@ -53,7 +54,7 @@ export interface RouteDefinition {
 export const MODULES = {
   MAIN: 'Principal',
   CRM: 'CRM',
-  COMMERCIAL: 'Comercial',
+  COMMERCIAL: 'Comercial & Marketing',
   CONTENT: 'Conteúdo',
   TRAFFIC: 'Tráfego',
   CS: 'Customer Success',
@@ -505,6 +506,49 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view', 'edit'],
     icon: Target,
     order: 1,
+  },
+  {
+    id: 'commercial.marketing',
+    path: '/commercial/marketing',
+    label: 'Marketing',
+    category: CATEGORIES.PRODUCTION,
+    module: MODULES.COMMERCIAL,
+    permissions: ['view', 'edit'],
+    icon: Megaphone,
+    order: 2,
+  },
+  {
+    id: 'commercial.marketing_detail',
+    path: '/commercial/marketing/:id',
+    label: 'Detalhes do Planejamento',
+    category: CATEGORIES.PRODUCTION,
+    module: MODULES.COMMERCIAL,
+    permissions: ['view', 'edit'],
+    hideInMenu: true,
+    parentId: 'commercial.marketing',
+    order: 3,
+  },
+  {
+    id: 'commercial.marketing_post',
+    path: '/commercial/marketing/:batchId/posts/:postId',
+    label: 'Detalhes do Post (Marketing)',
+    category: CATEGORIES.PRODUCTION,
+    module: MODULES.COMMERCIAL,
+    permissions: ['view', 'edit'],
+    hideInMenu: true,
+    parentId: 'commercial.marketing',
+    order: 4,
+  },
+  {
+    id: 'commercial.marketing_board',
+    path: '/commercial/marketing/board',
+    label: 'Quadro Marketing',
+    category: CATEGORIES.PRODUCTION,
+    module: MODULES.COMMERCIAL,
+    permissions: ['view', 'edit'],
+    hideInMenu: true,
+    parentId: 'commercial.marketing',
+    order: 5,
   },
 
   // ============================================
