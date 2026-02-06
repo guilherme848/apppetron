@@ -281,16 +281,15 @@ export default function MarketingPostDetail() {
   };
 
   // Field change handlers
+  // Title: only update local state on change, save on blur/Enter
   const handleTitleChange = (value: string) => {
     setTitle(value);
-    if (initialLoadComplete.current && value.trim() !== savedTitleRef.current.trim()) {
-      queueChange({ title: value.trim() });
-    }
+    // Don't queue changes during typing - only on blur
   };
 
   const handleTitleBlur = async () => {
     if (initialLoadComplete.current && title.trim() !== savedTitleRef.current.trim()) {
-      await flush();
+      await saveNow({ title: title.trim() });
       savedTitleRef.current = title.trim();
     }
   };
@@ -299,7 +298,7 @@ export default function MarketingPostDetail() {
     if (e.key === 'Enter') {
       e.preventDefault();
       if (initialLoadComplete.current && title.trim() !== savedTitleRef.current.trim()) {
-        await flush();
+        await saveNow({ title: title.trim() });
         savedTitleRef.current = title.trim();
       }
       (e.target as HTMLInputElement).blur();
@@ -338,14 +337,15 @@ export default function MarketingPostDetail() {
 
   const handleBriefingTitleChange = (value: string) => {
     setBriefingTitle(value);
-    if (initialLoadComplete.current) {
-      queueChange({ briefing_title: value || null });
-    }
+    // Don't queue changes during typing - only on blur
   };
 
   const handleBriefingTitleBlur = async () => {
-    if (initialLoadComplete.current) {
-      await flush();
+    if (initialLoadComplete.current && post) {
+      const currentValue = post.briefing_title || '';
+      if (briefingTitle !== currentValue) {
+        await saveNow({ briefing_title: briefingTitle || null });
+      }
     }
   };
 
