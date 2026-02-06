@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Eye, Pencil, Trash2, Loader2, ArrowUpDown, ArrowUp, ArrowDown, Lock, Filter } from 'lucide-react';
+import { Plus, Search, Eye, Pencil, Trash2, Loader2, ArrowUpDown, ArrowUp, ArrowDown, Lock, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -9,6 +9,8 @@ import { AccountStatusBadge } from '@/components/crm/StatusBadge';
 import { AccountForm } from '@/components/crm/AccountForm';
 import { AccountRemoveDialog, RemovalType } from '@/components/crm/AccountRemoveDialog';
 import { useCrm } from '@/contexts/CrmContext';
+import { useSettings } from '@/contexts/SettingsContext';
+import { useMetaAds } from '@/hooks/useMetaAds';
 import { toast } from '@/hooks/use-toast';
 import { useSensitivePermission } from '@/hooks/useSensitivePermission';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -65,8 +67,25 @@ const getStoredFilter = (): StatusFilter => {
 export default function CrmList() {
   const navigate = useNavigate();
   const { accounts, addAccount, updateAccount, softDeleteAccount, churnAccount, loading } = useCrm();
+  const { services } = useSettings();
+  const { clientLinks, loading: metaLoading } = useMetaAds();
   const { canViewFinancialValues } = useSensitivePermission();
   const showFinancialValues = canViewFinancialValues();
+
+  // Helper to check if client has traffic service but missing ad account link
+  const getMissingAdAccountWarning = (account: Account): boolean => {
+    if (account.status !== 'active') return false;
+    
+    const service = services.find((s) => s.id === account.service_id);
+    if (!service?.has_traffic) return false;
+    
+    // Check if client has any active ad account linked
+    const hasLinkedAdAccount = clientLinks.some(
+      (link) => link.client_id === account.id && link.active
+    );
+    
+    return !hasLinkedAdAccount;
+  };
   
   const [search, setSearch] = useState('');
   const [formOpen, setFormOpen] = useState(false);
@@ -397,9 +416,27 @@ export default function CrmList() {
                 </TableCell>
               </TableRow>
             ) : (
-              sortedAndFilteredAccounts.map((account) => (
+              sortedAndFilteredAccounts.map((account) => {
+                const missingAdAccount = getMissingAdAccountWarning(account);
+                return (
                 <TableRow key={account.id}>
-                  <TableCell className="font-medium">{account.name}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      {account.name}
+                      {missingAdAccount && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <AlertTriangle className="h-4 w-4 text-amber-500 dark:text-amber-400" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Conta de anúncios não vinculada</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     {account.service_name ? (
                       <Badge variant="secondary">{account.service_name}</Badge>
@@ -451,7 +488,8 @@ export default function CrmList() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
+              );
+              })
             )}
           </TableBody>
         </Table>
