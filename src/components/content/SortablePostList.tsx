@@ -50,6 +50,7 @@ interface SortablePostListProps {
   hasAnyChanges?: (postId: string) => boolean;
   getPendingCount?: (postId: string) => number;
   getDoneCount?: (postId: string) => number;
+  basePath?: string; // Base path for navigation, defaults to '/content/production'
 }
 
 interface SortableRowProps {
@@ -72,6 +73,7 @@ interface SortableRowProps {
   hasAnyChanges: boolean;
   pendingCount: number;
   doneCount: number;
+  basePath: string;
 }
 
 const getChannelLabel = (value: string | null) =>
@@ -101,6 +103,7 @@ function SortableRow({
   hasAnyChanges,
   pendingCount,
   doneCount,
+  basePath,
 }: SortableRowProps) {
   const navigate = useNavigate();
   const {
@@ -328,7 +331,7 @@ function SortableRow({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate(`/content/production/${batchId}/posts/${post.id}`)}
+            onClick={() => navigate(`${basePath}/${batchId}/posts/${post.id}`)}
           >
             <Eye className="h-4 w-4" />
           </Button>
@@ -362,6 +365,7 @@ export function SortablePostList({
   hasAnyChanges,
   getPendingCount,
   getDoneCount,
+  basePath = '/content/production',
 }: SortablePostListProps) {
   const { getMemberById } = useTeamMembers();
   const [isSaving, setIsSaving] = useState(false);
@@ -478,6 +482,7 @@ export function SortablePostList({
                 hasAnyChanges={hasAnyChanges?.(post.id) ?? false}
                 pendingCount={getPendingCount?.(post.id) ?? 0}
                 doneCount={getDoneCount?.(post.id) ?? 0}
+                basePath={basePath}
               />
             ))}
           </TableBody>
