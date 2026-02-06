@@ -98,7 +98,7 @@ export default function CreativeRequestNew() {
     setSaving(false);
     if (result.success) {
       toast({ title: 'Sucesso', description: 'Solicitação criada' });
-      navigate(`/traffic/creatives/${result.data?.id}`);
+      navigate(`/traffic/creative-requests/${result.data?.id}`);
     } else {
       toast({ title: 'Erro', description: result.error, variant: 'destructive' });
     }
@@ -110,7 +110,7 @@ export default function CreativeRequestNew() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/traffic/creatives')}>
+        <Button variant="ghost" size="icon" onClick={() => navigate('/traffic/creative-requests')}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <h1 className="text-2xl font-bold">Nova Solicitação de Criativo</h1>
@@ -294,7 +294,7 @@ export default function CreativeRequestNew() {
             </div>
 
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => navigate('/traffic/creatives')}>
+              <Button type="button" variant="outline" onClick={() => navigate('/traffic/creative-requests')}>
                 Cancelar
               </Button>
               <Button type="submit" disabled={saving || isRoleMissing}>

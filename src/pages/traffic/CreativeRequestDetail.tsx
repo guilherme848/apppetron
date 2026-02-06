@@ -189,7 +189,7 @@ export default function CreativeRequestDetail() {
   if (!request) {
     return (
       <div className="space-y-6">
-        <Button variant="ghost" onClick={() => navigate('/traffic/creatives')}>
+        <Button variant="ghost" onClick={() => navigate('/traffic/creative-requests')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar
         </Button>
@@ -204,7 +204,7 @@ export default function CreativeRequestDetail() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/traffic/creatives')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/traffic/creative-requests')}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
