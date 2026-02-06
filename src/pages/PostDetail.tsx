@@ -195,21 +195,18 @@ export default function PostDetail() {
   }, [post]);
 
   // Field change handlers with commit-based autosave
-  // Text fields: queue changes on change, flush on blur
+  // Text fields: only update local state on change, save on blur/Enter
   // Track draft title separately to detect actual changes
   const savedTitleRef = useRef(title);
 
   const handleTitleChange = (value: string) => {
     setTitle(value);
-    // Queue change only if value is different from saved
-    if (initialLoadComplete.current && value.trim() !== savedTitleRef.current.trim()) {
-      queueChange({ title: value.trim() });
-    }
+    // Don't queue changes during typing - only on blur
   };
 
   const handleTitleBlur = async () => {
     if (initialLoadComplete.current && title.trim() !== savedTitleRef.current.trim()) {
-      await flush();
+      await saveNow({ title: title.trim() });
       savedTitleRef.current = title.trim();
     }
   };
@@ -218,7 +215,7 @@ export default function PostDetail() {
     if (e.key === 'Enter') {
       e.preventDefault();
       if (initialLoadComplete.current && title.trim() !== savedTitleRef.current.trim()) {
-        await flush();
+        await saveNow({ title: title.trim() });
         savedTitleRef.current = title.trim();
       }
       // Optionally blur to give visual feedback
@@ -265,17 +262,18 @@ export default function PostDetail() {
     }
   };
 
-  // Briefing handlers - commit-based (queue on change, flush on blur)
+  // Briefing handlers - commit-based (save on blur only)
   const handleBriefingTitleChange = (value: string) => {
     setBriefingTitle(value);
-    if (initialLoadComplete.current) {
-      queueChange({ briefing_title: value || null });
-    }
+    // Don't queue changes during typing - only on blur
   };
 
   const handleBriefingTitleBlur = async () => {
-    if (initialLoadComplete.current) {
-      await flush();
+    if (initialLoadComplete.current && post) {
+      const currentValue = (post as any).briefing_title || '';
+      if (briefingTitle !== currentValue) {
+        await saveNow({ briefing_title: briefingTitle || null });
+      }
     }
   };
 
