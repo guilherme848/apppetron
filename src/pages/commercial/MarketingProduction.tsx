@@ -12,7 +12,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useJobRoles } from '@/hooks/useJobRoles';
 import { useStageResponsibilities } from '@/hooks/useStageResponsibilities';
-import { useAgencyContentProduction, PETRON_INTERNAL_ACCOUNT_ID } from '@/hooks/useAgencyContentProduction';
+import { useAgencyContentProduction } from '@/hooks/useAgencyContentProduction';
+import { PetronTeamDialog } from '@/components/commercial/PetronTeamDialog';
 
 export default function MarketingProduction() {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ export default function MarketingProduction() {
   const [activeTab, setActiveTab] = useState<BatchStatus>('planning');
   const [showArchived, setShowArchived] = useState(false);
   const [archivedBatches, setArchivedBatches] = useState<ContentBatch[]>([]);
+  const [teamDialogOpen, setTeamDialogOpen] = useState(false);
   const [loadingArchived, setLoadingArchived] = useState(false);
 
   const getStageRoleName = (stageKey: string) => {
@@ -167,7 +169,7 @@ export default function MarketingProduction() {
           <div className="flex items-center gap-2">
             <Button 
               variant="outline" 
-              onClick={() => navigate(`/crm/${PETRON_INTERNAL_ACCOUNT_ID}?tab=team`)}
+              onClick={() => setTeamDialogOpen(true)}
             >
               <Users className="h-4 w-4 mr-2" />
               Time Petron
@@ -295,6 +297,11 @@ export default function MarketingProduction() {
         onOpenChange={setPostFormOpen}
         batchId={selectedBatchId}
         onSubmit={handlePostSubmit}
+      />
+
+      <PetronTeamDialog
+        open={teamDialogOpen}
+        onOpenChange={setTeamDialogOpen}
       />
     </div>
   );
