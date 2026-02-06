@@ -37,9 +37,9 @@ function getTaskRoute(task: MyTask): string {
     case 'content_posts':
       return `/content/posts/${task.id}`;
     case 'content_extra_requests':
-      return `/content/extras/${task.id}`;
+      return `/content/extra-requests/${task.id}`;
     case 'traffic_creative_requests':
-      return `/traffic/creatives/${task.id}`;
+      return `/traffic/creative-requests/${task.id}`;
     case 'traffic_tasks':
       return `/traffic/tasks`;
     case 'cs_client_onboarding_tasks':

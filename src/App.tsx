@@ -159,6 +159,7 @@ const App = () => (
                         <Route path="/content/tasks" element={<ContentTasks />} />
                         <Route path="/content/extra-requests" element={<ExtraRequestsList />} />
                         <Route path="/content/extra-requests/new" element={<ExtraRequestNew />} />
+                        <Route path="/content/extra-requests/:id" element={<ExtraRequestDetail />} />
 
                         {/* Traffic routes */}
                         <Route path="/traffic" element={<TrafficDashboard />} />

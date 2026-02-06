@@ -118,7 +118,7 @@ export default function CreativeRequestsList() {
           <h1 className="text-2xl font-bold">Solicitações de Criativo</h1>
           <p className="text-muted-foreground">Gerencie peças criativas para campanhas de tráfego</p>
         </div>
-        <Button onClick={() => navigate('/traffic/creatives/new')}>
+        <Button onClick={() => navigate('/traffic/creative-requests/new')}>
           <Plus className="h-4 w-4 mr-2" />
           Nova Solicitação
         </Button>
@@ -293,7 +293,7 @@ export default function CreativeRequestsList() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => navigate(`/traffic/creatives/${request.id}`)}
+                            onClick={() => navigate(`/traffic/creative-requests/${request.id}`)}
                           >
                             Abrir
                           </Button>
