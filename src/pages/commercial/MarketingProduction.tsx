@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Loader2, Archive, RotateCcw, LayoutGrid, Megaphone } from 'lucide-react';
+import { Plus, Loader2, Archive, RotateCcw, LayoutGrid, Megaphone, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BatchCard } from '@/components/content/BatchCard';
@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useJobRoles } from '@/hooks/useJobRoles';
 import { useStageResponsibilities } from '@/hooks/useStageResponsibilities';
-import { useAgencyContentProduction } from '@/hooks/useAgencyContentProduction';
+import { useAgencyContentProduction, PETRON_INTERNAL_ACCOUNT_ID } from '@/hooks/useAgencyContentProduction';
 
 export default function MarketingProduction() {
   const navigate = useNavigate();
@@ -165,6 +165,13 @@ export default function MarketingProduction() {
         </div>
         <div className="flex flex-col items-end gap-1">
           <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate(`/crm/${PETRON_INTERNAL_ACCOUNT_ID}?tab=team`)}
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Time Petron
+            </Button>
             <Button variant="outline" onClick={() => navigate('/commercial/marketing/board')}>
               <LayoutGrid className="h-4 w-4 mr-2" />
               Quadro Resumo

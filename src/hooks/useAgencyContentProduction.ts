@@ -3,6 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { ContentBatch, ContentPost, BatchStatus } from '@/types/contentProduction';
 import { toast } from 'sonner';
 
+// ID fixo da conta interna Petron para marketing da agência
+export const PETRON_INTERNAL_ACCOUNT_ID = '00000000-0000-0000-0000-000000000001';
+
 export function useAgencyContentProduction() {
   const [batches, setBatches] = useState<ContentBatch[]>([]);
   const [posts, setPosts] = useState<ContentPost[]>([]);
@@ -92,7 +95,7 @@ export function useAgencyContentProduction() {
         .from('content_batches')
         .insert({
           ...batch,
-          client_id: null, // Agency content has no client
+          client_id: PETRON_INTERNAL_ACCOUNT_ID,
           scope: 'agency',
           archived: false,
         })
