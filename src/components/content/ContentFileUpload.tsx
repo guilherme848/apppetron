@@ -57,41 +57,50 @@ export function ContentFileUpload({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Max 20MB
-    if (file.size > 20 * 1024 * 1024) {
-      toast.error('Arquivo muito grande. Máximo 20MB.');
+    // Max 50MB
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error('Arquivo muito grande. Máximo 50MB.');
       return;
     }
 
     setUploading(true);
     const storagePath = `posts/${postId}/${context}/${Date.now()}-${file.name}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from('content-production')
-      .upload(storagePath, file);
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from('content-production')
+        .upload(storagePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+        });
 
-    if (uploadError) {
-      console.error('Upload error:', uploadError);
-      toast.error('Erro ao fazer upload do arquivo');
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        toast.error('Erro ao fazer upload do arquivo. Verifique o tamanho e tente novamente.');
+        setUploading(false);
+        return;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('content-production')
+        .getPublicUrl(storagePath);
+
+      await onFileUploaded({
+        file_name: file.name,
+        storage_path: storagePath,
+        file_size: file.size,
+        file_type: file.type,
+        public_url: urlData.publicUrl,
+      });
+
+      toast.success('Arquivo enviado com sucesso');
+    } catch (err) {
+      console.error('Upload exception:', err);
+      toast.error('Erro inesperado ao enviar arquivo. Tente novamente.');
+    } finally {
       setUploading(false);
-      return;
+      if (inputRef.current) inputRef.current.value = '';
     }
-
-    const { data: urlData } = supabase.storage
-      .from('content-production')
-      .getPublicUrl(storagePath);
-
-    await onFileUploaded({
-      file_name: file.name,
-      storage_path: storagePath,
-      file_size: file.size,
-      file_type: file.type,
-      public_url: urlData.publicUrl,
-    });
-
-    toast.success('Arquivo enviado com sucesso');
-    setUploading(false);
-    if (inputRef.current) inputRef.current.value = '';
   };
 
   const handleDelete = async (fileId: string, storagePath: string) => {
@@ -196,7 +205,7 @@ export function ContentFileUpload({
           {uploading ? 'Enviando...' : 'Enviar Arquivo'}
         </Button>
         <span className="text-xs text-muted-foreground">
-          Máximo 20MB por arquivo
+          Máximo 50MB por arquivo
         </span>
       </div>
 
