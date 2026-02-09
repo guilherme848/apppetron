@@ -57,11 +57,7 @@ export function ContentFileUpload({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Max 50MB
-    if (file.size > 50 * 1024 * 1024) {
-      toast.error('Arquivo muito grande. Máximo 50MB.');
-      return;
-    }
+    // No file size limit
 
     setUploading(true);
     const storagePath = `posts/${postId}/${context}/${Date.now()}-${file.name}`;
@@ -204,9 +200,6 @@ export function ContentFileUpload({
           )}
           {uploading ? 'Enviando...' : 'Enviar Arquivo'}
         </Button>
-        <span className="text-xs text-muted-foreground">
-          Máximo 50MB por arquivo
-        </span>
       </div>
 
       {files.length === 0 ? (
