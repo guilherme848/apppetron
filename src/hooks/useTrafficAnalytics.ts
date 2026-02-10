@@ -191,6 +191,21 @@ export function useTrafficAnalytics() {
     }
   }, []);
 
+  // Keys in daily metrics_json that are raw/summable (not ratios)
+  const summableKeys = useMemo(() => {
+    const simpleMetricSlugs = new Set(
+      metrics.filter(m => m.metric_type === 'simple').map(m => m.slug)
+    );
+    // Also include known raw keys that might not be in catalog but are summable
+    const knownRawKeys = new Set([
+      'spend', 'impressions', 'reach', 'clicks', 'link_clicks',
+      'leads', 'conversions', 'purchases', 'purchase_value',
+      'engagement', 'page_engagement', 'profile_visits',
+      'whatsapp_clicks', 'whatsapp_conversations', 'messaging_replies',
+    ]);
+    return new Set([...simpleMetricSlugs, ...knownRawKeys]);
+  }, [metrics]);
+
   // Aggregate metrics for an account over the period
   const aggregateAccountMetrics = useCallback((
     adAccountId: string,
@@ -201,17 +216,17 @@ export function useTrafficAnalytics() {
 
     const aggregated: Record<string, number> = {};
     
-    // Sum all simple metrics
+    // Only sum raw/base metrics, skip pre-calculated ratios (cpm, cpc, ctr, cost_per_message, etc.)
     for (const daily of accountMetrics) {
       for (const [key, value] of Object.entries(daily.metrics_json)) {
-        if (typeof value === 'number') {
+        if (typeof value === 'number' && summableKeys.has(key)) {
           aggregated[key] = (aggregated[key] || 0) + value;
         }
       }
     }
 
     return aggregated;
-  }, [dailyMetrics]);
+  }, [dailyMetrics, summableKeys]);
 
   // Determine health status based on targets or score
   const getHealthStatus = useCallback((
