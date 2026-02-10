@@ -94,7 +94,8 @@ export function MultiFileUpload({
       f.id === id ? { ...f, status: 'uploading' as const, progress: 0 } : f
     ));
 
-    const storagePath = `posts/${postId}/${context}/${Date.now()}-${file.name}`;
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const storagePath = `posts/${postId}/${context}/${Date.now()}-${safeName}`;
 
     try {
       const { error: uploadError } = await supabase.storage
@@ -146,14 +147,8 @@ export function MultiFileUpload({
     ];
 
     const newUploadingFiles: UploadingFile[] = [];
-    const errors: string[] = [];
 
     for (const file of fileArray) {
-      // Check file size
-      if (file.size > maxFileSize) {
-        errors.push(`${file.name}: arquivo muito grande (máx. ${maxFileSizeMb}MB)`);
-        continue;
-      }
 
       // Generate unique name if duplicate
       const uniqueName = generateUniqueFileName(file.name, existingNames);
@@ -172,9 +167,6 @@ export function MultiFileUpload({
       });
     }
 
-    if (errors.length > 0) {
-      toast.error(errors.join('\n'));
-    }
 
     if (newUploadingFiles.length === 0) return;
 
@@ -184,9 +176,8 @@ export function MultiFileUpload({
     // Start uploads in parallel
     await Promise.all(newUploadingFiles.map(uploadSingleFile));
 
-    const successCount = newUploadingFiles.length - errors.length;
-    if (successCount > 0) {
-      toast.success(`${successCount} arquivo${successCount > 1 ? 's' : ''} enviado${successCount > 1 ? 's' : ''}`);
+    if (newUploadingFiles.length > 0) {
+      toast.success(`${newUploadingFiles.length} arquivo${newUploadingFiles.length > 1 ? 's' : ''} enviado${newUploadingFiles.length > 1 ? 's' : ''}`);
     }
   }, [files, uploadingFiles, maxFileSize, maxFileSizeMb, generateUniqueFileName, uploadSingleFile]);
 
@@ -333,7 +324,7 @@ export function MultiFileUpload({
           {isDragOver ? 'Solte os arquivos aqui' : 'Arraste arquivos ou clique para selecionar'}
         </p>
         <p className="text-xs text-muted-foreground mt-1">
-          Máximo {maxFileSizeMb}MB por arquivo • Múltiplos arquivos permitidos
+          Múltiplos arquivos permitidos
         </p>
       </div>
 
