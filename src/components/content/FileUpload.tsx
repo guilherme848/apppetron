@@ -41,7 +41,8 @@ export function FileUpload({ files, folder, onFileUploaded, onFileDeleted, clien
     if (!file) return;
 
     setUploading(true);
-    const filePath = `${folder}/${Date.now()}-${file.name}`;
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const filePath = `${folder}/${Date.now()}-${safeName}`;
 
     const { error: uploadError } = await supabase.storage
       .from('content-production')
