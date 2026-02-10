@@ -60,7 +60,8 @@ export function ContentFileUpload({
     // No file size limit
 
     setUploading(true);
-    const storagePath = `posts/${postId}/${context}/${Date.now()}-${file.name}`;
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const storagePath = `posts/${postId}/${context}/${Date.now()}-${safeName}`;
 
     try {
       const { error: uploadError } = await supabase.storage
