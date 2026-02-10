@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Upload, X, FileIcon, Loader2, ExternalLink, Download, FolderArchive } from 'lucide-react';
+import { Upload, X, FileIcon, Loader2, Eye, Download, FolderArchive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -13,6 +13,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { downloadFile, downloadFilesAsZip, formatDateForFileName } from '@/lib/fileDownload';
+import { FilePreviewDialog } from '@/components/content/FilePreviewDialog';
 
 interface ContentFile {
   id: string;
@@ -51,6 +52,7 @@ export function ContentFileUpload({
   const [deleting, setDeleting] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [downloadingAll, setDownloadingAll] = useState(false);
+  const [previewFile, setPreviewFile] = useState<ContentFile | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -266,19 +268,13 @@ export function ContentFileUpload({
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
-                            asChild
+                            onClick={() => setPreviewFile(file)}
                           >
-                            <a
-                              href={getFileUrl(file)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                            </a>
+                            <Eye className="h-4 w-4" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Abrir arquivo</p>
+                          <p>Pré-visualizar</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -329,6 +325,15 @@ export function ContentFileUpload({
             })}
           </div>
         </div>
+      )}
+      {previewFile && (
+        <FilePreviewDialog
+          open={!!previewFile}
+          onOpenChange={(open) => { if (!open) setPreviewFile(null); }}
+          fileUrl={getFileUrl(previewFile)}
+          fileName={previewFile.file_name}
+          fileType={previewFile.file_type}
+        />
       )}
     </div>
   );

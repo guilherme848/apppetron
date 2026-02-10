@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { Upload, X, FileIcon, Loader2, ExternalLink, Download, AlertCircle, RotateCcw, FolderArchive } from 'lucide-react';
+import { Upload, X, FileIcon, Loader2, Eye, Download, AlertCircle, RotateCcw, FolderArchive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -14,6 +14,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { downloadFile, downloadFilesAsZip, formatDateForFileName } from '@/lib/fileDownload';
+import { FilePreviewDialog } from '@/components/content/FilePreviewDialog';
 
 interface ContentFile {
   id: string;
@@ -63,6 +64,7 @@ export function MultiFileUpload({
   const [isDragOver, setIsDragOver] = useState(false);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [downloadingAll, setDownloadingAll] = useState(false);
+  const [previewFile, setPreviewFile] = useState<ContentFile | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const maxFileSize = maxFileSizeMb * 1024 * 1024;
@@ -443,22 +445,24 @@ export function MultiFileUpload({
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    asChild
-                  >
-                    <a
-                      href={getFileUrl(file)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title="Abrir arquivo"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => setPreviewFile(file)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Pré-visualizar</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -506,6 +510,15 @@ export function MultiFileUpload({
           })}
           </div>
         </div>
+      )}
+      {previewFile && (
+        <FilePreviewDialog
+          open={!!previewFile}
+          onOpenChange={(open) => { if (!open) setPreviewFile(null); }}
+          fileUrl={getFileUrl(previewFile)}
+          fileName={previewFile.file_name}
+          fileType={previewFile.file_type}
+        />
       )}
     </div>
   );
