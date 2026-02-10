@@ -218,9 +218,12 @@ export function useTrafficAnalytics() {
     
     // Only sum raw/base metrics, skip pre-calculated ratios (cpm, cpc, ctr, cost_per_message, etc.)
     for (const daily of accountMetrics) {
-      for (const [key, value] of Object.entries(daily.metrics_json)) {
-        if (typeof value === 'number' && summableKeys.has(key)) {
-          aggregated[key] = (aggregated[key] || 0) + value;
+      const json = daily.metrics_json;
+      if (json && typeof json === 'object' && !Array.isArray(json)) {
+        for (const [key, value] of Object.entries(json)) {
+          if (typeof value === 'number' && summableKeys.has(key)) {
+            aggregated[key] = (aggregated[key] || 0) + value;
+          }
         }
       }
     }
