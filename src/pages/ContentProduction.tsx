@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Loader2, Archive, RotateCcw, LayoutGrid } from 'lucide-react';
+import { Plus, Loader2, Archive, RotateCcw, LayoutGrid, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useContentProduction } from '@/contexts/ContentProductionContext';
@@ -10,6 +10,7 @@ import { PostForm } from '@/components/content/PostForm';
 import { BATCH_STATUS_OPTIONS, BatchStatus, ContentBatch } from '@/types/contentProduction';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { useJobRoles } from '@/hooks/useJobRoles';
 import { useStageResponsibilities } from '@/hooks/useStageResponsibilities';
@@ -24,6 +25,7 @@ export default function ContentProduction() {
   const [selectedBatchId, setSelectedBatchId] = useState<string>('');
   const [activeTab, setActiveTab] = useState<BatchStatus>('planning');
   const [showArchived, setShowArchived] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [archivedBatches, setArchivedBatches] = useState<ContentBatch[]>([]);
   const [loadingArchived, setLoadingArchived] = useState(false);
 
@@ -80,6 +82,15 @@ export default function ContentProduction() {
     }
   };
 
+  const filteredBatches = useMemo(() => {
+    if (!searchTerm.trim()) return batches;
+    const term = searchTerm.toLowerCase();
+    return batches.filter((batch) => {
+      const clientName = getClientName(batch.client_id).toLowerCase();
+      return clientName.includes(term);
+    });
+  }, [batches, searchTerm, accounts]);
+
   const groupedBatches = useMemo(() => {
     const groups: Record<BatchStatus, typeof batches> = {
       planning: [],
@@ -91,13 +102,13 @@ export default function ContentProduction() {
       changes: [],
       scheduling: [],
     };
-    batches.forEach((batch) => {
+    filteredBatches.forEach((batch) => {
       if (groups[batch.status]) {
         groups[batch.status].push(batch);
       }
     });
     return groups;
-  }, [batches]);
+  }, [filteredBatches]);
 
   const getPostCount = (batchId: string) => posts.filter((p) => p.batch_id === batchId).length;
   const getDoneCount = (batchId: string) => posts.filter((p) => p.batch_id === batchId && p.status === 'done').length;
@@ -186,6 +197,16 @@ export default function ContentProduction() {
             {showArchived ? 'Ocultar arquivados' : `Ver arquivados${archivedBatches.length > 0 ? ` (${archivedBatches.length})` : ''}`}
           </Button>
         </div>
+      </div>
+
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Buscar por cliente..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-9"
+        />
       </div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as BatchStatus)}>
