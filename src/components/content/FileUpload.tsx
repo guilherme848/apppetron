@@ -39,32 +39,39 @@ export function FileUpload({ files, folder, onFileUploaded, onFileDeleted, clien
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const selectedFiles = e.target.files;
+    if (!selectedFiles || selectedFiles.length === 0) return;
 
     setUploading(true);
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const filePath = `${folder}/${Date.now()}-${safeName}`;
+    const fileArray = Array.from(selectedFiles);
+    let successCount = 0;
 
-    const { error: uploadError } = await supabase.storage
-      .from('content-production')
-      .upload(filePath, file);
+    await Promise.all(fileArray.map(async (file) => {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const filePath = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 6)}-${safeName}`;
 
-    if (uploadError) {
-      console.error('Upload error:', uploadError);
-      toast.error('Erro ao fazer upload do arquivo');
-      setUploading(false);
-      return;
+      const { error: uploadError } = await supabase.storage
+        .from('content-production')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        toast.error(`Erro ao enviar ${file.name}`);
+        return;
+      }
+
+      await onFileUploaded({
+        file_name: file.name,
+        file_path: filePath,
+        file_size: file.size,
+        file_type: file.type,
+      });
+      successCount++;
+    }));
+
+    if (successCount > 0) {
+      toast.success(`${successCount} arquivo${successCount > 1 ? 's' : ''} enviado${successCount > 1 ? 's' : ''}`);
     }
-
-    await onFileUploaded({
-      file_name: file.name,
-      file_path: filePath,
-      file_size: file.size,
-      file_type: file.type,
-    });
-
-    toast.success('Arquivo enviado com sucesso');
     setUploading(false);
     if (inputRef.current) inputRef.current.value = '';
   };
@@ -143,6 +150,7 @@ export function FileUpload({ files, folder, onFileUploaded, onFileDeleted, clien
         <input
           ref={inputRef}
           type="file"
+          multiple
           onChange={handleUpload}
           className="hidden"
           id={`file-upload-${folder}`}
@@ -159,7 +167,7 @@ export function FileUpload({ files, folder, onFileUploaded, onFileDeleted, clien
           ) : (
             <Upload className="h-4 w-4 mr-2" />
           )}
-          {uploading ? 'Enviando...' : 'Anexar Arquivo'}
+          {uploading ? 'Enviando...' : 'Anexar Arquivos'}
         </Button>
       </div>
 
