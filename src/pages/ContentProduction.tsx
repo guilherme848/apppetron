@@ -82,6 +82,13 @@ export default function ContentProduction() {
     }
   };
 
+  const getPostCount = (batchId: string) => posts.filter((p) => p.batch_id === batchId).length;
+  const getDoneCount = (batchId: string) => posts.filter((p) => p.batch_id === batchId && p.status === 'done').length;
+  const getClientName = (clientId: string | null) => {
+    if (!clientId) return 'Sem cliente';
+    return accounts.find((a) => a.id === clientId)?.name || 'Cliente desconhecido';
+  };
+
   const filteredBatches = useMemo(() => {
     if (!searchTerm.trim()) return batches;
     const term = searchTerm.toLowerCase();
@@ -109,13 +116,6 @@ export default function ContentProduction() {
     });
     return groups;
   }, [filteredBatches]);
-
-  const getPostCount = (batchId: string) => posts.filter((p) => p.batch_id === batchId).length;
-  const getDoneCount = (batchId: string) => posts.filter((p) => p.batch_id === batchId && p.status === 'done').length;
-  const getClientName = (clientId: string | null) => {
-    if (!clientId) return 'Sem cliente';
-    return accounts.find((a) => a.id === clientId)?.name || 'Cliente desconhecido';
-  };
 
   const isOverdue = (batch: ContentBatch) => {
     if (!batch.planning_due_date || batch.archived) return false;
