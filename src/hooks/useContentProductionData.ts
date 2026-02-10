@@ -139,9 +139,9 @@ export function useContentProductionData() {
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    await Promise.all([fetchBatches(), fetchAccounts()]);
+    await Promise.all([fetchBatches(), fetchAccounts(), fetchPosts()]);
     setLoading(false);
-  }, [fetchBatches, fetchAccounts]);
+  }, [fetchBatches, fetchAccounts, fetchPosts]);
 
   useEffect(() => {
     fetchAll();
