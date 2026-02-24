@@ -1,14 +1,20 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface SimpleAccount {
   id: string;
   name: string;
+}
+
+interface ExistingBatch {
+  client_id: string | null;
+  month_ref: string;
 }
 
 interface BatchFormProps {
@@ -18,6 +24,7 @@ interface BatchFormProps {
   onSubmit: (data: { client_id: string | null; month_ref: string }) => Promise<any>;
   hideClientField?: boolean;
   title?: string;
+  existingBatches?: ExistingBatch[];
 }
 
 export function BatchForm({ 
@@ -27,13 +34,18 @@ export function BatchForm({
   onSubmit,
   hideClientField = false,
   title = 'Novo Pacote do Mês',
+  existingBatches = [],
 }: BatchFormProps) {
   const [clientId, setClientId] = useState('');
   const [monthRef, setMonthRef] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const hasDuplicate = useMemo(() => {
+    if (!clientId || !monthRef) return false;
+    return existingBatches.some(b => b.client_id === clientId && b.month_ref === monthRef);
+  }, [clientId, monthRef, existingBatches]);
+
   const handleSubmit = async () => {
-    // Only require client if not hidden
     if (!hideClientField && !clientId) {
       toast.error('Selecione um cliente');
       return;
@@ -44,7 +56,6 @@ export function BatchForm({
       return;
     }
 
-    // Validate month format
     if (!/^\d{4}-\d{2}$/.test(monthRef)) {
       toast.error('Formato do mês inválido. Use YYYY-MM');
       return;
@@ -57,13 +68,8 @@ export function BatchForm({
         month_ref: monthRef 
       });
       
-      // Handle different return types
       if (result && result.error) {
-        if (result.error.code === '23505') {
-          toast.error('Já existe um pacote para este mês');
-        } else {
-          toast.error('Erro ao criar pacote');
-        }
+        toast.error('Erro ao criar pacote');
         return;
       }
 
@@ -111,6 +117,12 @@ export function BatchForm({
               onChange={(e) => setMonthRef(e.target.value)}
             />
           </div>
+          {hasDuplicate && (
+            <div className="flex items-center gap-2 rounded-md border border-yellow-500/50 bg-yellow-500/10 p-3 text-sm text-yellow-700 dark:text-yellow-400">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              <span>Já existe um planejamento para este cliente neste mês. Será criado um segundo pacote.</span>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
