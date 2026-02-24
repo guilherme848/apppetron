@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Loader2, Upload, Trash2, FileIcon, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Loader2, Upload, Trash2, FileIcon, ExternalLink, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,8 @@ import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { RichTextEditor } from '@/components/content/RichTextEditor';
 import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
 import { supabase } from '@/integrations/supabase/client';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 import {
   EXTRA_REQUEST_STATUS_LABELS,
   EXTRA_REQUEST_PRIORITY_LABELS,
@@ -53,6 +55,7 @@ export default function ExtraRequestDetail() {
   const [assigneeId, setAssigneeId] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [downloadingAll, setDownloadingAll] = useState(false);
 
   // Populate form when request loads
   useEffect(() => {
@@ -330,8 +333,41 @@ export default function ExtraRequestDetail() {
         <TabsContent value="files">
           <Card>
             <CardHeader>
-              <CardTitle>Anexos</CardTitle>
-              <CardDescription>Arquivos relacionados a esta solicitação</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Anexos</CardTitle>
+                  <CardDescription>Arquivos relacionados a esta solicitação</CardDescription>
+                </div>
+                {files.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={downloadingAll}
+                    onClick={async () => {
+                      setDownloadingAll(true);
+                      try {
+                        const zip = new JSZip();
+                        for (const file of files) {
+                          const { data, error } = await supabase.storage
+                            .from('content-production')
+                            .download(file.storage_path);
+                          if (data && !error) {
+                            zip.file(file.file_name, data);
+                          }
+                        }
+                        const blob = await zip.generateAsync({ type: 'blob' });
+                        saveAs(blob, `anexos-${request.title || 'solicitacao'}.zip`);
+                      } catch {
+                        toast({ title: 'Erro ao baixar arquivos', variant: 'destructive' });
+                      }
+                      setDownloadingAll(false);
+                    }}
+                  >
+                    {downloadingAll ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Download className="h-4 w-4 mr-2" />}
+                    Baixar todos
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
