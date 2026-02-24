@@ -126,15 +126,30 @@ export function useContentProductionData() {
       .select('*')
       .order('sort_order', { ascending: true })
       .order('created_at', { ascending: true });
+
     if (batchId) {
       query = query.eq('batch_id', batchId);
     }
+
     const { data, error } = await query;
     if (error) {
       console.error('Error fetching posts:', error);
-    } else {
-      setPosts((data || []).map(mapPost));
+      return;
     }
+
+    const mappedPosts = (data || []).map(mapPost);
+
+    // IMPORTANT: when fetching a single batch, do not wipe posts from other batches
+    if (batchId) {
+      setPosts((prev) => {
+        const otherBatchesPosts = prev.filter((p) => p.batch_id !== batchId);
+        return [...otherBatchesPosts, ...mappedPosts];
+      });
+      return;
+    }
+
+    // Full refresh (all batches)
+    setPosts(mappedPosts);
   }, []);
 
   const fetchAll = useCallback(async () => {
