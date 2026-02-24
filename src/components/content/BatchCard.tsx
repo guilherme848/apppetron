@@ -15,6 +15,7 @@ interface BatchCardProps {
   stageRoleName: string | null;
   isVariableStage: boolean;
   isOverdue: boolean;
+  isDuplicate?: boolean;
   onView: (id: string) => void;
   onStatusChange: (id: string, status: BatchStatus) => void;
   onAddPost: (batchId: string) => void;
@@ -28,6 +29,7 @@ export function BatchCard({
   stageRoleName, 
   isVariableStage, 
   isOverdue,
+  isDuplicate = false,
   onView, 
   onStatusChange, 
   onAddPost 
@@ -54,7 +56,14 @@ export function BatchCard({
                 </Badge>
               )}
             </div>
-            <p className="text-sm text-muted-foreground">{formatMonthRef(batch.month_ref)}</p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-sm text-muted-foreground">{formatMonthRef(batch.month_ref)}</p>
+              {isDuplicate && (
+                <Badge variant="attention" className="text-[10px] px-1.5 py-0">
+                  2+ pacotes
+                </Badge>
+              )}
+            </div>
           </div>
           <Badge variant="info">{doneCount}/{postCount}</Badge>
         </div>

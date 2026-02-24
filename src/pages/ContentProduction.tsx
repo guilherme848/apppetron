@@ -89,6 +89,20 @@ export default function ContentProduction() {
     return accounts.find((a) => a.id === clientId)?.name || 'Cliente desconhecido';
   };
 
+  // Track which client+month combos have duplicates
+  const duplicateKeys = useMemo(() => {
+    const counts = new Map<string, number>();
+    batches.forEach(b => {
+      const key = `${b.client_id}||${b.month_ref}`;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    });
+    const dupes = new Set<string>();
+    counts.forEach((count, key) => { if (count > 1) dupes.add(key); });
+    return dupes;
+  }, [batches]);
+
+  const isDuplicate = (batch: ContentBatch) => duplicateKeys.has(`${batch.client_id}||${batch.month_ref}`);
+
   const filteredBatches = useMemo(() => {
     if (!searchTerm.trim()) return batches;
     const term = searchTerm.toLowerCase();
@@ -239,6 +253,7 @@ export default function ContentProduction() {
                     stageRoleName={getStageRoleName(batch.status)}
                     isVariableStage={VARIABLE_STAGES.includes(batch.status)}
                     isOverdue={isOverdue(batch)}
+                    isDuplicate={isDuplicate(batch)}
                     onView={(id) => navigate(`/content/production/${id}`)}
                     onStatusChange={handleStatusChange}
                     onAddPost={handleAddPost}
@@ -301,6 +316,7 @@ export default function ContentProduction() {
         onOpenChange={setBatchFormOpen}
         accounts={accounts}
         onSubmit={addBatch}
+        existingBatches={batches.map(b => ({ client_id: b.client_id, month_ref: b.month_ref }))}
       />
 
       <PostForm
