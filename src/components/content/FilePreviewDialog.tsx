@@ -1,5 +1,5 @@
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { ExternalLink } from 'lucide-react';
+import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { ExternalLink, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface FilePreviewDialogProps {
@@ -31,14 +31,19 @@ export function FilePreviewDialog({ open, onOpenChange, fileUrl, fileName, fileT
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] flex flex-col p-0 gap-0">
-        <div className="flex items-center gap-2 px-4 py-3 border-b pr-12">
+      <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] flex flex-col p-0 gap-0 [&>button]:hidden">
+        <div className="flex items-center gap-2 px-4 py-3 border-b">
           <DialogTitle className="text-sm font-medium truncate flex-1">{fileName}</DialogTitle>
           <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" asChild>
             <a href={fileUrl} target="_blank" rel="noopener noreferrer" title="Abrir em nova aba">
               <ExternalLink className="h-4 w-4" />
             </a>
           </Button>
+          <DialogClose asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" title="Fechar">
+              <X className="h-4 w-4" />
+            </Button>
+          </DialogClose>
         </div>
         <div className="flex-1 overflow-auto flex items-center justify-center p-4 min-h-0">
           {previewType === 'image' && (
