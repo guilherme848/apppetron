@@ -114,6 +114,7 @@ export default function MarketingBatchDetail() {
       started_at: p.started_at,
       completed_at: p.completed_at,
       sort_order: p.sort_order,
+      is_drawer: p.is_drawer ?? false,
       created_at: p.created_at,
       updated_at: p.updated_at,
     })));

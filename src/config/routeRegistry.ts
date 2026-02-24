@@ -31,6 +31,7 @@ import {
   FilePen,
   Target,
   Megaphone,
+  Archive,
 } from 'lucide-react';
 
 // Action types for permissions
@@ -242,6 +243,16 @@ export const routeRegistry: RouteDefinition[] = [
     hideInMenu: true,
     parentId: 'content.extra_requests',
     order: 93,
+  },
+  {
+    id: 'content.drawer_posts',
+    path: '/content/drawer-posts',
+    label: 'Posts Gaveta',
+    category: CATEGORIES.PRODUCTION,
+    module: MODULES.CONTENT,
+    permissions: ['view'],
+    icon: Archive,
+    order: 3,
   },
   {
     id: 'content.legacy',

@@ -17,7 +17,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Eye, Trash2, ChevronUp, ChevronDown, Lock, AlertCircle, ExternalLink, MessageSquareWarning, CheckCircle2 } from 'lucide-react';
+import { GripVertical, Eye, Trash2, ChevronUp, ChevronDown, Lock, AlertCircle, ExternalLink, MessageSquareWarning, CheckCircle2, Archive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -194,6 +194,21 @@ function SortableRow({
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>{doneCount} alteração(ões) concluída(s) - revisar</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          {post.is_drawer && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="flex items-center gap-0.5 text-[10px] h-5">
+                    <Archive className="h-3 w-3" />
+                    Gaveta
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Post reservado para uso futuro</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

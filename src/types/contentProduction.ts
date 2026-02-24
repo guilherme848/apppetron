@@ -66,6 +66,7 @@ export interface ContentPost {
   started_at: string | null;
   completed_at: string | null;
   sort_order: number;
+  is_drawer: boolean;
   created_at: string;
   updated_at: string;
 }
