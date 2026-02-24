@@ -81,7 +81,7 @@ const getChannelLabel = (value: string | null) =>
 const getFormatLabel = (value: string | null) => {
   const opt = FORMAT_OPTIONS.find((o) => o.value === value);
   if (!opt) return value || null;
-  return `${opt.icon} ${opt.label}`;
+  return opt.label;
 };
 const getStatusLabel = (value: string) =>
   POST_STATUS_OPTIONS.find((o) => o.value === value)?.label || value;

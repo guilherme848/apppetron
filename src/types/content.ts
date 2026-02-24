@@ -54,9 +54,9 @@ export const CHANNEL_OPTIONS = [
 ];
 
 export const FORMAT_OPTIONS = [
-  { value: 'reels', label: 'Reels', icon: '🎬' },
-  { value: 'carrossel', label: 'Carrossel', icon: '🖼️' },
-  { value: 'story', label: 'Story', icon: '📱' },
-  { value: 'post', label: 'Post', icon: '📸' },
-  { value: 'video', label: 'Vídeo', icon: '🎥' },
+  { value: 'reels', label: 'Reels' },
+  { value: 'carrossel', label: 'Carrossel' },
+  { value: 'story', label: 'Story' },
+  { value: 'post', label: 'Post' },
+  { value: 'video', label: 'Vídeo' },
 ];
