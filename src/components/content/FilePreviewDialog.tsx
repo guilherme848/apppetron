@@ -32,8 +32,8 @@ export function FilePreviewDialog({ open, onOpenChange, fileUrl, fileName, fileT
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] flex flex-col p-0 gap-0">
-        <div className="flex items-center justify-between px-4 py-3 border-b">
-          <DialogTitle className="text-sm font-medium truncate pr-4">{fileName}</DialogTitle>
+        <div className="flex items-center gap-2 px-4 py-3 border-b pr-12">
+          <DialogTitle className="text-sm font-medium truncate flex-1">{fileName}</DialogTitle>
           <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" asChild>
             <a href={fileUrl} target="_blank" rel="noopener noreferrer" title="Abrir em nova aba">
               <ExternalLink className="h-4 w-4" />
