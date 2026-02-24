@@ -22,6 +22,7 @@ export interface ExtraRequest {
   due_date: string | null;
   completed_at: string | null;
   created_at: string;
+  format: string | null;
   updated_at: string;
   // Joined fields
   client_name?: string;

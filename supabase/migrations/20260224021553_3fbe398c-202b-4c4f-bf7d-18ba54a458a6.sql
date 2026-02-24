@@ -1,0 +1,1 @@
+ALTER TABLE public.content_extra_requests ADD COLUMN format TEXT NULL;
