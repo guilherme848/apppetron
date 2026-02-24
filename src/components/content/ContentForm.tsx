@@ -157,7 +157,7 @@ export function ContentForm({ open, onClose, onSubmit, content, accounts }: Cont
                   <SelectItem value="">Nenhum</SelectItem>
                   {FORMAT_OPTIONS.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
+                      {opt.icon} {opt.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
