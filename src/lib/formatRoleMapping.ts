@@ -5,10 +5,10 @@
 import { RoleKey } from './accountTeam';
 
 // Formats that map to designer
-export const DESIGNER_FORMATS = ['post', 'carrossel', 'carousel', 'story', 'artigo'];
+export const DESIGNER_FORMATS = ['post', 'carrossel', 'carousel', 'story'];
 
 // Formats that map to videomaker
-export const VIDEOMAKER_FORMATS = ['video', 'vídeo', 'reels', 'shorts'];
+export const VIDEOMAKER_FORMATS = ['video', 'vídeo', 'reels'];
 
 // Stages where auto-assignment by format applies
 export const FORMAT_ASSIGNMENT_STAGES = ['production', 'changes'];
