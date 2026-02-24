@@ -21,6 +21,7 @@ import {
   ExtraRequestedByRole,
   ExtraResponsibleRole,
 } from '@/types/extraRequests';
+import { FORMAT_OPTIONS } from '@/types/contentProduction';
 
 export default function ExtraRequestNew() {
   const navigate = useNavigate();
@@ -37,6 +38,7 @@ export default function ExtraRequestNew() {
   const [requestedByRoleKey, setRequestedByRoleKey] = useState<ExtraRequestedByRole>('support');
   const [requestedByMemberId, setRequestedByMemberId] = useState<string>('');
   const [responsibleRoleKey, setResponsibleRoleKey] = useState<RoleKey>('social');
+  const [formatValue, setFormatValue] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [priority, setPriority] = useState<ExtraRequestPriority>('medium');
 
@@ -89,6 +91,7 @@ export default function ExtraRequestNew() {
       month_ref: '', // Will be set by hook
       title,
       request_rich: requestRich || null,
+      format: formatValue || null,
       status: 'open',
       priority,
       requested_by_member_id: requestedByMemberId || null,
@@ -240,7 +243,22 @@ export default function ExtraRequestNew() {
               </Alert>
             )}
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label>Formato</Label>
+                <Select value={formatValue || '_none_'} onValueChange={(v) => setFormatValue(v === '_none_' ? '' : v)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none_">Nenhum</SelectItem>
+                    {FORMAT_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="dueDate">Prazo</Label>
                 <Input

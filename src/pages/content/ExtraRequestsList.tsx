@@ -236,6 +236,7 @@ export default function ExtraRequestsList() {
               <TableRow>
                 <TableHead>Título</TableHead>
                 <TableHead>Cliente</TableHead>
+                <TableHead>Formato</TableHead>
                 <TableHead>Mês</TableHead>
                 <TableHead>Solicitante</TableHead>
                 <TableHead>Cargo Resp.</TableHead>
@@ -250,7 +251,7 @@ export default function ExtraRequestsList() {
             <TableBody>
               {filteredRequests.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
                     Nenhuma solicitação encontrada
                   </TableCell>
                 </TableRow>
@@ -263,6 +264,7 @@ export default function ExtraRequestsList() {
                       </Link>
                     </TableCell>
                     <TableCell>{r.client_name}</TableCell>
+                    <TableCell>{r.format || '-'}</TableCell>
                     <TableCell>{r.month_ref}</TableCell>
                     <TableCell>
                       <span className="text-xs text-muted-foreground">

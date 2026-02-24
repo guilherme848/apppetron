@@ -27,6 +27,7 @@ import {
   ExtraResponsibleRole,
   ROLE_KEY_TO_ACCOUNT_FIELD,
 } from '@/types/extraRequests';
+import { FORMAT_OPTIONS } from '@/types/contentProduction';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -44,6 +45,7 @@ export default function ExtraRequestDetail() {
 
   // Local state for form
   const [title, setTitle] = useState('');
+  const [formatValue, setFormatValue] = useState('');
   const [requestRich, setRequestRich] = useState('');
   const [status, setStatus] = useState<ExtraRequestStatus>('open');
   const [priority, setPriority] = useState<ExtraRequestPriority>('medium');
@@ -56,6 +58,7 @@ export default function ExtraRequestDetail() {
   useEffect(() => {
     if (request) {
       setTitle(request.title);
+      setFormatValue(request.format || '');
       setRequestRich(request.request_rich || '');
       setStatus(request.status);
       setPriority(request.priority);
@@ -206,7 +209,7 @@ export default function ExtraRequestDetail() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
                   <Label htmlFor="title">Título</Label>
                   <Input
@@ -215,6 +218,21 @@ export default function ExtraRequestDetail() {
                     onChange={(e) => { setTitle(e.target.value); queueChange({ title: e.target.value }); }}
                     onBlur={flush}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Formato</Label>
+                  <Select value={formatValue || '_none_'} onValueChange={(v) => { const val = v === '_none_' ? '' : v; setFormatValue(val); saveNow({ format: val || null }); }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none_">Nenhum</SelectItem>
+                      {FORMAT_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">

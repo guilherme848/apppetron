@@ -621,6 +621,7 @@ export type Database = {
           completed_at: string | null
           created_at: string
           due_date: string | null
+          format: string | null
           id: string
           month_ref: string
           priority: string
@@ -638,6 +639,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           due_date?: string | null
+          format?: string | null
           id?: string
           month_ref: string
           priority?: string
@@ -655,6 +657,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           due_date?: string | null
+          format?: string | null
           id?: string
           month_ref?: string
           priority?: string
