@@ -268,7 +268,7 @@ export default function ExtraRequestsList() {
                     <TableCell>
                       {r.format ? (() => {
                         const opt = FORMAT_OPTIONS.find(o => o.value === r.format);
-                        return opt ? `${opt.icon} ${opt.label}` : r.format;
+                        return opt ? opt.label : r.format;
                       })() : '-'}
                     </TableCell>
                     <TableCell>{r.month_ref}</TableCell>

@@ -151,7 +151,7 @@ export default function ContentPage() {
             <SelectItem value="all">Todos</SelectItem>
             {FORMAT_OPTIONS.map((opt) => (
               <SelectItem key={opt.value} value={opt.value}>
-                {opt.icon} {opt.label}
+                {opt.label}
               </SelectItem>
             ))}
           </SelectContent>

@@ -110,7 +110,7 @@ export function PostForm({ open, onOpenChange, batchId, post, onSubmit, onUpdate
                   <SelectItem value="_none_">Nenhum</SelectItem>
                   {FORMAT_OPTIONS.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
-                      {opt.icon} {opt.label}
+                      {opt.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

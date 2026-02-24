@@ -72,7 +72,7 @@ export default function ContentDetail() {
   const getFormatLabel = (format: string | null) => {
     if (!format) return '-';
     const opt = FORMAT_OPTIONS.find((f) => f.value === format);
-    return opt ? `${opt.icon} ${opt.label}` : format;
+    return opt ? opt.label : format;
   };
 
   const isOverdue = content.due_date && content.due_date < today && content.status !== 'published';
