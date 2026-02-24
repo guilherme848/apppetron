@@ -253,7 +253,7 @@ export default function ExtraRequestNew() {
                   <SelectContent>
                     <SelectItem value="_none_">Nenhum</SelectItem>
                     {FORMAT_OPTIONS.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                      <SelectItem key={o.value} value={o.value}>{o.icon} {o.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

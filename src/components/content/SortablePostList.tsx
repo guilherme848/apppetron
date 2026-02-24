@@ -78,8 +78,11 @@ interface SortableRowProps {
 
 const getChannelLabel = (value: string | null) =>
   CHANNEL_OPTIONS.find((o) => o.value === value)?.label || value || null;
-const getFormatLabel = (value: string | null) =>
-  FORMAT_OPTIONS.find((o) => o.value === value)?.label || value || null;
+const getFormatLabel = (value: string | null) => {
+  const opt = FORMAT_OPTIONS.find((o) => o.value === value);
+  if (!opt) return value || null;
+  return `${opt.icon} ${opt.label}`;
+};
 const getStatusLabel = (value: string) =>
   POST_STATUS_OPTIONS.find((o) => o.value === value)?.label || value;
 

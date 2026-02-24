@@ -26,6 +26,7 @@ import {
 } from '@/types/extraRequests';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { FORMAT_OPTIONS } from '@/types/contentProduction';
 
 export default function ExtraRequestsList() {
   const navigate = useNavigate();
@@ -264,7 +265,12 @@ export default function ExtraRequestsList() {
                       </Link>
                     </TableCell>
                     <TableCell>{r.client_name}</TableCell>
-                    <TableCell>{r.format || '-'}</TableCell>
+                    <TableCell>
+                      {r.format ? (() => {
+                        const opt = FORMAT_OPTIONS.find(o => o.value === r.format);
+                        return opt ? `${opt.icon} ${opt.label}` : r.format;
+                      })() : '-'}
+                    </TableCell>
                     <TableCell>{r.month_ref}</TableCell>
                     <TableCell>
                       <span className="text-xs text-muted-foreground">
