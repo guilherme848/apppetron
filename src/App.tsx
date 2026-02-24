@@ -29,6 +29,7 @@ import PostDetail from "./pages/PostDetail";
 import ExtraRequestsList from "./pages/content/ExtraRequestsList";
 import ExtraRequestNew from "./pages/content/ExtraRequestNew";
 import ExtraRequestDetail from "./pages/content/ExtraRequestDetail";
+import DrawerPostsPage from "./pages/content/DrawerPostsPage";
 import NotFound from "./pages/NotFound";
 
 // Profile pages
@@ -163,6 +164,7 @@ const App = () => (
                         <Route path="/content/extra-requests" element={<ExtraRequestsList />} />
                         <Route path="/content/extra-requests/new" element={<ExtraRequestNew />} />
                         <Route path="/content/extra-requests/:id" element={<ExtraRequestDetail />} />
+                        <Route path="/content/drawer-posts" element={<DrawerPostsPage />} />
 
                         {/* Traffic routes */}
                         <Route path="/traffic" element={<TrafficDashboard />} />

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2, Loader2, FileText, Paperclip, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Trash2, Loader2, FileText, Paperclip, AlertTriangle, Archive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -552,6 +552,29 @@ export default function PostDetail() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Drawer toggle */}
+              <div className="flex items-center justify-between rounded-md border p-3">
+                <div className="flex items-center gap-2">
+                  <Archive className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">Post Gaveta</p>
+                    <p className="text-xs text-muted-foreground">Reservar este post para uso futuro (ex: planejamento de dezembro)</p>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={post.is_drawer}
+                    onChange={(e) => {
+                      saveNow({ is_drawer: e.target.checked });
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div className="w-9 h-5 bg-muted rounded-full peer peer-checked:bg-primary transition-colors after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-background after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+                </label>
+              </div>
+
               <div className="space-y-2">
                 <Label>Cargo Responsável</Label>
                 <Select

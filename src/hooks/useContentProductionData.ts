@@ -48,6 +48,7 @@ const mapPost = (data: any): ContentPost => ({
   started_at: data.started_at,
   completed_at: data.completed_at,
   sort_order: data.sort_order ?? 0,
+  is_drawer: data.is_drawer ?? false,
   created_at: data.created_at,
   updated_at: data.updated_at,
 });

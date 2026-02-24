@@ -815,6 +815,7 @@ export type Database = {
           due_date: string | null
           format: string | null
           id: string
+          is_drawer: boolean
           item_type: string | null
           responsible_role_id: string | null
           responsible_role_key: string
@@ -839,6 +840,7 @@ export type Database = {
           due_date?: string | null
           format?: string | null
           id?: string
+          is_drawer?: boolean
           item_type?: string | null
           responsible_role_id?: string | null
           responsible_role_key?: string
@@ -863,6 +865,7 @@ export type Database = {
           due_date?: string | null
           format?: string | null
           id?: string
+          is_drawer?: boolean
           item_type?: string | null
           responsible_role_id?: string | null
           responsible_role_key?: string

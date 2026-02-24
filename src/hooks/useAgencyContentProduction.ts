@@ -70,6 +70,7 @@ export function useAgencyContentProduction() {
           started_at: p.started_at,
           completed_at: p.completed_at,
           sort_order: p.sort_order,
+          is_drawer: p.is_drawer ?? false,
           created_at: p.created_at,
           updated_at: p.updated_at,
         }));
@@ -199,6 +200,7 @@ export function useAgencyContentProduction() {
         started_at: data.started_at,
         completed_at: data.completed_at,
         sort_order: data.sort_order,
+        is_drawer: data.is_drawer ?? false,
         created_at: data.created_at,
         updated_at: data.updated_at,
       };
