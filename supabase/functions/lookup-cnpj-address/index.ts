@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -35,15 +36,38 @@ interface AddressResult {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
+    // --- Authentication check ---
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: 'Não autorizado' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(
+        JSON.stringify({ error: 'Não autorizado' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    // --- End authentication check ---
+
     const { cnpj } = await req.json();
 
-    // Validate CNPJ - must be 14 digits
     const cleanCnpj = cnpj?.replace(/\D/g, '');
     if (!cleanCnpj || cleanCnpj.length !== 14) {
       return new Response(
@@ -54,14 +78,9 @@ serve(async (req) => {
 
     console.log(`Looking up CNPJ: ${cleanCnpj}`);
 
-    // Try BrasilAPI first
     let address: AddressResult = {
-      cep: null,
-      state: null,
-      city: null,
-      neighborhood: null,
-      street: null,
-      complement: null,
+      cep: null, state: null, city: null,
+      neighborhood: null, street: null, complement: null,
     };
 
     try {
@@ -71,33 +90,17 @@ serve(async (req) => {
 
       if (cnpjResponse.ok) {
         const cnpjData: CnpjResponse = await cnpjResponse.json();
-        console.log('BrasilAPI CNPJ response:', JSON.stringify(cnpjData));
-
-        // Extract address from CNPJ data
-        if (cnpjData.cep) {
-          address.cep = cnpjData.cep.replace(/\D/g, '');
-        }
-        if (cnpjData.uf) {
-          address.state = cnpjData.uf;
-        }
-        if (cnpjData.municipio) {
-          address.city = cnpjData.municipio;
-        }
-        if (cnpjData.bairro) {
-          address.neighborhood = cnpjData.bairro;
-        }
-        if (cnpjData.logradouro) {
-          address.street = cnpjData.logradouro;
-        }
-        if (cnpjData.complemento) {
-          address.complement = cnpjData.complemento;
-        }
+        if (cnpjData.cep) address.cep = cnpjData.cep.replace(/\D/g, '');
+        if (cnpjData.uf) address.state = cnpjData.uf;
+        if (cnpjData.municipio) address.city = cnpjData.municipio;
+        if (cnpjData.bairro) address.neighborhood = cnpjData.bairro;
+        if (cnpjData.logradouro) address.street = cnpjData.logradouro;
+        if (cnpjData.complemento) address.complement = cnpjData.complemento;
       }
     } catch (cnpjError) {
       console.error('Error fetching from BrasilAPI CNPJ:', cnpjError);
     }
 
-    // If we have a CEP but missing other data, try ViaCEP for more complete info
     if (address.cep && (!address.street || !address.neighborhood)) {
       try {
         const cepClean = address.cep.replace(/\D/g, '');
@@ -105,25 +108,12 @@ serve(async (req) => {
         
         if (viaCepResponse.ok) {
           const viaCepData: ViaCepResponse = await viaCepResponse.json();
-          console.log('ViaCEP response:', JSON.stringify(viaCepData));
-
           if (!viaCepData.erro) {
-            // Only fill in missing fields
-            if (!address.state && viaCepData.uf) {
-              address.state = viaCepData.uf;
-            }
-            if (!address.city && viaCepData.localidade) {
-              address.city = viaCepData.localidade;
-            }
-            if (!address.neighborhood && viaCepData.bairro) {
-              address.neighborhood = viaCepData.bairro;
-            }
-            if (!address.street && viaCepData.logradouro) {
-              address.street = viaCepData.logradouro;
-            }
-            if (!address.complement && viaCepData.complemento) {
-              address.complement = viaCepData.complemento;
-            }
+            if (!address.state && viaCepData.uf) address.state = viaCepData.uf;
+            if (!address.city && viaCepData.localidade) address.city = viaCepData.localidade;
+            if (!address.neighborhood && viaCepData.bairro) address.neighborhood = viaCepData.bairro;
+            if (!address.street && viaCepData.logradouro) address.street = viaCepData.logradouro;
+            if (!address.complement && viaCepData.complemento) address.complement = viaCepData.complemento;
           }
         }
       } catch (viaCepError) {
@@ -131,23 +121,16 @@ serve(async (req) => {
       }
     }
 
-    // Format CEP with mask if present
     if (address.cep && address.cep.length === 8) {
       address.cep = `${address.cep.slice(0, 5)}-${address.cep.slice(5)}`;
     }
 
-    console.log('Final address result:', JSON.stringify(address));
-
-    // Check if we found any address data
     const hasAddressData = address.cep || address.state || address.city || 
-                           address.neighborhood || address.street;
+                            address.neighborhood || address.street;
 
     if (!hasAddressData) {
       return new Response(
-        JSON.stringify({ 
-          error: 'Não foi possível localizar endereço para este CNPJ',
-          address: null
-        }),
+        JSON.stringify({ error: 'Não foi possível localizar endereço para este CNPJ', address: null }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

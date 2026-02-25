@@ -32,26 +32,15 @@ interface AIAnswer {
 
 function detectRefusalLikeText(content: string): boolean {
   const refusalIndicators = [
-    "i cannot",
-    "i can't",
-    "i dont have the ability",
-    "i don't have the ability",
-    "cannot complete this request",
-    "i'm unable to",
-    "as a language model",
-    "my limitations",
-    "i apologize",
-    "não posso",
-    "não consigo",
-    "não tenho como",
+    "i cannot", "i can't", "i dont have the ability", "i don't have the ability",
+    "cannot complete this request", "i'm unable to", "as a language model",
+    "my limitations", "i apologize", "não posso", "não consigo", "não tenho como",
   ];
   const lowered = content.toLowerCase();
   return refusalIndicators.some((i) => lowered.includes(i));
 }
 
 function coerceMessageContent(message: any): string {
-  // Chat Completions usually returns { content: string }, but some gateways/models may return
-  // content as array parts: [{ type: "text", text: "..." }] or similar.
   const c = message?.content;
   if (typeof c === "string") return c;
   if (Array.isArray(c)) {
@@ -69,13 +58,11 @@ function coerceMessageContent(message: any): string {
 }
 
 function extractJsonFromResponse(response: string): unknown {
-  // 1) Strip markdown fences
   let cleaned = response
     .replace(/```json\s*/gi, "")
     .replace(/```\s*/g, "")
     .trim();
 
-  // 2) Locate JSON object boundaries
   const jsonStart = cleaned.indexOf("{");
   const jsonEnd = cleaned.lastIndexOf("}");
   if (jsonStart === -1 || jsonEnd === -1) {
@@ -86,7 +73,6 @@ function extractJsonFromResponse(response: string): unknown {
   }
   cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
 
-  // 3) Parse, then repair common issues and retry
   try {
     return JSON.parse(cleaned);
   } catch {
@@ -108,12 +94,36 @@ function extractJsonFromResponse(response: string): unknown {
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
+    // --- Authentication check ---
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Não autorizado" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(
+        JSON.stringify({ error: "Não autorizado" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    // --- End authentication check ---
+
     const { transcript_text, questions, current_answers } = await req.json();
 
     if (!transcript_text || !questions || questions.length === 0) {
@@ -128,7 +138,6 @@ Deno.serve(async (req) => {
       const currentAnswer = current_answers?.find(
         (a: CurrentAnswer) => a.question_id === q.id
       );
-      // Consider unanswered if no text and no value_json
       const hasText = currentAnswer?.answer_text?.trim();
       const hasValue = currentAnswer?.answer_value_json !== null && currentAnswer?.answer_value_json !== undefined;
       return !hasText && !hasValue;
@@ -141,7 +150,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Build the prompt
     const questionsForPrompt = unansweredQuestions.map((q: QuestionInput) => ({
       id: q.id,
       answer_key: q.answer_key,
@@ -190,7 +198,6 @@ ${JSON.stringify(questionsForPrompt, null, 2)}
 Transcrição da reunião:
 ${transcript_text}`;
 
-    // Call AI via Lovable AI gateway
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY não configurada");
@@ -210,8 +217,6 @@ ${transcript_text}`;
             { role: "user", content: userPrompt },
           ],
           max_completion_tokens: 4000,
-          // NOTE: We intentionally avoid response_format here because some gateway/model combos
-          // may return an empty content field. We parse JSON ourselves robustly.
         }),
       });
     }
@@ -227,7 +232,6 @@ ${transcript_text}`;
     let aiResult = await response.json();
     const message = aiResult.choices?.[0]?.message;
     
-    // Check for refusal (OpenAI models can refuse)
     if (message?.refusal) {
       console.error("AI refused:", message.refusal);
       throw new Error("IA recusou processar o pedido");
@@ -249,7 +253,6 @@ ${transcript_text}`;
 
     if (!content) {
       console.error("Empty AI response. Full result:", JSON.stringify(aiResult));
-      // Simple retry once (intermittent gateway hiccup)
       console.warn("Retrying AI call once due to empty content...");
       response = await callAiOnce();
       if (!response.ok) {
@@ -264,7 +267,6 @@ ${transcript_text}`;
         console.error("Empty AI response after retry. Full result:", JSON.stringify(aiResult));
         throw new Error("Resposta vazia da IA");
       }
-      // overwrite for downstream parsing
       (aiResult as any).__content_override = content2;
     }
 
@@ -278,7 +280,6 @@ ${transcript_text}`;
       throw e instanceof Error ? e : new Error("Resposta da IA em formato inválido");
     }
 
-    // Filter out null values and validate
     const validAnswers = (parsedResponse.answers || []).filter(
       (a: AIAnswer) => a.value !== null || a.text
     );
@@ -295,7 +296,7 @@ ${transcript_text}`;
     );
   } catch (error) {
     console.error("Error in cs-autofill-answers:", error);
-    const errorMessage = error instanceof Error ? error.message : "Internal server error";
+    const errorMessage = error instanceof Error ? error.message : "Erro interno";
     return new Response(
       JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
