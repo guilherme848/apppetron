@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import { SalesFunnelKPI, formatNumber, formatPercent, formatCurrency, formatRoas, MONTH_NAMES } from '@/types/salesFunnel';
 import { parseISO } from 'date-fns';
-import { Users, Calendar, Video, Trophy, ChevronDown, DollarSign } from 'lucide-react';
+import { Users, Calendar, Video, Trophy, DollarSign } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Props {
@@ -103,95 +103,133 @@ export function SalesFunnelActual({ kpis, selectedMonth }: Props) {
     },
   ];
 
-  // Proportional: leads = 100%, others relative
+  // Calculate proportional widths: leads = 100%, others relative, minimum 20%
   const maxVolume = Math.max(v.leads, 1);
-  const widths = stages.map((s, i) => {
+  const widthPercents = stages.map((s) => {
     if (s.isHeader) return 100;
-    return Math.max(Math.round((s.value / maxVolume) * 100), 22);
+    return Math.max(Math.round((s.value / maxVolume) * 100), 20);
   });
 
-  const funnelColors = [
-    '', // header – styled separately
-    'from-primary to-primary/90',
-    'from-primary/80 to-primary/70',
-    'from-primary/65 to-primary/55',
-    'from-primary/50 to-primary/40',
-  ];
+  const funnelOpacities = [1, 1, 0.85, 0.7, 0.55];
 
   const periodLabel = selectedMonth !== undefined ? MONTH_NAMES[selectedMonth] : 'Ano (YTD)';
+
+  const STAGE_H = 64;
+  const CONNECTOR_H = 36;
+
+  // Build trapezoid SVG between two stages
+  const buildTrapezoid = (topW: number, bottomW: number, height: number) => {
+    const topLeft = (100 - topW) / 2;
+    const topRight = topLeft + topW;
+    const bottomLeft = (100 - bottomW) / 2;
+    const bottomRight = bottomLeft + bottomW;
+    return `M ${topLeft} 0 L ${topRight} 0 L ${bottomRight} ${height} L ${bottomLeft} ${height} Z`;
+  };
 
   return (
     <div>
       <p className="text-sm text-muted-foreground mb-5">{periodLabel}</p>
 
-      <div className="flex flex-col items-center">
+      <div className="flex flex-col items-center gap-0">
         {stages.map((stage, index) => {
           const Icon = stage.icon;
-          const w = widths[index];
+          const w = widthPercents[index];
+          const nextW = index < stages.length - 1 ? widthPercents[index + 1] : w;
 
           return (
             <div key={stage.label} className="w-full flex flex-col items-center">
               {/* Stage bar */}
               <div
-                className={cn(
-                  "relative flex items-center justify-between gap-3 rounded-lg transition-all",
-                  stage.isHeader
-                    ? "bg-card border border-border px-5 py-4"
-                    : `bg-gradient-to-r ${funnelColors[index]} text-primary-foreground px-5 py-4`
-                )}
+                className="relative mx-auto"
                 style={{
                   width: isMobile ? '100%' : `${w}%`,
-                  minWidth: isMobile ? undefined : '280px',
+                  minWidth: isMobile ? undefined : '260px',
+                  transition: 'width 0.4s ease',
                 }}
               >
-                {/* Left: icon + label */}
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className={cn(
-                    "flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center",
-                    stage.isHeader ? "bg-muted" : "bg-white/15"
+                <div
+                  className={cn(
+                    "flex items-center justify-between gap-3 rounded-xl px-5",
+                    stage.isHeader
+                      ? "bg-card border border-border"
+                      : "text-primary-foreground"
+                  )}
+                  style={{
+                    height: `${STAGE_H}px`,
+                    ...(!stage.isHeader ? {
+                      background: `hsl(var(--primary) / ${funnelOpacities[index]})`,
+                    } : {}),
+                  }}
+                >
+                  {/* Left: icon + label + kpis */}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={cn(
+                      "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
+                      stage.isHeader ? "bg-muted" : "bg-white/20"
+                    )}>
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className={cn("text-sm font-semibold leading-tight", stage.isHeader && "text-foreground")}>
+                        {stage.label}
+                      </p>
+                      {stage.kpis.length > 0 && (
+                        <div className="flex flex-wrap gap-x-3 mt-0.5">
+                          {stage.kpis.map(k => (
+                            <span key={k.label} className={cn("text-[11px]", stage.isHeader ? "text-muted-foreground" : "text-white/70")}>
+                              {k.label}: <span className="font-semibold">{k.value}</span>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right: big number */}
+                  <span className={cn(
+                    "text-xl font-bold flex-shrink-0 tabular-nums",
+                    stage.isHeader && "text-foreground"
                   )}>
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className={cn("text-sm font-medium leading-tight", stage.isHeader && "text-foreground")}>
-                      {stage.label}
-                    </p>
-                    {/* Inline KPIs below label */}
-                    {stage.kpis.length > 0 && (
-                      <div className="flex flex-wrap gap-x-3 gap-y-0 mt-0.5">
-                        {stage.kpis.map(k => (
-                          <span key={k.label} className={cn("text-xs", stage.isHeader ? "text-muted-foreground" : "text-white/70")}>
-                            {k.label}: <span className="font-medium">{k.value}</span>
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Right: big number */}
-                <span className={cn(
-                  "text-xl font-bold flex-shrink-0 tabular-nums",
-                  stage.isHeader && "text-foreground"
-                )}>
-                  {stage.formattedValue}
-                </span>
-              </div>
-
-              {/* Conversion connector */}
-              {stage.convRate !== null && (
-                <div className="flex items-center gap-1.5 py-2 text-muted-foreground">
-                  <ChevronDown className="h-3.5 w-3.5" />
-                  <span className="text-xs font-medium">
-                    {stage.convLabel}: <span className="text-foreground font-semibold">{formatPercent(stage.convRate)}</span>
+                    {stage.formattedValue}
                   </span>
                 </div>
-              )}
+              </div>
 
-              {/* Arrow from investment to leads */}
-              {stage.isHeader && (
-                <div className="py-2">
-                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              {/* Trapezoidal connector with conversion rate */}
+              {index < stages.length - 1 && (
+                <div
+                  className="relative w-full"
+                  style={{
+                    height: `${CONNECTOR_H}px`,
+                  }}
+                >
+                  {/* SVG trapezoid */}
+                  <svg
+                    className="absolute inset-0 w-full h-full"
+                    viewBox={`0 0 100 ${CONNECTOR_H}`}
+                    preserveAspectRatio="none"
+                  >
+                    <path
+                      d={buildTrapezoid(
+                        isMobile ? 100 : Math.max(w, 20),
+                        isMobile ? 100 : Math.max(nextW, 20),
+                        CONNECTOR_H
+                      )}
+                      fill={stage.isHeader
+                        ? 'hsl(var(--primary) / 0.15)'
+                        : `hsl(var(--primary) / ${(funnelOpacities[index] + (funnelOpacities[index + 1] ?? funnelOpacities[index])) / 2 * 0.4})`
+                      }
+                    />
+                  </svg>
+
+                  {/* Conversion label centered */}
+                  {stage.convRate !== null && (
+                    <div className="absolute inset-0 flex items-center justify-center z-10">
+                      <span className="text-xs font-medium text-muted-foreground bg-background/80 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                        {stage.convLabel}: <span className="text-foreground font-bold">{formatPercent(stage.convRate)}</span>
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
