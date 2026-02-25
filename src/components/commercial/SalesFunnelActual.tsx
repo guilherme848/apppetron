@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import { SalesFunnelKPI, formatNumber, formatPercent, formatCurrency, formatRoas, MONTH_NAMES } from '@/types/salesFunnel';
 import { parseISO } from 'date-fns';
-import { Users, Calendar, Video, Trophy, DollarSign } from 'lucide-react';
+import { Users, Calendar, Video, Trophy } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Props {
@@ -49,16 +49,6 @@ export function SalesFunnelActual({ kpis, selectedMonth }: Props) {
 
   const stages = [
     {
-      label: 'Investimento',
-      value: v.investment,
-      formattedValue: formatCurrency(v.investment),
-      icon: DollarSign,
-      kpis: [] as { label: string; value: string }[],
-      convRate: null as number | null,
-      convLabel: '',
-      isHeader: true,
-    },
-    {
       label: 'Leads',
       value: v.leads,
       formattedValue: formatNumber(v.leads),
@@ -66,7 +56,6 @@ export function SalesFunnelActual({ kpis, selectedMonth }: Props) {
       kpis: [{ label: 'CPL', value: formatCurrency(cpl) }],
       convRate: rateScheduling,
       convLabel: 'Tx Agendamento',
-      isHeader: false,
     },
     {
       label: 'Reunião Agendada',
@@ -76,7 +65,6 @@ export function SalesFunnelActual({ kpis, selectedMonth }: Props) {
       kpis: [],
       convRate: rateAttendance,
       convLabel: 'Tx Comparecimento',
-      isHeader: false,
     },
     {
       label: 'Comparecida',
@@ -86,7 +74,6 @@ export function SalesFunnelActual({ kpis, selectedMonth }: Props) {
       kpis: [{ label: 'Custo/Comp.', value: formatCurrency(costPerAttendance) }],
       convRate: rateClose,
       convLabel: 'Tx Conversão',
-      isHeader: false,
     },
     {
       label: 'Vendas',
@@ -99,20 +86,17 @@ export function SalesFunnelActual({ kpis, selectedMonth }: Props) {
       ],
       convRate: null,
       convLabel: '',
-      isHeader: false,
     },
   ];
 
-  // Calculate proportional widths: investment = 100%, leads relative to investment visual, others relative to leads
+  // Calculate proportional widths: Leads = 100%, others proportional
   const maxVolume = Math.max(v.leads, 1);
   const widthPercents = stages.map((s, i) => {
-    if (s.isHeader) return 100; // Investimento = full width
-    if (i === 1) return 85; // Leads always starts narrower than Investimento
-    // Remaining stages proportional to leads, scaled within the 85% cap
-    return Math.max(Math.round((s.value / maxVolume) * 85), 18);
+    if (i === 0) return 100; // Leads = full width
+    return Math.max(Math.round((s.value / maxVolume) * 100), 18);
   });
 
-  const funnelOpacities = [1, 1, 0.85, 0.7, 0.55];
+  const funnelOpacities = [1, 0.85, 0.7, 0.55];
 
   const periodLabel = selectedMonth !== undefined ? MONTH_NAMES[selectedMonth] : 'Ano (YTD)';
 
@@ -150,35 +134,25 @@ export function SalesFunnelActual({ kpis, selectedMonth }: Props) {
                 }}
               >
                 <div
-                  className={cn(
-                    "flex items-center justify-between gap-3 rounded-xl px-5",
-                    stage.isHeader
-                      ? "bg-card border border-border"
-                      : "text-primary-foreground"
-                  )}
+                  className="flex items-center justify-between gap-3 rounded-xl px-5 text-primary-foreground"
                   style={{
                     height: `${STAGE_H}px`,
-                    ...(!stage.isHeader ? {
-                      background: `hsl(var(--primary) / ${funnelOpacities[index]})`,
-                    } : {}),
+                    background: `hsl(var(--primary) / ${funnelOpacities[index]})`,
                   }}
                 >
                   {/* Left: icon + label + kpis */}
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className={cn(
-                      "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
-                      stage.isHeader ? "bg-muted" : "bg-white/20"
-                    )}>
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-white/20">
                       <Icon className="h-4 w-4" />
                     </div>
                     <div className="min-w-0">
-                      <p className={cn("text-sm font-semibold leading-tight", stage.isHeader && "text-foreground")}>
+                      <p className="text-sm font-semibold leading-tight">
                         {stage.label}
                       </p>
                       {stage.kpis.length > 0 && (
                         <div className="flex flex-wrap gap-x-3 mt-0.5">
                           {stage.kpis.map(k => (
-                            <span key={k.label} className={cn("text-[11px]", stage.isHeader ? "text-muted-foreground" : "text-white/70")}>
+                            <span key={k.label} className="text-[11px] text-white/70">
                               {k.label}: <span className="font-semibold">{k.value}</span>
                             </span>
                           ))}
@@ -188,10 +162,7 @@ export function SalesFunnelActual({ kpis, selectedMonth }: Props) {
                   </div>
 
                   {/* Right: big number */}
-                  <span className={cn(
-                    "text-xl font-bold flex-shrink-0 tabular-nums",
-                    stage.isHeader && "text-foreground"
-                  )}>
+                  <span className="text-xl font-bold flex-shrink-0 tabular-nums">
                     {stage.formattedValue}
                   </span>
                 </div>
@@ -217,10 +188,7 @@ export function SalesFunnelActual({ kpis, selectedMonth }: Props) {
                         isMobile ? 100 : Math.max(nextW, 20),
                         CONNECTOR_H
                       )}
-                      fill={stage.isHeader
-                        ? 'hsl(var(--primary) / 0.15)'
-                        : `hsl(var(--primary) / ${(funnelOpacities[index] + (funnelOpacities[index + 1] ?? funnelOpacities[index])) / 2 * 0.4})`
-                      }
+                      fill={`hsl(var(--primary) / ${(funnelOpacities[index] + (funnelOpacities[index + 1] ?? funnelOpacities[index])) / 2 * 0.4})`}
                     />
                   </svg>
 
