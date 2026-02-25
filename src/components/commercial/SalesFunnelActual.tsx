@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import { SalesFunnelKPI, formatNumber, formatPercent, formatCurrency, formatRoas, MONTH_NAMES } from '@/types/salesFunnel';
 import { parseISO } from 'date-fns';
-import { Users, Calendar, Video, Trophy, ArrowDown, DollarSign, Target, TrendingUp } from 'lucide-react';
+import { Users, Calendar, Video, Trophy, ArrowDown, DollarSign } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Props {
@@ -9,28 +9,23 @@ interface Props {
   selectedMonth?: number;
 }
 
-interface FunnelStage {
-  key: string;
-  label: string;
-  value: number;
-  formattedValue: string;
-  icon: React.ReactNode;
-  details: { label: string; value: string }[];
-  conversionToNext: number | null;
-  conversionLabel: string | null;
-}
-
 export function SalesFunnelActual({ kpis, selectedMonth }: Props) {
   const isMobile = useIsMobile();
 
-  const getKpi = () => {
+  const getValues = () => {
     if (selectedMonth !== undefined) {
-      return kpis.find(k => parseISO(k.month).getMonth() === selectedMonth) || null;
+      const kpi = kpis.find(k => parseISO(k.month).getMonth() === selectedMonth);
+      if (kpi) {
+        return {
+          investment: kpi.investment_actual || 0,
+          leads: kpi.leads_actual || 0,
+          appointments: kpi.appointments_actual || 0,
+          meetings: kpi.meetings_held_actual || 0,
+          sales: kpi.sales_actual || 0,
+          revenue: kpi.revenue_actual || 0,
+        };
+      }
     }
-    return null;
-  };
-
-  const getYtdValues = () => {
     return kpis.reduce((acc, kpi) => ({
       investment: acc.investment + (kpi.investment_actual || 0),
       leads: acc.leads + (kpi.leads_actual || 0),
@@ -41,202 +36,140 @@ export function SalesFunnelActual({ kpis, selectedMonth }: Props) {
     }), { investment: 0, leads: 0, appointments: 0, meetings: 0, sales: 0, revenue: 0 });
   };
 
-  const kpi = getKpi();
-  const isYtd = selectedMonth === undefined;
-
-  // Build values either from single month KPI or YTD aggregation
-  const investment = isYtd ? getYtdValues().investment : (kpi?.investment_actual || 0);
-  const leads = isYtd ? getYtdValues().leads : (kpi?.leads_actual || 0);
-  const appointments = isYtd ? getYtdValues().appointments : (kpi?.appointments_actual || 0);
-  const meetings = isYtd ? getYtdValues().meetings : (kpi?.meetings_held_actual || 0);
-  const sales = isYtd ? getYtdValues().sales : (kpi?.sales_actual || 0);
-  const revenue = isYtd ? getYtdValues().revenue : (kpi?.revenue_actual || 0);
-
+  const v = getValues();
   const safeDiv = (a: number, b: number) => b === 0 ? null : a / b;
 
-  const cpl = safeDiv(investment, leads);
-  const rateScheduling = safeDiv(appointments, leads);
-  const rateAttendance = safeDiv(meetings, appointments);
-  const costPerAttendance = safeDiv(investment, meetings);
-  const rateClose = safeDiv(sales, meetings);
-  const cac = safeDiv(investment, sales);
-  const avgTicket = safeDiv(revenue, sales);
-  const roas = safeDiv(revenue, investment);
-  const convLeadSale = safeDiv(sales, leads);
+  const cpl = safeDiv(v.investment, v.leads);
+  const rateScheduling = safeDiv(v.appointments, v.leads);
+  const rateAttendance = safeDiv(v.meetings, v.appointments);
+  const costPerAttendance = safeDiv(v.investment, v.meetings);
+  const rateClose = safeDiv(v.sales, v.meetings);
+  const cac = safeDiv(v.investment, v.sales);
+  const avgTicket = safeDiv(v.revenue, v.sales);
+  const roas = safeDiv(v.revenue, v.investment);
+  const convLeadSale = safeDiv(v.sales, v.leads);
 
-  const stages: FunnelStage[] = [
+  // Funnel stages: Investimento > Leads > Reunião Agendada > Comparecida > Vendas
+  const stages = [
     {
-      key: 'investment',
       label: 'Investimento',
-      value: investment,
-      formattedValue: formatCurrency(investment),
+      value: v.investment,
+      formattedValue: formatCurrency(v.investment),
       icon: <DollarSign className="h-4 w-4" />,
       details: [],
-      conversionToNext: null,
-      conversionLabel: null,
+      convRate: null as number | null,
+      convLabel: null as string | null,
     },
     {
-      key: 'leads',
       label: 'Leads',
-      value: leads,
-      formattedValue: formatNumber(leads),
+      value: v.leads,
+      formattedValue: formatNumber(v.leads),
       icon: <Users className="h-4 w-4" />,
-      details: [
-        { label: 'CPL', value: formatCurrency(cpl) },
-      ],
-      conversionToNext: rateScheduling,
-      conversionLabel: 'Tx Agendamento',
+      details: [{ label: 'CPL', value: formatCurrency(cpl) }],
+      convRate: rateScheduling,
+      convLabel: 'Tx Agendamento',
     },
     {
-      key: 'appointments',
-      label: 'Agendamentos',
-      value: appointments,
-      formattedValue: formatNumber(appointments),
+      label: 'Reunião Agendada',
+      value: v.appointments,
+      formattedValue: formatNumber(v.appointments),
       icon: <Calendar className="h-4 w-4" />,
       details: [],
-      conversionToNext: rateAttendance,
-      conversionLabel: 'Tx Comparecimento',
+      convRate: rateAttendance,
+      convLabel: 'Tx Comparecimento',
     },
     {
-      key: 'meetings',
-      label: 'Reuniões',
-      value: meetings,
-      formattedValue: formatNumber(meetings),
+      label: 'Comparecida',
+      value: v.meetings,
+      formattedValue: formatNumber(v.meetings),
       icon: <Video className="h-4 w-4" />,
-      details: [
-        { label: 'Custo/Comp.', value: formatCurrency(costPerAttendance) },
-      ],
-      conversionToNext: rateClose,
-      conversionLabel: 'Tx Conversão',
+      details: [{ label: 'Custo/Comp.', value: formatCurrency(costPerAttendance) }],
+      convRate: rateClose,
+      convLabel: 'Tx Conversão',
     },
     {
-      key: 'sales',
       label: 'Vendas',
-      value: sales,
-      formattedValue: formatNumber(sales),
+      value: v.sales,
+      formattedValue: formatNumber(v.sales),
       icon: <Trophy className="h-4 w-4" />,
       details: [
         { label: 'CAC', value: formatCurrency(cac) },
         { label: 'Ticket Médio', value: formatCurrency(avgTicket) },
-      ],
-      conversionToNext: null,
-      conversionLabel: null,
-    },
-    {
-      key: 'revenue',
-      label: 'Receita',
-      value: revenue,
-      formattedValue: formatCurrency(revenue),
-      icon: <TrendingUp className="h-4 w-4" />,
-      details: [
+        { label: 'Receita', value: formatCurrency(v.revenue) },
         { label: 'ROAS', value: formatRoas(roas) },
       ],
-      conversionToNext: null,
-      conversionLabel: null,
+      convRate: null,
+      convLabel: null,
     },
   ];
 
-  // For proportional width, use leads as the max reference (skip investment/revenue as they're monetary)
-  const volumeStages = ['leads', 'appointments', 'meetings', 'sales'];
-  const maxVolume = Math.max(leads, 1);
-
-  // Calculate proportional width for each stage
-  const getWidth = (stage: FunnelStage): number => {
-    if (stage.key === 'investment' || stage.key === 'revenue') return 100; // Full width for bookend stages
-    const proportion = Math.max(stage.value / maxVolume, 0.15); // min 15% so it's visible
+  // Proportional widths based on volume (leads = 100%)
+  const maxVolume = Math.max(v.leads, 1);
+  const getWidth = (stage: typeof stages[number], index: number): number => {
+    if (index === 0) return 100; // Investimento always full
+    const proportion = Math.max(stage.value / maxVolume, 0.18);
     return proportion * 100;
   };
 
-  const periodLabel = selectedMonth !== undefined
-    ? MONTH_NAMES[selectedMonth]
-    : 'Ano (YTD)';
+  const opacities = ['bg-muted text-muted-foreground border border-border', 'bg-primary text-primary-foreground', 'bg-primary/80 text-primary-foreground', 'bg-primary/60 text-primary-foreground', 'bg-primary/40 text-primary-foreground'];
 
-  // Opacity levels for funnel stages
-  const stageStyles: Record<string, string> = {
-    investment: 'bg-muted text-muted-foreground border border-border',
-    leads: 'bg-primary text-primary-foreground',
-    appointments: 'bg-primary/85 text-primary-foreground',
-    meetings: 'bg-primary/70 text-primary-foreground',
-    sales: 'bg-primary/55 text-primary-foreground',
-    revenue: 'bg-muted text-muted-foreground border border-border',
-  };
+  const periodLabel = selectedMonth !== undefined ? MONTH_NAMES[selectedMonth] : 'Ano (YTD)';
 
   return (
     <div className="space-y-2">
       <p className="text-sm text-muted-foreground mb-4">{periodLabel}</p>
-
       <div className="flex flex-col items-center gap-0">
-        {stages.map((stage, index) => {
-          const width = getWidth(stage);
-          const isFunnelStage = volumeStages.includes(stage.key);
-
-          return (
-            <div key={stage.key} className="w-full flex flex-col items-center">
-              {/* Stage block */}
-              <div
-                className={cn(
-                  "relative py-3 px-4 rounded-md transition-all",
-                  stageStyles[stage.key],
-                )}
-                style={{
-                  width: isMobile ? '100%' : `${width}%`,
-                  minWidth: isMobile ? undefined : '220px',
-                }}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    {stage.icon}
-                    <span className="text-sm font-medium truncate">{stage.label}</span>
-                  </div>
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    {stage.details.map(d => (
-                      <span key={d.label} className="text-xs opacity-80 hidden sm:inline">
-                        {d.label}: <span className="font-medium">{d.value}</span>
-                      </span>
-                    ))}
-                    <span className="text-lg font-bold">{stage.formattedValue}</span>
-                  </div>
+        {stages.map((stage, index) => (
+          <div key={stage.label} className="w-full flex flex-col items-center">
+            <div
+              className={cn("relative py-3 px-4 rounded-md transition-all", opacities[index])}
+              style={{ width: isMobile ? '100%' : `${getWidth(stage, index)}%`, minWidth: isMobile ? undefined : '220px' }}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  {stage.icon}
+                  <span className="text-sm font-medium truncate">{stage.label}</span>
                 </div>
-                {/* Mobile details */}
-                {stage.details.length > 0 && (
-                  <div className="flex gap-3 mt-1 sm:hidden">
-                    {stage.details.map(d => (
-                      <span key={d.label} className="text-xs opacity-80">
-                        {d.label}: <span className="font-medium">{d.value}</span>
-                      </span>
-                    ))}
-                  </div>
-                )}
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  {stage.details.map(d => (
+                    <span key={d.label} className="text-xs opacity-80 hidden sm:inline">
+                      {d.label}: <span className="font-medium">{d.value}</span>
+                    </span>
+                  ))}
+                  <span className="text-lg font-bold">{stage.formattedValue}</span>
+                </div>
               </div>
-
-              {/* Conversion arrow */}
-              {stage.conversionToNext !== null && (
-                <div className="flex items-center gap-1.5 py-1 text-muted-foreground">
-                  <ArrowDown className="h-3 w-3" />
-                  <span className="text-xs">
-                    {stage.conversionLabel}: <span className="font-semibold text-foreground">{formatPercent(stage.conversionToNext)}</span>
-                  </span>
-                </div>
-              )}
-
-              {/* Separator between investment→leads and sales→revenue */}
-              {(stage.key === 'investment' || stage.key === 'sales') && !stage.conversionToNext && index < stages.length - 1 && (
-                <div className="py-1">
-                  <ArrowDown className="h-3 w-3 text-muted-foreground" />
+              {stage.details.length > 0 && (
+                <div className="flex flex-wrap gap-3 mt-1 sm:hidden">
+                  {stage.details.map(d => (
+                    <span key={d.label} className="text-xs opacity-80">
+                      {d.label}: <span className="font-medium">{d.value}</span>
+                    </span>
+                  ))}
                 </div>
               )}
             </div>
-          );
-        })}
+
+            {stage.convRate !== null && (
+              <div className="flex items-center gap-1.5 py-1 text-muted-foreground">
+                <ArrowDown className="h-3 w-3" />
+                <span className="text-xs">
+                  {stage.convLabel}: <span className="font-semibold text-foreground">{formatPercent(stage.convRate)}</span>
+                </span>
+              </div>
+            )}
+
+            {index === 0 && (
+              <div className="py-1"><ArrowDown className="h-3 w-3 text-muted-foreground" /></div>
+            )}
+          </div>
+        ))}
       </div>
 
-      {/* Overall conversion */}
-      {leads > 0 && sales > 0 && (
+      {v.leads > 0 && v.sales > 0 && (
         <div className="text-center pt-3 border-t mt-4">
           <span className="text-xs text-muted-foreground">Conversão Lead → Venda: </span>
-          <span className="text-sm font-semibold text-primary">
-            {formatPercent(convLeadSale)}
-          </span>
+          <span className="text-sm font-semibold text-primary">{formatPercent(convLeadSale)}</span>
         </div>
       )}
     </div>
