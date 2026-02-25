@@ -16,7 +16,7 @@ import {
   AreaChart,
 } from 'recharts';
 import { SalesFunnelActual } from './SalesFunnelActual';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
@@ -83,7 +83,8 @@ function ChartTooltip({ active, payload, label, formatter }: any) {
 }
 
 export function FunnelDashboard({ kpis, year }: Props) {
-  const [selectedFunnelMonth, setSelectedFunnelMonth] = useState<number | undefined>(undefined);
+  const currentMonth = new Date().getMonth();
+  const [selectedFunnelMonth, setSelectedFunnelMonth] = useState<number | undefined>(currentMonth);
 
   // Latest month with data for KPI cards
   const kpisWithData = kpis.filter(k => k.leads_actual !== null && k.leads_actual !== 0);

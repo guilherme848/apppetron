@@ -1,19 +1,8 @@
 import { cn } from '@/lib/utils';
 import { SalesFunnelKPI, formatNumber, formatPercent, MONTH_NAMES } from '@/types/salesFunnel';
 import { parseISO } from 'date-fns';
-import { Users, Calendar, Video, Trophy } from 'lucide-react';
+import { Users, Calendar, Video, Trophy, ArrowDown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-  LabelList,
-} from 'recharts';
 
 interface Props {
   kpis: SalesFunnelKPI[];
@@ -44,86 +33,74 @@ export function SalesFunnelActual({ kpis, selectedMonth }: Props) {
   };
 
   const values = getValues();
-  const conversionRate = values.leads > 0 ? (values.sales / values.leads) : 0;
+  const safeDiv = (a: number, b: number) => b === 0 ? null : a / b;
+
+  const stages = [
+    { key: 'leads', label: 'Leads', value: values.leads, icon: <Users className="h-4 w-4" />, conversion: safeDiv(values.appointments, values.leads), nextLabel: 'Agendamentos' },
+    { key: 'appointments', label: 'Agendamentos', value: values.appointments, icon: <Calendar className="h-4 w-4" />, conversion: safeDiv(values.meetings, values.appointments), nextLabel: 'Reuniões' },
+    { key: 'meetings', label: 'Reuniões', value: values.meetings, icon: <Video className="h-4 w-4" />, conversion: safeDiv(values.sales, values.meetings), nextLabel: 'Vendas' },
+    { key: 'sales', label: 'Vendas', value: values.sales, icon: <Trophy className="h-4 w-4" />, conversion: null, nextLabel: null },
+  ];
+
+  // Width percentages for funnel shape (decreasing)
+  const widths = [100, 72, 50, 32];
+  // Opacity levels
+  const opacities = ['bg-primary', 'bg-primary/80', 'bg-primary/60', 'bg-primary/40'];
 
   const periodLabel = selectedMonth !== undefined
     ? MONTH_NAMES[selectedMonth]
     : 'Ano (YTD)';
 
-  const barData = [
-    { name: 'Leads', value: values.leads, icon: Users },
-    { name: 'Agendamentos', value: values.appointments, icon: Calendar },
-    { name: 'Reuniões', value: values.meetings, icon: Video },
-    { name: 'Vendas', value: values.sales, icon: Trophy },
-  ];
-
-  // Colors with decreasing opacity to create funnel effect
-  const barColors = [
-    'hsl(var(--primary))',
-    'hsl(var(--primary) / 0.8)',
-    'hsl(var(--primary) / 0.6)',
-    'hsl(var(--primary) / 0.4)',
-  ];
-
   return (
-    <div className="flex flex-col lg:flex-row items-center gap-6">
-      {/* Bar chart funnel */}
-      <div className="flex-1 w-full">
-        <p className="text-sm text-muted-foreground mb-3">{periodLabel}</p>
-        <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
-          <BarChart data={barData} layout="horizontal" barCategoryGap="20%">
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" vertical={false} />
-            <XAxis dataKey="name" className="text-xs" tick={{ fontSize: 12 }} />
-            <YAxis className="text-xs" hide />
-            <Tooltip
-              formatter={(value: number) => [formatNumber(value), '']}
-              contentStyle={{
-                borderRadius: '8px',
-                border: '1px solid hsl(var(--border))',
-                background: 'hsl(var(--background))',
+    <div className="space-y-1">
+      <p className="text-sm text-muted-foreground mb-4">{periodLabel}</p>
+      <div className="flex flex-col items-center gap-0">
+        {stages.map((stage, index) => (
+          <div key={stage.key} className="w-full flex flex-col items-center">
+            {/* Funnel trapezoid block */}
+            <div
+              className={cn(
+                "relative py-3 px-5 rounded-md transition-all flex items-center justify-between",
+                opacities[index],
+                "text-primary-foreground"
+              )}
+              style={{
+                width: `${widths[index]}%`,
+                minWidth: isMobile ? '200px' : '260px',
+                clipPath: index < stages.length - 1
+                  ? `polygon(0% 0%, 100% 0%, ${100 - (widths[index] - widths[index + 1]) / 2 / widths[index] * 100}% 100%, ${(widths[index] - widths[index + 1]) / 2 / widths[index] * 100}% 100%)`
+                  : undefined,
               }}
-            />
-            <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={80}>
-              {barData.map((_, index) => (
-                <Cell key={index} fill={barColors[index]} />
-              ))}
-              <LabelList dataKey="value" position="top" className="text-xs font-semibold fill-foreground" />
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+            >
+              <div className="flex items-center gap-2">
+                {stage.icon}
+                <span className="text-sm font-medium">{stage.label}</span>
+              </div>
+              <span className="text-lg font-bold">{formatNumber(stage.value)}</span>
+            </div>
+
+            {/* Conversion arrow between stages */}
+            {stage.conversion !== null && (
+              <div className="flex items-center gap-1.5 py-1 text-muted-foreground">
+                <ArrowDown className="h-3 w-3" />
+                <span className="text-xs">
+                  {formatPercent(stage.conversion)}
+                </span>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
 
-      {/* Conversion rate circle */}
-      <div className="flex flex-col items-center justify-center gap-2 min-w-[160px]">
-        <div className="relative w-32 h-32">
-          <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
-            {/* Background circle */}
-            <circle
-              cx="60" cy="60" r="52"
-              fill="none"
-              stroke="hsl(var(--muted))"
-              strokeWidth="10"
-            />
-            {/* Progress circle */}
-            <circle
-              cx="60" cy="60" r="52"
-              fill="none"
-              stroke="hsl(var(--primary))"
-              strokeWidth="10"
-              strokeLinecap="round"
-              strokeDasharray={`${conversionRate * 326.73} 326.73`}
-            />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-2xl font-bold">
-              {(conversionRate * 100).toFixed(1)}%
-            </span>
-          </div>
+      {/* Overall conversion */}
+      {values.leads > 0 && (
+        <div className="text-center pt-3">
+          <span className="text-xs text-muted-foreground">Conversão Lead → Venda: </span>
+          <span className="text-sm font-semibold text-primary">
+            {formatPercent(safeDiv(values.sales, values.leads))}
+          </span>
         </div>
-        <p className="text-sm text-muted-foreground text-center font-medium">
-          Lead-to-Sale<br />Conversion Rate
-        </p>
-      </div>
+      )}
     </div>
   );
 }
