@@ -86,25 +86,47 @@ export function FunnelDashboard({ kpis, year }: Props) {
   const currentMonth = new Date().getMonth();
   const [selectedFunnelMonth, setSelectedFunnelMonth] = useState<number | undefined>(currentMonth);
 
-  // Latest month with data for KPI cards
+  // Latest month with data for MoM badges
   const kpisWithData = kpis.filter(k => k.leads_actual !== null && k.leads_actual !== 0);
   const latestKpi = kpisWithData.length > 0 ? kpisWithData[kpisWithData.length - 1] : null;
-  const latestMonthName = latestKpi ? MONTH_NAMES[parseISO(latestKpi.month).getMonth()] : '';
 
-  // YTD totals
-  const ytd = kpis.reduce((acc, kpi) => ({
-    investment: acc.investment + (kpi.investment_actual || 0),
-    leads: acc.leads + (kpi.leads_actual || 0),
-    appointments: acc.appointments + (kpi.appointments_actual || 0),
-    meetings: acc.meetings + (kpi.meetings_held_actual || 0),
-    sales: acc.sales + (kpi.sales_actual || 0),
-    revenue: acc.revenue + (kpi.revenue_actual || 0),
-  }), { investment: 0, leads: 0, appointments: 0, meetings: 0, sales: 0, revenue: 0 });
+  // Totals based on selected month or YTD
+  const totals = useMemo(() => {
+    if (selectedFunnelMonth !== undefined) {
+      const kpi = kpis.find(k => parseISO(k.month).getMonth() === selectedFunnelMonth);
+      if (kpi) return {
+        investment: kpi.investment_actual || 0,
+        leads: kpi.leads_actual || 0,
+        appointments: kpi.appointments_actual || 0,
+        meetings: kpi.meetings_held_actual || 0,
+        sales: kpi.sales_actual || 0,
+        revenue: kpi.revenue_actual || 0,
+        mom_leads: kpi.leads_mom_change,
+        mom_sales: kpi.sales_mom_change,
+        mom_roas: kpi.roas_mom_change,
+      };
+    }
+    const agg = kpis.reduce((acc, kpi) => ({
+      investment: acc.investment + (kpi.investment_actual || 0),
+      leads: acc.leads + (kpi.leads_actual || 0),
+      appointments: acc.appointments + (kpi.appointments_actual || 0),
+      meetings: acc.meetings + (kpi.meetings_held_actual || 0),
+      sales: acc.sales + (kpi.sales_actual || 0),
+      revenue: acc.revenue + (kpi.revenue_actual || 0),
+    }), { investment: 0, leads: 0, appointments: 0, meetings: 0, sales: 0, revenue: 0 });
+    return {
+      ...agg,
+      mom_leads: latestKpi?.leads_mom_change ?? null,
+      mom_sales: latestKpi?.sales_mom_change ?? null,
+      mom_roas: latestKpi?.roas_mom_change ?? null,
+    };
+  }, [kpis, selectedFunnelMonth, latestKpi]);
 
-  const ytdCpl = ytd.leads > 0 ? ytd.investment / ytd.leads : 0;
-  const ytdRoas = ytd.investment > 0 ? ytd.revenue / ytd.investment : 0;
-  const ytdTkm = ytd.sales > 0 ? ytd.revenue / ytd.sales : 0;
-  const ytdConversion = ytd.leads > 0 ? (ytd.sales / ytd.leads) : 0;
+  const cpl = totals.leads > 0 ? totals.investment / totals.leads : 0;
+  const roas = totals.investment > 0 ? totals.revenue / totals.investment : 0;
+  const tkm = totals.sales > 0 ? totals.revenue / totals.sales : 0;
+
+  const periodSuffix = selectedFunnelMonth !== undefined ? MONTH_NAMES[selectedFunnelMonth] : 'YTD';
 
   // Chart data — month by month
   const chartData = kpis.map(kpi => {
@@ -132,31 +154,30 @@ export function FunnelDashboard({ kpis, year }: Props) {
       {/* KPI Cards */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <KPICard
-          title="Investimento YTD"
-          value={formatCurrency(ytd.investment)}
-          subtitle={`CPL médio: ${formatCurrency(ytdCpl)}`}
+          title={`Investimento ${periodSuffix}`}
+          value={formatCurrency(totals.investment)}
+          subtitle={`CPL: ${formatCurrency(cpl)}`}
           icon={DollarSign}
         />
         <KPICard
-          title="Leads YTD"
-          value={formatNumber(ytd.leads)}
-          subtitle={`Último mês: ${latestKpi ? formatNumber(latestKpi.leads_actual) : '-'}`}
+          title={`Leads ${periodSuffix}`}
+          value={formatNumber(totals.leads)}
           icon={Users}
-          mom={latestKpi?.leads_mom_change}
+          mom={totals.mom_leads}
         />
         <KPICard
-          title="Vendas YTD"
-          value={formatNumber(ytd.sales)}
-          subtitle={`TKM: ${formatCurrency(ytdTkm)}`}
+          title={`Vendas ${periodSuffix}`}
+          value={formatNumber(totals.sales)}
+          subtitle={`TKM: ${formatCurrency(tkm)}`}
           icon={Target}
-          mom={latestKpi?.sales_mom_change}
+          mom={totals.mom_sales}
         />
         <KPICard
-          title="Receita YTD"
-          value={formatCurrency(ytd.revenue)}
-          subtitle={`ROAS: ${formatRoas(ytdRoas)}`}
+          title={`Receita ${periodSuffix}`}
+          value={formatCurrency(totals.revenue)}
+          subtitle={`ROAS: ${formatRoas(roas)}`}
           icon={BarChart3}
-          mom={latestKpi?.roas_mom_change}
+          mom={totals.mom_roas}
         />
       </div>
 
