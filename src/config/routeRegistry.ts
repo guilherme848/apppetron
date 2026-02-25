@@ -161,7 +161,7 @@ export const routeRegistry: RouteDefinition[] = [
     path: '/content/tasks',
     label: 'Tarefas de Conteúdo',
     category: CATEGORIES.TASKS,
-    module: MODULES.CRM,
+    module: MODULES.CONTENT,
     permissions: ['view', 'edit'],
     icon: ListTodo,
     order: 4,
