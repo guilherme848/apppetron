@@ -103,11 +103,13 @@ export function SalesFunnelActual({ kpis, selectedMonth }: Props) {
     },
   ];
 
-  // Calculate proportional widths: leads = 100%, others relative, minimum 20%
+  // Calculate proportional widths: investment = 100%, leads relative to investment visual, others relative to leads
   const maxVolume = Math.max(v.leads, 1);
-  const widthPercents = stages.map((s) => {
-    if (s.isHeader) return 100;
-    return Math.max(Math.round((s.value / maxVolume) * 100), 20);
+  const widthPercents = stages.map((s, i) => {
+    if (s.isHeader) return 100; // Investimento = full width
+    if (i === 1) return 85; // Leads always starts narrower than Investimento
+    // Remaining stages proportional to leads, scaled within the 85% cap
+    return Math.max(Math.round((s.value / maxVolume) * 85), 18);
   });
 
   const funnelOpacities = [1, 1, 0.85, 0.7, 0.55];
