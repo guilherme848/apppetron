@@ -118,28 +118,11 @@ export default function SalesFunnelPage() {
       <Tabs defaultValue="dashboard" className="space-y-4">
         <TabsList>
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="targets">Metas</TabsTrigger>
           <TabsTrigger value="actuals">Realizado</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard">
           <FunnelDashboard kpis={kpis} year={filters.year} />
-        </TabsContent>
-
-        <TabsContent value="targets">
-          <Card>
-            <CardHeader>
-              <CardTitle>Metas Mensais - {filters.year}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <FunnelTargetsTable
-                targets={targets}
-                year={filters.year}
-                canEdit={canEdit}
-                onSave={saveTarget}
-              />
-            </CardContent>
-          </Card>
         </TabsContent>
 
         <TabsContent value="actuals">
