@@ -2,7 +2,6 @@ import { Users, DollarSign, TrendingDown, Loader2, Receipt, Lock } from 'lucide-
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { ClientEvolutionChart } from '@/components/dashboard/ClientEvolutionChart';
 import { ChurnMrrCharts } from '@/components/dashboard/ChurnMrrCharts';
-import { DashboardFilters } from '@/components/dashboard/DashboardFilters';
 import { ChurnLTCard } from '@/components/dashboard/ChurnLTCard';
 import { CohortAnalysis } from '@/components/dashboard/CohortAnalysis';
 import { DistributionCharts } from '@/components/dashboard/DistributionCharts';
@@ -13,21 +12,6 @@ import { useSensitivePermission } from '@/hooks/useSensitivePermission';
 export default function Dashboard() {
   const {
     loading,
-    services,
-    niches,
-    // Filters
-    periodFilter,
-    setPeriodFilter,
-    customStartDate,
-    setCustomStartDate,
-    customEndDate,
-    setCustomEndDate,
-    serviceFilter,
-    setServiceFilter,
-    nicheFilter,
-    setNicheFilter,
-    statusFilter,
-    setStatusFilter,
     // KPIs
     activeClients,
     churnedThisMonth,
@@ -68,23 +52,6 @@ export default function Dashboard() {
         <p className="text-muted-foreground">Visão estratégica de CS, retenção e performance financeira</p>
       </div>
 
-      {/* Global Filters */}
-      <DashboardFilters
-        periodFilter={periodFilter}
-        onPeriodChange={setPeriodFilter}
-        customStartDate={customStartDate}
-        customEndDate={customEndDate}
-        onCustomStartChange={setCustomStartDate}
-        onCustomEndChange={setCustomEndDate}
-        serviceFilter={serviceFilter}
-        onServiceChange={setServiceFilter}
-        nicheFilter={nicheFilter}
-        onNicheChange={setNicheFilter}
-        statusFilter={statusFilter}
-        onStatusChange={setStatusFilter}
-        services={services}
-        niches={niches}
-      />
 
       {/* Row 1: Health Score + KPIs de CS */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
