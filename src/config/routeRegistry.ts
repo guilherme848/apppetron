@@ -154,6 +154,7 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.CRM,
     permissions: ['view', 'edit'],
     icon: CheckSquare,
+    hideInMenu: true,
     order: 3,
   },
   {
@@ -479,6 +480,7 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.CRM,
     permissions: ['view', 'edit'],
     icon: FilePen,
+    hideInMenu: true,
     order: 5,
   },
   {
