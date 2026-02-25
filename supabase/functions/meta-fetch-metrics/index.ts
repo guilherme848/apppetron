@@ -21,7 +21,6 @@ interface MetaInsightsData {
   date_stop: string;
 }
 
-// Helper to find action value
 function findActionValue(actions: Array<{ action_type: string; value: string }> | undefined, types: string[]): number {
   if (!actions) return 0;
   for (const type of types) {
@@ -31,7 +30,6 @@ function findActionValue(actions: Array<{ action_type: string; value: string }> 
   return 0;
 }
 
-// Helper to find cost per action
 function findCostPerAction(costs: Array<{ action_type: string; value: string }> | undefined, types: string[]): number {
   if (!costs) return 0;
   for (const type of types) {
@@ -47,10 +45,34 @@ serve(async (req) => {
   }
 
   try {
+    // --- Authentication check ---
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: 'Não autorizado' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const authSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await authSupabase.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(
+        JSON.stringify({ error: 'Não autorizado' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    // --- End authentication check ---
+
     const { adAccountIds, dateFrom, dateTo } = await req.json();
 
     const businessId = Deno.env.get('META_BUSINESS_ID');
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     if (!businessId || !supabaseUrl || !supabaseServiceKey) {
@@ -63,7 +85,6 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get the stored connection
     const { data: connection, error: connError } = await supabase
       .from('meta_bm_connection')
       .select('*')
@@ -80,7 +101,6 @@ serve(async (req) => {
 
     const accessToken = connection.access_token_encrypted;
 
-    // If no specific accounts provided, fetch all linked accounts
     let accountsToFetch = adAccountIds;
     if (!accountsToFetch || accountsToFetch.length === 0) {
       const { data: linkedAccounts } = await supabase
@@ -91,14 +111,12 @@ serve(async (req) => {
     }
 
     if (accountsToFetch.length === 0) {
-      console.log('[meta-fetch-metrics] No accounts to fetch metrics for');
       return new Response(
         JSON.stringify({ success: true, message: 'No accounts to fetch', count: 0 }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Default date range: last 30 days
     const today = new Date();
     const defaultDateTo = today.toISOString().split('T')[0];
     const defaultDateFrom = new Date(today.setDate(today.getDate() - 30)).toISOString().split('T')[0];
@@ -114,23 +132,13 @@ serve(async (req) => {
 
     for (const adAccountId of accountsToFetch) {
       try {
-        // Fetch insights with daily breakdown - extended fields for local business metrics
         const fields = [
-          'impressions',
-          'clicks',
-          'spend',
-          'reach',
-          'cpm',
-          'cpc',
-          'ctr',
-          'actions',
-          'cost_per_action_type',
-          'website_ctr',
+          'impressions', 'clicks', 'spend', 'reach', 'cpm', 'cpc', 'ctr',
+          'actions', 'cost_per_action_type', 'website_ctr',
         ].join(',');
         
-        const graphUrl = `https://graph.facebook.com/v19.0/${adAccountId}/insights?fields=${fields}&time_range={"since":"${since}","until":"${until}"}&time_increment=1&access_token=${accessToken}`;
+        const graphUrl = `https://graph.facebook.com/v19.0/${adAccountId}/insights?fields=${fields}&time_range={\\\"since\\\":\\\"${since}\\\",\\\"until\\\":\\\"${until}\\\"}&time_increment=1&access_token=${accessToken}`;
         
-        console.log(`[meta-fetch-metrics] Fetching ${adAccountId}...`);
         const response = await fetch(graphUrl);
         const data = await response.json();
 
@@ -141,123 +149,57 @@ serve(async (req) => {
         }
 
         if (!data.data || data.data.length === 0) {
-          console.log(`[meta-fetch-metrics] No data for ${adAccountId}`);
           continue;
         }
 
-        // Process each day's data
         for (const dayData of data.data as MetaInsightsData[]) {
           const date = dayData.date_start;
           
-          // WhatsApp related metrics
           const whatsappClicks = findActionValue(dayData.actions, [
             'onsite_conversion.messaging_conversation_started_7d',
             'onsite_conversion.messaging_first_reply',
             'contact_total',
           ]);
-          
           const whatsappConversations = findActionValue(dayData.actions, [
             'onsite_conversion.messaging_conversation_started_7d',
             'messaging_conversation_started_7d',
           ]);
-          
           const messagingReplies = findActionValue(dayData.actions, [
             'onsite_conversion.messaging_first_reply',
             'messaging_first_reply',
           ]);
-          
-          // Total WhatsApp conversations (combined)
           const totalWhatsappConversations = whatsappConversations + messagingReplies;
-          
-          // Profile/Page interactions
-          const pageEngagement = findActionValue(dayData.actions, [
-            'page_engagement',
-            'post_engagement',
-          ]);
-          
-          const profileVisits = findActionValue(dayData.actions, [
-            'landing_page_view',
-            'link_click',
-          ]);
-          
-          // Lead/Contact metrics for local business
-          const leads = findActionValue(dayData.actions, [
-            'lead',
-            'lead.fb',
-            'onsite_conversion.lead_grouped',
-          ]);
-          
-          const phoneCallClicks = findActionValue(dayData.actions, [
-            'onsite_conversion.post_save',
-            'contact_total',
-          ]);
-          
-          // Conversions (purchases, etc.)
-          const conversions = findActionValue(dayData.actions, [
-            'omni_purchase',
-            'purchase',
-            'complete_registration',
-          ]);
-          
-          // Cost per lead
-          const costPerLead = findCostPerAction(dayData.cost_per_action_type, [
-            'lead',
-            'lead.fb',
-            'onsite_conversion.lead_grouped',
-          ]);
-
-          // Total engagement (likes, comments, shares, reactions)
-          const engagement = findActionValue(dayData.actions, [
-            'post_engagement',
-            'page_engagement',
-            'post_reaction',
-            'comment',
-            'post',
-            'like',
-          ]);
+          const pageEngagement = findActionValue(dayData.actions, ['page_engagement', 'post_engagement']);
+          const profileVisits = findActionValue(dayData.actions, ['landing_page_view', 'link_click']);
+          const leads = findActionValue(dayData.actions, ['lead', 'lead.fb', 'onsite_conversion.lead_grouped']);
+          const phoneCallClicks = findActionValue(dayData.actions, ['onsite_conversion.post_save', 'contact_total']);
+          const conversions = findActionValue(dayData.actions, ['omni_purchase', 'purchase', 'complete_registration']);
+          const costPerLead = findCostPerAction(dayData.cost_per_action_type, ['lead', 'lead.fb', 'onsite_conversion.lead_grouped']);
+          const engagement = findActionValue(dayData.actions, ['post_engagement', 'page_engagement', 'post_reaction', 'comment', 'post', 'like']);
 
           const spendValue = parseFloat(dayData.spend || '0');
           
           const metricsJson = {
-            // Basic metrics - aligned with traffic_metric_catalog slugs
             impressions: parseInt(dayData.impressions || '0'),
             reach: parseInt(dayData.reach || '0'),
             spend: spendValue,
-            
-            // Cliques no link (link_clicks for catalog, clicks from Meta API)
             link_clicks: parseInt(dayData.clicks || '0'),
-            
-            // Legacy fields (keeping for backwards compatibility)
             clicks: parseInt(dayData.clicks || '0'),
             cpm: parseFloat(dayData.cpm || '0'),
             cpc: parseFloat(dayData.cpc || '0'),
             ctr: parseFloat(dayData.ctr || '0'),
-            
-            // Conversion metrics
-            conversions: conversions,
-            leads: leads,
-            purchases: 0, // Meta doesn't always return this
-            purchase_value: 0, // Meta doesn't always return this
-            
-            // WhatsApp/Messaging metrics
+            conversions, leads, purchases: 0, purchase_value: 0,
             whatsapp_clicks: whatsappClicks,
             whatsapp_conversations: totalWhatsappConversations,
             messaging_replies: messagingReplies,
-            // Custo por mensagem = Valor Investido / Conversas de WhatsApp
             cost_per_message: totalWhatsappConversations > 0 
-              ? parseFloat((spendValue / totalWhatsappConversations).toFixed(2)) 
-              : 0,
-            
-            // Profile/Engagement metrics
+              ? parseFloat((spendValue / totalWhatsappConversations).toFixed(2)) : 0,
             page_engagement: pageEngagement,
             profile_visits: profileVisits,
             engagement: engagement || pageEngagement,
-            
-            // Cost metrics
             cost_per_lead: costPerLead,
           };
 
-          // Upsert the daily metrics
           const { error: upsertError } = await supabase
             .from('ad_account_metrics_daily')
             .upsert({
@@ -265,19 +207,14 @@ serve(async (req) => {
               date: date,
               platform: 'meta',
               metrics_json: metricsJson,
-            }, {
-              onConflict: 'ad_account_id,date,platform',
-            });
+            }, { onConflict: 'ad_account_id,date,platform' });
 
           if (upsertError) {
             console.error(`[meta-fetch-metrics] Error upserting metrics for ${adAccountId} on ${date}:`, upsertError);
           }
         }
 
-        results.push({
-          ad_account_id: adAccountId,
-          days_fetched: data.data.length,
-        });
+        results.push({ ad_account_id: adAccountId, days_fetched: data.data.length });
         successCount++;
 
       } catch (err) {
@@ -290,12 +227,8 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ 
-        success: true, 
-        message: 'Metrics fetch completed',
-        total: accountsToFetch.length,
-        successCount,
-        errorCount,
-        results,
+        success: true, message: 'Metrics fetch completed',
+        total: accountsToFetch.length, successCount, errorCount, results,
         dateRange: { from: since, to: until },
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -304,7 +237,7 @@ serve(async (req) => {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('[meta-fetch-metrics] Fatal error:', error);
     return new Response(
-      JSON.stringify({ error: message }),
+      JSON.stringify({ error: 'Erro interno' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
