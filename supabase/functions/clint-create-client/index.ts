@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 interface ClintClientPayload {
-  event_id: string;
+  event_id?: string;
   event_type?: string;
   // Campos mapeados do Clint
   organization_name: string;
@@ -44,13 +44,9 @@ Deno.serve(async (req) => {
     const payload: ClintClientPayload = await req.json();
     console.log("Clint create-client webhook received:", JSON.stringify(payload));
 
-    const sourceEventId = payload.event_id;
-    if (!sourceEventId) {
-      return new Response(
-        JSON.stringify({ error: "Missing event_id" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    // Generate event_id if not provided (Clint doesn't always send one)
+    const sourceEventId = payload.event_id || 
+      `clint-auto-${payload.organization_name}-${payload.contact_email || ""}-${Date.now()}`;
 
     if (!payload.organization_name) {
       return new Response(
