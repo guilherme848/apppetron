@@ -46,6 +46,9 @@ const METRICS_CONFIG: MetricConfig[] = [
   { key: 'investment_actual', label: 'Investimento', format: formatCurrency, fromMeta: true },
   { key: 'leads_actual', label: 'Leads', format: formatNumber, fromMeta: true },
   { key: 'cpl_actual', label: 'CPL', format: formatCurrency, computed: true },
+  { key: 'mql_actual', label: 'MQL', format: formatNumber },
+  { key: 'cpmql_actual', label: 'CPMQL', format: formatCurrency, computed: true },
+  { key: 'rate_qualification_actual', label: 'Tx Qualif.', format: formatPercent, computed: true, hasBenchmark: true, benchmarkKey: 'rate_qualification' },
   { key: 'appointments_actual', label: 'Agendamentos', format: formatNumber },
   { key: 'rate_scheduling_actual', label: 'Tx Agend.', format: formatPercent, computed: true, hasBenchmark: true, benchmarkKey: 'rate_scheduling' },
   { key: 'meetings_held_actual', label: 'Reuniões', format: formatNumber },
@@ -136,6 +139,8 @@ export function FunnelActualsTable({
         return investment;
       case 'leads_actual':
         return leads;
+      case 'mql_actual':
+        return actual?.mql_actual ?? null;
       case 'sales_actual':
         return salesCount > 0 ? salesCount : null;
       case 'avg_ticket_actual':
@@ -146,11 +151,27 @@ export function FunnelActualsTable({
         return investment && leads
           ? investment / leads
           : null;
-      case 'rate_scheduling_actual':
-        const appointments = actual?.appointments_actual || null;
-        return leads && appointments
-          ? appointments / leads
+      case 'cpmql_actual': {
+        const mql = actual?.mql_actual ?? null;
+        return investment && mql && mql > 0
+          ? investment / mql
           : null;
+      }
+      case 'rate_qualification_actual': {
+        const mql2 = actual?.mql_actual ?? null;
+        return leads && mql2 && mql2 > 0
+          ? mql2 / leads
+          : null;
+      }
+      case 'rate_scheduling_actual': {
+        const appointments = actual?.appointments_actual || null;
+        const mqlForScheduling = actual?.mql_actual ?? null;
+        // Use MQL as base if available, otherwise use leads
+        const base = mqlForScheduling && mqlForScheduling > 0 ? mqlForScheduling : leads;
+        return base && appointments
+          ? appointments / base
+          : null;
+      }
       case 'rate_attendance_actual':
         return actual?.appointments_actual && actual?.meetings_held_actual
           ? actual.meetings_held_actual / actual.appointments_actual
@@ -172,8 +193,6 @@ export function FunnelActualsTable({
           ? totalRevenue / investment
           : null;
       case 'roas_expected':
-        // ROAS Expectativa = (LT médio * Ticket médio) / CAC
-        // LTV = avgLtMonths * avgTicket, CAC = investment / salesCount
         if (baseMetrics.avgLtMonths > 0 && avgTicket > 0 && investment && salesCount > 0) {
           const ltv = baseMetrics.avgLtMonths * avgTicket;
           const cac = investment / salesCount;
