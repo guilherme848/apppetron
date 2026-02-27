@@ -8,11 +8,15 @@ const corsHeaders = {
 interface ClintClientPayload {
   event_id: string;
   event_type?: string;
-  client_name: string;
+  // Campos mapeados do Clint
+  contact_name: string;
+  contact_email?: string;
+  contact_phone?: string;
+  deal_stage?: string;
+  deal_user?: string;
+  deal_status?: string;
+  // Campos opcionais extras
   client_cnpj?: string;
-  client_email?: string;
-  client_phone?: string;
-  contact_name?: string;
   start_date?: string;
   website?: string;
   country?: string;
@@ -47,9 +51,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (!payload.client_name) {
+    if (!payload.contact_name) {
       return new Response(
-        JSON.stringify({ error: "Missing client_name" }),
+        JSON.stringify({ error: "Missing contact_name" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -81,11 +85,11 @@ Deno.serve(async (req) => {
       existingAccount = data;
     }
 
-    if (!existingAccount && payload.client_email) {
+    if (!existingAccount && payload.contact_email) {
       const { data } = await supabase
         .from("accounts")
         .select("id, name")
-        .eq("contact_email", payload.client_email)
+        .eq("contact_email", payload.contact_email)
         .maybeSingle();
       existingAccount = data;
     }
@@ -128,19 +132,20 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create account
+    // Create account using mapped Clint fields
     const startDate = payload.start_date || new Date().toISOString().split("T")[0];
 
     const { data: account, error: accountError } = await supabase
       .from("accounts")
       .insert({
-        name: payload.client_name,
+        name: payload.contact_name,
+        contact_name: payload.contact_name,
+        contact_email: payload.contact_email || null,
+        contact_phone: payload.contact_phone || null,
         cpf_cnpj: payload.client_cnpj || null,
-        contact_email: payload.client_email || null,
-        contact_phone: payload.client_phone || null,
-        contact_name: payload.contact_name || null,
         start_date: startDate,
         status: "active",
+        origin: "clint",
         website: payload.website || null,
         country: payload.country || null,
         postal_code: payload.postal_code || null,
@@ -150,7 +155,6 @@ Deno.serve(async (req) => {
         street: payload.street || null,
         street_number: payload.street_number || null,
         address_complement: payload.address_complement || null,
-        origin: "clint",
       })
       .select()
       .single();
