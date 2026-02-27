@@ -5248,6 +5248,56 @@ export type Database = {
       }
     }
     Views: {
+      petron_sales_funnel_kpis_monthly: {
+        Row: {
+          actual_notes: string | null
+          appointments_actual: number | null
+          appointments_target: number | null
+          avg_ticket_actual: number | null
+          avg_ticket_target: number | null
+          conv_appointments_to_meetings: number | null
+          conv_leads_to_appointments: number | null
+          conv_leads_to_mql: number | null
+          conv_leads_to_sales: number | null
+          conv_meetings_to_sales: number | null
+          conv_mql_to_appointments: number | null
+          cpl_actual: number | null
+          cpl_target: number | null
+          cpmql_actual: number | null
+          investment_actual: number | null
+          investment_target: number | null
+          leads_achievement: number | null
+          leads_actual: number | null
+          leads_mom_change: number | null
+          leads_target: number | null
+          meetings_held_actual: number | null
+          meetings_held_target: number | null
+          meetings_mom_change: number | null
+          month: string | null
+          mql_actual: number | null
+          mql_target: number | null
+          rate_attendance_actual: number | null
+          rate_attendance_target: number | null
+          rate_close_actual: number | null
+          rate_close_target: number | null
+          rate_qualification_actual: number | null
+          rate_scheduling_actual: number | null
+          rate_scheduling_target: number | null
+          revenue_achievement: number | null
+          revenue_actual: number | null
+          revenue_target: number | null
+          roas_achievement: number | null
+          roas_actual: number | null
+          roas_mom_change: number | null
+          roas_target: number | null
+          sales_achievement: number | null
+          sales_actual: number | null
+          sales_mom_change: number | null
+          sales_target: number | null
+          target_notes: string | null
+        }
+        Relationships: []
+      }
       traffic_weekly_load_by_day: {
         Row: {
           client_count: number | null
