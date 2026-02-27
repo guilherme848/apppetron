@@ -9,7 +9,8 @@ interface ClintClientPayload {
   event_id: string;
   event_type?: string;
   // Campos mapeados do Clint
-  contact_name: string;
+  organization_name: string;
+  contact_name?: string;
   contact_email?: string;
   contact_phone?: string;
   deal_stage?: string;
@@ -51,9 +52,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (!payload.contact_name) {
+    if (!payload.organization_name) {
       return new Response(
-        JSON.stringify({ error: "Missing contact_name" }),
+        JSON.stringify({ error: "Missing organization_name" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -138,8 +139,8 @@ Deno.serve(async (req) => {
     const { data: account, error: accountError } = await supabase
       .from("accounts")
       .insert({
-        name: payload.contact_name,
-        contact_name: payload.contact_name,
+        name: payload.organization_name,
+        contact_name: payload.contact_name || null,
         contact_email: payload.contact_email || null,
         contact_phone: payload.contact_phone || null,
         cpf_cnpj: payload.client_cnpj || null,
