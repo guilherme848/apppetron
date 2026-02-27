@@ -3639,6 +3639,7 @@ export type Database = {
           leads_actual: number | null
           meetings_held_actual: number | null
           month: string
+          mql_actual: number | null
           notes: string | null
           rate_attendance_actual: number | null
           rate_close_actual: number | null
@@ -3659,6 +3660,7 @@ export type Database = {
           leads_actual?: number | null
           meetings_held_actual?: number | null
           month: string
+          mql_actual?: number | null
           notes?: string | null
           rate_attendance_actual?: number | null
           rate_close_actual?: number | null
@@ -3679,6 +3681,7 @@ export type Database = {
           leads_actual?: number | null
           meetings_held_actual?: number | null
           month?: string
+          mql_actual?: number | null
           notes?: string | null
           rate_attendance_actual?: number | null
           rate_close_actual?: number | null
@@ -3702,6 +3705,7 @@ export type Database = {
           leads_target: number | null
           meetings_held_target: number | null
           month: string
+          mql_target: number | null
           notes: string | null
           rate_attendance_target: number | null
           rate_close_target: number | null
@@ -3722,6 +3726,7 @@ export type Database = {
           leads_target?: number | null
           meetings_held_target?: number | null
           month: string
+          mql_target?: number | null
           notes?: string | null
           rate_attendance_target?: number | null
           rate_close_target?: number | null
@@ -3742,6 +3747,7 @@ export type Database = {
           leads_target?: number | null
           meetings_held_target?: number | null
           month?: string
+          mql_target?: number | null
           notes?: string | null
           rate_attendance_target?: number | null
           rate_close_target?: number | null
