@@ -24,6 +24,7 @@ export function FunnelActualModal({ open, onOpenChange, month, actual, onSave }:
     investment_actual: '',
     leads_actual: '',
     cpl_actual: '',
+    mql_actual: '',
     appointments_actual: '',
     meetings_held_actual: '',
     sales_actual: '',
@@ -39,6 +40,7 @@ export function FunnelActualModal({ open, onOpenChange, month, actual, onSave }:
         investment_actual: actual.investment_actual?.toString() || '',
         leads_actual: actual.leads_actual?.toString() || '',
         cpl_actual: actual.cpl_actual?.toString() || '',
+        mql_actual: actual.mql_actual?.toString() || '',
         appointments_actual: actual.appointments_actual?.toString() || '',
         meetings_held_actual: actual.meetings_held_actual?.toString() || '',
         sales_actual: actual.sales_actual?.toString() || '',
@@ -52,6 +54,7 @@ export function FunnelActualModal({ open, onOpenChange, month, actual, onSave }:
         investment_actual: '',
         leads_actual: '',
         cpl_actual: '',
+        mql_actual: '',
         appointments_actual: '',
         meetings_held_actual: '',
         sales_actual: '',
@@ -83,6 +86,7 @@ export function FunnelActualModal({ open, onOpenChange, month, actual, onSave }:
       investment_actual: form.investment_actual ? parseFloat(form.investment_actual) : null,
       leads_actual: form.leads_actual ? parseInt(form.leads_actual) : null,
       cpl_actual: form.cpl_actual ? parseFloat(form.cpl_actual) : null,
+      mql_actual: form.mql_actual ? parseInt(form.mql_actual) : null,
       appointments_actual: form.appointments_actual ? parseInt(form.appointments_actual) : null,
       meetings_held_actual: form.meetings_held_actual ? parseInt(form.meetings_held_actual) : null,
       sales_actual: form.sales_actual ? parseInt(form.sales_actual) : null,
@@ -169,6 +173,18 @@ export function FunnelActualModal({ open, onOpenChange, month, actual, onSave }:
               </p>
             </div>
             <div className="space-y-2">
+              <Label>MQL (Leads Qualificados)</Label>
+              <Input
+                type="number"
+                value={form.mql_actual}
+                onChange={(e) => setForm({ ...form, mql_actual: e.target.value })}
+                placeholder="0"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
               <Label>Agendamentos</Label>
               <Input
                 type="number"
@@ -177,9 +193,6 @@ export function FunnelActualModal({ open, onOpenChange, month, actual, onSave }:
                 placeholder="0"
               />
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Reuniões Realizadas</Label>
               <Input
@@ -189,6 +202,9 @@ export function FunnelActualModal({ open, onOpenChange, month, actual, onSave }:
                 placeholder="0"
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Vendas</Label>
               <Input

@@ -7,6 +7,7 @@ export interface SalesFunnelTarget {
   month: string; // ISO date (always 1st day)
   investment_target: number | null;
   leads_target: number | null;
+  mql_target: number | null;
   cpl_target: number | null;
   rate_scheduling_target: number | null;
   appointments_target: number | null;
@@ -28,6 +29,7 @@ export interface SalesFunnelActual {
   month: string;
   investment_actual: number | null;
   leads_actual: number | null;
+  mql_actual: number | null;
   cpl_actual: number | null;
   rate_scheduling_actual: number | null;
   appointments_actual: number | null;
@@ -49,6 +51,7 @@ export interface SalesFunnelKPI {
   // Targets
   investment_target: number | null;
   leads_target: number | null;
+  mql_target: number | null;
   cpl_target: number | null;
   rate_scheduling_target: number | null;
   appointments_target: number | null;
@@ -62,6 +65,7 @@ export interface SalesFunnelKPI {
   // Actuals
   investment_actual: number | null;
   leads_actual: number | null;
+  mql_actual: number | null;
   cpl_actual: number | null;
   appointments_actual: number | null;
   rate_scheduling_actual: number | null;
@@ -72,7 +76,12 @@ export interface SalesFunnelKPI {
   avg_ticket_actual: number | null;
   revenue_actual: number | null;
   roas_actual: number | null;
+  // MQL metrics
+  cpmql_actual: number | null;
+  rate_qualification_actual: number | null;
   // Conversions
+  conv_leads_to_mql: number | null;
+  conv_mql_to_appointments: number | null;
   conv_leads_to_appointments: number | null;
   conv_appointments_to_meetings: number | null;
   conv_meetings_to_sales: number | null;
