@@ -1,0 +1,1 @@
+DROP VIEW IF EXISTS petron_sales_funnel_kpis_monthly;
