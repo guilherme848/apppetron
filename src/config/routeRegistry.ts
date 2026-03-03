@@ -32,6 +32,7 @@ import {
   Target,
   Megaphone,
   Archive,
+  Send,
 } from 'lucide-react';
 
 // Action types for permissions
@@ -511,14 +512,34 @@ export const routeRegistry: RouteDefinition[] = [
   // COMMERCIAL MODULE
   // ============================================
   {
+    id: 'commercial.planning',
+    path: '/commercial/planning',
+    label: 'Planejamento Comercial',
+    category: CATEGORIES.ANALYTICS,
+    module: MODULES.COMMERCIAL,
+    permissions: ['view', 'edit'],
+    icon: BarChart3,
+    order: 0,
+  },
+  {
     id: 'commercial.funnel',
     path: '/commercial/funnel',
-    label: 'Funil Comercial',
+    label: 'Inbound',
     category: CATEGORIES.ANALYTICS,
     module: MODULES.COMMERCIAL,
     permissions: ['view', 'edit'],
     icon: Target,
     order: 1,
+  },
+  {
+    id: 'commercial.outbound',
+    path: '/commercial/outbound',
+    label: 'Outbound',
+    category: CATEGORIES.ANALYTICS,
+    module: MODULES.COMMERCIAL,
+    permissions: ['view', 'edit'],
+    icon: Send,
+    order: 2,
   },
   {
     id: 'commercial.marketing',
@@ -528,7 +549,7 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.COMMERCIAL,
     permissions: ['view', 'edit'],
     icon: Megaphone,
-    order: 2,
+    order: 3,
   },
   {
     id: 'commercial.marketing_detail',
@@ -539,7 +560,7 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view', 'edit'],
     hideInMenu: true,
     parentId: 'commercial.marketing',
-    order: 3,
+    order: 4,
   },
   {
     id: 'commercial.marketing_post',
@@ -550,7 +571,7 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view', 'edit'],
     hideInMenu: true,
     parentId: 'commercial.marketing',
-    order: 4,
+    order: 5,
   },
   {
     id: 'commercial.marketing_board',
@@ -561,17 +582,7 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view', 'edit'],
     hideInMenu: true,
     parentId: 'commercial.marketing',
-    order: 5,
-  },
-  {
-    id: 'commercial.planning',
-    path: '/commercial/planning',
-    label: 'Planejamento Comercial',
-    category: CATEGORIES.ANALYTICS,
-    module: MODULES.COMMERCIAL,
-    permissions: ['view', 'edit'],
-    icon: BarChart3,
-    order: 3,
+    order: 6,
   },
 
   // ============================================
