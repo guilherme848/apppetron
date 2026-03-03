@@ -198,10 +198,10 @@ const App = () => (
 
                         {/* Commercial routes */}
                         <Route path="/commercial/funnel" element={<SalesFunnelPage />} />
+                        <Route path="/commercial/planning" element={<CommercialPlanningPage />} />
                         <Route path="/commercial/marketing" element={<MarketingProduction />} />
                         <Route path="/commercial/marketing/:id" element={<MarketingBatchDetail />} />
                         <Route path="/commercial/marketing/:batchId/posts/:postId" element={<MarketingPostDetail />} />
-                        <Route path="/commercial/planning" element={<CommercialPlanningPage />} />
 
                         {/* Settings - Admin only with internal navigation */}
                         <Route
