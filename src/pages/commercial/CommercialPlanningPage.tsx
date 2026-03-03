@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,10 +11,42 @@ import { Label } from '@/components/ui/label';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Pencil, TrendingUp, Target, DollarSign, BarChart3, AlertTriangle } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Line, ComposedChart, ResponsiveContainer, Legend, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Line, ComposedChart, ResponsiveContainer, Legend } from 'recharts';
+import MrrBaseConfig from '@/components/commercial/MrrBaseConfig';
+import MrrScenarioCard, { type ScenarioConfig } from '@/components/commercial/MrrScenarioCard';
+import MrrScenariosChart from '@/components/commercial/MrrScenariosChart';
 
 const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 const MONTH_NAMES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+const STORAGE_KEY = 'commercial-planning-config';
+
+interface MrrConfig {
+  ticketMedio: number;
+  clientesAtuais: number;
+  cenarioInicial: ScenarioConfig;
+  cenarioBom: ScenarioConfig;
+  cenarioOtimo: ScenarioConfig;
+}
+
+const defaultMrrConfig: MrrConfig = {
+  ticketMedio: 2800,
+  clientesAtuais: 45,
+  cenarioInicial: { churnPct: 10, adicaoMensal: 5 },
+  cenarioBom: { churnPct: 11, adicaoMensal: 10 },
+  cenarioOtimo: { churnPct: 12, adicaoMensal: 9 },
+};
+
+function loadMrrConfig(): MrrConfig {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) return { ...defaultMrrConfig, ...JSON.parse(saved) };
+  } catch {}
+  return defaultMrrConfig;
+}
+
+const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 });
+const pct = (v: number, t: number) => t > 0 ? Math.round((v / t) * 100) : 0;
 
 interface MonthData {
   month: number;
@@ -28,7 +60,7 @@ interface MonthData {
 }
 
 function getInitialData(): MonthData[] {
-  const currentMonth = new Date().getMonth(); // 0-indexed
+  const currentMonth = new Date().getMonth();
   return Array.from({ length: 12 }, (_, i) => {
     const isPast = i <= currentMonth;
     const baseTarget = 80000 + Math.floor(Math.random() * 40000);
@@ -44,9 +76,6 @@ function getInitialData(): MonthData[] {
     };
   });
 }
-
-const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 });
-const pct = (v: number, t: number) => t > 0 ? Math.round((v / t) * 100) : 0;
 
 function getAtingimentoColor(p: number) {
   if (p >= 100) return 'text-green-600 dark:text-green-400';
@@ -79,6 +108,13 @@ export default function CommercialPlanningPage() {
   const [editingRow, setEditingRow] = useState<number | null>(null);
   const [inlineEditing, setInlineEditing] = useState<{ month: number; field: string } | null>(null);
   const [inlineValue, setInlineValue] = useState('');
+
+  // MRR Config with localStorage persistence
+  const [mrrConfig, setMrrConfig] = useState<MrrConfig>(loadMrrConfig);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(mrrConfig));
+  }, [mrrConfig]);
 
   // Modal state
   const [modalMonth, setModalMonth] = useState<number | 'all'>('all');
@@ -209,6 +245,52 @@ export default function CommercialPlanningPage() {
           </Button>
         </div>
       </div>
+
+      {/* MRR Base Config */}
+      <MrrBaseConfig
+        ticketMedio={mrrConfig.ticketMedio}
+        clientesAtuais={mrrConfig.clientesAtuais}
+        onTicketMedioChange={v => setMrrConfig(prev => ({ ...prev, ticketMedio: v }))}
+        onClientesAtuaisChange={v => setMrrConfig(prev => ({ ...prev, clientesAtuais: v }))}
+      />
+
+      {/* MRR Scenarios */}
+      <MrrScenarioCard
+        label="Cenário Inicial"
+        emoji="🔴"
+        colorClass="red"
+        config={mrrConfig.cenarioInicial}
+        clientesIniciais={mrrConfig.clientesAtuais}
+        ticketMedio={mrrConfig.ticketMedio}
+        onConfigChange={c => setMrrConfig(prev => ({ ...prev, cenarioInicial: c }))}
+      />
+      <MrrScenarioCard
+        label="Cenário Bom"
+        emoji="🟡"
+        colorClass="yellow"
+        config={mrrConfig.cenarioBom}
+        clientesIniciais={mrrConfig.clientesAtuais}
+        ticketMedio={mrrConfig.ticketMedio}
+        onConfigChange={c => setMrrConfig(prev => ({ ...prev, cenarioBom: c }))}
+      />
+      <MrrScenarioCard
+        label="Cenário Ótimo"
+        emoji="🟢"
+        colorClass="green"
+        config={mrrConfig.cenarioOtimo}
+        clientesIniciais={mrrConfig.clientesAtuais}
+        ticketMedio={mrrConfig.ticketMedio}
+        onConfigChange={c => setMrrConfig(prev => ({ ...prev, cenarioOtimo: c }))}
+      />
+
+      {/* Scenarios Comparison Chart */}
+      <MrrScenariosChart
+        clientesIniciais={mrrConfig.clientesAtuais}
+        ticketMedio={mrrConfig.ticketMedio}
+        inicial={mrrConfig.cenarioInicial}
+        bom={mrrConfig.cenarioBom}
+        otimo={mrrConfig.cenarioOtimo}
+      />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
