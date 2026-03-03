@@ -563,6 +563,16 @@ export const routeRegistry: RouteDefinition[] = [
     parentId: 'commercial.marketing',
     order: 5,
   },
+  {
+    id: 'commercial.planning',
+    path: '/commercial/planning',
+    label: 'Planejamento Comercial',
+    category: CATEGORIES.ANALYTICS,
+    module: MODULES.COMMERCIAL,
+    permissions: ['view', 'edit'],
+    icon: BarChart3,
+    order: 3,
+  },
 
   // ============================================
   // SETTINGS MODULE (Admin Only - Single Menu Entry)
