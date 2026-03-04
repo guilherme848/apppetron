@@ -90,11 +90,16 @@ export function FunnelDashboard({ kpis, year }: Props) {
   const kpisWithData = kpis.filter(k => k.leads_actual !== null && k.leads_actual !== 0);
   const latestKpi = kpisWithData.length > 0 ? kpisWithData[kpisWithData.length - 1] : null;
 
-  // Totals based on selected month — always single month, returns zeros if no data
+  const EMPTY_TOTALS = {
+    investment: 0, leads: 0, appointments: 0, meetings: 0, sales: 0, revenue: 0,
+    mom_leads: null as number | null, mom_sales: null as number | null, mom_roas: null as number | null,
+  };
+
   const totals = useMemo(() => {
     if (selectedFunnelMonth !== undefined) {
       const kpi = kpis.find(k => parseISO(k.month).getMonth() === selectedFunnelMonth);
-      if (kpi) return {
+      if (!kpi) return EMPTY_TOTALS;
+      return {
         investment: kpi.investment_actual || 0,
         leads: kpi.leads_actual || 0,
         appointments: kpi.appointments_actual || 0,
