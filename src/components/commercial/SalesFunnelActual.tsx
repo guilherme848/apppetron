@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import { SalesFunnelKPI, formatNumber, formatPercent, formatCurrency, formatRoas, MONTH_NAMES } from '@/types/salesFunnel';
 import { parseISO } from 'date-fns';
-import { Users, Calendar, Video, Trophy } from 'lucide-react';
+import { Users, Calendar, Video, Trophy, Filter } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Props {
@@ -18,6 +18,7 @@ export function SalesFunnelActual({ kpis, selectedMonth }: Props) {
       if (kpi) return {
         investment: kpi.investment_actual || 0,
         leads: kpi.leads_actual || 0,
+        mql: kpi.mql_actual || 0,
         appointments: kpi.appointments_actual || 0,
         meetings: kpi.meetings_held_actual || 0,
         sales: kpi.sales_actual || 0,
@@ -27,18 +28,21 @@ export function SalesFunnelActual({ kpis, selectedMonth }: Props) {
     return kpis.reduce((acc, kpi) => ({
       investment: acc.investment + (kpi.investment_actual || 0),
       leads: acc.leads + (kpi.leads_actual || 0),
+      mql: acc.mql + (kpi.mql_actual || 0),
       appointments: acc.appointments + (kpi.appointments_actual || 0),
       meetings: acc.meetings + (kpi.meetings_held_actual || 0),
       sales: acc.sales + (kpi.sales_actual || 0),
       revenue: acc.revenue + (kpi.revenue_actual || 0),
-    }), { investment: 0, leads: 0, appointments: 0, meetings: 0, sales: 0, revenue: 0 });
+    }), { investment: 0, leads: 0, mql: 0, appointments: 0, meetings: 0, sales: 0, revenue: 0 });
   };
 
   const v = getValues();
   const safeDiv = (a: number, b: number) => b === 0 ? null : a / b;
 
   const cpl = safeDiv(v.investment, v.leads);
-  const rateScheduling = safeDiv(v.appointments, v.leads);
+  const rateQualification = safeDiv(v.mql, v.leads);
+  const cpmql = safeDiv(v.investment, v.mql);
+  const rateScheduling = safeDiv(v.appointments, v.mql);
   const rateAttendance = safeDiv(v.meetings, v.appointments);
   const costPerAttendance = safeDiv(v.investment, v.meetings);
   const rateClose = safeDiv(v.sales, v.meetings);
@@ -54,6 +58,15 @@ export function SalesFunnelActual({ kpis, selectedMonth }: Props) {
       formattedValue: formatNumber(v.leads),
       icon: Users,
       kpis: [{ label: 'CPL', value: formatCurrency(cpl) }],
+      convRate: rateQualification,
+      convLabel: 'Tx Qualificação',
+    },
+    {
+      label: 'MQL',
+      value: v.mql,
+      formattedValue: formatNumber(v.mql),
+      icon: Filter,
+      kpis: [{ label: 'CPMQL', value: formatCurrency(cpmql) }],
       convRate: rateScheduling,
       convLabel: 'Tx Agendamento',
     },
@@ -96,8 +109,7 @@ export function SalesFunnelActual({ kpis, selectedMonth }: Props) {
     return Math.max(Math.round((s.value / maxVolume) * 100), 18);
   });
 
-  const funnelOpacities = [1, 0.85, 0.7, 0.55];
-
+  const funnelOpacities = [1, 0.9, 0.78, 0.65, 0.5];
   const periodLabel = selectedMonth !== undefined ? MONTH_NAMES[selectedMonth] : 'Ano (YTD)';
 
   const STAGE_H = 64;
