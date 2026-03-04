@@ -102,11 +102,17 @@ export function SalesFunnelActual({ kpis, selectedMonth }: Props) {
     },
   ];
 
-  // Calculate proportional widths: Leads = 100%, others proportional
+  // Calculate proportional widths with guaranteed visual narrowing
+  const hasData = stages.some(s => s.value > 0);
   const maxVolume = Math.max(v.leads, 1);
+  // Default decreasing widths when no data, so it always looks like a funnel
+  const defaultWidths = [100, 82, 64, 46, 30];
   const widthPercents = stages.map((s, i) => {
-    if (i === 0) return 100; // Leads = full width
-    return Math.max(Math.round((s.value / maxVolume) * 100), 18);
+    if (!hasData) return defaultWidths[i];
+    if (i === 0) return 100;
+    const proportional = Math.round((s.value / maxVolume) * 100);
+    // Ensure each stage is narrower than the previous one (min 5% narrower)
+    return Math.max(Math.min(proportional, defaultWidths[i]), 20);
   });
 
   const funnelOpacities = [1, 0.9, 0.78, 0.65, 0.5];
