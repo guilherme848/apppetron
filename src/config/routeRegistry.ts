@@ -299,6 +299,7 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.TRAFFIC,
     permissions: ['view', 'edit'],
     icon: CheckSquare,
+    hideInMenu: true,
     order: 1,
   },
   {
@@ -319,6 +320,7 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.TRAFFIC,
     permissions: ['view'],
     icon: BarChart3,
+    hideInMenu: true,
     order: 3,
   },
   {
@@ -329,6 +331,7 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.TRAFFIC,
     permissions: ['view'],
     icon: TrendingUp,
+    hideInMenu: true,
     order: 4,
   },
   {
