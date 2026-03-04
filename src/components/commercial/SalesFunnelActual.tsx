@@ -12,10 +12,13 @@ interface Props {
 export function SalesFunnelActual({ kpis, selectedMonth }: Props) {
   const isMobile = useIsMobile();
 
+  const EMPTY = { investment: 0, leads: 0, mql: 0, appointments: 0, meetings: 0, sales: 0, revenue: 0 };
+
   const getValues = () => {
     if (selectedMonth !== undefined) {
       const kpi = kpis.find(k => parseISO(k.month).getMonth() === selectedMonth);
-      if (kpi) return {
+      if (!kpi) return EMPTY;
+      return {
         investment: kpi.investment_actual || 0,
         leads: kpi.leads_actual || 0,
         mql: kpi.mql_actual || 0,
