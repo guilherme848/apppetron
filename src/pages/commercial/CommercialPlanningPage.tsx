@@ -114,6 +114,8 @@ export default function CommercialPlanningPage() {
       qtyIndicacao: ma.indicacaoQty,
       qtyProspeccao: ma.prospeccaoQty,
       churnQty: ma.churnQty,
+      mrrAtMonth: ma.mrrAtMonth,
+      activeClientsAtMonth: ma.activeClientsAtMonth,
     }));
   }, [monthlyActuals, targets]);
 
@@ -128,22 +130,34 @@ export default function CommercialPlanningPage() {
   const currentMonth = new Date().getMonth();
 
   const metaAnual = useMemo(() => targets.reduce((s, t) => s + t.target, 0), [targets]);
-  const realizadoTotal = useMemo(() => data.reduce((s, d) => s + d.inbound + d.indicacao + d.prospeccao, 0), [data]);
+  // Realizado = último MRR conhecido (evolução do MRR)
+  const realizadoTotal = useMemo(() => {
+    const pastData = data.filter((_, i) => i <= currentMonth);
+    if (pastData.length === 0) return 0;
+    return pastData[pastData.length - 1].mrrAtMonth;
+  }, [data, currentMonth]);
 
   const projecaoCalc = useMemo(() => {
-    const mesesComDados = data.filter((_, i) => i <= currentMonth);
-    if (mesesComDados.length === 0) return 0;
-    const total = mesesComDados.reduce((s, d) => s + d.inbound + d.indicacao + d.prospeccao, 0);
-    return Math.round((total / mesesComDados.length) * 12);
+    const mesesComDados = data.filter((_, i) => i <= currentMonth && i > 0);
+    if (mesesComDados.length === 0) return data[0]?.mrrAtMonth || 0;
+    // Average MRR growth per month, project to year end
+    const firstMrr = data[0]?.mrrAtMonth || 0;
+    const lastMrr = mesesComDados[mesesComDados.length - 1].mrrAtMonth;
+    const monthsElapsed = mesesComDados.length;
+    const avgGrowth = (lastMrr - firstMrr) / monthsElapsed;
+    const remainingMonths = 11 - (mesesComDados[mesesComDados.length - 1].month);
+    return Math.round(lastMrr + avgGrowth * remainingMonths);
   }, [data, currentMonth]);
 
   const atingimento = pct(realizadoTotal, metaAnual);
 
   const chartData = useMemo(() => data.map((d, i) => {
-    const realizado = d.inbound + d.indicacao + d.prospeccao;
-    const pastMonths = data.slice(Math.max(0, i - 2), i + 1).filter((_, idx) => (Math.max(0, i - 2) + idx) <= currentMonth);
-    const proj = pastMonths.length > 0 ? Math.round(pastMonths.reduce((s, m) => s + m.inbound + m.indicacao + m.prospeccao, 0) / pastMonths.length) : null;
-    return { name: MONTHS[i], meta: d.target, realizado: i <= currentMonth ? realizado : null, projecao: proj };
+    return {
+      name: MONTHS[i],
+      meta: d.target,
+      realizado: i <= currentMonth ? d.mrrAtMonth : null,
+      projecao: null,
+    };
   }), [data, currentMonth]);
 
   const chartConfig = {

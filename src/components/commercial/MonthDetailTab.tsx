@@ -36,11 +36,12 @@ export interface MonthData {
   targetInbound: number;
   targetIndicacao: number;
   targetProspeccao: number;
-  // New fields for Mês a Mês detail
   qtyInbound: number;
   qtyIndicacao: number;
   qtyProspeccao: number;
   churnQty: number;
+  mrrAtMonth: number;
+  activeClientsAtMonth: number;
 }
 
 interface MonthDetailTabProps {
@@ -178,18 +179,26 @@ export default function MonthDetailTab({ data, onDataChange, readOnly }: MonthDe
             ) : (
               <>
                 <div className="flex justify-between text-sm font-medium border-b pb-2">
-                  <span>Total Realizado</span>
-                  <span>{fmt(totalRealizado)}</span>
+                  <span>MRR no Mês</span>
+                  <span>{fmt(d.mrrAtMonth)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Clientes ativos</span>
+                  <span className="font-medium">{d.activeClientsAtMonth}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Novos contratos</span>
+                  <span className="font-medium">{d.qtyInbound + d.qtyIndicacao + d.qtyProspeccao}</span>
                 </div>
                 {channels.map(ch => (
                   <div key={ch.label} className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{ch.label}</span>
+                    <span className="text-muted-foreground pl-3">↳ {ch.label}</span>
                     <span>{fmt(ch.realized)}</span>
                   </div>
                 ))}
                 <div className="flex justify-between text-sm pt-2 border-t">
                   <span className="text-muted-foreground">Churn do mês</span>
-                  <span className="text-red-600 dark:text-red-400">{d.churnQty} clientes</span>
+                  <span className="text-destructive">{d.churnQty} clientes</span>
                 </div>
               </>
             )}
