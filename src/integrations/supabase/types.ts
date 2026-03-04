@@ -1375,6 +1375,464 @@ export type Database = {
           },
         ]
       }
+      crm_activities: {
+        Row: {
+          cadence_id: string | null
+          completed_at: string | null
+          contact_id: string | null
+          created_at: string
+          deal_id: string | null
+          description: string | null
+          id: string
+          notes: string | null
+          responsible_id: string | null
+          result: string | null
+          scheduled_at: string | null
+          status: string
+          title: string
+          type: string
+        }
+        Insert: {
+          cadence_id?: string | null
+          completed_at?: string | null
+          contact_id?: string | null
+          created_at?: string
+          deal_id?: string | null
+          description?: string | null
+          id?: string
+          notes?: string | null
+          responsible_id?: string | null
+          result?: string | null
+          scheduled_at?: string | null
+          status?: string
+          title: string
+          type?: string
+        }
+        Update: {
+          cadence_id?: string | null
+          completed_at?: string | null
+          contact_id?: string | null
+          created_at?: string
+          deal_id?: string | null
+          description?: string | null
+          id?: string
+          notes?: string | null
+          responsible_id?: string | null
+          result?: string | null
+          scheduled_at?: string | null
+          status?: string
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_activities_cadence_id_fkey"
+            columns: ["cadence_id"]
+            isOneToOne: false
+            referencedRelation: "crm_cadences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activities_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activities_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "crm_deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activities_responsible_id_fkey"
+            columns: ["responsible_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_cadence_steps: {
+        Row: {
+          cadence_id: string
+          created_at: string
+          day_offset: number
+          description: string | null
+          id: string
+          responsible_type: string
+          sort_order: number
+          title: string
+          type: string
+        }
+        Insert: {
+          cadence_id: string
+          created_at?: string
+          day_offset?: number
+          description?: string | null
+          id?: string
+          responsible_type?: string
+          sort_order?: number
+          title: string
+          type?: string
+        }
+        Update: {
+          cadence_id?: string
+          created_at?: string
+          day_offset?: number
+          description?: string | null
+          id?: string
+          responsible_type?: string
+          sort_order?: number
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_cadence_steps_cadence_id_fkey"
+            columns: ["cadence_id"]
+            isOneToOne: false
+            referencedRelation: "crm_cadences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_cadences: {
+        Row: {
+          created_at: string
+          funnel_id: string | null
+          id: string
+          name: string
+          trigger_stage_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          funnel_id?: string | null
+          id?: string
+          name: string
+          trigger_stage_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          funnel_id?: string | null
+          id?: string
+          name?: string
+          trigger_stage_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_cadences_funnel_id_fkey"
+            columns: ["funnel_id"]
+            isOneToOne: false
+            referencedRelation: "crm_funnels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_cadences_trigger_stage_id_fkey"
+            columns: ["trigger_stage_id"]
+            isOneToOne: false
+            referencedRelation: "crm_funnel_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_calls: {
+        Row: {
+          api4com_call_id: string | null
+          contact_id: string | null
+          created_at: string
+          deal_id: string | null
+          duration: number | null
+          id: string
+          notes: string | null
+          phone: string | null
+          result: string | null
+          user_id: string | null
+        }
+        Insert: {
+          api4com_call_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          deal_id?: string | null
+          duration?: number | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          result?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          api4com_call_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          deal_id?: string | null
+          duration?: number | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          result?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_calls_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_calls_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "crm_deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_calls_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_contacts: {
+        Row: {
+          company: string | null
+          created_at: string
+          email: string | null
+          id: string
+          instagram: string | null
+          name: string
+          notes: string | null
+          origin: string | null
+          phone: string | null
+          tags: string[] | null
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          instagram?: string | null
+          name: string
+          notes?: string | null
+          origin?: string | null
+          phone?: string | null
+          tags?: string[] | null
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          instagram?: string | null
+          name?: string
+          notes?: string | null
+          origin?: string | null
+          phone?: string | null
+          tags?: string[] | null
+        }
+        Relationships: []
+      }
+      crm_deal_stage_history: {
+        Row: {
+          changed_at: string
+          deal_id: string
+          from_stage_id: string | null
+          id: string
+          to_stage_id: string
+          user_id: string | null
+        }
+        Insert: {
+          changed_at?: string
+          deal_id: string
+          from_stage_id?: string | null
+          id?: string
+          to_stage_id: string
+          user_id?: string | null
+        }
+        Update: {
+          changed_at?: string
+          deal_id?: string
+          from_stage_id?: string | null
+          id?: string
+          to_stage_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_deal_stage_history_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "crm_deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_deal_stage_history_from_stage_id_fkey"
+            columns: ["from_stage_id"]
+            isOneToOne: false
+            referencedRelation: "crm_funnel_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_deal_stage_history_to_stage_id_fkey"
+            columns: ["to_stage_id"]
+            isOneToOne: false
+            referencedRelation: "crm_funnel_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_deal_stage_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_deals: {
+        Row: {
+          closed_at: string | null
+          contact_id: string | null
+          created_at: string
+          funnel_id: string
+          id: string
+          notes: string | null
+          probability: number | null
+          responsible_id: string | null
+          stage_id: string
+          status: string
+          tags: string[] | null
+          title: string
+          value: number | null
+        }
+        Insert: {
+          closed_at?: string | null
+          contact_id?: string | null
+          created_at?: string
+          funnel_id: string
+          id?: string
+          notes?: string | null
+          probability?: number | null
+          responsible_id?: string | null
+          stage_id: string
+          status?: string
+          tags?: string[] | null
+          title: string
+          value?: number | null
+        }
+        Update: {
+          closed_at?: string | null
+          contact_id?: string | null
+          created_at?: string
+          funnel_id?: string
+          id?: string
+          notes?: string | null
+          probability?: number | null
+          responsible_id?: string | null
+          stage_id?: string
+          status?: string
+          tags?: string[] | null
+          title?: string
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_deals_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_deals_funnel_id_fkey"
+            columns: ["funnel_id"]
+            isOneToOne: false
+            referencedRelation: "crm_funnels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_deals_responsible_id_fkey"
+            columns: ["responsible_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_deals_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "crm_funnel_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_funnel_stages: {
+        Row: {
+          color: string
+          created_at: string
+          funnel_id: string
+          id: string
+          name: string
+          probability: number
+          sort_order: number
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          funnel_id: string
+          id?: string
+          name: string
+          probability?: number
+          sort_order?: number
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          funnel_id?: string
+          id?: string
+          name?: string
+          probability?: number
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_funnel_stages_funnel_id_fkey"
+            columns: ["funnel_id"]
+            isOneToOne: false
+            referencedRelation: "crm_funnels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_funnels: {
+        Row: {
+          color: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       cs_alert_config: {
         Row: {
           alert_type: string
