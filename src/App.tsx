@@ -94,6 +94,12 @@ import MarketingPostDetail from "./pages/commercial/MarketingPostDetail";
 import CommercialPlanningPage from "./pages/commercial/CommercialPlanningPage";
 import OutboundFunnelPage from "./pages/commercial/OutboundFunnelPage";
 
+// Sales CRM pages
+import SalesDashboard from "./pages/sales/SalesDashboard";
+import SalesFunnelKanban from "./pages/sales/SalesFunnelKanban";
+import SalesActivities from "./pages/sales/SalesActivities";
+import SalesContacts from "./pages/sales/SalesContacts";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -204,6 +210,12 @@ const App = () => (
                         <Route path="/commercial/marketing" element={<MarketingProduction />} />
                         <Route path="/commercial/marketing/:id" element={<MarketingBatchDetail />} />
                         <Route path="/commercial/marketing/:batchId/posts/:postId" element={<MarketingPostDetail />} />
+
+                        {/* Sales CRM routes */}
+                        <Route path="/sales" element={<SalesDashboard />} />
+                        <Route path="/sales/funnel/:funnelId" element={<SalesFunnelKanban />} />
+                        <Route path="/sales/activities" element={<SalesActivities />} />
+                        <Route path="/sales/contacts" element={<SalesContacts />} />
 
                         {/* Settings - Admin only with internal navigation */}
                         <Route

@@ -33,6 +33,10 @@ import {
   Megaphone,
   Archive,
   Send,
+  Phone,
+  GitMerge,
+  Contact,
+  Activity,
 } from 'lucide-react';
 
 // Action types for permissions
@@ -56,6 +60,7 @@ export interface RouteDefinition {
 export const MODULES = {
   MAIN: 'Principal',
   CRM: 'CRM',
+  SALES: 'Vendas',
   COMMERCIAL: 'Comercial & Marketing',
   CONTENT: 'Conteúdo',
   TRAFFIC: 'Tráfego',
@@ -81,6 +86,10 @@ export const CATEGORIES = {
   INTEGRATIONS: 'Integrações',
   ACCESS: 'Acessos',
   CONTRACTS: 'Contratos',
+  FUNNELS: 'Funis',
+  CONTACTS: 'Contatos',
+  ACTIVITIES: 'Atividades',
+  VOIP: 'VOIP',
 } as const;
 
 /**
@@ -167,6 +176,60 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view', 'edit'],
     icon: ListTodo,
     order: 4,
+  },
+
+  // ============================================
+  // SALES MODULE (CRM de Vendas)
+  // ============================================
+  {
+    id: 'sales.dashboard',
+    path: '/sales',
+    label: 'Dashboard',
+    category: CATEGORIES.DASHBOARD,
+    module: MODULES.SALES,
+    permissions: ['view'],
+    icon: BarChart3,
+    order: 0,
+  },
+  {
+    id: 'sales.activities',
+    path: '/sales/activities',
+    label: 'Atividades',
+    category: CATEGORIES.ACTIVITIES,
+    module: MODULES.SALES,
+    permissions: ['view', 'edit'],
+    icon: Activity,
+    order: 2,
+  },
+  {
+    id: 'sales.contacts',
+    path: '/sales/contacts',
+    label: 'Contatos',
+    category: CATEGORIES.CONTACTS,
+    module: MODULES.SALES,
+    permissions: ['view', 'edit'],
+    icon: Contact,
+    order: 3,
+  },
+  {
+    id: 'sales.dialer',
+    path: '/sales/dialer',
+    label: 'Discador VOIP',
+    category: CATEGORIES.VOIP,
+    module: MODULES.SALES,
+    permissions: ['view', 'edit'],
+    icon: Phone,
+    order: 4,
+  },
+  {
+    id: 'sales.funnel',
+    path: '/sales/funnel/:funnelId',
+    label: 'Funil',
+    category: CATEGORIES.FUNNELS,
+    module: MODULES.SALES,
+    permissions: ['view', 'edit'],
+    hideInMenu: true,
+    order: 10,
   },
 
   // ============================================
@@ -883,6 +946,7 @@ export function getRoutesForAccessControl(): Record<string, Record<string, Route
 export const MODULE_ORDER: string[] = [
   MODULES.MAIN,
   MODULES.CRM,
+  MODULES.SALES,
   MODULES.COMMERCIAL,
   MODULES.CONTENT,
   MODULES.TRAFFIC,
