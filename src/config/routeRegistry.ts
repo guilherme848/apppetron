@@ -37,6 +37,7 @@ import {
   GitMerge,
   Contact,
   Activity,
+  Trophy,
 } from 'lucide-react';
 
 // Action types for permissions
@@ -233,6 +234,46 @@ export const routeRegistry: RouteDefinition[] = [
     hideInMenu: true,
   },
   {
+    id: 'sales.scoring',
+    path: '/sales/scoring',
+    label: 'Lead Scoring',
+    category: CATEGORIES.ANALYTICS,
+    module: MODULES.SALES,
+    permissions: ['view', 'edit'],
+    icon: Target,
+    order: 5,
+  },
+  {
+    id: 'sales.templates',
+    path: '/sales/templates',
+    label: 'Templates',
+    category: CATEGORIES.PIPELINE,
+    module: MODULES.SALES,
+    permissions: ['view', 'edit'],
+    icon: FilePen,
+    order: 6,
+  },
+  {
+    id: 'sales.automations',
+    path: '/sales/automations',
+    label: 'Automações',
+    category: CATEGORIES.PIPELINE,
+    module: MODULES.SALES,
+    permissions: ['view', 'edit'],
+    icon: Zap,
+    order: 7,
+  },
+  {
+    id: 'sales.goals',
+    path: '/sales/goals',
+    label: 'Metas e Ranking',
+    category: CATEGORIES.ANALYTICS,
+    module: MODULES.SALES,
+    permissions: ['view', 'edit'],
+    icon: Trophy,
+    order: 8,
+  },
+  {
     id: 'sales.settings',
     path: '/sales/settings',
     label: 'Configurações',
@@ -240,7 +281,7 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.SALES,
     permissions: ['view', 'edit', 'manage'],
     icon: Settings,
-    order: 5,
+    order: 9,
   },
 
   // ============================================
