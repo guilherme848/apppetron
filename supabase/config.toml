@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.clint-create-client]
 verify_jwt = false
+
+[functions.external-api]
+verify_jwt = false
