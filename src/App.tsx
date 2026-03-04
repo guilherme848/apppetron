@@ -99,6 +99,7 @@ import SalesDashboard from "./pages/sales/SalesDashboard";
 import SalesFunnelsPage from "./pages/sales/SalesFunnelsPage";
 import SalesActivities from "./pages/sales/SalesActivities";
 import SalesContacts from "./pages/sales/SalesContacts";
+import SalesSettingsPage from "./pages/sales/SalesSettingsPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -216,6 +217,7 @@ const App = () => (
                         <Route path="/sales/funnels" element={<SalesFunnelsPage />} />
                         <Route path="/sales/activities" element={<SalesActivities />} />
                         <Route path="/sales/contacts" element={<SalesContacts />} />
+                        <Route path="/sales/settings" element={<SalesSettingsPage />} />
 
                         {/* Settings - Admin only with internal navigation */}
                         <Route

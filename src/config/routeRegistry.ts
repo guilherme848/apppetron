@@ -230,6 +230,17 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view', 'edit'],
     icon: Phone,
     order: 4,
+    hideInMenu: true,
+  },
+  {
+    id: 'sales.settings',
+    path: '/sales/settings',
+    label: 'Configurações',
+    category: CATEGORIES.FUNNELS,
+    module: MODULES.SALES,
+    permissions: ['view', 'edit', 'manage'],
+    icon: Settings,
+    order: 5,
   },
 
   // ============================================
