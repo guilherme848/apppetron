@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -75,9 +75,16 @@ export default function CommercialPlanningPage() {
   const { loading, error, lastFetched, activeClients, totalMrr, avgTicket, monthlyActuals, refetch } = usePlatformData(year);
 
   const [scenarios, setScenarios] = useState<ScenarioStorage>(loadScenarios);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    localStorage.setItem(SCENARIO_STORAGE_KEY, JSON.stringify(scenarios));
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      localStorage.setItem(SCENARIO_STORAGE_KEY, JSON.stringify(scenarios));
+      setLastSavedAt(new Date());
+    }, 800);
+    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
   }, [scenarios]);
 
   // Targets still from localStorage (user-defined)
@@ -366,20 +373,24 @@ export default function CommercialPlanningPage() {
             label="Cenário Inicial" emoji="🔴" colorClass="red"
             config={scenarios.cenarioInicial} clientesIniciais={activeClients} ticketMedio={avgTicket}
             onConfigChange={c => setScenarios(prev => ({ ...prev, cenarioInicial: c }))}
+            monthlyActuals={monthlyActuals} lastSavedAt={lastSavedAt}
           />
           <MrrScenarioCard
             label="Cenário Bom" emoji="🟡" colorClass="yellow"
             config={scenarios.cenarioBom} clientesIniciais={activeClients} ticketMedio={avgTicket}
             onConfigChange={c => setScenarios(prev => ({ ...prev, cenarioBom: c }))}
+            monthlyActuals={monthlyActuals} lastSavedAt={lastSavedAt}
           />
           <MrrScenarioCard
             label="Cenário Ótimo" emoji="🟢" colorClass="green"
             config={scenarios.cenarioOtimo} clientesIniciais={activeClients} ticketMedio={avgTicket}
             onConfigChange={c => setScenarios(prev => ({ ...prev, cenarioOtimo: c }))}
+            monthlyActuals={monthlyActuals} lastSavedAt={lastSavedAt}
           />
           <MrrScenariosChart
             clientesIniciais={activeClients} ticketMedio={avgTicket}
             inicial={scenarios.cenarioInicial} bom={scenarios.cenarioBom} otimo={scenarios.cenarioOtimo}
+            monthlyActuals={monthlyActuals}
           />
         </TabsContent>
 
