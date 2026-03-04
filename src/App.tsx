@@ -221,11 +221,7 @@ const App = () => (
                         <Route path="/sales/funnels" element={<SalesFunnelsPage />} />
                         <Route path="/sales/activities" element={<SalesActivities />} />
                         <Route path="/sales/contacts" element={<SalesContacts />} />
-                        <Route path="/sales/scoring" element={<LeadScoringPage />} />
-                        <Route path="/sales/templates" element={<SalesTemplatesPage />} />
-                        <Route path="/sales/automations" element={<SalesAutomationsPage />} />
                         <Route path="/sales/goals" element={<SalesGoalsPage />} />
-                        <Route path="/sales/settings" element={<SalesSettingsPage />} />
 
                         {/* Settings - Admin only with internal navigation */}
                         <Route
@@ -249,6 +245,10 @@ const App = () => (
                           <Route path="traffic/playbook" element={<TrafficPlaybookPage />} />
                           <Route path="integrations/meta" element={<MetaIntegrationPage />} />
                           <Route path="traffic/analytics" element={<TrafficAnalyticsSettingsTab />} />
+                          <Route path="sales/funnels" element={<SalesSettingsPage />} />
+                          <Route path="sales/scoring" element={<LeadScoringPage />} />
+                          <Route path="sales/templates" element={<SalesTemplatesPage />} />
+                          <Route path="sales/automations" element={<SalesAutomationsPage />} />
                           <Route path="cs/onboarding/activities" element={<PetronOnboardingActivitiesPage />} />
                           <Route path="cs/onboarding/sequences" element={<PetronOnboardingSequencesPage />} />
                           <Route path="cs/onboarding/questions" element={<OnboardingQuestionsPage />} />

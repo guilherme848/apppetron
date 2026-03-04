@@ -242,6 +242,7 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view', 'edit'],
     icon: Target,
     order: 5,
+    hideInMenu: true,
   },
   {
     id: 'sales.templates',
@@ -252,6 +253,7 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view', 'edit'],
     icon: FilePen,
     order: 6,
+    hideInMenu: true,
   },
   {
     id: 'sales.automations',
@@ -262,6 +264,7 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view', 'edit'],
     icon: Zap,
     order: 7,
+    hideInMenu: true,
   },
   {
     id: 'sales.goals',
@@ -282,6 +285,7 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view', 'edit', 'manage'],
     icon: Settings,
     order: 9,
+    hideInMenu: true,
   },
 
   // ============================================
