@@ -8,69 +8,43 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Pencil, TrendingUp, Target, DollarSign, BarChart3, AlertTriangle } from 'lucide-react';
+import { Pencil, TrendingUp, Target, DollarSign, BarChart3, AlertTriangle, Loader2, RefreshCw } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Line, ComposedChart, ResponsiveContainer, Legend } from 'recharts';
 import MrrBaseConfig from '@/components/commercial/MrrBaseConfig';
 import MrrScenarioCard, { type ScenarioConfig } from '@/components/commercial/MrrScenarioCard';
 import MrrScenariosChart from '@/components/commercial/MrrScenariosChart';
 import MonthDetailTab, { type MonthData } from '@/components/commercial/MonthDetailTab';
+import { usePlatformData } from '@/hooks/usePlatformData';
 
 const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 const MONTH_NAMES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
-const STORAGE_KEY = 'commercial-planning-config';
+const SCENARIO_STORAGE_KEY = 'commercial-planning-scenarios';
 
-interface MrrConfig {
-  ticketMedio: number;
-  clientesAtuais: number;
+interface ScenarioStorage {
   cenarioInicial: ScenarioConfig;
   cenarioBom: ScenarioConfig;
   cenarioOtimo: ScenarioConfig;
 }
 
-const defaultMrrConfig: MrrConfig = {
-  ticketMedio: 2800,
-  clientesAtuais: 45,
+const defaultScenarios: ScenarioStorage = {
   cenarioInicial: { churnPct: 10, adicaoMensal: 5 },
   cenarioBom: { churnPct: 11, adicaoMensal: 10 },
   cenarioOtimo: { churnPct: 12, adicaoMensal: 9 },
 };
 
-function loadMrrConfig(): MrrConfig {
+function loadScenarios(): ScenarioStorage {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return { ...defaultMrrConfig, ...JSON.parse(saved) };
+    const saved = localStorage.getItem(SCENARIO_STORAGE_KEY);
+    if (saved) return { ...defaultScenarios, ...JSON.parse(saved) };
   } catch {}
-  return defaultMrrConfig;
+  return defaultScenarios;
 }
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 });
 const pct = (v: number, t: number) => t > 0 ? Math.round((v / t) * 100) : 0;
-
-function getInitialData(): MonthData[] {
-  const currentMonth = new Date().getMonth();
-  return Array.from({ length: 12 }, (_, i) => {
-    const isPast = i <= currentMonth;
-    const baseTarget = 80000 + Math.floor(Math.random() * 40000);
-    return {
-      month: i,
-      target: baseTarget,
-      targetInbound: Math.round(baseTarget * 0.4),
-      targetIndicacao: Math.round(baseTarget * 0.3),
-      targetProspeccao: Math.round(baseTarget * 0.3),
-      inbound: isPast ? Math.round((baseTarget * 0.4) * (0.7 + Math.random() * 0.6)) : 0,
-      indicacao: isPast ? Math.round((baseTarget * 0.3) * (0.5 + Math.random() * 0.8)) : 0,
-      prospeccao: isPast ? Math.round((baseTarget * 0.3) * (0.6 + Math.random() * 0.7)) : 0,
-      qtyInbound: isPast ? Math.floor(Math.random() * 5) + 1 : 0,
-      qtyIndicacao: isPast ? Math.floor(Math.random() * 3) + 1 : 0,
-      qtyProspeccao: isPast ? Math.floor(Math.random() * 4) + 1 : 0,
-      churnQty: isPast ? Math.floor(Math.random() * 3) : 0,
-    };
-  });
-}
 
 function getAtingimentoColor(p: number) {
   if (p >= 100) return 'text-green-600 dark:text-green-400';
@@ -98,18 +72,53 @@ function getDiffColor(v: number) {
 
 export default function CommercialPlanningPage() {
   const [year, setYear] = useState(new Date().getFullYear());
-  const [data, setData] = useState<MonthData[]>(getInitialData);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [inlineEditing, setInlineEditing] = useState<{ month: number; field: string } | null>(null);
-  const [inlineValue, setInlineValue] = useState('');
+  const { loading, error, lastFetched, activeClients, totalMrr, avgTicket, monthlyActuals, refetch } = usePlatformData(year);
 
-  const [mrrConfig, setMrrConfig] = useState<MrrConfig>(loadMrrConfig);
+  const [scenarios, setScenarios] = useState<ScenarioStorage>(loadScenarios);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(mrrConfig));
-  }, [mrrConfig]);
+    localStorage.setItem(SCENARIO_STORAGE_KEY, JSON.stringify(scenarios));
+  }, [scenarios]);
+
+  // Targets still from localStorage (user-defined)
+  const TARGET_STORAGE_KEY = `commercial-targets-${year}`;
+  const [targets, setTargets] = useState<{ target: number; targetInbound: number; targetIndicacao: number; targetProspeccao: number }[]>(() => {
+    try {
+      const saved = localStorage.getItem(TARGET_STORAGE_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return Array.from({ length: 12 }, () => ({
+      target: 100000,
+      targetInbound: 40000,
+      targetIndicacao: 30000,
+      targetProspeccao: 30000,
+    }));
+  });
+
+  useEffect(() => {
+    localStorage.setItem(TARGET_STORAGE_KEY, JSON.stringify(targets));
+  }, [targets]);
+
+  // Build MonthData from platform + targets
+  const data: MonthData[] = useMemo(() => {
+    return monthlyActuals.map((ma, i) => ({
+      month: i,
+      target: targets[i]?.target || 0,
+      targetInbound: targets[i]?.targetInbound || 0,
+      targetIndicacao: targets[i]?.targetIndicacao || 0,
+      targetProspeccao: targets[i]?.targetProspeccao || 0,
+      inbound: ma.inboundValue,
+      indicacao: ma.indicacaoValue,
+      prospeccao: ma.prospeccaoValue,
+      qtyInbound: ma.inboundQty,
+      qtyIndicacao: ma.indicacaoQty,
+      qtyProspeccao: ma.prospeccaoQty,
+      churnQty: ma.churnQty,
+    }));
+  }, [monthlyActuals, targets]);
 
   // Modal state
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [modalMonth, setModalMonth] = useState<number | 'all'>('all');
   const [modalTarget, setModalTarget] = useState('');
   const [modalInbound, setModalInbound] = useState('');
@@ -118,7 +127,7 @@ export default function CommercialPlanningPage() {
 
   const currentMonth = new Date().getMonth();
 
-  const metaAnual = useMemo(() => data.reduce((s, d) => s + d.target, 0), [data]);
+  const metaAnual = useMemo(() => targets.reduce((s, t) => s + t.target, 0), [targets]);
   const realizadoTotal = useMemo(() => data.reduce((s, d) => s + d.inbound + d.indicacao + d.prospeccao, 0), [data]);
 
   const projecaoCalc = useMemo(() => {
@@ -148,29 +157,13 @@ export default function CommercialPlanningPage() {
     const labels = { inbound: 'Inbound', indicacao: 'Indicação', prospeccao: 'Prospecção Ativa' };
     const targetKeys = { inbound: 'targetInbound', indicacao: 'targetIndicacao', prospeccao: 'targetProspeccao' } as const;
     return channels.map(ch => {
-      const metaAno = data.reduce((s, d) => s + d[targetKeys[ch]], 0);
+      const metaAno = targets.reduce((s, t) => s + t[targetKeys[ch]], 0);
       const realizadoAno = data.reduce((s, d) => s + d[ch], 0);
       const contribuicao = realizadoTotal > 0 ? Math.round((realizadoAno / realizadoTotal) * 100) : 0;
       const monthlyData = data.map((d, i) => ({ name: MONTHS[i], value: i <= currentMonth ? d[ch] : 0 }));
       return { key: ch, label: labels[ch], metaAno, realizadoAno, contribuicao, monthlyData };
     });
-  }, [data, realizadoTotal, currentMonth]);
-
-  const startInlineEdit = (month: number, field: string, currentValue: number) => {
-    if (month > currentMonth && ['inbound', 'indicacao', 'prospeccao'].includes(field)) return;
-    setInlineEditing({ month, field });
-    setInlineValue(String(currentValue));
-  };
-
-  const commitInlineEdit = () => {
-    if (!inlineEditing) return;
-    const val = parseInt(inlineValue) || 0;
-    setData(prev => prev.map((d, i) => {
-      if (i !== inlineEditing.month) return d;
-      return { ...d, [inlineEditing.field]: val };
-    }));
-    setInlineEditing(null);
-  };
+  }, [data, targets, realizadoTotal, currentMonth]);
 
   const openEditModal = () => {
     setModalMonth('all');
@@ -191,12 +184,23 @@ export default function CommercialPlanningPage() {
     const ib = parseInt(modalInbound) || 0;
     const ind = parseInt(modalIndicacao) || 0;
     const pr = parseInt(modalProspeccao) || 0;
-    setData(prev => prev.map((d, i) => {
-      if (modalMonth !== 'all' && i !== modalMonth) return d;
-      return { ...d, target: t, targetInbound: ib, targetIndicacao: ind, targetProspeccao: pr };
+    setTargets(prev => prev.map((item, i) => {
+      if (modalMonth !== 'all' && i !== modalMonth) return item;
+      return { target: t, targetInbound: ib, targetIndicacao: ind, targetProspeccao: pr };
     }));
     setEditModalOpen(false);
   };
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <p className="text-destructive">Erro ao carregar dados: {error}</p>
+        <Button onClick={refetch} variant="outline">
+          <RefreshCw className="h-4 w-4 mr-2" /> Tentar novamente
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -233,12 +237,14 @@ export default function CommercialPlanningPage() {
 
         {/* Tab 1 — Planejamento Comercial */}
         <TabsContent value="planning" className="space-y-6 mt-6">
-          {/* MRR Base Config */}
+          {/* MRR Base Config — read-only from database */}
           <MrrBaseConfig
-            ticketMedio={mrrConfig.ticketMedio}
-            clientesAtuais={mrrConfig.clientesAtuais}
-            onTicketMedioChange={v => setMrrConfig(prev => ({ ...prev, ticketMedio: v }))}
-            onClientesAtuaisChange={v => setMrrConfig(prev => ({ ...prev, clientesAtuais: v }))}
+            ticketMedio={avgTicket}
+            clientesAtuais={activeClients}
+            mrrAtual={totalMrr}
+            loading={loading}
+            lastFetched={lastFetched}
+            onRefresh={refetch}
           />
 
           {/* KPI Cards */}
@@ -349,32 +355,32 @@ export default function CommercialPlanningPage() {
         <TabsContent value="scenarios" className="space-y-6 mt-6">
           <MrrScenarioCard
             label="Cenário Inicial" emoji="🔴" colorClass="red"
-            config={mrrConfig.cenarioInicial} clientesIniciais={mrrConfig.clientesAtuais} ticketMedio={mrrConfig.ticketMedio}
-            onConfigChange={c => setMrrConfig(prev => ({ ...prev, cenarioInicial: c }))}
+            config={scenarios.cenarioInicial} clientesIniciais={activeClients} ticketMedio={avgTicket}
+            onConfigChange={c => setScenarios(prev => ({ ...prev, cenarioInicial: c }))}
           />
           <MrrScenarioCard
             label="Cenário Bom" emoji="🟡" colorClass="yellow"
-            config={mrrConfig.cenarioBom} clientesIniciais={mrrConfig.clientesAtuais} ticketMedio={mrrConfig.ticketMedio}
-            onConfigChange={c => setMrrConfig(prev => ({ ...prev, cenarioBom: c }))}
+            config={scenarios.cenarioBom} clientesIniciais={activeClients} ticketMedio={avgTicket}
+            onConfigChange={c => setScenarios(prev => ({ ...prev, cenarioBom: c }))}
           />
           <MrrScenarioCard
             label="Cenário Ótimo" emoji="🟢" colorClass="green"
-            config={mrrConfig.cenarioOtimo} clientesIniciais={mrrConfig.clientesAtuais} ticketMedio={mrrConfig.ticketMedio}
-            onConfigChange={c => setMrrConfig(prev => ({ ...prev, cenarioOtimo: c }))}
+            config={scenarios.cenarioOtimo} clientesIniciais={activeClients} ticketMedio={avgTicket}
+            onConfigChange={c => setScenarios(prev => ({ ...prev, cenarioOtimo: c }))}
           />
           <MrrScenariosChart
-            clientesIniciais={mrrConfig.clientesAtuais} ticketMedio={mrrConfig.ticketMedio}
-            inicial={mrrConfig.cenarioInicial} bom={mrrConfig.cenarioBom} otimo={mrrConfig.cenarioOtimo}
+            clientesIniciais={activeClients} ticketMedio={avgTicket}
+            inicial={scenarios.cenarioInicial} bom={scenarios.cenarioBom} otimo={scenarios.cenarioOtimo}
           />
         </TabsContent>
 
         {/* Tab 3 — Mês a Mês */}
         <TabsContent value="monthly" className="mt-6">
-          <MonthDetailTab data={data} onDataChange={setData} />
+          <MonthDetailTab data={data} onDataChange={() => {}} readOnly />
         </TabsContent>
       </Tabs>
 
-      {/* Edit Modal (global) */}
+      {/* Edit Modal (global targets) */}
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
