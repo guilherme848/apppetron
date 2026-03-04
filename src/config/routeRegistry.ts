@@ -192,6 +192,16 @@ export const routeRegistry: RouteDefinition[] = [
     order: 0,
   },
   {
+    id: 'sales.funnels',
+    path: '/sales/funnels',
+    label: 'Funis de Vendas',
+    category: CATEGORIES.FUNNELS,
+    module: MODULES.SALES,
+    permissions: ['view', 'edit'],
+    icon: GitMerge,
+    order: 1,
+  },
+  {
     id: 'sales.activities',
     path: '/sales/activities',
     label: 'Atividades',
@@ -220,16 +230,6 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view', 'edit'],
     icon: Phone,
     order: 4,
-  },
-  {
-    id: 'sales.funnel',
-    path: '/sales/funnel/:funnelId',
-    label: 'Funil',
-    category: CATEGORIES.FUNNELS,
-    module: MODULES.SALES,
-    permissions: ['view', 'edit'],
-    hideInMenu: true,
-    order: 10,
   },
 
   // ============================================

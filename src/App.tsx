@@ -96,7 +96,7 @@ import OutboundFunnelPage from "./pages/commercial/OutboundFunnelPage";
 
 // Sales CRM pages
 import SalesDashboard from "./pages/sales/SalesDashboard";
-import SalesFunnelKanban from "./pages/sales/SalesFunnelKanban";
+import SalesFunnelsPage from "./pages/sales/SalesFunnelsPage";
 import SalesActivities from "./pages/sales/SalesActivities";
 import SalesContacts from "./pages/sales/SalesContacts";
 
@@ -213,7 +213,7 @@ const App = () => (
 
                         {/* Sales CRM routes */}
                         <Route path="/sales" element={<SalesDashboard />} />
-                        <Route path="/sales/funnel/:funnelId" element={<SalesFunnelKanban />} />
+                        <Route path="/sales/funnels" element={<SalesFunnelsPage />} />
                         <Route path="/sales/activities" element={<SalesActivities />} />
                         <Route path="/sales/contacts" element={<SalesContacts />} />
 
