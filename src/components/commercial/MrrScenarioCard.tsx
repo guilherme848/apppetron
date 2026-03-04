@@ -5,7 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Lock } from 'lucide-react';
+import { Lock, Pin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import type { MonthlyActuals } from '@/hooks/usePlatformData';
 
 const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -34,6 +35,9 @@ interface MrrScenarioCardProps {
   onConfigChange: (c: ScenarioConfig) => void;
   monthlyActuals: MonthlyActuals[];
   lastSavedAt?: Date | null;
+  isBP?: boolean;
+  bpLocked?: number[] | null;
+  onLockBP?: () => void;
 }
 
 const currentMonth = new Date().getMonth();
@@ -112,7 +116,7 @@ function DiffBadge({ diff }: { diff: number }) {
   );
 }
 
-export default function MrrScenarioCard({ label, emoji, colorClass, config, clientesIniciais, ticketMedio, onConfigChange, monthlyActuals, lastSavedAt }: MrrScenarioCardProps) {
+export default function MrrScenarioCard({ label, emoji, colorClass, config, clientesIniciais, ticketMedio, onConfigChange, monthlyActuals, lastSavedAt, isBP, bpLocked, onLockBP }: MrrScenarioCardProps) {
   const realJanClientes = monthlyActuals[0]?.activeClientsAtMonth ?? clientesIniciais;
   const realJanMrr = monthlyActuals[0]?.mrrAtMonth ?? 0;
   const estimativa = useMemo(() => calcScenarioMonths(clientesIniciais, ticketMedio, config, realJanClientes, realJanMrr), [clientesIniciais, ticketMedio, config, realJanClientes, realJanMrr]);
@@ -141,6 +145,11 @@ export default function MrrScenarioCard({ label, emoji, colorClass, config, clie
         <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-base flex items-center gap-2">
             <span>{emoji}</span> {label}
+            {isBP && (
+              <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border-none text-[10px] gap-1">
+                <Pin className="h-3 w-3" /> BP Oficial
+              </Badge>
+            )}
           </CardTitle>
           {savedTimeStr && (
             <span className="text-[11px] text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">
@@ -158,6 +167,16 @@ export default function MrrScenarioCard({ label, emoji, colorClass, config, clie
             <Input type="number" value={config.adicaoMensal} onChange={e => onConfigChange({ ...config, adicaoMensal: Number(e.target.value) || 0 })} className="w-20 h-8 text-sm" />
           </div>
         </div>
+        {isBP && !bpLocked && onLockBP && (
+          <div className="pt-2">
+            <Button size="sm" variant="outline" onClick={onLockBP} className="text-xs">
+              <Pin className="h-3 w-3 mr-1" /> Definir como BP do Ano
+            </Button>
+          </div>
+        )}
+        {isBP && bpLocked && (
+          <p className="text-[11px] text-muted-foreground pt-1">🔒 BP congelado — os valores de referência não mudam ao alterar os inputs.</p>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Summary cards — updated */}
