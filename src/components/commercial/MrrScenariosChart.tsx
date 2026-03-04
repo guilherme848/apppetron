@@ -37,10 +37,12 @@ function calcNovaPrevisaoMrr(monthlyActuals: MonthlyActuals[], ticketMedio: numb
 
 export default function MrrScenariosChart({ clientesIniciais, ticketMedio, inicial, bom, otimo, monthlyActuals }: MrrScenariosChartProps) {
   const chartData = useMemo(() => {
-    // Estimativas originais
-    const eI = calcScenarioMonths(clientesIniciais, ticketMedio, inicial);
-    const eB = calcScenarioMonths(clientesIniciais, ticketMedio, bom);
-    const eO = calcScenarioMonths(clientesIniciais, ticketMedio, otimo);
+    const janClientes = monthlyActuals[0]?.activeClientsAtMonth ?? clientesIniciais;
+    const janMrr = monthlyActuals[0]?.mrrAtMonth ?? 0;
+    // Estimativas originais (starting from real January)
+    const eI = calcScenarioMonths(clientesIniciais, ticketMedio, inicial, janClientes, janMrr);
+    const eB = calcScenarioMonths(clientesIniciais, ticketMedio, bom, janClientes, janMrr);
+    const eO = calcScenarioMonths(clientesIniciais, ticketMedio, otimo, janClientes, janMrr);
 
     // Nova Previsão
     const npI = calcNovaPrevisaoMrr(monthlyActuals, ticketMedio, inicial);
