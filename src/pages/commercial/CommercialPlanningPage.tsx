@@ -147,21 +147,13 @@ export default function CommercialPlanningPage() {
 
   const atingimento = pct(realizadoTotal, metaAnual);
 
-  // Chart: meta acumulada vs realizado acumulado
-  const chartData = useMemo(() => {
-    let acumMeta = 0;
-    let acumReal = 0;
-    return data.map((d, i) => {
-      acumMeta += d.target;
-      acumReal += d.mrrAtMonth;
-      return {
-        name: MONTHS[i],
-        meta: acumMeta,
-        realizado: i <= currentMonth ? acumReal : null,
-        projecao: null,
-      };
-    });
-  }, [data, currentMonth]);
+  // Chart: meta mensal vs MRR mensal (não acumulado)
+  const chartData = useMemo(() => data.map((d, i) => ({
+    name: MONTHS[i],
+    meta: d.target,
+    realizado: i <= currentMonth ? d.mrrAtMonth : null,
+    projecao: null,
+  })), [data, currentMonth]);
 
   const chartConfig = {
     meta: { label: 'Meta', color: 'hsl(201 30% 21%)' },
