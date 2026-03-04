@@ -100,6 +100,10 @@ import SalesFunnelsPage from "./pages/sales/SalesFunnelsPage";
 import SalesActivities from "./pages/sales/SalesActivities";
 import SalesContacts from "./pages/sales/SalesContacts";
 import SalesSettingsPage from "./pages/sales/SalesSettingsPage";
+import LeadScoringPage from "./pages/sales/LeadScoringPage";
+import SalesTemplatesPage from "./pages/sales/SalesTemplatesPage";
+import SalesAutomationsPage from "./pages/sales/SalesAutomationsPage";
+import SalesGoalsPage from "./pages/sales/SalesGoalsPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -217,6 +221,10 @@ const App = () => (
                         <Route path="/sales/funnels" element={<SalesFunnelsPage />} />
                         <Route path="/sales/activities" element={<SalesActivities />} />
                         <Route path="/sales/contacts" element={<SalesContacts />} />
+                        <Route path="/sales/scoring" element={<LeadScoringPage />} />
+                        <Route path="/sales/templates" element={<SalesTemplatesPage />} />
+                        <Route path="/sales/automations" element={<SalesAutomationsPage />} />
+                        <Route path="/sales/goals" element={<SalesGoalsPage />} />
                         <Route path="/sales/settings" element={<SalesSettingsPage />} />
 
                         {/* Settings - Admin only with internal navigation */}

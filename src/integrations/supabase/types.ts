@@ -1455,6 +1455,93 @@ export type Database = {
           },
         ]
       }
+      crm_automation_logs: {
+        Row: {
+          actions_executed: Json
+          automation_id: string
+          deal_id: string | null
+          error_message: string | null
+          executed_at: string
+          id: string
+          status: string
+          trigger_event: string | null
+        }
+        Insert: {
+          actions_executed?: Json
+          automation_id: string
+          deal_id?: string | null
+          error_message?: string | null
+          executed_at?: string
+          id?: string
+          status?: string
+          trigger_event?: string | null
+        }
+        Update: {
+          actions_executed?: Json
+          automation_id?: string
+          deal_id?: string | null
+          error_message?: string | null
+          executed_at?: string
+          id?: string
+          status?: string
+          trigger_event?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_automation_logs_automation_id_fkey"
+            columns: ["automation_id"]
+            isOneToOne: false
+            referencedRelation: "crm_automations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_automation_logs_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "crm_deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_automations: {
+        Row: {
+          actions: Json
+          active: boolean
+          conditions: Json
+          created_at: string
+          executions_count: number
+          id: string
+          name: string
+          trigger_config: Json
+          trigger_type: string
+          updated_at: string
+        }
+        Insert: {
+          actions?: Json
+          active?: boolean
+          conditions?: Json
+          created_at?: string
+          executions_count?: number
+          id?: string
+          name: string
+          trigger_config?: Json
+          trigger_type: string
+          updated_at?: string
+        }
+        Update: {
+          actions?: Json
+          active?: boolean
+          conditions?: Json
+          created_at?: string
+          executions_count?: number
+          id?: string
+          name?: string
+          trigger_config?: Json
+          trigger_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       crm_cadence_steps: {
         Row: {
           cadence_id: string
@@ -1637,6 +1724,41 @@ export type Database = {
           tags?: string[] | null
         }
         Relationships: []
+      }
+      crm_deal_scores: {
+        Row: {
+          breakdown: Json
+          calculated_at: string
+          created_at: string
+          deal_id: string
+          id: string
+          score: number
+        }
+        Insert: {
+          breakdown?: Json
+          calculated_at?: string
+          created_at?: string
+          deal_id: string
+          id?: string
+          score?: number
+        }
+        Update: {
+          breakdown?: Json
+          calculated_at?: string
+          created_at?: string
+          deal_id?: string
+          id?: string
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_deal_scores_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "crm_deals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       crm_deal_stage_history: {
         Row: {
@@ -1832,6 +1954,181 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      crm_goal_achievements: {
+        Row: {
+          activities_done: number
+          calls_done: number
+          deals_done: number
+          id: string
+          month: string
+          updated_at: string
+          user_id: string
+          value_done: number
+        }
+        Insert: {
+          activities_done?: number
+          calls_done?: number
+          deals_done?: number
+          id?: string
+          month: string
+          updated_at?: string
+          user_id: string
+          value_done?: number
+        }
+        Update: {
+          activities_done?: number
+          calls_done?: number
+          deals_done?: number
+          id?: string
+          month?: string
+          updated_at?: string
+          user_id?: string
+          value_done?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_goal_achievements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_goals: {
+        Row: {
+          activities_target: number
+          calls_target: number
+          created_at: string
+          deals_target: number
+          id: string
+          month: string
+          updated_at: string
+          user_id: string
+          value_target: number
+        }
+        Insert: {
+          activities_target?: number
+          calls_target?: number
+          created_at?: string
+          deals_target?: number
+          id?: string
+          month: string
+          updated_at?: string
+          user_id: string
+          value_target?: number
+        }
+        Update: {
+          activities_target?: number
+          calls_target?: number
+          created_at?: string
+          deals_target?: number
+          id?: string
+          month?: string
+          updated_at?: string
+          user_id?: string
+          value_target?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_goals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_scoring_config: {
+        Row: {
+          active: boolean
+          created_at: string
+          criterion_key: string
+          criterion_label: string
+          group_key: string
+          group_label: string
+          id: string
+          points: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          criterion_key: string
+          criterion_label: string
+          group_key: string
+          group_label: string
+          id?: string
+          points?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          criterion_key?: string
+          criterion_label?: string
+          group_key?: string
+          group_label?: string
+          id?: string
+          points?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      crm_templates: {
+        Row: {
+          active: boolean
+          content: string
+          created_at: string
+          funnel_id: string | null
+          id: string
+          name: string
+          stage_id: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          content?: string
+          created_at?: string
+          funnel_id?: string | null
+          id?: string
+          name: string
+          stage_id?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          content?: string
+          created_at?: string
+          funnel_id?: string | null
+          id?: string
+          name?: string
+          stage_id?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_templates_funnel_id_fkey"
+            columns: ["funnel_id"]
+            isOneToOne: false
+            referencedRelation: "crm_funnels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_templates_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "crm_funnel_stages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cs_alert_config: {
         Row: {
