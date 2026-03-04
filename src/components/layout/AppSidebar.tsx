@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react';
-import { LayoutDashboard, Users, CheckSquare, Layers, Settings, ListTodo, TrendingUp, BarChart3, HeartHandshake, FileText, Home, GitMerge } from 'lucide-react';
+import { LayoutDashboard, Users, CheckSquare, Layers, Settings, ListTodo, TrendingUp, BarChart3, HeartHandshake, FileText, Home } from 'lucide-react';
 import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
 import {
   Sidebar,
@@ -17,7 +16,6 @@ import { useRouteAccess } from '@/hooks/useRouteAccess';
 import { useAuth } from '@/contexts/AuthContext';
 import { getMenuRoutes, RouteDefinition, MODULES } from '@/config/routeRegistry';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
 import petronLogo from '@/assets/petron-logo.png';
 
 // Icon mapping for routes (kept for potential future use)
@@ -111,13 +109,7 @@ export function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  // Fetch funnels for dynamic menu
-  const [funnels, setFunnels] = useState<{ id: string; name: string; color: string }[]>([]);
-  useEffect(() => {
-    supabase.from('crm_funnels').select('id, name, color').order('created_at').then(({ data }) => {
-      setFunnels((data as any[]) || []);
-    });
-  }, []);
+  
 
   // Get menu routes from registry
   const menuRoutes = getMenuRoutes();
@@ -181,31 +173,6 @@ export function AppSidebar() {
                             >
                               <Icon className="h-4 w-4" />
                               <span>{route.label}</span>
-                            </RouterNavLink>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      );
-                    })}
-                    {/* Dynamic funnel links for Sales module */}
-                    {module === MODULES.SALES && funnels.length > 0 && funnels.map(funnel => {
-                      const funnelPath = `/sales/funnel/${funnel.id}`;
-                      const isFunnelActive = currentPath === funnelPath;
-                      return (
-                        <SidebarMenuItem key={funnel.id}>
-                          <SidebarMenuButton asChild data-active={isFunnelActive}>
-                            <RouterNavLink
-                              to={funnelPath}
-                              className={cn(
-                                "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                                isFunnelActive
-                                  ? "bg-accent text-accent-foreground font-medium"
-                                  : "hover:bg-accent/50"
-                              )}
-                            >
-                              <div className="h-4 w-4 flex items-center justify-center">
-                                <div className="h-3 w-3 rounded-full" style={{ backgroundColor: funnel.color }} />
-                              </div>
-                              <span>{funnel.name}</span>
                             </RouterNavLink>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
