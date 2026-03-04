@@ -1957,6 +1957,8 @@ export type Database = {
           fb_form_name: string | null
           funnel_id: string
           id: string
+          loss_reason_id: string | null
+          lost_at: string | null
           notes: string | null
           probability: number | null
           recovery_boleto_url: string | null
@@ -1984,6 +1986,8 @@ export type Database = {
           fb_form_name?: string | null
           funnel_id: string
           id?: string
+          loss_reason_id?: string | null
+          lost_at?: string | null
           notes?: string | null
           probability?: number | null
           recovery_boleto_url?: string | null
@@ -2011,6 +2015,8 @@ export type Database = {
           fb_form_name?: string | null
           funnel_id?: string
           id?: string
+          loss_reason_id?: string | null
+          lost_at?: string | null
           notes?: string | null
           probability?: number | null
           recovery_boleto_url?: string | null
@@ -2038,6 +2044,13 @@ export type Database = {
             columns: ["funnel_id"]
             isOneToOne: false
             referencedRelation: "crm_funnels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_deals_loss_reason_id_fkey"
+            columns: ["loss_reason_id"]
+            isOneToOne: false
+            referencedRelation: "crm_loss_reasons"
             referencedColumns: ["id"]
           },
           {
@@ -2202,6 +2215,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      crm_loss_reasons: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
       }
       crm_scoring_config: {
         Row: {
