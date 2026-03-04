@@ -46,9 +46,10 @@ export interface MonthData {
 interface MonthDetailTabProps {
   data: MonthData[];
   onDataChange: (data: MonthData[]) => void;
+  readOnly?: boolean;
 }
 
-export default function MonthDetailTab({ data, onDataChange }: MonthDetailTabProps) {
+export default function MonthDetailTab({ data, onDataChange, readOnly }: MonthDetailTabProps) {
   const currentMonth = new Date().getMonth();
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [launchModalOpen, setLaunchModalOpen] = useState(false);
@@ -136,7 +137,7 @@ export default function MonthDetailTab({ data, onDataChange }: MonthDetailTabPro
             ))}
           </SelectContent>
         </Select>
-        {!isFuture && (
+        {!isFuture && !readOnly && (
           <Button onClick={openLaunchModal} className="bg-accent text-accent-foreground hover:bg-accent/90">
             <Plus className="h-4 w-4 mr-1" /> Lançar Realizado
           </Button>
