@@ -100,10 +100,6 @@ export default function MonthDetailTab({ data, onDataChange, readOnly, bpAdicaoM
     setChannelPlans(prev => ({ ...prev, [key]: { ...getPlan(i), ...partial } }));
   };
 
-  // BP per channel (split evenly as default)
-  const bpPerChannel = Math.round(bpAdicaoMensal / 3);
-  const bpOutbound = bpAdicaoMensal - bpPerChannel * 2;
-
   // Totals
   const totals = useMemo(() => {
     let bpTotal = 0, bpMrr = 0;
@@ -183,18 +179,9 @@ export default function MonthDetailTab({ data, onDataChange, readOnly, bpAdicaoM
                   <tr className="bg-muted/40">
                     <td colSpan={14} className={groupHeaderCls}>📌 BP (Cenário Bom)</td>
                   </tr>
-                  {/* BP Adições totais */}
-                  <GroupRow label="Adições totais" months={MONTHS.map(() => bpAdicaoMensal)} total={totals.bpTotal} colBg={colBg} currentMonth={currentMonth} />
-                  <GroupRow label="↳ Inbound" months={MONTHS.map(() => bpPerChannel)} total={bpPerChannel * 12} colBg={colBg} currentMonth={currentMonth} muted />
-                  <GroupRow label="↳ Indicação" months={MONTHS.map(() => bpPerChannel)} total={bpPerChannel * 12} colBg={colBg} currentMonth={currentMonth} muted />
-                  <GroupRow label="↳ Outbound" months={MONTHS.map(() => bpOutbound)} total={bpOutbound * 12} colBg={colBg} currentMonth={currentMonth} muted />
-                  <GroupRow label="MRR Gerado" months={MONTHS.map(() => bpAdicaoMensal * ticketMedio)} total={totals.bpMrr} colBg={colBg} currentMonth={currentMonth} isCurrency />
-
-                  {/* ═══ GROUP 2: PLANEJADO ═══ */}
-                  <tr className="bg-blue-50/60 dark:bg-blue-950/10">
-                    <td colSpan={14} className={`${groupHeaderCls} bg-blue-50/60 dark:bg-blue-950/10`}>📝 Planejado</td>
-                  </tr>
-                  {/* Planejado Inbound */}
+                  {/* BP Adições totais — read-only from meta */}
+                  <GroupRow label="Adições totais" months={MONTHS.map(() => bpAdicaoMensal)} total={totals.bpTotal} colBg={colBg} currentMonth={currentMonth} bold />
+                  {/* Channel split — editable: user defines how to reach the total */}
                   <EditableRow
                     label="Inbound"
                     getVal={i => getPlan(i).inbound}
@@ -219,24 +206,24 @@ export default function MonthDetailTab({ data, onDataChange, readOnly, bpAdicaoM
                     colBg={colBg}
                     total={Array.from({ length: 12 }, (_, i) => getPlan(i).outbound).reduce((a, b) => a + b, 0)}
                   />
-                  {/* Total Planejado */}
-                  <GroupRow
-                    label="Total contratos"
-                    months={Array.from({ length: 12 }, (_, i) => { const p = getPlan(i); return p.inbound + p.indicacao + p.outbound; })}
-                    total={totals.planTotal}
-                    colBg={colBg}
-                    currentMonth={currentMonth}
-                    bold
-                  />
-                  <GroupRow
-                    label="MRR Planejado"
-                    months={Array.from({ length: 12 }, (_, i) => { const p = getPlan(i); return (p.inbound + p.indicacao + p.outbound) * ticketMedio; })}
-                    total={totals.planMrr}
-                    colBg={colBg}
-                    currentMonth={currentMonth}
-                    isCurrency
-                    bold
-                  />
+                  {/* Validation row — sum vs BP */}
+                  <tr>
+                    <td className={`${stickyLabelCls} text-muted-foreground pl-6 text-[11px]`}>Soma canais</td>
+                    {MONTHS.map((_, i) => {
+                      const p = getPlan(i);
+                      const sum = p.inbound + p.indicacao + p.outbound;
+                      const diff = sum - bpAdicaoMensal;
+                      return (
+                        <td key={i} className={`${cellCls} ${colBg(i)} text-[11px] font-medium ${getDiffColor(diff)}`}>
+                          {sum}{diff !== 0 && ` (${diff > 0 ? '+' : ''}${diff})`}
+                        </td>
+                      );
+                    })}
+                    <td className={`${cellCls} bg-muted/40 text-[11px] font-semibold ${getDiffColor(totals.planTotal - totals.bpTotal)}`}>
+                      {totals.planTotal}
+                    </td>
+                  </tr>
+                  <GroupRow label="MRR Gerado" months={MONTHS.map(() => bpAdicaoMensal * ticketMedio)} total={totals.bpMrr} colBg={colBg} currentMonth={currentMonth} isCurrency />
 
                   {/* ═══ GROUP 3: REALIZADO ═══ */}
                   <tr className="bg-orange-50/40 dark:bg-orange-950/10">
