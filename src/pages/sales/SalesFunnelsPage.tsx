@@ -1,11 +1,12 @@
 import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
@@ -106,183 +107,6 @@ function StageColumn({
   );
 }
 
-/* ───── Deal Detail Sheet ───── */
-function DealDetailSheet({
-  deal,
-  stages,
-  activities,
-  funnelStages,
-  onClose,
-  onUpdate,
-  teamMembers,
-}: {
-  deal: any;
-  stages: any[];
-  activities: any[];
-  funnelStages: any[];
-  onClose: () => void;
-  onUpdate: () => void;
-  teamMembers: any[];
-}) {
-  const dealActivities = activities.filter(a => a.deal_id === deal.id);
-  const [editingStage, setEditingStage] = useState(deal.stage_id);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-  const handleStageChange = async (newStageId: string) => {
-    if (newStageId === deal.stage_id) return;
-    setEditingStage(newStageId);
-    const { error } = await supabase.from('crm_deals').update({ stage_id: newStageId } as any).eq('id', deal.id);
-    if (!error) {
-      await supabase.from('crm_deal_stage_history').insert({
-        deal_id: deal.id,
-        from_stage_id: deal.stage_id,
-        to_stage_id: newStageId,
-      } as any);
-      toast.success('Etapa atualizada');
-      onUpdate();
-    }
-  };
-
-  const handleStatusChange = async (status: 'won' | 'lost') => {
-    const { error } = await supabase.from('crm_deals').update({
-      status,
-      closed_at: new Date().toISOString(),
-    } as any).eq('id', deal.id);
-    if (!error) {
-      toast.success(status === 'won' ? 'Negócio ganho! 🎉' : 'Negócio perdido');
-      onUpdate();
-      onClose();
-    }
-  };
-
-  const handleDelete = async () => {
-    const { error } = await supabase.from('crm_deals').delete().eq('id', deal.id);
-    if (!error) {
-      toast.success('Negócio excluído');
-      onUpdate();
-      onClose();
-    }
-  };
-
-  return (
-    <Sheet open={!!deal} onOpenChange={onClose}>
-      <SheetContent className="w-[500px] sm:max-w-[500px] overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle className="text-foreground">{deal.title}</SheetTitle>
-          {deal.contact?.company && (
-            <p className="text-sm text-muted-foreground">{deal.contact.company}</p>
-          )}
-        </SheetHeader>
-
-        <div className="mt-6 space-y-6">
-          {/* Quick Info */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs text-muted-foreground">Valor</p>
-              <p className="text-lg font-bold" style={{ color: DC.orange }}>
-                {Number(deal.value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Probabilidade</p>
-              <p className="text-lg font-bold text-foreground">{deal.probability || 0}%</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Responsável</p>
-              <p className="text-sm text-foreground">{deal.responsible?.name || '—'}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Etapa</p>
-              <Select value={editingStage} onValueChange={handleStageChange}>
-                <SelectTrigger className="h-8 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {funnelStages.map(s => (
-                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-2">
-            <Button size="sm" onClick={() => handleStatusChange('won')} className="flex-1" style={{ backgroundColor: DC.teal }}>
-              <Check className="h-4 w-4 mr-1" /> Ganho
-            </Button>
-            <Button size="sm" variant="destructive" onClick={() => handleStatusChange('lost')} className="flex-1">
-              <X className="h-4 w-4 mr-1" /> Perdido
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => setShowDeleteConfirm(true)}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-
-          {/* Tabs */}
-          <Tabs defaultValue="activities">
-            <TabsList className="w-full">
-              <TabsTrigger value="activities" className="flex-1">Atividades</TabsTrigger>
-              <TabsTrigger value="cadence" className="flex-1">Cadência</TabsTrigger>
-              <TabsTrigger value="history" className="flex-1">Histórico</TabsTrigger>
-            </TabsList>
-            <TabsContent value="activities" className="space-y-3 mt-4">
-              {dealActivities.length === 0 ? (
-                <p className="text-sm text-center py-4 text-muted-foreground">Nenhuma atividade vinculada</p>
-              ) : (
-                dealActivities.map(act => (
-                  <div
-                    key={act.id}
-                    className="p-3 rounded-lg border"
-                    style={{
-                      borderColor: DC.border,
-                      backgroundColor: act.status === 'pending' && act.scheduled_at && act.scheduled_at < new Date().toISOString()
-                        ? DC.redBg : undefined,
-                    }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-foreground">{act.title}</p>
-                      <Badge variant={act.status === 'completed' ? 'default' : 'secondary'}>
-                        {act.status === 'completed' ? 'Concluída' : 'Pendente'}
-                      </Badge>
-                    </div>
-                    {act.scheduled_at && (
-                      <p className="text-xs mt-1 text-muted-foreground">
-                        {format(new Date(act.scheduled_at), "dd/MM/yyyy 'às' HH:mm")}
-                      </p>
-                    )}
-                  </div>
-                ))
-              )}
-            </TabsContent>
-            <TabsContent value="cadence" className="mt-4">
-              <p className="text-sm text-center py-4 text-muted-foreground">Nenhuma cadência vinculada</p>
-            </TabsContent>
-            <TabsContent value="history" className="mt-4">
-              <p className="text-sm text-center py-4 text-muted-foreground">Histórico em breve</p>
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        {/* Delete Confirm */}
-        <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Excluir Negócio</DialogTitle>
-              <DialogDescription>
-                Tem certeza que deseja excluir "{deal.title}"? Esta ação não pode ser desfeita.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>Cancelar</Button>
-              <Button variant="destructive" onClick={handleDelete}>Excluir</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </SheetContent>
-    </Sheet>
-  );
-}
 
 /* ───── Main Page ───── */
 export default function SalesFunnelsPage() {
@@ -292,10 +116,10 @@ export default function SalesFunnelsPage() {
     refetchDeals,
   } = useSalesCrmData();
   const { members: teamMembers } = useTeamMembers();
+  const navigate = useNavigate();
 
   const [activeFunnelId, setActiveFunnelId] = useState<string>('');
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
-  const [selectedDeal, setSelectedDeal] = useState<any>(null);
   const [showNewDealDialog, setShowNewDealDialog] = useState(false);
   const [newDealStageId, setNewDealStageId] = useState('');
   const [newDealForm, setNewDealForm] = useState({ title: '', value: '', contact_id: '', responsible_id: '' });
@@ -431,7 +255,7 @@ export default function SalesFunnelsPage() {
                 deals={stageDeals}
                 stageValue={stageValue}
                 onAddDeal={() => handleAddDeal(stage.id)}
-                onDealClick={setSelectedDeal}
+                onDealClick={(deal) => navigate(`/sales/deals/${deal.id}`)}
               />
             );
           })}
@@ -462,7 +286,7 @@ export default function SalesFunnelsPage() {
                     const stage = stages.find(s => s.id === deal.stage_id);
                     const daysInStage = differenceInDays(new Date(), new Date(deal.created_at));
                     return (
-                      <TableRow key={deal.id} className="cursor-pointer" onClick={() => setSelectedDeal(deal)}>
+                      <TableRow key={deal.id} className="cursor-pointer" onClick={() => navigate(`/sales/deals/${deal.id}`)}>
                         <TableCell className="font-medium">{deal.title}</TableCell>
                         <TableCell>{deal.contact?.company || '—'}</TableCell>
                         <TableCell>
@@ -544,18 +368,6 @@ export default function SalesFunnelsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Deal Detail */}
-      {selectedDeal && (
-        <DealDetailSheet
-          deal={selectedDeal}
-          stages={stages}
-          activities={activities}
-          funnelStages={funnelStages}
-          onClose={() => setSelectedDeal(null)}
-          onUpdate={() => { refetchDeals(); setSelectedDeal(null); }}
-          teamMembers={teamMembers}
-        />
-      )}
     </div>
   );
 }

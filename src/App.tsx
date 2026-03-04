@@ -104,6 +104,7 @@ import LeadScoringPage from "./pages/sales/LeadScoringPage";
 import SalesTemplatesPage from "./pages/sales/SalesTemplatesPage";
 import SalesAutomationsPage from "./pages/sales/SalesAutomationsPage";
 import SalesGoalsPage from "./pages/sales/SalesGoalsPage";
+import DealDetailPage from "./pages/sales/DealDetailPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -222,6 +223,7 @@ const App = () => (
                         <Route path="/sales/activities" element={<SalesActivities />} />
                         <Route path="/sales/contacts" element={<SalesContacts />} />
                         <Route path="/sales/goals" element={<SalesGoalsPage />} />
+                        <Route path="/sales/deals/:id" element={<DealDetailPage />} />
 
                         {/* Settings - Admin only with internal navigation */}
                         <Route

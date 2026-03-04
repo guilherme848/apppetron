@@ -1688,42 +1688,169 @@ export type Database = {
       }
       crm_contacts: {
         Row: {
+          category: string | null
+          city: string | null
+          cnpj: string | null
           company: string | null
+          company_instagram: string | null
+          company_phone: string | null
+          company_url: string | null
           created_at: string
+          custom_fields: Json | null
+          document: string | null
           email: string | null
+          employee_count: string | null
           id: string
           instagram: string | null
+          manychat_url: string | null
+          monthly_revenue: string | null
           name: string
           notes: string | null
           origin: string | null
           phone: string | null
+          position: string | null
+          segment: string | null
+          state: string | null
           tags: string[] | null
         }
         Insert: {
+          category?: string | null
+          city?: string | null
+          cnpj?: string | null
           company?: string | null
+          company_instagram?: string | null
+          company_phone?: string | null
+          company_url?: string | null
           created_at?: string
+          custom_fields?: Json | null
+          document?: string | null
           email?: string | null
+          employee_count?: string | null
           id?: string
           instagram?: string | null
+          manychat_url?: string | null
+          monthly_revenue?: string | null
           name: string
           notes?: string | null
           origin?: string | null
           phone?: string | null
+          position?: string | null
+          segment?: string | null
+          state?: string | null
           tags?: string[] | null
         }
         Update: {
+          category?: string | null
+          city?: string | null
+          cnpj?: string | null
           company?: string | null
+          company_instagram?: string | null
+          company_phone?: string | null
+          company_url?: string | null
           created_at?: string
+          custom_fields?: Json | null
+          document?: string | null
           email?: string | null
+          employee_count?: string | null
           id?: string
           instagram?: string | null
+          manychat_url?: string | null
+          monthly_revenue?: string | null
           name?: string
           notes?: string | null
           origin?: string | null
           phone?: string | null
+          position?: string | null
+          segment?: string | null
+          state?: string | null
           tags?: string[] | null
         }
         Relationships: []
+      }
+      crm_deal_events: {
+        Row: {
+          created_at: string
+          deal_id: string
+          description: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          deal_id: string
+          description?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          deal_id?: string
+          description?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_deal_events_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "crm_deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_deal_files: {
+        Row: {
+          created_at: string
+          deal_id: string
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          public_url: string | null
+          storage_path: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          deal_id: string
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          public_url?: string | null
+          storage_path: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          deal_id?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          public_url?: string | null
+          storage_path?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_deal_files_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "crm_deals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       crm_deal_scores: {
         Row: {
@@ -1821,10 +1948,22 @@ export type Database = {
           closed_at: string | null
           contact_id: string | null
           created_at: string
+          custom_fields: Json | null
+          fb_ad_id: string | null
+          fb_ad_name: string | null
+          fb_campaign_id: string | null
+          fb_campaign_name: string | null
+          fb_form_id: string | null
+          fb_form_name: string | null
           funnel_id: string
           id: string
           notes: string | null
           probability: number | null
+          recovery_boleto_url: string | null
+          recovery_checkout_url: string | null
+          recovery_invoice_id: string | null
+          recovery_product_id: string | null
+          recovery_product_name: string | null
           responsible_id: string | null
           stage_id: string
           status: string
@@ -1836,10 +1975,22 @@ export type Database = {
           closed_at?: string | null
           contact_id?: string | null
           created_at?: string
+          custom_fields?: Json | null
+          fb_ad_id?: string | null
+          fb_ad_name?: string | null
+          fb_campaign_id?: string | null
+          fb_campaign_name?: string | null
+          fb_form_id?: string | null
+          fb_form_name?: string | null
           funnel_id: string
           id?: string
           notes?: string | null
           probability?: number | null
+          recovery_boleto_url?: string | null
+          recovery_checkout_url?: string | null
+          recovery_invoice_id?: string | null
+          recovery_product_id?: string | null
+          recovery_product_name?: string | null
           responsible_id?: string | null
           stage_id: string
           status?: string
@@ -1851,10 +2002,22 @@ export type Database = {
           closed_at?: string | null
           contact_id?: string | null
           created_at?: string
+          custom_fields?: Json | null
+          fb_ad_id?: string | null
+          fb_ad_name?: string | null
+          fb_campaign_id?: string | null
+          fb_campaign_name?: string | null
+          fb_form_id?: string | null
+          fb_form_name?: string | null
           funnel_id?: string
           id?: string
           notes?: string | null
           probability?: number | null
+          recovery_boleto_url?: string | null
+          recovery_checkout_url?: string | null
+          recovery_invoice_id?: string | null
+          recovery_product_id?: string | null
+          recovery_product_name?: string | null
           responsible_id?: string | null
           stage_id?: string
           status?: string
@@ -2082,6 +2245,7 @@ export type Database = {
       crm_templates: {
         Row: {
           active: boolean
+          cadence_step_id: string | null
           content: string
           created_at: string
           funnel_id: string | null
@@ -2090,9 +2254,11 @@ export type Database = {
           stage_id: string | null
           type: string
           updated_at: string
+          variables: Json | null
         }
         Insert: {
           active?: boolean
+          cadence_step_id?: string | null
           content?: string
           created_at?: string
           funnel_id?: string | null
@@ -2101,9 +2267,11 @@ export type Database = {
           stage_id?: string | null
           type?: string
           updated_at?: string
+          variables?: Json | null
         }
         Update: {
           active?: boolean
+          cadence_step_id?: string | null
           content?: string
           created_at?: string
           funnel_id?: string | null
@@ -2112,8 +2280,16 @@ export type Database = {
           stage_id?: string | null
           type?: string
           updated_at?: string
+          variables?: Json | null
         }
         Relationships: [
+          {
+            foreignKeyName: "crm_templates_cadence_step_id_fkey"
+            columns: ["cadence_step_id"]
+            isOneToOne: false
+            referencedRelation: "crm_cadence_steps"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "crm_templates_funnel_id_fkey"
             columns: ["funnel_id"]
