@@ -38,15 +38,18 @@ interface MrrScenarioCardProps {
 
 const currentMonth = new Date().getMonth();
 
-export function calcScenarioMonths(clientesIniciais: number, ticketMedio: number, config: ScenarioConfig): ScenarioMonth[] {
+export function calcScenarioMonths(clientesIniciais: number, ticketMedio: number, config: ScenarioConfig, realJanClientes?: number, realJanMrr?: number): ScenarioMonth[] {
   const months: ScenarioMonth[] = [];
-  let clientes = clientesIniciais;
+  // Always start from real January if available
+  const janClientes = realJanClientes ?? clientesIniciais;
+  const janMrr = realJanMrr ?? (janClientes * ticketMedio);
+  let clientes = janClientes;
   for (let i = 0; i < 12; i++) {
     if (i > 0) {
       const prev = months[i - 1].clientes;
       clientes = Math.round(prev - (prev * config.churnPct / 100) + config.adicaoMensal);
     }
-    months.push({ month: i, clientes, churnPct: config.churnPct, adicao: config.adicaoMensal, mrr: clientes * ticketMedio });
+    months.push({ month: i, clientes, churnPct: config.churnPct, adicao: config.adicaoMensal, mrr: i === 0 ? janMrr : clientes * ticketMedio });
   }
   return months;
 }
@@ -110,7 +113,9 @@ function DiffBadge({ diff }: { diff: number }) {
 }
 
 export default function MrrScenarioCard({ label, emoji, colorClass, config, clientesIniciais, ticketMedio, onConfigChange, monthlyActuals, lastSavedAt }: MrrScenarioCardProps) {
-  const estimativa = useMemo(() => calcScenarioMonths(clientesIniciais, ticketMedio, config), [clientesIniciais, ticketMedio, config]);
+  const realJanClientes = monthlyActuals[0]?.activeClientsAtMonth ?? clientesIniciais;
+  const realJanMrr = monthlyActuals[0]?.mrrAtMonth ?? 0;
+  const estimativa = useMemo(() => calcScenarioMonths(clientesIniciais, ticketMedio, config, realJanClientes, realJanMrr), [clientesIniciais, ticketMedio, config, realJanClientes, realJanMrr]);
   const novaPrevisao = useMemo(() => calcNovaPrevisao(monthlyActuals, ticketMedio, config), [monthlyActuals, ticketMedio, config]);
 
   // Summary card values
