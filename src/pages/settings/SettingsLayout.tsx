@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Settings, Users, Briefcase, Shield, Layers, Package, GitBranch, Target, ChevronDown, ChevronRight, Menu, RotateCcw, RefreshCw, HeartHandshake, MessageSquareText } from 'lucide-react';
+import { Settings, Users, Briefcase, Shield, Layers, Package, GitBranch, Target, ChevronDown, ChevronRight, Menu, RotateCcw, RefreshCw, HeartHandshake, MessageSquareText, GitMerge, FilePen, Zap, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -65,6 +65,18 @@ const SETTINGS_CATEGORIES: SettingsCategory[] = [
     ],
   },
   {
+    id: 'sales',
+    label: 'Vendas (CRM)',
+    description: 'Configure funis, scoring, templates e automações de vendas.',
+    icon: TrendingUp,
+    items: [
+      { id: 'sales-funnels', label: 'Funis e Etapas', path: '/settings/sales/funnels' },
+      { id: 'sales-scoring', label: 'Lead Scoring', path: '/settings/sales/scoring' },
+      { id: 'sales-templates', label: 'Templates', path: '/settings/sales/templates' },
+      { id: 'sales-automations', label: 'Automações', path: '/settings/sales/automations' },
+    ],
+  },
+  {
     id: 'cs',
     label: 'Customer Success',
     description: 'Configure os processos de onboarding e atendimento.',
@@ -86,6 +98,8 @@ function getCategoryIcon(categoryId: string) {
       return Layers;
     case 'general':
       return Settings;
+    case 'sales':
+      return TrendingUp;
     case 'cs':
       return HeartHandshake;
     default:
@@ -115,6 +129,14 @@ function getItemIcon(itemId: string) {
       return RefreshCw;
     case 'onboarding-questions':
       return MessageSquareText;
+    case 'sales-funnels':
+      return GitMerge;
+    case 'sales-scoring':
+      return Target;
+    case 'sales-templates':
+      return FilePen;
+    case 'sales-automations':
+      return Zap;
     default:
       return Settings;
   }
