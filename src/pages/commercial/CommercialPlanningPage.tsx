@@ -130,35 +130,38 @@ export default function CommercialPlanningPage() {
   const currentMonth = new Date().getMonth();
 
   const metaAnual = useMemo(() => targets.reduce((s, t) => s + t.target, 0), [targets]);
-  // Realizado = último MRR conhecido (evolução do MRR)
+  // Realizado = soma acumulada do MRR de cada mês (faturamento total no ano)
   const realizadoTotal = useMemo(() => {
-    const pastData = data.filter((_, i) => i <= currentMonth);
-    if (pastData.length === 0) return 0;
-    return pastData[pastData.length - 1].mrrAtMonth;
+    return data
+      .filter((_, i) => i <= currentMonth)
+      .reduce((s, d) => s + d.mrrAtMonth, 0);
   }, [data, currentMonth]);
 
   const projecaoCalc = useMemo(() => {
-    const mesesComDados = data.filter((_, i) => i <= currentMonth && i > 0);
-    if (mesesComDados.length === 0) return data[0]?.mrrAtMonth || 0;
-    // Average MRR growth per month, project to year end
-    const firstMrr = data[0]?.mrrAtMonth || 0;
-    const lastMrr = mesesComDados[mesesComDados.length - 1].mrrAtMonth;
-    const monthsElapsed = mesesComDados.length;
-    const avgGrowth = (lastMrr - firstMrr) / monthsElapsed;
-    const remainingMonths = 11 - (mesesComDados[mesesComDados.length - 1].month);
-    return Math.round(lastMrr + avgGrowth * remainingMonths);
+    const pastData = data.filter((_, i) => i <= currentMonth);
+    if (pastData.length === 0) return 0;
+    const acumulado = pastData.reduce((s, d) => s + d.mrrAtMonth, 0);
+    const mediaMensal = acumulado / pastData.length;
+    return Math.round(mediaMensal * 12);
   }, [data, currentMonth]);
 
   const atingimento = pct(realizadoTotal, metaAnual);
 
-  const chartData = useMemo(() => data.map((d, i) => {
-    return {
-      name: MONTHS[i],
-      meta: d.target,
-      realizado: i <= currentMonth ? d.mrrAtMonth : null,
-      projecao: null,
-    };
-  }), [data, currentMonth]);
+  // Chart: meta acumulada vs realizado acumulado
+  const chartData = useMemo(() => {
+    let acumMeta = 0;
+    let acumReal = 0;
+    return data.map((d, i) => {
+      acumMeta += d.target;
+      acumReal += d.mrrAtMonth;
+      return {
+        name: MONTHS[i],
+        meta: acumMeta,
+        realizado: i <= currentMonth ? acumReal : null,
+        projecao: null,
+      };
+    });
+  }, [data, currentMonth]);
 
   const chartConfig = {
     meta: { label: 'Meta', color: 'hsl(201 30% 21%)' },
