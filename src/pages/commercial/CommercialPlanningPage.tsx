@@ -544,7 +544,7 @@ export default function CommercialPlanningPage() {
 
         {/* Tab 3 — Mês a Mês */}
         <TabsContent value="monthly" className="mt-6">
-          <MonthDetailTab data={data} onDataChange={() => {}} readOnly />
+          <MonthDetailTab data={data} onDataChange={() => {}} readOnly bpAdicaoMensal={scenarios.cenarioBom.adicaoMensal} ticketMedio={avgTicket} year={year} />
         </TabsContent>
       </Tabs>
 
