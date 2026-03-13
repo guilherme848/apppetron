@@ -44,6 +44,11 @@ export function OptimizationLogTab({ optimizations, accounts, teamMembers, delet
   const [filterDateTo, setFilterDateTo] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
+  // Filtrar apenas gestores de tráfego para o filtro de responsáveis
+  const trafficManagers = useMemo(() => {
+    return teamMembers.filter((m) => m.role_id === TRAFFIC_MANAGER_ROLE_ID && m.active !== false);
+  }, [teamMembers]);
+
   const getClientName = (id: string) => accounts.find((a) => a.id === id)?.name || '—';
   const getMemberName = (id: string | null) => (id ? teamMembers.find((m) => m.id === id)?.name || '—' : '—');
   const getPlatformLabel = (v: string) => PLATFORM_OPTIONS.find((p) => p.value === v)?.label || v;
