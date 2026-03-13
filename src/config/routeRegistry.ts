@@ -420,6 +420,7 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view'],
     icon: LayoutDashboard,
     order: 1,
+    hideInMenu: true,
   },
   {
     id: 'traffic.tasks',
