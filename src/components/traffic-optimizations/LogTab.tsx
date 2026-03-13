@@ -19,10 +19,13 @@ import {
 } from '@/components/ui/alert-dialog';
 import { TrafficOptimization, PLATFORM_OPTIONS, TASK_TYPE_OPTIONS } from '@/hooks/useTrafficOptimizations';
 
+// ID do cargo "Gestor de Tráfego"
+const TRAFFIC_MANAGER_ROLE_ID = '29521693-8a2e-46fe-81a5-8b78059ad879';
+
 interface Props {
   optimizations: TrafficOptimization[];
   accounts: { id: string; name: string }[];
-  teamMembers: { id: string; name: string }[];
+  teamMembers: { id: string; name: string; role_id?: string | null; active?: boolean }[];
   deleteOptimization: (id: string) => Promise<any>;
 }
 
@@ -40,6 +43,11 @@ export function OptimizationLogTab({ optimizations, accounts, teamMembers, delet
   const [filterDateFrom, setFilterDateFrom] = useState('');
   const [filterDateTo, setFilterDateTo] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  // Filtrar apenas gestores de tráfego para o filtro de responsáveis
+  const trafficManagers = useMemo(() => {
+    return teamMembers.filter((m) => m.role_id === TRAFFIC_MANAGER_ROLE_ID && m.active !== false);
+  }, [teamMembers]);
 
   const getClientName = (id: string) => accounts.find((a) => a.id === id)?.name || '—';
   const getMemberName = (id: string | null) => (id ? teamMembers.find((m) => m.id === id)?.name || '—' : '—');
@@ -95,9 +103,9 @@ export function OptimizationLogTab({ optimizations, accounts, teamMembers, delet
           <span className="text-xs text-muted-foreground">Responsável</span>
           <Select value={filterMember} onValueChange={setFilterMember}>
             <SelectTrigger className="h-8 w-[160px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
+          <SelectContent>
               <SelectItem value="all">Todos</SelectItem>
-              {teamMembers.map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
+              {trafficManagers.map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>

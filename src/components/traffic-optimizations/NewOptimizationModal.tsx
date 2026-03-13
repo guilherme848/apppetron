@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,17 +8,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { PLATFORM_OPTIONS, TASK_TYPE_OPTIONS, OptimizationInput } from '@/hooks/useTrafficOptimizations';
 
+// ID do cargo "Gestor de Tráfego"
+const TRAFFIC_MANAGER_ROLE_ID = '29521693-8a2e-46fe-81a5-8b78059ad879';
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   accounts: { id: string; name: string }[];
-  teamMembers: { id: string; name: string }[];
+  teamMembers: { id: string; name: string; role_id?: string | null; active?: boolean }[];
   currentMemberId: string | null;
   onSubmit: (input: OptimizationInput) => Promise<any>;
 }
 
 export function NewOptimizationModal({ open, onOpenChange, accounts, teamMembers, currentMemberId, onSubmit }: Props) {
   const today = new Date().toISOString().split('T')[0];
+
+  // Filtrar apenas gestores de tráfego
+  const trafficManagers = useMemo(() => {
+    return teamMembers.filter((m) => m.role_id === TRAFFIC_MANAGER_ROLE_ID && m.active !== false);
+  }, [teamMembers]);
+
   const [form, setForm] = useState({
     client_id: '',
     platform: 'meta_ads',
@@ -85,8 +94,8 @@ export function NewOptimizationModal({ open, onOpenChange, accounts, teamMembers
               <Label>Responsável</Label>
               <Select value={form.member_id} onValueChange={(v) => setForm((f) => ({ ...f, member_id: v }))}>
                 <SelectTrigger><SelectValue placeholder="Selecionar" /></SelectTrigger>
-              <SelectContent>
-                  {teamMembers.filter((m: any) => m.active !== false).map((m: any) => (
+                <SelectContent>
+                  {trafficManagers.map((m) => (
                     <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
                   ))}
                 </SelectContent>

@@ -1,6 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { TeamMember } from '@/types/team';
+
+// ID do cargo "Gestor de Tráfego"
+const TRAFFIC_MANAGER_ROLE_ID = '29521693-8a2e-46fe-81a5-8b78059ad879';
 
 export function useTeamMembers() {
   const [members, setMembers] = useState<TeamMember[]>([]);
@@ -69,6 +72,11 @@ export function useTeamMembers() {
 
   const getMembersByRoleId = (roleId: string) => members.filter((m) => m.role_id === roleId && m.active);
 
+  // Filtrar apenas gestores de tráfego ativos
+  const trafficManagers = useMemo(() => {
+    return members.filter((m) => m.role_id === TRAFFIC_MANAGER_ROLE_ID && m.active);
+  }, [members]);
+
   return {
     members,
     loading,
@@ -78,6 +86,7 @@ export function useTeamMembers() {
     getMemberById,
     getActiveMembers,
     getMembersByRoleId,
+    trafficManagers,
     refetch: fetchMembers,
   };
 }
