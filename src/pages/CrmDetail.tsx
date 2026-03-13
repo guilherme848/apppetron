@@ -332,73 +332,7 @@ export default function CrmDetail() {
         <ClientTrafficSection account={account} onUpdate={handleTeamUpdate} />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Contratos (MRR)</CardTitle>
-            {showFinancialValues && (
-              <Button size="sm" onClick={() => setContractFormOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Novo
-              </Button>
-            )}
-          </CardHeader>
-          <CardContent>
-            {contracts.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">Nenhum contrato</p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>MRR</TableHead>
-                    <TableHead>Início</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-[80px]">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {contracts.map((contract) => (
-                    <TableRow key={contract.id}>
-                      <TableCell className="font-medium">
-                        {showFinancialValues ? formatCurrency(Number(contract.mrr)) : <RestrictedValue />}
-                      </TableCell>
-                      <TableCell>{formatDate(contract.start_date)}</TableCell>
-                      <TableCell>
-                        <ContractStatusBadge status={contract.status} />
-                      </TableCell>
-                      <TableCell>
-                        {showFinancialValues ? (
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                setEditingContract(contract);
-                                setContractFormOpen(true);
-                              }}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteContract(contract.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-
+      <div className="grid gap-6 lg:grid-cols-1">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Tarefas</CardTitle>
