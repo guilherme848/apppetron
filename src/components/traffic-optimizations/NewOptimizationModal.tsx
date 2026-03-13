@@ -15,7 +15,7 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   accounts: { id: string; name: string }[];
-  teamMembers: { id: string; name: string; role_id?: string | null }[];
+  teamMembers: { id: string; name: string; role_id?: string | null; active?: boolean }[];
   currentMemberId: string | null;
   onSubmit: (input: OptimizationInput) => Promise<any>;
 }
