@@ -340,8 +340,8 @@ export default function SalesDashboard() {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-6">
-        <h1 className="text-2xl font-bold" style={{ color: DC.textPrimary }}>Dashboard Comercial</h1>
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold text-foreground">Dashboard Comercial</h1>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
           {Array.from({ length: 7 }).map((_, i) => (
             <Card key={i}><CardContent className="p-5"><Skeleton className="h-14" /></CardContent></Card>
