@@ -4,6 +4,8 @@ export type TaskStatus = 'backlog' | 'todo' | 'doing' | 'done';
 export type AdPaymentMethod = 'pix' | 'boleto' | 'cartao';
 export type AdPaymentFrequency = 'weekly' | 'biweekly' | 'monthly';
 
+export type AccountOrigin = 'indicacao' | 'inbound' | 'outbound';
+
 export interface Account {
   id: string;
   name: string;
@@ -12,6 +14,8 @@ export interface Account {
   updated_at?: string;
   
   // Dados do cliente
+  razao_social?: string | null;
+  origin?: AccountOrigin | null;
   niche?: string | null;
   website?: string | null;
   cpf_cnpj?: string | null;
@@ -55,6 +59,9 @@ export interface Account {
   support_member_id?: string | null;
   cs_member_id?: string | null;
   
+  // Contrato extra
+  billing_day?: number | null;
+
   // Tráfego Pago
   ad_payment_method?: AdPaymentMethod | null;
   ad_monthly_budget?: number | null;

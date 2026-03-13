@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { Account, AccountStatus } from '@/types/crm';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useTraffic } from '@/contexts/TrafficContext';
@@ -72,8 +72,6 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
   const { canViewFinancialValues } = useSensitivePermission();
   const showFinancialFields = canViewFinancialValues();
 
-  // Supports legacy accounts that only have `service_contracted` text (no FK).
-  // We keep a stable synthetic value so Radix Select can render the saved label.
   const LEGACY_SERVICE_PREFIX = '__legacy_service__:';
   const isLegacyServiceValue = (value: string) => value.startsWith(LEGACY_SERVICE_PREFIX);
   
@@ -81,7 +79,6 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
   const isEditing = !!account;
   const skipAutoSave = useRef(false);
   
-  // Restricted field placeholder
   const RestrictedField = ({ label }: { label: string }) => (
     <div className="space-y-2">
       <Label>{label}</Label>
@@ -101,7 +98,6 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
     </div>
   );
   
-  // Track the account ID and open state to control form initialization
   const accountId = account?.id;
   const lastInitializedRef = useRef<{ accountId: string | undefined; wasOpen: boolean }>({ 
     accountId: undefined, 
@@ -110,6 +106,8 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
   
   const [formData, setFormData] = useState({
     name: '',
+    razao_social: '',
+    origin: '',
     status: 'lead' as AccountStatus,
     service_id: '',
     niche_id: '',
@@ -118,6 +116,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
     cpf_cnpj: '',
     monthly_value: '',
     start_date: '',
+    billing_day: '',
     churned_at: '',
     contact_name: '',
     contact_phone: '',
@@ -132,27 +131,67 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
     address_complement: '',
   });
   const [emailError, setEmailError] = useState('');
+  
+  // Account services (toggles)
+  const [accountServiceIds, setAccountServiceIds] = useState<string[]>([]);
+  const [loadingServices, setLoadingServices] = useState(false);
 
-  // Debug: understand why the selected service isn't showing in the Select
+  // Load account services when editing
+  useEffect(() => {
+    if (!open || !account?.id) {
+      setAccountServiceIds([]);
+      return;
+    }
+    const loadAccountServices = async () => {
+      setLoadingServices(true);
+      const { data, error } = await supabase
+        .from('account_services')
+        .select('service_id')
+        .eq('account_id', account.id);
+      if (!error && data) {
+        setAccountServiceIds(data.map(d => d.service_id));
+      }
+      setLoadingServices(false);
+    };
+    loadAccountServices();
+  }, [open, account?.id]);
+
+  const toggleAccountService = async (serviceId: string, enabled: boolean) => {
+    if (!account?.id) return;
+    if (enabled) {
+      const { error } = await supabase
+        .from('account_services')
+        .insert({ account_id: account.id, service_id: serviceId });
+      if (!error) {
+        setAccountServiceIds(prev => [...prev, serviceId]);
+        toast.success('Serviço ativado');
+      }
+    } else {
+      const { error } = await supabase
+        .from('account_services')
+        .delete()
+        .eq('account_id', account.id)
+        .eq('service_id', serviceId);
+      if (!error) {
+        setAccountServiceIds(prev => prev.filter(id => id !== serviceId));
+        toast.success('Serviço desativado');
+      }
+    }
+  };
+
   useEffect(() => {
     if (!open || !account) return;
     console.debug('[CRM] AccountForm open snapshot', {
       accountId: account.id,
       account_service_id: (account as any).service_id,
-      account_service_name: (account as any).service_name,
-      account_service_contracted: (account as any).service_contracted,
       form_service_id: formData.service_id,
       servicesCount: services.length,
-      activeServicesCount: activeServices.length,
     });
-  }, [open, account, formData.service_id, services.length, activeServices.length]);
+  }, [open, account, formData.service_id, services.length]);
 
-  // Ensure selects can display the current value even if it's not in the active list
   const selectedService = services.find(s => s.id === formData.service_id);
   const selectedNiche = niches.find(n => n.id === formData.niche_id);
 
-  // If the form already has a saved FK but settings haven't loaded that row yet (or it was removed),
-  // create a temporary option so Radix Select can render the selected label.
   const fallbackServiceOption = (!selectedService && formData.service_id && (account?.service_name || account?.service_contracted))
     ? {
         id: formData.service_id,
@@ -165,12 +204,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
     : null;
 
   const fallbackNicheOption = (!selectedNiche && formData.niche_id && account?.niche)
-    ? {
-        id: formData.niche_id,
-        name: account.niche,
-        active: true,
-        created_at: '',
-      }
+    ? { id: formData.niche_id, name: account.niche, active: true, created_at: '' }
     : null;
 
   const serviceOptions = selectedService && !activeServices.some(s => s.id === selectedService.id)
@@ -185,19 +219,19 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
       ? [fallbackNicheOption, ...activeNiches]
       : activeNiches;
 
-  // Build the data object for saving
   const buildSaveData = useCallback((data: typeof formData): Partial<Account> => {
     const normalizedServiceId = !data.service_id || isLegacyServiceValue(data.service_id) ? '' : data.service_id;
     const selectedService = services.find(s => s.id === normalizedServiceId);
     const selectedNiche = niches.find(n => n.id === data.niche_id);
 
-    // IMPORTANT: don't wipe legacy text fields when FK isn't set.
     const serviceContracted = selectedService?.name
       ?? (normalizedServiceId ? null : (account?.service_contracted ?? account?.service_name ?? null));
     const nicheName = selectedNiche?.name ?? (data.niche_id ? null : (account?.niche ?? null));
 
     return {
       name: data.name.trim(),
+      razao_social: data.razao_social || null,
+      origin: (data.origin || null) as any,
       status: data.status,
       service_id: normalizedServiceId || null,
       niche_id: data.niche_id || null,
@@ -208,6 +242,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
       cpf_cnpj: data.cpf_cnpj || null,
       monthly_value: data.monthly_value ? parseFloat(data.monthly_value) : null,
       start_date: data.start_date || null,
+      billing_day: data.billing_day ? parseInt(data.billing_day) : null,
       contact_name: data.contact_name || null,
       contact_phone: data.contact_phone || null,
       contact_email: data.contact_email || null,
@@ -222,48 +257,30 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
     } as Partial<Account>;
   }, [services, niches, account]);
 
-  // AutoSave hook - only used when editing existing account
   const { status: saveStatus, saveNow, queueChange, flush } = useAutoSave({
     onSave: async (patch) => {
       if (!isEditing || !account) return;
-      if (import.meta.env.DEV) {
-        console.debug('[CRM] AccountForm autosave', {
-          mode: 'edit',
-          accountId: account.id,
-          keys: Object.keys(patch as Record<string, unknown>),
-        });
-      }
-      // We need to send the full data with the patch applied
       const currentData = { ...formData, ...patch };
       const saveData = buildSaveData(currentData);
       await onSubmit(saveData);
     },
   });
 
-  // Flush on dialog close
   const handleClose = useCallback(() => {
     flush();
     onClose();
   }, [flush, onClose]);
 
-  // Initialize form data only when:
-  // 1. Dialog opens for the first time
-  // 2. Account ID changes (switching to a different account)
-  // NOT when account object reference changes after a save
   useEffect(() => {
     const shouldInitialize = 
-      // Dialog just opened
       (open && !lastInitializedRef.current.wasOpen) ||
-      // Account ID changed
       (open && accountId !== lastInitializedRef.current.accountId);
     
     if (!shouldInitialize) {
-      // Update the wasOpen state even if we don't initialize
       lastInitializedRef.current.wasOpen = open;
       return;
     }
     
-    // Mark that we're initializing for this account and open state
     lastInitializedRef.current = { accountId, wasOpen: open };
     
     if (account) {
@@ -274,16 +291,12 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
         const matchingService = findServiceByName(account.service_contracted);
         if (matchingService) serviceId = matchingService.id;
       }
-      // When the account comes from a JOIN (list/detail), we often have `service_name` but not `service_id`.
-      // Use it as a fallback so the Select can display the saved plan.
       if (!serviceId && (account as Account & { service_name?: string | null }).service_name) {
         const matchingService = findServiceByName(
           (account as Account & { service_name?: string | null }).service_name as string
         );
         if (matchingService) serviceId = matchingService.id;
       }
-
-      // Legacy support: keep showing the saved text even if we cannot resolve an FK.
       if (!serviceId) {
         const legacyLabel = (account as Account & { service_name?: string | null }).service_name || account.service_contracted;
         if (legacyLabel) {
@@ -298,6 +311,8 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
       skipAutoSave.current = true;
       setFormData({
         name: account.name || '',
+        razao_social: (account as any).razao_social || '',
+        origin: (account as any).origin || '',
         status: account.status || 'lead',
         service_id: serviceId,
         niche_id: nicheId,
@@ -306,6 +321,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
         cpf_cnpj: account.cpf_cnpj || '',
         monthly_value: account.monthly_value?.toString() || '',
         start_date: account.start_date || '',
+        billing_day: (account as any).billing_day?.toString() || '',
         churned_at: account.churned_at || '',
         contact_name: account.contact_name || '',
         contact_phone: account.contact_phone || '',
@@ -324,6 +340,8 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
       skipAutoSave.current = true;
       setFormData({
         name: '',
+        razao_social: '',
+        origin: '',
         status: 'lead',
         service_id: '',
         niche_id: '',
@@ -332,6 +350,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
         cpf_cnpj: '',
         monthly_value: '',
         start_date: '',
+        billing_day: '',
         churned_at: '',
         contact_name: '',
         contact_phone: '',
@@ -350,14 +369,12 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
     setEmailError('');
   }, [account, accountId, open, findServiceByName, findNicheByName]);
   
-  // Reset the ref when dialog closes so next open will reinitialize
   useEffect(() => {
     if (!open) {
       lastInitializedRef.current = { accountId: undefined, wasOpen: false };
     }
   }, [open]);
 
-  // For new accounts, use submit button. For existing, use autosave
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) return;
@@ -368,16 +385,13 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
     }
 
     if (!isEditing) {
-      // New account - submit and close
       onSubmit(buildSaveData(formData));
       onClose();
     } else {
-      // Editing - just close (autosave handles it)
       handleClose();
     }
   };
 
-  // Text field handlers with commit-based autosave (queue on change, flush on blur)
   const handleTextChange = (field: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -392,7 +406,6 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
     }
   };
 
-  // Select handlers with immediate save
   const handleSelectChange = (field: keyof typeof formData) => (value: string) => {
     const actualValue = value === 'none' || value === 'inherit' ? '' : value;
     setFormData(prev => ({ ...prev, [field]: actualValue }));
@@ -401,10 +414,8 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
     }
   };
 
-  // CNPJ Address Lookup state
   const [cnpjLookupLoading, setCnpjLookupLoading] = useState(false);
 
-  // Special formatted inputs - queue on change, flush on blur
   const handleCpfCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatCpfCnpj(e.target.value);
     if (formatted.replace(/\D/g, '').length <= 14) {
@@ -415,78 +426,40 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
     }
   };
 
-  // CNPJ address lookup on blur
   const handleCpfCnpjBlur = async () => {
-    // First, handle the normal autosave flush
     if (isEditing && !skipAutoSave.current) {
       await flush();
     }
-
-    // Check if it's a valid CNPJ (14 digits)
     const cleanCnpj = formData.cpf_cnpj.replace(/\D/g, '');
-    if (cleanCnpj.length !== 14) {
-      return;
-    }
+    if (cleanCnpj.length !== 14) return;
 
-    // Try to lookup address
     setCnpjLookupLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('lookup-cnpj-address', {
         body: { cnpj: cleanCnpj }
       });
-
-      if (error) {
-        console.error('Error looking up CNPJ address:', error);
+      if (error || !data?.address) {
         toast.warning('Não foi possível localizar endereço automaticamente.');
         return;
       }
-
-      if (!data?.address) {
-        toast.warning('Não foi possível localizar endereço automaticamente.');
-        return;
-      }
-
       const address = data.address;
       const updates: Partial<typeof formData> = {};
       let fieldsUpdated = 0;
-
-      // Only fill empty fields
-      if (address.cep && !formData.postal_code) {
-        updates.postal_code = address.cep;
-        fieldsUpdated++;
-      }
-      if (address.state && !formData.state) {
-        updates.state = address.state;
-        fieldsUpdated++;
-      }
-      if (address.city && !formData.city) {
-        updates.city = address.city;
-        fieldsUpdated++;
-      }
-      if (address.neighborhood && !formData.neighborhood) {
-        updates.neighborhood = address.neighborhood;
-        fieldsUpdated++;
-      }
-      if (address.street && !formData.street) {
-        updates.street = address.street;
-        fieldsUpdated++;
-      }
-      if (address.complement && !formData.address_complement) {
-        updates.address_complement = address.complement;
-        fieldsUpdated++;
-      }
+      if (address.cep && !formData.postal_code) { updates.postal_code = address.cep; fieldsUpdated++; }
+      if (address.state && !formData.state) { updates.state = address.state; fieldsUpdated++; }
+      if (address.city && !formData.city) { updates.city = address.city; fieldsUpdated++; }
+      if (address.neighborhood && !formData.neighborhood) { updates.neighborhood = address.neighborhood; fieldsUpdated++; }
+      if (address.street && !formData.street) { updates.street = address.street; fieldsUpdated++; }
+      if (address.complement && !formData.address_complement) { updates.address_complement = address.complement; fieldsUpdated++; }
 
       if (fieldsUpdated > 0) {
         setFormData(prev => ({ ...prev, ...updates }));
-        
-        // Queue changes for autosave if editing
         if (isEditing && !skipAutoSave.current) {
           Object.entries(updates).forEach(([key, value]) => {
             queueChange({ [key]: value });
           });
           await flush();
         }
-
         toast.success(`${fieldsUpdated} campo(s) de endereço preenchido(s) automaticamente.`);
       } else {
         toast.info('Todos os campos de endereço já estavam preenchidos.');
@@ -527,9 +500,16 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
     }
   };
 
+  // Gradient separator component
+  const GradientSeparator = () => (
+    <div className="h-px w-full" style={{
+      background: 'linear-gradient(90deg, transparent, hsl(var(--border)), transparent)'
+    }} />
+  );
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-thin">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle>{account ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
@@ -542,7 +522,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Dados do Cliente */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Dados do Cliente</h3>
+            <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.12em]">Dados do Cliente</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Nome do Cliente *</Label>
@@ -554,6 +534,30 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                   placeholder="Nome da empresa"
                   required
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="razao_social">Razão Social</Label>
+                <Input
+                  id="razao_social"
+                  value={formData.razao_social}
+                  onChange={handleTextChange('razao_social')}
+                  onBlur={handleTextBlur('razao_social')}
+                  placeholder="Razão social da empresa"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="origin">Fonte do Cliente</Label>
+                <Select value={formData.origin || 'none'} onValueChange={handleSelectChange('origin')}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a fonte" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhuma</SelectItem>
+                    <SelectItem value="indicacao">Indicação</SelectItem>
+                    <SelectItem value="inbound">Inbound</SelectItem>
+                    <SelectItem value="outbound">Outbound</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
@@ -621,11 +625,11 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
             </div>
           </div>
 
-          <Separator />
+          <GradientSeparator />
 
           {/* Contrato */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Contrato</h3>
+            <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.12em]">Contrato</h3>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -650,7 +654,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                 </Select>
               </div>
               
-              {/* Traffic Routine with override */}
+              {/* Traffic Routine */}
               <div className="col-span-3 space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="traffic_routine_id">Rotina de Tráfego</Label>
@@ -752,6 +756,19 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                   }}
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="billing_day">Dia de Vencimento</Label>
+                <Input
+                  id="billing_day"
+                  type="number"
+                  min="1"
+                  max="31"
+                  value={formData.billing_day}
+                  onChange={handleTextChange('billing_day')}
+                  onBlur={handleTextBlur('billing_day')}
+                  placeholder="1-31"
+                />
+              </div>
               {formData.status === 'churned' && (
                 <div className="space-y-2">
                   <Label htmlFor="churned_at">Data de Churn</Label>
@@ -774,11 +791,44 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
             </div>
           </div>
 
-          <Separator />
+          {/* Serviços Contratados - only show when editing */}
+          {isEditing && (
+            <>
+              <GradientSeparator />
+              <div className="space-y-4">
+                <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.12em]">Serviços Contratados</h3>
+                {loadingServices ? (
+                  <div className="flex items-center gap-2 py-4">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Carregando serviços...</span>
+                  </div>
+                ) : services.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-2">Nenhum plano cadastrado no sistema.</p>
+                ) : (
+                  <div className="grid grid-cols-1 gap-3">
+                    {services.filter(s => s.active).map((service) => (
+                      <div
+                        key={service.id}
+                        className="flex items-center justify-between rounded-xl border border-border px-4 py-3 transition-colors hover:border-primary/20"
+                      >
+                        <span className="text-sm font-medium">{service.name}</span>
+                        <Switch
+                          checked={accountServiceIds.includes(service.id)}
+                          onCheckedChange={(checked) => toggleAccountService(service.id, checked)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          <GradientSeparator />
 
           {/* Contato */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Contato</h3>
+            <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.12em]">Contato</h3>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="contact_name">Nome do Contato</Label>
@@ -816,11 +866,11 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
             </div>
           </div>
 
-          <Separator />
+          <GradientSeparator />
 
           {/* Endereço */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Endereço</h3>
+            <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.12em]">Endereço</h3>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="country">País</Label>

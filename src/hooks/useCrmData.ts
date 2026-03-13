@@ -9,6 +9,8 @@ const mapAccount = (data: any): Account => ({
   status: data.status as AccountStatus,
   created_at: data.created_at,
   updated_at: data.updated_at,
+  razao_social: data.razao_social,
+  origin: data.origin,
   niche: data.niche,
   website: data.website,
   cpf_cnpj: data.cpf_cnpj,
@@ -19,7 +21,6 @@ const mapAccount = (data: any): Account => ({
   deleted_at: data.deleted_at,
   service_id: data.service_id,
   niche_id: data.niche_id,
-  // Nome do serviço via join
   service_name: data.services?.name || null,
   contact_name: data.contact_name,
   contact_phone: data.contact_phone,
@@ -32,14 +33,13 @@ const mapAccount = (data: any): Account => ({
   street: data.street,
   street_number: data.street_number,
   address_complement: data.address_complement,
-  // Team member IDs
   designer_member_id: data.designer_member_id,
   videomaker_member_id: data.videomaker_member_id,
   social_member_id: data.social_member_id,
   traffic_member_id: data.traffic_member_id,
   support_member_id: data.support_member_id,
   cs_member_id: data.cs_member_id,
-  // Tráfego Pago
+  billing_day: data.billing_day,
   ad_payment_method: data.ad_payment_method,
   ad_monthly_budget: data.ad_monthly_budget,
   ad_payment_frequency: data.ad_payment_frequency,
