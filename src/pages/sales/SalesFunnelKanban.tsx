@@ -39,8 +39,7 @@ function StageColumn({
 
   return (
     <div
-      className="flex flex-col min-w-[280px] max-w-[320px] rounded-lg"
-      style={{ backgroundColor: '#F1F5F9' }}
+      className="flex flex-col min-w-[280px] max-w-[320px] rounded-lg bg-muted/50"
       data-stage-id={stage.id}
     >
       <div className="p-3 border-b" style={{ borderColor: DC.border }}>
