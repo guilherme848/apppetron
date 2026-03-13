@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,11 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { PLATFORM_OPTIONS, TASK_TYPE_OPTIONS, OptimizationInput } from '@/hooks/useTrafficOptimizations';
 
+// ID do cargo "Gestor de Tráfego"
+const TRAFFIC_MANAGER_ROLE_ID = '29521693-8a2e-46fe-81a5-8b78059ad879';
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   accounts: { id: string; name: string }[];
-  teamMembers: { id: string; name: string }[];
+  teamMembers: { id: string; name: string; role_id?: string | null }[];
   currentMemberId: string | null;
   onSubmit: (input: OptimizationInput) => Promise<any>;
 }
