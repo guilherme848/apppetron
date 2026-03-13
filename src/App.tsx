@@ -43,6 +43,7 @@ import TrafficClientDetail from "./pages/traffic/TrafficClientDetail";
 import TrafficOverview from "./pages/traffic/TrafficOverview";
 import TrafficAccountDetail from "./pages/traffic/TrafficAccountDetail";
 import TrafficBenchmarks from "./pages/traffic/TrafficBenchmarks";
+import TrafficOptimizationsPage from "./pages/traffic/TrafficOptimizationsPage";
 
 // CS pages
 import CsDashboard from "./pages/cs/CsDashboard";
