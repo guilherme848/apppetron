@@ -94,7 +94,7 @@ export default function SalesAutomationsPage() {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-4">
+      <div className="space-y-4">
         <Skeleton className="h-8 w-48" />
         {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full" />)}
       </div>
