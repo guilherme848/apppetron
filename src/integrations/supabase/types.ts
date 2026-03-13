@@ -5535,6 +5535,111 @@ export type Database = {
           },
         ]
       }
+      traffic_optimization_weekly_cycle: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          manager_member_id: string
+          sort_order: number
+          weekday: number
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          manager_member_id: string
+          sort_order?: number
+          weekday: number
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          manager_member_id?: string
+          sort_order?: number
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traffic_optimization_weekly_cycle_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traffic_optimization_weekly_cycle_manager_member_id_fkey"
+            columns: ["manager_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      traffic_optimizations: {
+        Row: {
+          checkin_alertas: boolean | null
+          checkin_campanhas_rodando: boolean | null
+          checkin_saldo_ok: boolean | null
+          client_id: string
+          created_at: string
+          description: string | null
+          id: string
+          member_id: string | null
+          optimization_date: string
+          platform: string
+          task_type: string
+          tempo_gasto_minutos: number
+          updated_at: string
+        }
+        Insert: {
+          checkin_alertas?: boolean | null
+          checkin_campanhas_rodando?: boolean | null
+          checkin_saldo_ok?: boolean | null
+          client_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          member_id?: string | null
+          optimization_date?: string
+          platform?: string
+          task_type?: string
+          tempo_gasto_minutos?: number
+          updated_at?: string
+        }
+        Update: {
+          checkin_alertas?: boolean | null
+          checkin_campanhas_rodando?: boolean | null
+          checkin_saldo_ok?: boolean | null
+          client_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          member_id?: string | null
+          optimization_date?: string
+          platform?: string
+          task_type?: string
+          tempo_gasto_minutos?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traffic_optimizations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traffic_optimizations_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       traffic_periods: {
         Row: {
           client_id: string
