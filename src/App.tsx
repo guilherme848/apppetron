@@ -190,6 +190,7 @@ const App = () => (
                         <Route path="/traffic/overview" element={<TrafficOverview />} />
                         <Route path="/traffic/accounts/:id" element={<TrafficAccountDetail />} />
                         <Route path="/traffic/benchmarks" element={<TrafficBenchmarks />} />
+                        <Route path="/traffic/optimizations" element={<TrafficOptimizationsPage />} />
 
                         {/* Traffic Creative Requests */}
                         <Route path="/traffic/creative-requests" element={<CreativeRequestsList />} />

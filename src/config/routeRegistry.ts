@@ -433,6 +433,16 @@ export const routeRegistry: RouteDefinition[] = [
     order: 2,
   },
   {
+    id: 'traffic.optimizations',
+    path: '/traffic/optimizations',
+    label: 'Otimizações',
+    category: CATEGORIES.TASKS,
+    module: MODULES.TRAFFIC,
+    permissions: ['view', 'edit'],
+    icon: Wrench,
+    order: 3,
+  },
+  {
     id: 'traffic.overview',
     path: '/traffic/overview',
     label: 'Dashboard Multi-Contas',
