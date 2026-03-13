@@ -43,6 +43,7 @@ import TrafficClientDetail from "./pages/traffic/TrafficClientDetail";
 import TrafficOverview from "./pages/traffic/TrafficOverview";
 import TrafficAccountDetail from "./pages/traffic/TrafficAccountDetail";
 import TrafficBenchmarks from "./pages/traffic/TrafficBenchmarks";
+import TrafficOptimizationsPage from "./pages/traffic/TrafficOptimizationsPage";
 
 // CS pages
 import CsDashboard from "./pages/cs/CsDashboard";
@@ -189,6 +190,7 @@ const App = () => (
                         <Route path="/traffic/overview" element={<TrafficOverview />} />
                         <Route path="/traffic/accounts/:id" element={<TrafficAccountDetail />} />
                         <Route path="/traffic/benchmarks" element={<TrafficBenchmarks />} />
+                        <Route path="/traffic/optimizations" element={<TrafficOptimizationsPage />} />
 
                         {/* Traffic Creative Requests */}
                         <Route path="/traffic/creative-requests" element={<CreativeRequestsList />} />

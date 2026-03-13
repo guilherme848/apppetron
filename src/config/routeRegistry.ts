@@ -38,6 +38,7 @@ import {
   Contact,
   Activity,
   Trophy,
+  Wrench,
 } from 'lucide-react';
 
 // Action types for permissions
@@ -430,6 +431,16 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view'],
     icon: BarChart3,
     order: 2,
+  },
+  {
+    id: 'traffic.optimizations',
+    path: '/traffic/optimizations',
+    label: 'Otimizações',
+    category: CATEGORIES.TASKS,
+    module: MODULES.TRAFFIC,
+    permissions: ['view', 'edit'],
+    icon: Wrench,
+    order: 3,
   },
   {
     id: 'traffic.overview',
