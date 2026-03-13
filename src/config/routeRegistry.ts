@@ -38,6 +38,7 @@ import {
   Contact,
   Activity,
   Trophy,
+  Wrench,
 } from 'lucide-react';
 
 // Action types for permissions
