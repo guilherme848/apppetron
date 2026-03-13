@@ -72,6 +72,11 @@ export function useTeamMembers() {
 
   const getMembersByRoleId = (roleId: string) => members.filter((m) => m.role_id === roleId && m.active);
 
+  // Filtrar apenas gestores de tráfego ativos
+  const trafficManagers = useMemo(() => {
+    return members.filter((m) => m.role_id === TRAFFIC_MANAGER_ROLE_ID && m.active);
+  }, [members]);
+
   return {
     members,
     loading,
@@ -81,6 +86,7 @@ export function useTeamMembers() {
     getMemberById,
     getActiveMembers,
     getMembersByRoleId,
+    trafficManagers,
     refetch: fetchMembers,
   };
 }
