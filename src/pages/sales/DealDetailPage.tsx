@@ -37,7 +37,7 @@ export default function DealDetailPage() {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-4">
+      <div className="space-y-4">
         <Skeleton className="h-6 w-64" />
         <Skeleton className="h-20 w-full" />
         <Skeleton className="h-12 w-full" />

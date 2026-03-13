@@ -78,7 +78,7 @@ export default function LeadScoringPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <Target className="h-6 w-6" style={{ color: DC.orange }} />

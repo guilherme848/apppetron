@@ -178,7 +178,7 @@ export default function SalesFunnelsPage() {
   }
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="space-y-4">
       {/* Header: Funnel Selector + View Toggle */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
