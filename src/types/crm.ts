@@ -59,6 +59,9 @@ export interface Account {
   support_member_id?: string | null;
   cs_member_id?: string | null;
   
+  // Contrato extra
+  billing_day?: number | null;
+
   // Tráfego Pago
   ad_payment_method?: AdPaymentMethod | null;
   ad_monthly_budget?: number | null;
