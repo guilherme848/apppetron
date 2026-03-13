@@ -1,45 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* 
- * Petron Design System
- * All colors in HSL format
- * 
- * Brand Colors:
- * - Azul Principal: #253746 → hsl(201, 30%, 21%)
- * - Laranja Acento: #F4762D → hsl(21, 90%, 57%)
- * - Azul Secundário: #2B5B6C → hsl(193, 42%, 30%)
+ * Petron Design System v2 — Premium SaaS
+ * Dark-first with light mode support
+ * Accent: #F97316 (Petron Orange)
  */
 
 @layer base {
   :root {
-    /* Background & Foreground */
-    --background: 0 0% 100%;
-    --foreground: 201 30% 21%;
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+    /* Background & Foreground — Light */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
 
     /* Cards */
     --card: 0 0% 100%;
-    --card-foreground: 201 30% 21%;
+    --card-foreground: 222 47% 11%;
 
     /* Popovers */
     --popover: 0 0% 100%;
-    --popover-foreground: 201 30% 21%;
+    --popover-foreground: 222 47% 11%;
 
-    /* Primary - Azul Principal Petron */
-    --primary: 201 30% 21%;
+    /* Primary — Petron Orange */
+    --primary: 25 95% 53%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary - Azul Secundário Petron */
-    --secondary: 193 42% 30%;
-    --secondary-foreground: 0 0% 100%;
+    /* Secondary */
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
 
-    /* Muted - Cinza claro neutro */
-    --muted: 210 20% 96%;
-    --muted-foreground: 201 15% 40%;
+    /* Muted */
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    /* Accent - Laranja Petron */
-    --accent: 21 90% 57%;
+    /* Accent — Orange */
+    --accent: 25 95% 53%;
     --accent-foreground: 0 0% 100%;
 
     /* Destructive */
@@ -47,138 +47,144 @@
     --destructive-foreground: 0 0% 100%;
 
     /* Borders & Inputs */
-    --border: 210 20% 90%;
-    --input: 210 20% 90%;
-    --ring: 21 90% 57%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 25 95% 53%;
 
     --radius: 0.5rem;
 
-    /* Sidebar - Light */
-    --sidebar-background: 201 30% 21%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 21 90% 57%;
+    /* Sidebar — Light (white) */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 25 95% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 193 42% 30%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 201 30% 30%;
-    --sidebar-ring: 21 90% 57%;
+    --sidebar-accent: 210 40% 96%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 25 95% 53%;
+    --sidebar-muted-foreground: 215 16% 47%;
 
     /* Chart colors */
-    --chart-1: 201 30% 21%;
-    --chart-2: 193 42% 30%;
-    --chart-3: 21 90% 57%;
-    --chart-4: 210 20% 60%;
+    --chart-1: 25 95% 53%;
+    --chart-2: 217 91% 60%;
+    --chart-3: 142 71% 45%;
+    --chart-4: 263 70% 50%;
     --chart-5: 0 84% 60%;
 
     /* Success & Warning states */
-    --success: 142 76% 36%;
+    --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
+    --warning: 48 96% 53%;
+    --warning-foreground: 0 0% 0%;
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
 
-    /* Badge Tokens - Light Mode (Petron Palette) */
-    --badge-neutral-bg: rgba(37, 55, 70, 0.08);
-    --badge-neutral-text: 201 30% 21%;
-    --badge-neutral-border: rgba(37, 55, 70, 0.22);
+    /* Badge Tokens — Light */
+    --badge-neutral-bg: rgba(15, 23, 42, 0.06);
+    --badge-neutral-text: 222 47% 11%;
+    --badge-neutral-border: rgba(15, 23, 42, 0.12);
 
-    --badge-info-bg: rgba(43, 91, 108, 0.12);
-    --badge-info-text: 193 42% 30%;
-    --badge-info-border: rgba(43, 91, 108, 0.28);
+    --badge-info-bg: rgba(59, 130, 246, 0.10);
+    --badge-info-text: 217 91% 50%;
+    --badge-info-border: rgba(59, 130, 246, 0.25);
 
-    --badge-attention-bg: rgba(244, 118, 45, 0.14);
-    --badge-attention-text: 21 90% 47%;
-    --badge-attention-border: rgba(244, 118, 45, 0.34);
+    --badge-attention-bg: rgba(249, 115, 22, 0.10);
+    --badge-attention-text: 25 95% 45%;
+    --badge-attention-border: rgba(249, 115, 22, 0.30);
 
-    --badge-strong-bg: 201 30% 21%;
+    --badge-strong-bg: 25 95% 53%;
     --badge-strong-text: 0 0% 100%;
-    --badge-strong-border: rgba(37, 55, 70, 0.40);
+    --badge-strong-border: rgba(249, 115, 22, 0.60);
 
-    --badge-muted-bg: rgba(37, 55, 70, 0.05);
-    --badge-muted-text: 201 15% 50%;
-    --badge-muted-border: rgba(37, 55, 70, 0.12);
+    --badge-muted-bg: rgba(15, 23, 42, 0.04);
+    --badge-muted-text: 215 16% 55%;
+    --badge-muted-border: rgba(15, 23, 42, 0.08);
   }
 
   .dark {
-    /* Background & Foreground */
-    --background: 201 35% 8%;
-    --foreground: 0 0% 100%;
+    /* Background & Foreground — Dark */
+    --background: 228 25% 7%;
+    --foreground: 214 32% 91%;
 
     /* Cards */
-    --card: 201 32% 11%;
-    --card-foreground: 0 0% 100%;
+    --card: 229 22% 13%;
+    --card-foreground: 214 32% 91%;
 
     /* Popovers */
-    --popover: 201 32% 11%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 229 22% 13%;
+    --popover-foreground: 214 32% 91%;
 
-    /* Primary - Azul Secundário no dark para melhor contraste */
-    --primary: 193 42% 40%;
+    /* Primary — Orange stays */
+    --primary: 25 95% 53%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary - Azul Principal como secundário no dark */
-    --secondary: 201 30% 25%;
-    --secondary-foreground: 0 0% 100%;
+    /* Secondary */
+    --secondary: 230 18% 16%;
+    --secondary-foreground: 214 32% 91%;
 
     /* Muted */
-    --muted: 201 25% 15%;
-    --muted-foreground: 210 15% 75%;
+    --muted: 230 18% 16%;
+    --muted-foreground: 215 20% 65%;
 
-    /* Accent - Laranja Petron (mantém a marca) */
-    --accent: 21 90% 57%;
-    --accent-foreground: 201 35% 8%;
+    /* Accent — Orange */
+    --accent: 25 95% 53%;
+    --accent-foreground: 0 0% 100%;
 
     /* Destructive */
-    --destructive: 0 62% 30%;
+    --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 100%;
 
     /* Borders & Inputs */
-    --border: 201 25% 20%;
-    --input: 201 25% 20%;
-    --ring: 21 90% 57%;
+    --border: 232 18% 22%;
+    --input: 228 25% 10%;
+    --ring: 25 95% 53%;
 
-    /* Sidebar - Dark */
-    --sidebar-background: 201 35% 6%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 21 90% 57%;
+    /* Sidebar — Dark */
+    --sidebar-background: 230 20% 11%;
+    --sidebar-foreground: 214 32% 91%;
+    --sidebar-primary: 25 95% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 193 42% 35%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 201 25% 18%;
-    --sidebar-ring: 21 90% 57%;
+    --sidebar-accent: 230 18% 18%;
+    --sidebar-accent-foreground: 214 32% 91%;
+    --sidebar-border: 232 18% 18%;
+    --sidebar-ring: 25 95% 53%;
+    --sidebar-muted-foreground: 215 20% 55%;
 
-    /* Chart colors - Dark adjusted */
-    --chart-1: 193 42% 50%;
-    --chart-2: 201 30% 40%;
-    --chart-3: 21 90% 57%;
-    --chart-4: 210 20% 50%;
-    --chart-5: 0 62% 50%;
+    /* Chart colors — Dark */
+    --chart-1: 25 95% 53%;
+    --chart-2: 217 91% 60%;
+    --chart-3: 142 71% 45%;
+    --chart-4: 263 70% 60%;
+    --chart-5: 0 63% 50%;
 
     /* Success & Warning states */
-    --success: 142 70% 40%;
+    --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 90% 55%;
+    --warning: 48 96% 53%;
     --warning-foreground: 0 0% 0%;
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
 
-    /* Badge Tokens - Dark Mode (Petron Palette) */
-    --badge-neutral-bg: rgba(255, 255, 255, 0.08);
-    --badge-neutral-text: 0 0% 100%;
-    --badge-neutral-border: rgba(255, 255, 255, 0.18);
+    /* Badge Tokens — Dark */
+    --badge-neutral-bg: rgba(255, 255, 255, 0.06);
+    --badge-neutral-text: 214 32% 91%;
+    --badge-neutral-border: rgba(255, 255, 255, 0.12);
 
-    --badge-info-bg: rgba(43, 91, 108, 0.35);
-    --badge-info-text: 0 0% 100%;
-    --badge-info-border: rgba(43, 91, 108, 0.60);
+    --badge-info-bg: rgba(59, 130, 246, 0.18);
+    --badge-info-text: 217 91% 75%;
+    --badge-info-border: rgba(59, 130, 246, 0.35);
 
-    --badge-attention-bg: rgba(244, 118, 45, 0.28);
-    --badge-attention-text: 0 0% 100%;
-    --badge-attention-border: rgba(244, 118, 45, 0.60);
+    --badge-attention-bg: rgba(249, 115, 22, 0.20);
+    --badge-attention-text: 25 95% 70%;
+    --badge-attention-border: rgba(249, 115, 22, 0.45);
 
-    --badge-strong-bg: 21 90% 57%;
+    --badge-strong-bg: 25 95% 53%;
     --badge-strong-text: 0 0% 100%;
-    --badge-strong-border: rgba(244, 118, 45, 0.75);
+    --badge-strong-border: rgba(249, 115, 22, 0.70);
 
-    --badge-muted-bg: rgba(255, 255, 255, 0.04);
-    --badge-muted-text: 210 15% 60%;
-    --badge-muted-border: rgba(255, 255, 255, 0.10);
+    --badge-muted-bg: rgba(255, 255, 255, 0.03);
+    --badge-muted-text: 215 20% 55%;
+    --badge-muted-border: rgba(255, 255, 255, 0.06);
   }
 }
 
@@ -187,12 +193,112 @@
     @apply border-border;
   }
 
+  html {
+    font-family: var(--font-sans);
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Smooth theme transition */
+  html, body, .bg-background, .bg-card, .bg-muted, .bg-sidebar, .bg-popover {
+    transition: background-color 300ms ease, color 300ms ease, border-color 300ms ease;
   }
 }
 
-/* TipTap Editor Styles */
+/* ─── Custom Scrollbar ─── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(25 95% 53% / 0.35);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(25 95% 53% / 0.6);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(25 95% 53% / 0.35) transparent;
+}
+
+/* ─── Glassmorphism ─── */
+.glass {
+  background: hsl(var(--card) / 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid hsl(var(--border) / 0.5);
+}
+
+.dark .glass {
+  background: hsl(var(--card) / 0.6);
+}
+
+/* ─── Glow Effects ─── */
+.glow-destructive {
+  box-shadow: 0 0 20px hsl(0 84% 60% / 0.18);
+}
+.glow-warning {
+  box-shadow: 0 0 20px hsl(48 96% 53% / 0.18);
+}
+.glow-success {
+  box-shadow: 0 0 20px hsl(142 71% 45% / 0.18);
+}
+.glow-accent {
+  box-shadow: 0 0 20px hsl(25 95% 53% / 0.18);
+}
+
+/* ─── Active sidebar indicator gradient ─── */
+.sidebar-active-indicator {
+  position: relative;
+}
+.sidebar-active-indicator::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
+  border-radius: 0 4px 4px 0;
+  background: linear-gradient(180deg, #F97316, #f43f5e);
+}
+
+/* ─── Table hover gradient ─── */
+.table-row-hover:hover {
+  background: linear-gradient(90deg, hsl(var(--muted) / 0.5), transparent) !important;
+}
+
+/* ─── Micro-interactions ─── */
+.btn-micro {
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+.btn-micro:hover {
+  transform: scale(1.02);
+}
+.btn-micro:active {
+  transform: scale(0.98);
+}
+
+/* ─── Pulse badge animation ─── */
+@keyframes pulse-badge {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.badge-pulse {
+  animation: pulse-badge 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ─── TipTap Editor Styles ─── */
 .ProseMirror {
   outline: none;
 }
@@ -269,7 +375,7 @@
   text-decoration: underline;
 }
 
-/* Badge Variants - Petron Palette */
+/* ─── Badge Variants — Petron Palette ─── */
 .badge-neutral {
   background: var(--badge-neutral-bg);
   color: hsl(var(--badge-neutral-text));

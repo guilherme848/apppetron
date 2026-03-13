@@ -1,47 +1,31 @@
-import { LayoutDashboard, Users, CheckSquare, Layers, Settings, ListTodo, TrendingUp, BarChart3, HeartHandshake, FileText, Home } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { LayoutDashboard, ChevronLeft, ChevronRight } from 'lucide-react';
 import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
 } from '@/components/ui/sidebar';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useRouteAccess } from '@/hooks/useRouteAccess';
 import { useAuth } from '@/contexts/AuthContext';
 import { getMenuRoutes, RouteDefinition, MODULES } from '@/config/routeRegistry';
 import { cn } from '@/lib/utils';
 import petronLogo from '@/assets/petron-logo.png';
 
-// Icon mapping for routes (kept for potential future use)
-const ICON_MAP: Record<string, React.ElementType> = {
-  Home,
-  LayoutDashboard,
-  Users,
-  CheckSquare,
-  Layers,
-  ListTodo,
-  TrendingUp,
-  BarChart3,
-  HeartHandshake,
-  FileText,
-  Settings,
-};
-
-// Get icon for a route
 function getRouteIcon(route: RouteDefinition): React.ElementType {
-  if (route.icon) return route.icon;
-  return LayoutDashboard; // Default
+  return route.icon || LayoutDashboard;
 }
 
-// Module display config
 const moduleConfig: { module: string; label: string | null }[] = [
-  { module: MODULES.MAIN, label: null }, // No label for main items
+  { module: MODULES.MAIN, label: null },
   { module: MODULES.CRM, label: 'CRM' },
   { module: MODULES.SALES, label: 'Vendas' },
   { module: MODULES.COMMERCIAL, label: 'Comercial & Marketing' },
@@ -51,47 +35,23 @@ const moduleConfig: { module: string; label: string | null }[] = [
   { module: MODULES.SETTINGS, label: 'Sistema' },
 ];
 
-/**
- * Check if a route should be marked as active.
- * Uses EXACT matching to prevent multiple items being highlighted.
- * This fixes the bug where clicking one item activates multiple items.
- */
 function isRouteActive(routePath: string, currentPath: string): boolean {
-  // Exact match only - no startsWith to prevent parent routes matching children
   return currentPath === routePath;
 }
 
-// Skeleton menu for loading state
 function SidebarSkeleton() {
   return (
     <>
-      {/* Main group skeleton */}
-      <SidebarGroup>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            {[1, 2].map((i) => (
-              <SidebarMenuItem key={i}>
-                <div className="flex items-center gap-3 px-3 py-2">
-                  <Skeleton className="h-4 w-4 rounded" />
-                  <Skeleton className="h-4 w-24 rounded" />
-                </div>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-      
-      {/* Other groups skeleton */}
-      {[1, 2, 3].map((group) => (
+      {[1, 2, 3, 4].map((group) => (
         <SidebarGroup key={group}>
-          <Skeleton className="h-3 w-16 mb-2 ml-2" />
+          <Skeleton className="h-3 w-20 mb-3 ml-3 rounded" />
           <SidebarGroupContent>
             <SidebarMenu>
               {[1, 2].map((i) => (
                 <SidebarMenuItem key={i}>
                   <div className="flex items-center gap-3 px-3 py-2">
                     <Skeleton className="h-4 w-4 rounded" />
-                    <Skeleton className="h-4 w-20 rounded" />
+                    <Skeleton className="h-3.5 w-24 rounded" />
                   </div>
                 </SidebarMenuItem>
               ))}
@@ -109,17 +69,14 @@ export function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  
+  // Expanded groups state (hover or pinned)
+  const [expandedAll, setExpandedAll] = useState(false);
+  const [hoveredModule, setHoveredModule] = useState<string | null>(null);
 
-  // Get menu routes from registry
   const menuRoutes = getMenuRoutes();
-
-  // Show skeleton while permissions are loading
   const isLoading = permissionsLoading || authLoading;
 
-  // Filter routes by permission and group by module
   const routesByModule: Record<string, RouteDefinition[]> = {};
-  
   if (!isLoading) {
     for (const route of menuRoutes) {
       if (!canAccess(route.id, 'view')) continue;
@@ -130,18 +87,62 @@ export function AppSidebar() {
     }
   }
 
+  const isModuleActive = useCallback(
+    (module: string) => {
+      const routes = routesByModule[module];
+      if (!routes) return false;
+      return routes.some((r) => isRouteActive(r.path, currentPath));
+    },
+    [routesByModule, currentPath],
+  );
+
+  const isGroupOpen = useCallback(
+    (module: string) => {
+      if (expandedAll) return true;
+      if (hoveredModule === module) return true;
+      if (isModuleActive(module)) return true;
+      // Main module always open
+      if (module === MODULES.MAIN) return true;
+      return false;
+    },
+    [expandedAll, hoveredModule, isModuleActive],
+  );
+
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border p-4">
-        <div className="flex items-center gap-3">
-          <img 
-            src={petronLogo} 
-            alt="Petron Logo" 
-            className="h-[7.5rem] w-auto"
+        <div className="flex items-center justify-between">
+          <img
+            src={petronLogo}
+            alt="Petron"
+            className="h-20 w-auto"
           />
+          <TooltipProvider delayDuration={0}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                  onClick={() => setExpandedAll((prev) => !prev)}
+                >
+                  <ChevronLeft
+                    className={cn(
+                      'h-4 w-4 transition-transform duration-200',
+                      !expandedAll && 'rotate-180',
+                    )}
+                  />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="text-xs">
+                {expandedAll ? 'Recolher menu' : 'Expandir menu'}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </SidebarHeader>
-      <SidebarContent>
+
+      <SidebarContent className="py-2">
         {isLoading ? (
           <SidebarSkeleton />
         ) : (
@@ -149,37 +150,68 @@ export function AppSidebar() {
             const routes = routesByModule[module];
             if (!routes || routes.length === 0) return null;
 
+            const open = isGroupOpen(module);
+            const moduleActive = isModuleActive(module);
+
             return (
-              <SidebarGroup key={module}>
-                {label && <SidebarGroupLabel>{label}</SidebarGroupLabel>}
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {routes.map((route) => {
-                      const Icon = getRouteIcon(route);
-                      const isActive = isRouteActive(route.path, currentPath);
-                      
-                      return (
-                        <SidebarMenuItem key={route.id}>
-                          <SidebarMenuButton asChild data-active={isActive}>
-                            <RouterNavLink
-                              to={route.path}
-                              end
-                              className={cn(
-                                "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                                isActive 
-                                  ? "bg-accent text-accent-foreground font-medium" 
-                                  : "hover:bg-accent/50"
-                              )}
-                            >
-                              <Icon className="h-4 w-4" />
-                              <span>{route.label}</span>
-                            </RouterNavLink>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      );
-                    })}
-                  </SidebarMenu>
-                </SidebarGroupContent>
+              <SidebarGroup
+                key={module}
+                className="py-0.5"
+                onMouseEnter={() => !expandedAll && setHoveredModule(module)}
+                onMouseLeave={() => !expandedAll && setHoveredModule(null)}
+              >
+                {/* Group label — always visible */}
+                {label && (
+                  <div
+                    className={cn(
+                      'px-3 py-2 cursor-default select-none',
+                      'text-[11px] font-semibold uppercase tracking-[0.08em]',
+                      moduleActive
+                        ? 'text-sidebar-primary'
+                        : 'text-sidebar-foreground/50',
+                      'transition-colors duration-200',
+                    )}
+                  >
+                    {label}
+                  </div>
+                )}
+
+                {/* Sub-items — collapsible */}
+                <div
+                  className={cn(
+                    'overflow-hidden transition-all duration-200 ease-out',
+                    open ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0',
+                  )}
+                >
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      {routes.map((route) => {
+                        const Icon = getRouteIcon(route);
+                        const isActive = isRouteActive(route.path, currentPath);
+
+                        return (
+                          <SidebarMenuItem key={route.id}>
+                            <SidebarMenuButton asChild data-active={isActive}>
+                              <RouterNavLink
+                                to={route.path}
+                                end
+                                className={cn(
+                                  'flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-150 text-sm relative',
+                                  isActive
+                                    ? 'text-sidebar-primary font-medium bg-sidebar-accent sidebar-active-indicator'
+                                    : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/60',
+                                )}
+                              >
+                                <Icon className="h-4 w-4 shrink-0" />
+                                <span className="truncate">{route.label}</span>
+                              </RouterNavLink>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        );
+                      })}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </div>
               </SidebarGroup>
             );
           })
