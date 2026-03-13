@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTrafficOptimizations } from '@/hooks/useTrafficOptimizations';
 import { useCrm } from '@/contexts/CrmContext';
-import { useSettings } from '@/contexts/SettingsContext';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { OptimizationMyDayTab } from '@/components/traffic-optimizations/MyDayTab';
 import { OptimizationWeeklyCycleTab } from '@/components/traffic-optimizations/WeeklyCycleTab';
 import { OptimizationLogTab } from '@/components/traffic-optimizations/LogTab';
