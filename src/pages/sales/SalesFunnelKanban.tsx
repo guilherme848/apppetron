@@ -199,8 +199,8 @@ export default function SalesFunnelKanban() {
 
   if (!funnel) {
     return (
-      <div className="p-6">
-        <p style={{ color: DC.textSecondary }}>Funil não encontrado.</p>
+      <div>
+        <p className="text-muted-foreground">Funil não encontrado.</p>
         <Button variant="outline" onClick={() => navigate('/sales')} className="mt-4">
           <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
         </Button>
