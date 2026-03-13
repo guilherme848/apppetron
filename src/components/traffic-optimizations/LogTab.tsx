@@ -19,10 +19,13 @@ import {
 } from '@/components/ui/alert-dialog';
 import { TrafficOptimization, PLATFORM_OPTIONS, TASK_TYPE_OPTIONS } from '@/hooks/useTrafficOptimizations';
 
+// ID do cargo "Gestor de Tráfego"
+const TRAFFIC_MANAGER_ROLE_ID = '29521693-8a2e-46fe-81a5-8b78059ad879';
+
 interface Props {
   optimizations: TrafficOptimization[];
   accounts: { id: string; name: string }[];
-  teamMembers: { id: string; name: string }[];
+  teamMembers: { id: string; name: string; role_id?: string | null; active?: boolean }[];
   deleteOptimization: (id: string) => Promise<any>;
 }
 
