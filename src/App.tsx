@@ -184,6 +184,7 @@ const App = () => (
 
                         {/* Traffic routes */}
                         <Route path="/traffic" element={<TrafficDashboard />} />
+                        <Route path="/traffic/operational" element={<TrafficOperationalDashboard />} />
                         <Route path="/traffic/tasks" element={<TrafficTasks />} />
                         <Route path="/traffic/playbook-tasks" element={<TrafficPlaybookTasksPage />} />
                         <Route path="/traffic/clients/:id" element={<TrafficClientDetail />} />
