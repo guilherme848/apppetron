@@ -103,9 +103,9 @@ export function OptimizationLogTab({ optimizations, accounts, teamMembers, delet
           <span className="text-xs text-muted-foreground">Responsável</span>
           <Select value={filterMember} onValueChange={setFilterMember}>
             <SelectTrigger className="h-8 w-[160px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
+          <SelectContent>
               <SelectItem value="all">Todos</SelectItem>
-              {teamMembers.map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
+              {trafficManagers.map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
