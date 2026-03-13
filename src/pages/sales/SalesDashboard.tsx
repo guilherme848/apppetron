@@ -356,7 +356,7 @@ export default function SalesDashboard() {
   const clearFilters = () => { setFilterFunnels([]); setFilterResponsible([]); };
 
   return (
-    <div className="p-6 space-y-6" style={{ backgroundColor: DC.bgPage }}>
+    <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-bold" style={{ color: DC.textPrimary }}>Dashboard Comercial</h1>
       </div>
