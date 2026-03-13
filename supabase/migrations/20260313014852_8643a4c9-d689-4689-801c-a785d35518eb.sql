@@ -1,0 +1,1 @@
+INSERT INTO team_members (name, email, role_id, active) VALUES ('Demo Temporário', 'demo-temp@petron.app', 'f7738534-d5c5-45dc-ac04-5582dbeb507a', true);
