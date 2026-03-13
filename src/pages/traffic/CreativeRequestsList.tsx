@@ -43,7 +43,7 @@ export default function CreativeRequestsList() {
   const [search, setSearch] = useState('');
 
   const today = new Date().toISOString().split('T')[0];
-  const openStatuses: CreativeRequestStatus[] = ['open', 'in_progress', 'ready_for_review', 'approved'];
+  const openStatuses: CreativeRequestStatus[] = ['open', 'in_progress', 'ready_for_review', 'approved', 'rejected'];
 
   const filteredRequests = requests.filter((r) => {
     if (filterClient !== 'all' && r.client_id !== filterClient) return false;

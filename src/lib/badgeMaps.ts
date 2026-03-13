@@ -33,13 +33,14 @@ export function getTaskStatusVariant(status: string): BadgeVariant {
 // REQUEST STATUS (Extra Requests, Creative Requests, Change Requests)
 // -----------------------------------------------------------------------------
 export type RequestStatusKey = 
-  | 'open' | 'in_progress' | 'ready_for_review' | 'approved' | 'done' | 'canceled';
+  | 'open' | 'in_progress' | 'ready_for_review' | 'approved' | 'rejected' | 'done' | 'canceled';
 
 export const REQUEST_STATUS_VARIANT: Record<RequestStatusKey, BadgeVariant> = {
   open: 'neutral',
   in_progress: 'info',
   ready_for_review: 'attention',
   approved: 'info',
+  rejected: 'destructive' as BadgeVariant,
   done: 'strong',
   canceled: 'muted',
 };
@@ -48,23 +49,25 @@ export function getRequestStatusVariant(status: string): BadgeVariant {
   return REQUEST_STATUS_VARIANT[status as RequestStatusKey] || 'neutral';
 }
 
+// Alias for change requests
+export function getChangeRequestStatusVariant(status: string): BadgeVariant {
+  return getRequestStatusVariant(status);
+}
+
 // -----------------------------------------------------------------------------
-// BATCH / PIPELINE STATUS
+// BATCH STATUS
 // -----------------------------------------------------------------------------
 export type BatchStatusKey = 
-  | 'planning' | 'production' | 'review' | 'pdf' 
-  | 'to_deliver' | 'delivered' | 'changes' | 'scheduling' | 'done';
+  | 'planning' | 'review' | 'approved' | 'production' | 'changes' | 'delivered' | 'completed';
 
 export const BATCH_STATUS_VARIANT: Record<BatchStatusKey, BadgeVariant> = {
   planning: 'neutral',
+  review: 'attention',
+  approved: 'info',
   production: 'info',
-  review: 'info',
-  pdf: 'neutral',
-  to_deliver: 'attention',
-  delivered: 'info',
   changes: 'attention',
-  scheduling: 'info',
-  done: 'strong',
+  delivered: 'strong',
+  completed: 'strong',
 };
 
 export function getBatchStatusVariant(status: string): BadgeVariant {
@@ -77,10 +80,10 @@ export function getBatchStatusVariant(status: string): BadgeVariant {
 export type PriorityKey = 'low' | 'medium' | 'high' | 'urgent';
 
 export const PRIORITY_VARIANT: Record<PriorityKey, BadgeVariant> = {
-  low: 'neutral',
-  medium: 'info',
+  low: 'muted',
+  medium: 'neutral',
   high: 'attention',
-  urgent: 'strong',
+  urgent: 'destructive' as BadgeVariant,
 };
 
 export function getPriorityVariant(priority: string): BadgeVariant {
@@ -88,15 +91,16 @@ export function getPriorityVariant(priority: string): BadgeVariant {
 }
 
 // -----------------------------------------------------------------------------
-// ACCOUNT STATUS (CRM)
+// ACCOUNT STATUS
 // -----------------------------------------------------------------------------
-export type AccountStatusKey = 'lead' | 'active' | 'churned' | 'archived';
+export type AccountStatusKey = 'active' | 'paused' | 'churned' | 'prospect' | 'onboarding';
 
 export const ACCOUNT_STATUS_VARIANT: Record<AccountStatusKey, BadgeVariant> = {
-  lead: 'neutral',
   active: 'strong',
+  paused: 'attention',
   churned: 'muted',
-  archived: 'muted',
+  prospect: 'neutral',
+  onboarding: 'info',
 };
 
 export function getAccountStatusVariant(status: string): BadgeVariant {
@@ -106,12 +110,14 @@ export function getAccountStatusVariant(status: string): BadgeVariant {
 // -----------------------------------------------------------------------------
 // CONTRACT STATUS
 // -----------------------------------------------------------------------------
-export type ContractStatusKey = 'active' | 'paused' | 'canceled';
+export type ContractStatusKey = 'active' | 'expired' | 'canceled' | 'pending' | 'draft';
 
 export const CONTRACT_STATUS_VARIANT: Record<ContractStatusKey, BadgeVariant> = {
   active: 'strong',
-  paused: 'attention',
+  expired: 'muted',
   canceled: 'muted',
+  pending: 'attention',
+  draft: 'neutral',
 };
 
 export function getContractStatusVariant(status: string): BadgeVariant {
@@ -119,42 +125,43 @@ export function getContractStatusVariant(status: string): BadgeVariant {
 }
 
 // -----------------------------------------------------------------------------
-// CONTENT FORMAT / TYPE
-// -----------------------------------------------------------------------------
-export type ContentFormatKey = 
-  | 'reels' | 'video' | 'carousel' | 'static' | 'story' | 'other';
-
-export const CONTENT_FORMAT_VARIANT: Record<ContentFormatKey, BadgeVariant> = {
-  reels: 'attention',
-  video: 'attention',
-  carousel: 'info',
-  static: 'neutral',
-  story: 'info',
-  other: 'neutral',
-};
-
-export function getContentFormatVariant(format: string): BadgeVariant {
-  return CONTENT_FORMAT_VARIANT[format as ContentFormatKey] || 'neutral';
-}
-
-// -----------------------------------------------------------------------------
 // CHANNEL
 // -----------------------------------------------------------------------------
-export type ChannelKey = 
-  | 'instagram' | 'facebook' | 'tiktok' | 'youtube' | 'linkedin' | 'whatsapp' | 'other';
+export type ChannelKey = 'instagram' | 'facebook' | 'linkedin' | 'tiktok' | 'youtube' | 'blog' | 'email' | 'other';
 
 export const CHANNEL_VARIANT: Record<ChannelKey, BadgeVariant> = {
   instagram: 'info',
   facebook: 'info',
+  linkedin: 'info',
   tiktok: 'attention',
   youtube: 'attention',
-  linkedin: 'neutral',
-  whatsapp: 'info',
-  other: 'neutral',
+  blog: 'neutral',
+  email: 'neutral',
+  other: 'muted',
 };
 
 export function getChannelVariant(channel: string): BadgeVariant {
-  return CHANNEL_VARIANT[channel as ChannelKey] || 'neutral';
+  return CHANNEL_VARIANT[channel as ChannelKey] || 'muted';
+}
+
+// -----------------------------------------------------------------------------
+// CONTENT FORMAT
+// -----------------------------------------------------------------------------
+export type ContentFormatKey = 'post' | 'carrossel' | 'carousel' | 'story' | 'video' | 'vídeo' | 'reels' | 'static';
+
+export const CONTENT_FORMAT_VARIANT: Record<ContentFormatKey, BadgeVariant> = {
+  post: 'neutral',
+  carrossel: 'info',
+  carousel: 'info',
+  story: 'attention',
+  video: 'attention',
+  'vídeo': 'attention',
+  reels: 'attention',
+  static: 'neutral',
+};
+
+export function getContentFormatVariant(format: string): BadgeVariant {
+  return CONTENT_FORMAT_VARIANT[format as ContentFormatKey] || 'muted';
 }
 
 // -----------------------------------------------------------------------------
@@ -164,119 +171,10 @@ export type NpsClassificationKey = 'promoter' | 'passive' | 'detractor';
 
 export const NPS_CLASSIFICATION_VARIANT: Record<NpsClassificationKey, BadgeVariant> = {
   promoter: 'strong',
-  passive: 'neutral',
-  detractor: 'attention',
+  passive: 'attention',
+  detractor: 'destructive' as BadgeVariant,
 };
 
 export function getNpsClassificationVariant(classification: string): BadgeVariant {
   return NPS_CLASSIFICATION_VARIANT[classification as NpsClassificationKey] || 'neutral';
-}
-
-// -----------------------------------------------------------------------------
-// RISK LEVEL (CS)
-// -----------------------------------------------------------------------------
-export type RiskLevelKey = 'low' | 'medium' | 'high' | 'critical';
-
-export const RISK_LEVEL_VARIANT: Record<RiskLevelKey, BadgeVariant> = {
-  low: 'neutral',
-  medium: 'info',
-  high: 'attention',
-  critical: 'strong',
-};
-
-export function getRiskLevelVariant(level: string): BadgeVariant {
-  return RISK_LEVEL_VARIANT[level as RiskLevelKey] || 'neutral';
-}
-
-// -----------------------------------------------------------------------------
-// ONBOARDING STATUS
-// -----------------------------------------------------------------------------
-export type OnboardingStatusKey = 'not_started' | 'in_progress' | 'completed' | 'blocked';
-
-export const ONBOARDING_STATUS_VARIANT: Record<OnboardingStatusKey, BadgeVariant> = {
-  not_started: 'neutral',
-  in_progress: 'info',
-  completed: 'strong',
-  blocked: 'attention',
-};
-
-export function getOnboardingStatusVariant(status: string): BadgeVariant {
-  return ONBOARDING_STATUS_VARIANT[status as OnboardingStatusKey] || 'neutral';
-}
-
-// -----------------------------------------------------------------------------
-// MEETING STATUS
-// -----------------------------------------------------------------------------
-export type MeetingStatusKey = 'scheduled' | 'completed' | 'canceled' | 'no_show';
-
-export const MEETING_STATUS_VARIANT: Record<MeetingStatusKey, BadgeVariant> = {
-  scheduled: 'info',
-  completed: 'strong',
-  canceled: 'muted',
-  no_show: 'attention',
-};
-
-export function getMeetingStatusVariant(status: string): BadgeVariant {
-  return MEETING_STATUS_VARIANT[status as MeetingStatusKey] || 'neutral';
-}
-
-// -----------------------------------------------------------------------------
-// ALERT TYPE (CS Dashboard)
-// -----------------------------------------------------------------------------
-export type AlertTypeKey = 
-  | 'onboarding_delayed' | 'no_meeting' | 'detractor_no_followup' | 'renewal_soon';
-
-export const ALERT_TYPE_VARIANT: Record<AlertTypeKey, BadgeVariant> = {
-  onboarding_delayed: 'attention',
-  no_meeting: 'attention',
-  detractor_no_followup: 'strong',
-  renewal_soon: 'info',
-};
-
-export function getAlertTypeVariant(type: string): BadgeVariant {
-  return ALERT_TYPE_VARIANT[type as AlertTypeKey] || 'neutral';
-}
-
-// -----------------------------------------------------------------------------
-// CHANGE REQUEST STATUS
-// -----------------------------------------------------------------------------
-export type ChangeRequestStatusKey = 'open' | 'in_progress' | 'done' | 'canceled';
-
-export const CHANGE_REQUEST_STATUS_VARIANT: Record<ChangeRequestStatusKey, BadgeVariant> = {
-  open: 'attention',
-  in_progress: 'info',
-  done: 'strong',
-  canceled: 'muted',
-};
-
-export function getChangeRequestStatusVariant(status: string): BadgeVariant {
-  return CHANGE_REQUEST_STATUS_VARIANT[status as ChangeRequestStatusKey] || 'neutral';
-}
-
-// -----------------------------------------------------------------------------
-// CLIENT STATUS (CS)
-// -----------------------------------------------------------------------------
-export type ClientStatusKey = 'active' | 'at_risk' | 'onboarding' | 'churned';
-
-export const CLIENT_STATUS_VARIANT: Record<ClientStatusKey, BadgeVariant> = {
-  active: 'strong',
-  at_risk: 'attention',
-  onboarding: 'info',
-  churned: 'muted',
-};
-
-export function getClientStatusVariant(status: string): BadgeVariant {
-  return CLIENT_STATUS_VARIANT[status as ClientStatusKey] || 'neutral';
-}
-
-// -----------------------------------------------------------------------------
-// OVERDUE HELPER (returns attention if overdue)
-// -----------------------------------------------------------------------------
-export function getOverdueVariant(dueDate: string | Date | null | undefined, isCompleted: boolean = false): BadgeVariant | null {
-  if (!dueDate || isCompleted) return null;
-  const due = typeof dueDate === 'string' ? new Date(dueDate) : dueDate;
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  due.setHours(0, 0, 0, 0);
-  return due < now ? 'attention' : null;
 }

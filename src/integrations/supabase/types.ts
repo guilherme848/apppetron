@@ -5160,6 +5160,133 @@ export type Database = {
           },
         ]
       }
+      traffic_creative_request_item_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          item_id: string
+          public_url: string | null
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          item_id: string
+          public_url?: string | null
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          item_id?: string
+          public_url?: string | null
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traffic_creative_request_item_files_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_creative_request_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      traffic_creative_request_items: {
+        Row: {
+          created_at: string
+          format: string
+          id: string
+          notes: string | null
+          request_id: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          format?: string
+          id?: string
+          notes?: string | null
+          request_id: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          format?: string
+          id?: string
+          notes?: string | null
+          request_id?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traffic_creative_request_items_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_creative_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      traffic_creative_request_status_history: {
+        Row: {
+          changed_by_member_id: string | null
+          created_at: string
+          feedback: string | null
+          from_status: string | null
+          id: string
+          request_id: string
+          to_status: string
+        }
+        Insert: {
+          changed_by_member_id?: string | null
+          created_at?: string
+          feedback?: string | null
+          from_status?: string | null
+          id?: string
+          request_id: string
+          to_status: string
+        }
+        Update: {
+          changed_by_member_id?: string | null
+          created_at?: string
+          feedback?: string | null
+          from_status?: string | null
+          id?: string
+          request_id?: string
+          to_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traffic_creative_request_status_histo_changed_by_member_id_fkey"
+            columns: ["changed_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traffic_creative_request_status_history_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_creative_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       traffic_creative_requests: {
         Row: {
           assignee_id: string | null
@@ -5174,6 +5301,7 @@ export type Database = {
           month_ref: string
           objective: string | null
           priority: string
+          rejection_feedback: string | null
           requested_by_member_id: string | null
           requested_by_role_key: string
           responsible_role_key: string
@@ -5195,6 +5323,7 @@ export type Database = {
           month_ref: string
           objective?: string | null
           priority?: string
+          rejection_feedback?: string | null
           requested_by_member_id?: string | null
           requested_by_role_key?: string
           responsible_role_key?: string
@@ -5216,6 +5345,7 @@ export type Database = {
           month_ref?: string
           objective?: string | null
           priority?: string
+          rejection_feedback?: string | null
           requested_by_member_id?: string | null
           requested_by_role_key?: string
           responsible_role_key?: string
