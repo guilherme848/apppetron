@@ -15,6 +15,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        mono: ["JetBrains Mono", "ui-monospace", "monospace"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -81,6 +82,7 @@ export default {
         },
       },
       borderRadius: {
+        "2xl": "calc(var(--radius) + 6px)",
         xl: "calc(var(--radius) + 4px)",
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
@@ -123,12 +125,12 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "fade-in-up": "fade-in-up 0.3s ease-out",
+        "fade-in-up": "fade-in-up 0.28s cubic-bezier(0.16, 1, 0.3, 1)",
         "fade-in": "fade-in 0.2s ease-out",
         "scale-in": "scale-in 0.2s ease-out",
         "slide-in-right": "slide-in-right 0.3s ease-out",
         "slide-down": "slide-down 0.2s ease-out",
-        "enter": "fade-in-up 0.3s ease-out",
+        "enter": "fade-in-up 0.28s cubic-bezier(0.16, 1, 0.3, 1)",
         "spin-slow": "spin-slow 0.5s ease-in-out",
       },
     },

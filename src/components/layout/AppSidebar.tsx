@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { LayoutDashboard, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, ChevronLeft } from 'lucide-react';
 import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
 import {
   Sidebar,
@@ -51,7 +51,7 @@ function SidebarSkeleton() {
                 <SidebarMenuItem key={i}>
                   <div className="flex items-center gap-3 px-3 py-2">
                     <Skeleton className="h-4 w-4 rounded" />
-                    <Skeleton className="h-3.5 w-24 rounded" />
+                    <Skeleton className="h-3 w-24 rounded" />
                   </div>
                 </SidebarMenuItem>
               ))}
@@ -69,7 +69,6 @@ export function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  // Expanded groups state (hover or pinned)
   const [expandedAll, setExpandedAll] = useState(false);
   const [hoveredModule, setHoveredModule] = useState<string | null>(null);
 
@@ -101,7 +100,6 @@ export function AppSidebar() {
       if (expandedAll) return true;
       if (hoveredModule === module) return true;
       if (isModuleActive(module)) return true;
-      // Main module always open
       if (module === MODULES.MAIN) return true;
       return false;
     },
@@ -115,7 +113,7 @@ export function AppSidebar() {
           <img
             src={petronLogo}
             alt="Petron"
-            className="h-20 w-auto"
+            className="h-16 w-auto"
           />
           <TooltipProvider delayDuration={0}>
             <Tooltip>
@@ -123,12 +121,12 @@ export function AppSidebar() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                  className="h-7 w-7 rounded-full text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent"
                   onClick={() => setExpandedAll((prev) => !prev)}
                 >
                   <ChevronLeft
                     className={cn(
-                      'h-4 w-4 transition-transform duration-200',
+                      'h-3.5 w-3.5 transition-transform duration-250',
                       !expandedAll && 'rotate-180',
                     )}
                   />
@@ -140,6 +138,8 @@ export function AppSidebar() {
             </Tooltip>
           </TooltipProvider>
         </div>
+        {/* Gradient separator */}
+        <div className="mt-3 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
       </SidebarHeader>
 
       <SidebarContent className="py-2">
@@ -160,15 +160,14 @@ export function AppSidebar() {
                 onMouseEnter={() => !expandedAll && setHoveredModule(module)}
                 onMouseLeave={() => !expandedAll && setHoveredModule(null)}
               >
-                {/* Group label — always visible */}
                 {label && (
                   <div
                     className={cn(
                       'px-3 py-2 cursor-default select-none',
-                      'text-[11px] font-semibold uppercase tracking-[0.08em]',
+                      'text-[10px] font-semibold uppercase tracking-[0.12em]',
                       moduleActive
                         ? 'text-sidebar-primary'
-                        : 'text-sidebar-foreground/50',
+                        : 'text-sidebar-foreground/35',
                       'transition-colors duration-200',
                     )}
                   >
@@ -176,10 +175,9 @@ export function AppSidebar() {
                   </div>
                 )}
 
-                {/* Sub-items — collapsible */}
                 <div
                   className={cn(
-                    'overflow-hidden transition-all duration-200 ease-out',
+                    'overflow-hidden transition-all duration-250 ease-[cubic-bezier(0.16,1,0.3,1)]',
                     open ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0',
                   )}
                 >
@@ -196,10 +194,10 @@ export function AppSidebar() {
                                 to={route.path}
                                 end
                                 className={cn(
-                                  'flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-150 text-sm relative',
+                                  'flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 text-[13px] relative',
                                   isActive
-                                    ? 'text-sidebar-primary font-medium bg-sidebar-accent sidebar-active-indicator'
-                                    : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/60',
+                                    ? 'text-sidebar-primary font-medium bg-primary/[0.08] sidebar-active-indicator'
+                                    : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50',
                                 )}
                               >
                                 <Icon className="h-4 w-4 shrink-0" />
