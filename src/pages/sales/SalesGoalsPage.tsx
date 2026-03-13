@@ -35,7 +35,7 @@ function PodiumCard({ rank, name, valueDone, valuePct, avatarUrl }: { rank: numb
         {name?.charAt(0) || '?'}
       </div>
       <p className="text-sm font-semibold text-foreground">{name}</p>
-      <p className="text-xs" style={{ color: DC.orange }}>
+      <p className="text-xs text-primary">
         {valueDone.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
       </p>
       <p className="text-xs text-muted-foreground">{Math.round(valuePct)}% da meta</p>
@@ -88,7 +88,7 @@ export default function SalesGoalsPage() {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-4">
+      <div className="space-y-4">
         <Skeleton className="h-8 w-48" />
         <div className="grid grid-cols-3 gap-4">{[1, 2, 3].map(i => <Skeleton key={i} className="h-32" />)}</div>
         <Skeleton className="h-64 w-full" />
@@ -97,10 +97,10 @@ export default function SalesGoalsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <Trophy className="h-6 w-6" style={{ color: DC.orange }} />
+          <Trophy className="h-6 w-6 text-primary" />
           <h1 className="text-xl font-bold text-foreground">Metas e Ranking</h1>
         </div>
         <div className="flex items-center gap-2">

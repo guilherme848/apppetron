@@ -102,7 +102,7 @@ export default function SalesActivities() {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-4">
+      <div className="space-y-4">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-64" />
       </div>
@@ -110,19 +110,17 @@ export default function SalesActivities() {
   }
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Atividades</h1>
         <div className="flex items-center gap-2">
-          <Button onClick={() => setShowNewDialog(true)} size="sm" style={{ backgroundColor: DC.orange }}>
+          <Button onClick={() => setShowNewDialog(true)} size="sm">
             <Plus className="h-4 w-4 mr-1" /> Nova Atividade
           </Button>
-          <Button variant={viewMode === 'list' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('list')}
-            style={viewMode === 'list' ? { backgroundColor: DC.orange } : {}}>
+          <Button variant={viewMode === 'list' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('list')}>
             <List className="h-4 w-4 mr-1" /> Lista
           </Button>
-          <Button variant={viewMode === 'agenda' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('agenda')}
-            style={viewMode === 'agenda' ? { backgroundColor: DC.orange } : {}}>
+          <Button variant={viewMode === 'agenda' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('agenda')}>
             <Calendar className="h-4 w-4 mr-1" /> Agenda
           </Button>
         </div>

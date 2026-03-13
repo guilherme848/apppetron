@@ -74,7 +74,7 @@ export default function SalesContacts() {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-4">
+      <div className="space-y-4">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-64" />
       </div>
@@ -87,10 +87,10 @@ export default function SalesContacts() {
   ) : [];
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Contatos</h1>
-        <Button onClick={() => setShowNewDialog(true)} style={{ backgroundColor: DC.orange }}>
+        <Button onClick={() => setShowNewDialog(true)}>
           <Plus className="h-4 w-4 mr-2" /> Novo Contato
         </Button>
       </div>

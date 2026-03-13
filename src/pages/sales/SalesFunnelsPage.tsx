@@ -157,7 +157,7 @@ export default function SalesFunnelsPage() {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-4">
+      <div className="space-y-4">
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-10 w-full max-w-md" />
         <div className="flex gap-4">
@@ -169,7 +169,7 @@ export default function SalesFunnelsPage() {
 
   if (funnels.length === 0) {
     return (
-      <div className="p-6 flex flex-col items-center justify-center gap-4 py-20">
+      <div className="flex flex-col items-center justify-center gap-4 py-20">
         <AlertTriangle className="h-10 w-10 text-muted-foreground" />
         <p className="text-lg text-muted-foreground">Nenhum funil criado ainda.</p>
         <p className="text-sm text-muted-foreground">Acesse Configurações → Funis e Etapas para criar seu primeiro funil.</p>
@@ -178,7 +178,7 @@ export default function SalesFunnelsPage() {
   }
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="space-y-4">
       {/* Header: Funnel Selector + View Toggle */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">

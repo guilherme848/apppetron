@@ -39,8 +39,7 @@ function StageColumn({
 
   return (
     <div
-      className="flex flex-col min-w-[280px] max-w-[320px] rounded-lg"
-      style={{ backgroundColor: '#F1F5F9' }}
+      className="flex flex-col min-w-[280px] max-w-[320px] rounded-lg bg-muted/50"
       data-stage-id={stage.id}
     >
       <div className="p-3 border-b" style={{ borderColor: DC.border }}>
@@ -189,7 +188,7 @@ export default function SalesFunnelKanban() {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-4">
+      <div className="space-y-4">
         <Skeleton className="h-8 w-48" />
         <div className="flex gap-4">
           {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-96 w-72" />)}
@@ -200,8 +199,8 @@ export default function SalesFunnelKanban() {
 
   if (!funnel) {
     return (
-      <div className="p-6">
-        <p style={{ color: DC.textSecondary }}>Funil não encontrado.</p>
+      <div>
+        <p className="text-muted-foreground">Funil não encontrado.</p>
         <Button variant="outline" onClick={() => navigate('/sales')} className="mt-4">
           <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
         </Button>
@@ -210,7 +209,7 @@ export default function SalesFunnelKanban() {
   }
 
   return (
-    <div className="p-6 space-y-4" style={{ backgroundColor: DC.bgPage }}>
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate('/sales')}>

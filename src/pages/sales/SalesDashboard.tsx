@@ -65,16 +65,16 @@ function KpiCard({ icon: Icon, label, value, sub, color, bgColor }: {
   icon: any; label: string; value: React.ReactNode; sub?: string; color: string; bgColor: string;
 }) {
   return (
-    <Card style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)', borderRadius: 8 }}>
+    <Card>
       <CardContent className="p-5">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg" style={{ backgroundColor: bgColor }}>
             <Icon className="h-5 w-5" style={{ color }} />
           </div>
           <div className="min-w-0">
-            <p className="text-xs truncate" style={{ color: DC.textSecondary }}>{label}</p>
-            <p className="text-xl font-bold truncate" style={{ color: DC.textPrimary }}>{value}</p>
-            {sub && <p className="text-xs mt-0.5" style={{ color: DC.textSecondary }}>{sub}</p>}
+            <p className="text-xs truncate text-muted-foreground">{label}</p>
+            <p className="text-xl font-bold truncate text-foreground">{value}</p>
+            {sub && <p className="text-xs mt-0.5 text-muted-foreground">{sub}</p>}
           </div>
         </div>
       </CardContent>
@@ -340,8 +340,8 @@ export default function SalesDashboard() {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-6">
-        <h1 className="text-2xl font-bold" style={{ color: DC.textPrimary }}>Dashboard Comercial</h1>
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold text-foreground">Dashboard Comercial</h1>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
           {Array.from({ length: 7 }).map((_, i) => (
             <Card key={i}><CardContent className="p-5"><Skeleton className="h-14" /></CardContent></Card>
@@ -356,7 +356,7 @@ export default function SalesDashboard() {
   const clearFilters = () => { setFilterFunnels([]); setFilterResponsible([]); };
 
   return (
-    <div className="p-6 space-y-6" style={{ backgroundColor: DC.bgPage }}>
+    <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-bold" style={{ color: DC.textPrimary }}>Dashboard Comercial</h1>
       </div>

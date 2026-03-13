@@ -1,29 +1,39 @@
-// Petron Dashboard Color Palette
+// Petron Dashboard Color Palette — Theme-aware via CSS variables
+// These values resolve via CSS custom properties, supporting both light and dark modes automatically.
+
 export const DC = {
-  orange: '#F97316',
-  dark: '#1B2B3B',
-  teal: '#0F766E',
-  red: '#EF4444',
-  bgPage: '#F8FAFC',
-  bgCard: '#FFFFFF',
-  textPrimary: '#1E293B',
-  textSecondary: '#64748B',
-  border: '#E2E8F0',
-  // Opacity variants
-  orange20: 'rgba(249,115,22,0.20)',
-  orange40: 'rgba(249,115,22,0.40)',
-  orange60: 'rgba(249,115,22,0.60)',
-  teal20: 'rgba(15,118,110,0.20)',
-  teal40: 'rgba(15,118,110,0.40)',
-  teal60: 'rgba(15,118,110,0.60)',
-  redBg: '#FEF2F2',
-  orangeBg: '#FFF7ED',
+  // Accent colors (resolved via CSS vars for theme support)
+  orange: 'hsl(var(--primary))',
+  teal: 'hsl(var(--success))',
+  red: 'hsl(var(--destructive))',
+  dark: 'hsl(var(--foreground))',
+
+  // Backgrounds
+  bgPage: 'hsl(var(--background))',
+  bgCard: 'hsl(var(--card))',
+
+  // Text
+  textPrimary: 'hsl(var(--foreground))',
+  textSecondary: 'hsl(var(--muted-foreground))',
+
+  // Border
+  border: 'hsl(var(--border))',
+
+  // Opacity variants (kept as rgba for inline style compatibility)
+  orange20: 'hsl(var(--primary) / 0.15)',
+  orange40: 'hsl(var(--primary) / 0.30)',
+  orange60: 'hsl(var(--primary) / 0.50)',
+  teal20: 'hsl(var(--success) / 0.15)',
+  teal40: 'hsl(var(--success) / 0.30)',
+  teal60: 'hsl(var(--success) / 0.50)',
+  redBg: 'hsl(var(--destructive) / 0.08)',
+  orangeBg: 'hsl(var(--primary) / 0.08)',
 } as const;
 
 export const ROLE_CHIP_COLORS: Record<string, string> = {
-  designer: DC.orange,
-  social: DC.teal,
-  videomaker: DC.dark,
+  designer: 'hsl(var(--primary))',
+  social: 'hsl(var(--success))',
+  videomaker: 'hsl(var(--foreground))',
 };
 
 export const ROLE_LABELS: Record<string, string> = {
@@ -38,8 +48,8 @@ export const ROLE_LABELS: Record<string, string> = {
 export const PRODUCTION_ROLES = ['designer', 'social', 'videomaker'] as const;
 
 export const tooltipStyle = {
-  backgroundColor: DC.bgCard,
-  border: `1px solid ${DC.border}`,
-  borderRadius: '8px',
-  color: DC.textPrimary,
+  backgroundColor: 'hsl(var(--card))',
+  border: '1px solid hsl(var(--border))',
+  borderRadius: '10px',
+  color: 'hsl(var(--foreground))',
 };

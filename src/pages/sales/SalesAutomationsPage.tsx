@@ -94,7 +94,7 @@ export default function SalesAutomationsPage() {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-4">
+      <div className="space-y-4">
         <Skeleton className="h-8 w-48" />
         {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full" />)}
       </div>
@@ -102,13 +102,13 @@ export default function SalesAutomationsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <Zap className="h-6 w-6" style={{ color: DC.orange }} />
+          <Zap className="h-6 w-6 text-primary" />
           <h1 className="text-xl font-bold text-foreground">Automações</h1>
         </div>
-        <Button size="sm" onClick={handleNew} style={{ backgroundColor: DC.orange }}>
+        <Button size="sm" onClick={handleNew}>
           <Plus className="h-4 w-4 mr-1" /> Nova Automação
         </Button>
       </div>
