@@ -412,6 +412,16 @@ export const routeRegistry: RouteDefinition[] = [
     order: 0, // Always first in module
   },
   {
+    id: 'traffic.operational',
+    path: '/traffic/operational',
+    label: 'Dashboard Operacional',
+    category: CATEGORIES.DASHBOARD,
+    module: MODULES.TRAFFIC,
+    permissions: ['view'],
+    icon: LayoutDashboard,
+    order: 1,
+  },
+  {
     id: 'traffic.tasks',
     path: '/traffic/playbook-tasks',
     label: 'Tarefas de Tráfego',
@@ -420,7 +430,7 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view', 'edit'],
     icon: CheckSquare,
     hideInMenu: true,
-    order: 1,
+    order: 1.5,
   },
   {
     id: 'traffic.balances',

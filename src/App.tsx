@@ -44,6 +44,7 @@ import TrafficOverview from "./pages/traffic/TrafficOverview";
 import TrafficAccountDetail from "./pages/traffic/TrafficAccountDetail";
 import TrafficBenchmarks from "./pages/traffic/TrafficBenchmarks";
 import TrafficOptimizationsPage from "./pages/traffic/TrafficOptimizationsPage";
+import TrafficOperationalDashboard from "./pages/traffic/TrafficOperationalDashboard";
 
 // CS pages
 import CsDashboard from "./pages/cs/CsDashboard";
@@ -183,6 +184,7 @@ const App = () => (
 
                         {/* Traffic routes */}
                         <Route path="/traffic" element={<TrafficDashboard />} />
+                        <Route path="/traffic/operational" element={<TrafficOperationalDashboard />} />
                         <Route path="/traffic/tasks" element={<TrafficTasks />} />
                         <Route path="/traffic/playbook-tasks" element={<TrafficPlaybookTasksPage />} />
                         <Route path="/traffic/clients/:id" element={<TrafficClientDetail />} />
