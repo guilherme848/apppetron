@@ -65,16 +65,16 @@ function KpiCard({ icon: Icon, label, value, sub, color, bgColor }: {
   icon: any; label: string; value: React.ReactNode; sub?: string; color: string; bgColor: string;
 }) {
   return (
-    <Card style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)', borderRadius: 8 }}>
+    <Card>
       <CardContent className="p-5">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg" style={{ backgroundColor: bgColor }}>
             <Icon className="h-5 w-5" style={{ color }} />
           </div>
           <div className="min-w-0">
-            <p className="text-xs truncate" style={{ color: DC.textSecondary }}>{label}</p>
-            <p className="text-xl font-bold truncate" style={{ color: DC.textPrimary }}>{value}</p>
-            {sub && <p className="text-xs mt-0.5" style={{ color: DC.textSecondary }}>{sub}</p>}
+            <p className="text-xs truncate text-muted-foreground">{label}</p>
+            <p className="text-xl font-bold truncate text-foreground">{value}</p>
+            {sub && <p className="text-xs mt-0.5 text-muted-foreground">{sub}</p>}
           </div>
         </div>
       </CardContent>

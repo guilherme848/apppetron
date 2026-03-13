@@ -35,7 +35,7 @@ function PodiumCard({ rank, name, valueDone, valuePct, avatarUrl }: { rank: numb
         {name?.charAt(0) || '?'}
       </div>
       <p className="text-sm font-semibold text-foreground">{name}</p>
-      <p className="text-xs" style={{ color: DC.orange }}>
+      <p className="text-xs text-primary">
         {valueDone.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
       </p>
       <p className="text-xs text-muted-foreground">{Math.round(valuePct)}% da meta</p>
