@@ -157,7 +157,7 @@ export default function SalesFunnelsPage() {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-4">
+      <div className="space-y-4">
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-10 w-full max-w-md" />
         <div className="flex gap-4">
