@@ -14,12 +14,49 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_services: {
+        Row: {
+          account_id: string
+          created_at: string
+          id: string
+          service_id: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          id?: string
+          service_id: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          id?: string
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_services_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accounts: {
         Row: {
           ad_monthly_budget: number | null
           ad_payment_frequency: string | null
           ad_payment_method: string | null
           address_complement: string | null
+          billing_day: number | null
           churned_at: string | null
           city: string | null
           contact_email: string | null
@@ -42,6 +79,7 @@ export type Database = {
           niche_id: string | null
           origin: string | null
           postal_code: string | null
+          razao_social: string | null
           service_contracted: string | null
           service_id: string | null
           social_member_id: string | null
@@ -63,6 +101,7 @@ export type Database = {
           ad_payment_frequency?: string | null
           ad_payment_method?: string | null
           address_complement?: string | null
+          billing_day?: number | null
           churned_at?: string | null
           city?: string | null
           contact_email?: string | null
@@ -85,6 +124,7 @@ export type Database = {
           niche_id?: string | null
           origin?: string | null
           postal_code?: string | null
+          razao_social?: string | null
           service_contracted?: string | null
           service_id?: string | null
           social_member_id?: string | null
@@ -106,6 +146,7 @@ export type Database = {
           ad_payment_frequency?: string | null
           ad_payment_method?: string | null
           address_complement?: string | null
+          billing_day?: number | null
           churned_at?: string | null
           city?: string | null
           contact_email?: string | null
@@ -128,6 +169,7 @@ export type Database = {
           niche_id?: string | null
           origin?: string | null
           postal_code?: string | null
+          razao_social?: string | null
           service_contracted?: string | null
           service_id?: string | null
           social_member_id?: string | null
