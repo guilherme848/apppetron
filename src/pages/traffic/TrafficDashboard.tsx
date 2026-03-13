@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Users,
   AlertTriangle,
@@ -7,14 +7,41 @@ import {
   Zap,
   ExternalLink,
   Loader2,
+  ShieldCheck,
+  CircleDollarSign,
+  Image,
+  ChevronRight,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useTrafficOverview } from '@/hooks/useTrafficOverview';
 import { TASK_TYPE_OPTIONS } from '@/hooks/useTrafficOptimizations';
 import { cn } from '@/lib/utils';
+
+const COMPLEXITY_COLORS: Record<string, string> = {
+  Leve: 'bg-muted text-muted-foreground',
+  Média: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+  Alta: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
+};
+
+function getInitials(name: string) {
+  return name
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
+}
 
 export default function TrafficDashboard() {
   const navigate = useNavigate();
@@ -40,225 +67,363 @@ export default function TrafficDashboard() {
   }
 
   const taskTypeLabel = (type: string) =>
-    TASK_TYPE_OPTIONS.find(t => t.value === type)?.label || type;
+    TASK_TYPE_OPTIONS.find((t) => t.value === type)?.label || type;
+  const taskTypeComplexity = (type: string) =>
+    TASK_TYPE_OPTIONS.find((t) => t.value === type)?.complexity || 'Leve';
+
+  const kpis = [
+    {
+      label: 'Clientes Ativos',
+      value: totalActiveClients,
+      icon: Users,
+      borderColor: 'border-l-blue-500',
+      iconColor: 'text-blue-500',
+      valueColor: 'text-foreground',
+      onClick: undefined,
+    },
+    {
+      label: 'Saldo Baixo',
+      value: lowBalanceClients.length,
+      icon: AlertTriangle,
+      borderColor: 'border-l-destructive',
+      iconColor: 'text-destructive',
+      valueColor: 'text-destructive',
+      onClick: () => navigate('/traffic/balances'),
+    },
+    {
+      label: 'Check-ins Hoje',
+      value: todayCheckins.length,
+      icon: CheckCircle2,
+      borderColor: 'border-l-emerald-500',
+      iconColor: 'text-emerald-600',
+      valueColor: 'text-emerald-600',
+      onClick: undefined,
+    },
+    {
+      label: 'Sem Check-in',
+      value: clientsWithoutCheckin.length,
+      icon: Clock,
+      borderColor: 'border-l-yellow-500',
+      iconColor: 'text-yellow-600',
+      valueColor: 'text-yellow-600',
+      onClick: () => navigate('/traffic/optimizations'),
+    },
+    {
+      label: 'Otimizações (Semana)',
+      value: weekOptimizations.length,
+      icon: Zap,
+      borderColor: 'border-l-purple-500',
+      iconColor: 'text-purple-600',
+      valueColor: 'text-foreground',
+      onClick: undefined,
+    },
+  ];
+
+  const hasNoAlerts =
+    clientsWithoutCheckin.length === 0 &&
+    lowBalanceClients.length === 0 &&
+    pendingCreatives.length === 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold">Visão Geral — Tráfego Pago</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl font-bold tracking-tight">
+          Visão Geral — Tráfego Pago
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Painel operacional do gestor de tráfego
         </p>
       </div>
 
-      {/* KPI Cards */}
+      {/* ───────── KPI CARDS ───────── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <Card>
-          <CardHeader className="pb-2 pt-4">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-primary" />
-              <CardTitle className="text-sm font-medium text-muted-foreground">Clientes Ativos</CardTitle>
-            </div>
-            <p className="text-2xl font-bold">{totalActiveClients}</p>
-          </CardHeader>
-        </Card>
+        {kpis.map((kpi) => {
+          const Icon = kpi.icon;
+          return (
+            <Card
+              key={kpi.label}
+              className={cn(
+                'border-l-4 bg-card shadow-sm transition-all',
+                kpi.borderColor,
+                kpi.onClick && 'cursor-pointer hover:shadow-md hover:-translate-y-0.5',
+              )}
+              onClick={kpi.onClick}
+            >
+              <CardContent className="p-4 flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <Icon className={cn('h-4 w-4', kpi.iconColor)} />
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    {kpi.label}
+                  </span>
+                </div>
+                <p className={cn('text-3xl font-bold leading-none mt-1', kpi.valueColor)}>
+                  {kpi.value}
+                </p>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
 
-        <Card
-          className="cursor-pointer hover:border-destructive/50 transition-colors border-l-4 border-l-destructive"
-          onClick={() => navigate('/traffic/balances')}
-        >
-          <CardHeader className="pb-2 pt-4">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-destructive" />
-              <CardTitle className="text-sm font-medium text-muted-foreground">Saldo Baixo</CardTitle>
-            </div>
-            <p className="text-2xl font-bold text-destructive">{lowBalanceClients.length}</p>
-          </CardHeader>
-        </Card>
-
-        <Card className="border-l-4 border-l-green-500">
-          <CardHeader className="pb-2 pt-4">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-              <CardTitle className="text-sm font-medium text-muted-foreground">Check-ins Hoje</CardTitle>
-            </div>
-            <p className="text-2xl font-bold text-green-600">{todayCheckins.length}</p>
-          </CardHeader>
-        </Card>
-
-        <Card
-          className="cursor-pointer hover:border-yellow-500/50 transition-colors border-l-4 border-l-yellow-500"
-          onClick={() => navigate('/traffic/optimizations')}
-        >
-          <CardHeader className="pb-2 pt-4">
+      {/* ───────── ALERTS SECTION ───────── */}
+      <div className="grid lg:grid-cols-2 gap-5">
+        {/* Left — Sem Check-in */}
+        <Card className="shadow-sm">
+          <CardHeader className="pb-3 border-b bg-yellow-50/60 dark:bg-yellow-900/10 rounded-t-lg">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-yellow-600" />
-              <CardTitle className="text-sm font-medium text-muted-foreground">Sem Check-in</CardTitle>
+              <CardTitle className="text-sm font-semibold text-yellow-800 dark:text-yellow-400">
+                Sem Check-in Hoje
+              </CardTitle>
+              {clientsWithoutCheckin.length > 0 && (
+                <Badge variant="attention" className="ml-auto text-xs">
+                  {clientsWithoutCheckin.length}
+                </Badge>
+              )}
             </div>
-            <p className="text-2xl font-bold text-yellow-600">{clientsWithoutCheckin.length}</p>
           </CardHeader>
+          <CardContent className="pt-4">
+            {clientsWithoutCheckin.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-6 text-center gap-2">
+                <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+                <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                  Todos os check-ins realizados hoje!
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                {clientsWithoutCheckin.map((c) => (
+                  <div
+                    key={c.id}
+                    className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Avatar className="h-7 w-7 text-xs">
+                        <AvatarFallback className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300 text-[10px] font-semibold">
+                          {getInitials(c.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm truncate">{c.name}</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs text-primary shrink-0"
+                      onClick={() => navigate('/traffic/optimizations')}
+                    >
+                      Fazer Check-in
+                      <ChevronRight className="h-3 w-3 ml-0.5" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-primary">
-          <CardHeader className="pb-2 pt-4">
+        {/* Right — Alertas Críticos */}
+        <Card className="shadow-sm">
+          <CardHeader className="pb-3 border-b bg-red-50/60 dark:bg-red-900/10 rounded-t-lg">
             <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4 text-primary" />
-              <CardTitle className="text-sm font-medium text-muted-foreground">Otimizações (Semana)</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              <CardTitle className="text-sm font-semibold text-red-800 dark:text-red-400">
+                Alertas Críticos
+              </CardTitle>
+              {(lowBalanceClients.length + pendingCreatives.length > 0) && (
+                <Badge variant="destructive" className="ml-auto text-xs">
+                  {lowBalanceClients.length + pendingCreatives.length}
+                </Badge>
+              )}
             </div>
-            <p className="text-2xl font-bold">{weekOptimizations.length}</p>
           </CardHeader>
+          <CardContent className="pt-4">
+            {lowBalanceClients.length === 0 && pendingCreatives.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-6 text-center gap-2">
+                <ShieldCheck className="h-8 w-8 text-emerald-500" />
+                <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                  Nenhum alerta no momento
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4 max-h-64 overflow-y-auto pr-1">
+                {/* Saldo Baixo */}
+                {lowBalanceClients.length > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-1.5">
+                        <CircleDollarSign className="h-3.5 w-3.5 text-destructive" />
+                        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          Saldo Baixo
+                        </span>
+                      </div>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="h-auto p-0 text-xs text-destructive"
+                        onClick={() => navigate('/traffic/balances')}
+                      >
+                        Ver todos <ExternalLink className="h-3 w-3 ml-1" />
+                      </Button>
+                    </div>
+                    {lowBalanceClients.slice(0, 5).map((c) => {
+                      const bal = getClientBalance(c.id);
+                      return (
+                        <div
+                          key={c.id}
+                          className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <Avatar className="h-7 w-7 text-xs">
+                              <AvatarFallback className="bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 text-[10px] font-semibold">
+                                {getInitials(c.name)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-sm truncate">{c.name}</span>
+                          </div>
+                          <span className="text-sm font-semibold text-destructive shrink-0 ml-2">
+                            {bal !== null
+                              ? bal.toLocaleString('pt-BR', {
+                                  style: 'currency',
+                                  currency: 'BRL',
+                                })
+                              : '—'}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Separator */}
+                {lowBalanceClients.length > 0 && pendingCreatives.length > 0 && (
+                  <div className="border-t" />
+                )}
+
+                {/* Criativos Pendentes */}
+                {pendingCreatives.length > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-1.5">
+                        <Image className="h-3.5 w-3.5 text-yellow-600" />
+                        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          Criativos Pendentes
+                        </span>
+                      </div>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="h-auto p-0 text-xs text-yellow-600"
+                        onClick={() => navigate('/traffic/creative-requests')}
+                      >
+                        Ver todos <ExternalLink className="h-3 w-3 ml-1" />
+                      </Button>
+                    </div>
+                    {pendingCreatives.slice(0, 5).map((cr) => (
+                      <div
+                        key={cr.id}
+                        className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-muted/50 transition-colors cursor-pointer"
+                        onClick={() =>
+                          navigate(`/traffic/creative-requests/${cr.id}`)
+                        }
+                      >
+                        <span className="text-sm truncate">{cr.title}</span>
+                        <span className="text-xs text-muted-foreground shrink-0 ml-2">
+                          {getClientName(cr.client_id)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
         </Card>
       </div>
 
-      {/* Alerts Section */}
-      {(lowBalanceClients.length > 0 || pendingCreatives.length > 0 || clientsWithoutCheckin.length > 0) && (
-        <div className="grid lg:grid-cols-3 gap-4">
-          {/* Low Balance */}
-          {lowBalanceClients.length > 0 && (
-            <Card className="border-destructive/30 bg-destructive/5">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-destructive" />
-                  Clientes com Saldo Baixo
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 max-h-48 overflow-y-auto">
-                {lowBalanceClients.map(c => {
-                  const bal = getClientBalance(c.id);
-                  return (
-                    <div key={c.id} className="flex items-center justify-between text-sm">
-                      <span className="truncate">{c.name}</span>
-                      <Badge variant="destructive" className="text-xs shrink-0 ml-2">
-                        {bal !== null
-                          ? bal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-                          : '—'}
-                      </Badge>
-                    </div>
-                  );
-                })}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full mt-1 text-destructive"
-                  onClick={() => navigate('/traffic/balances')}
-                >
-                  Ver todos <ExternalLink className="h-3 w-3 ml-1" />
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Pending Creatives */}
-          {pendingCreatives.length > 0 && (
-            <Card className="border-yellow-500/30 bg-yellow-500/5">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-yellow-600" />
-                  Criativos Pendentes
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 max-h-48 overflow-y-auto">
-                {pendingCreatives.slice(0, 8).map(cr => (
-                  <div key={cr.id} className="flex items-center justify-between text-sm">
-                    <span className="truncate">{cr.title}</span>
-                    <span className="text-xs text-muted-foreground shrink-0 ml-2">
-                      {getClientName(cr.client_id)}
-                    </span>
-                  </div>
-                ))}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full mt-1 text-yellow-600"
-                  onClick={() => navigate('/traffic/creative-requests')}
-                >
-                  Ver todos <ExternalLink className="h-3 w-3 ml-1" />
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Without Check-in */}
-          {clientsWithoutCheckin.length > 0 && (
-            <Card className="border-orange-500/30 bg-orange-500/5">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-orange-600" />
-                  Sem Check-in Hoje
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 max-h-48 overflow-y-auto">
-                {clientsWithoutCheckin.slice(0, 10).map(c => (
-                  <div key={c.id} className="text-sm">{c.name}</div>
-                ))}
-                {clientsWithoutCheckin.length > 10 && (
-                  <p className="text-xs text-muted-foreground">
-                    +{clientsWithoutCheckin.length - 10} clientes
-                  </p>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full mt-1 text-orange-600"
-                  onClick={() => navigate('/traffic/optimizations')}
-                >
-                  Ir para Meu Dia <ExternalLink className="h-3 w-3 ml-1" />
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
-
-      {/* Recent Optimizations */}
-      <Card>
-        <CardHeader>
+      {/* ───────── RECENT OPTIMIZATIONS ───────── */}
+      <Card className="shadow-sm">
+        <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Otimizações Recentes (Semana Atual)</CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/traffic/optimizations')}>
+            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Otimizações Recentes — Semana Atual
+            </CardTitle>
+            <Button
+              variant="link"
+              size="sm"
+              className="h-auto p-0 text-xs"
+              onClick={() => navigate('/traffic/optimizations')}
+            >
               Ver tudo <ExternalLink className="h-3 w-3 ml-1" />
             </Button>
           </div>
         </CardHeader>
         <CardContent>
           {recentOptimizations.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Nenhuma otimização registrada esta semana.
-            </p>
+            <div className="flex flex-col items-center justify-center py-10 text-center gap-3">
+              <Zap className="h-10 w-10 text-muted-foreground/40" />
+              <p className="text-sm text-muted-foreground">
+                Nenhuma otimização registrada esta semana.
+              </p>
+            </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead className="text-right">Tempo</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentOptimizations.map(o => (
-                  <TableRow key={o.id}>
-                    <TableCell className="whitespace-nowrap">
-                      {new Date(o.optimization_date + 'T12:00:00').toLocaleDateString('pt-BR')}
-                    </TableCell>
-                    <TableCell>{o.clientName}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="text-xs">
-                        {taskTypeLabel(o.task_type)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="max-w-[200px] truncate">
-                      {o.description || '—'}
-                    </TableCell>
-                    <TableCell className="text-right whitespace-nowrap">
-                      {o.tempo_gasto_minutos} min
-                    </TableCell>
+            <div className="rounded-lg border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40">
+                    <TableHead className="text-xs font-semibold">Data</TableHead>
+                    <TableHead className="text-xs font-semibold">Cliente</TableHead>
+                    <TableHead className="text-xs font-semibold">Tipo</TableHead>
+                    <TableHead className="text-xs font-semibold">Descrição</TableHead>
+                    <TableHead className="text-xs font-semibold text-right">
+                      Tempo
+                    </TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {recentOptimizations.map((o, idx) => {
+                    const complexity = taskTypeComplexity(o.task_type);
+                    return (
+                      <TableRow
+                        key={o.id}
+                        className={cn(
+                          idx % 2 === 0
+                            ? 'bg-card'
+                            : 'bg-muted/20',
+                          'hover:bg-muted/40 transition-colors',
+                        )}
+                      >
+                        <TableCell className="whitespace-nowrap text-sm">
+                          {new Date(
+                            o.optimization_date + 'T12:00:00',
+                          ).toLocaleDateString('pt-BR')}
+                        </TableCell>
+                        <TableCell className="text-sm font-medium">
+                          {o.clientName}
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={cn(
+                              'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold',
+                              COMPLEXITY_COLORS[complexity] ||
+                                'bg-muted text-muted-foreground',
+                            )}
+                          >
+                            {taskTypeLabel(o.task_type)}
+                          </span>
+                        </TableCell>
+                        <TableCell className="max-w-[220px] truncate text-sm text-muted-foreground">
+                          {o.description || '—'}
+                        </TableCell>
+                        <TableCell className="text-right whitespace-nowrap text-sm tabular-nums">
+                          {o.tempo_gasto_minutos} min
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
