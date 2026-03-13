@@ -22,6 +22,12 @@ interface Props {
 
 export function NewOptimizationModal({ open, onOpenChange, accounts, teamMembers, currentMemberId, onSubmit }: Props) {
   const today = new Date().toISOString().split('T')[0];
+
+  // Filtrar apenas gestores de tráfego
+  const trafficManagers = useMemo(() => {
+    return teamMembers.filter((m) => m.role_id === TRAFFIC_MANAGER_ROLE_ID && m.active !== false);
+  }, [teamMembers]);
+
   const [form, setForm] = useState({
     client_id: '',
     platform: 'meta_ads',
