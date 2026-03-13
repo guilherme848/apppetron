@@ -15,7 +15,7 @@ export default function TrafficOptimizationsPage() {
   const [showNewModal, setShowNewModal] = useState(false);
   const optimizationsData = useTrafficOptimizations();
   const { accounts } = useCrm();
-  const { teamMembers } = useSettings();
+  const { members: teamMembers } = useTeamMembers();
 
   const activeAccounts = accounts.filter((a) => a.status === 'active' && !a.deleted_at);
 

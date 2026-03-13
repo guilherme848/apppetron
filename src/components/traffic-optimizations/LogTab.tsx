@@ -157,16 +157,20 @@ export function OptimizationLogTab({ optimizations, accounts, teamMembers, delet
 
       <p className="text-xs text-muted-foreground text-right">{filtered.length} registros</p>
 
-      <ConfirmDeleteDialog
-        open={!!deleteId}
-        onOpenChange={() => setDeleteId(null)}
-        onConfirm={() => {
-          if (deleteId) deleteOptimization(deleteId);
-          setDeleteId(null);
-        }}
-        title="Excluir otimização"
-        description="Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita."
-      />
+      {deleteId && (
+        <ConfirmDeleteDialog
+          open={!!deleteId}
+          onOpenChange={() => setDeleteId(null)}
+          onConfirm={() => {
+            if (deleteId) deleteOptimization(deleteId);
+            setDeleteId(null);
+          }}
+          title="Excluir otimização"
+          description="Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita."
+        >
+          <span />
+        </ConfirmDeleteDialog>
+      )}
     </div>
   );
 }

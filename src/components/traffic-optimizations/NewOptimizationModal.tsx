@@ -85,8 +85,8 @@ export function NewOptimizationModal({ open, onOpenChange, accounts, teamMembers
               <Label>Responsável</Label>
               <Select value={form.member_id} onValueChange={(v) => setForm((f) => ({ ...f, member_id: v }))}>
                 <SelectTrigger><SelectValue placeholder="Selecionar" /></SelectTrigger>
-                <SelectContent>
-                  {teamMembers.filter((m) => m.active !== false).map((m) => (
+              <SelectContent>
+                  {teamMembers.filter((m: any) => m.active !== false).map((m: any) => (
                     <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
                   ))}
                 </SelectContent>
