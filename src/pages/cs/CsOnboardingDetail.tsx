@@ -274,7 +274,7 @@ export default function CsOnboardingDetail() {
       {/* Sticky Navigation */}
       <StickyNav
         activeTab={activeTab}
-        onTabChange={handleTabChange}
+        onTabChange={(tab) => setActiveTab(tab)}
         transcriptionCount={transcriptionCount}
         answeredCount={answeredCount}
         totalQuestions={questions?.length || 0}
@@ -282,77 +282,73 @@ export default function CsOnboardingDetail() {
         totalActivities={totalCount}
       />
 
-      {/* SECTION 1 — Transcrições */}
-      <div ref={transcricoesRef} data-section="transcricoes" className="pt-8 space-y-4" style={{ animationDelay: '40ms', animationFillMode: 'both' }}>
-        <h2 className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-          Transcrições
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <TranscriptionUploadCard
-            title="Transcrição da Reunião de Vendas"
-            type="vendas"
+      {/* Tab content — only active tab is rendered */}
+      <div className="pt-8 pb-8 animate-fade-in" key={activeTab}>
+        {activeTab === 'transcricoes' && (
+          <div className="space-y-4">
+            <h2 className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              Transcrições
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <TranscriptionUploadCard
+                title="Transcrição da Reunião de Vendas"
+                type="vendas"
+                onboardingId={onboardingId || ''}
+                fileName={ob.transcricao_vendas_nome}
+                fileSize={ob.transcricao_vendas_tamanho}
+                fileUrl={ob.transcricao_vendas_url}
+                fileContent={ob.transcricao_vendas_conteudo}
+                uploadedAt={ob.transcricao_vendas_uploaded_at}
+                disabled={isConcluido}
+                onUploaded={(data) => handleTranscriptionUploaded('vendas', data)}
+                onRemoved={() => handleTranscriptionRemoved('vendas')}
+              />
+              <TranscriptionUploadCard
+                title="Transcrição da Reunião de Onboarding"
+                type="onboarding"
+                onboardingId={onboardingId || ''}
+                fileName={ob.transcricao_onboarding_nome}
+                fileSize={ob.transcricao_onboarding_tamanho}
+                fileUrl={ob.transcricao_onboarding_url}
+                fileContent={ob.transcricao_onboarding_conteudo}
+                uploadedAt={ob.transcricao_onboarding_uploaded_at}
+                disabled={isConcluido}
+                onUploaded={(data) => handleTranscriptionUploaded('onboarding', data)}
+                onRemoved={() => handleTranscriptionRemoved('onboarding')}
+              />
+            </div>
+            <div className="flex items-start gap-3 p-3 px-4 rounded-[10px] border border-[hsl(var(--info)/0.2)] bg-[hsl(var(--info)/0.08)]">
+              <Info className="h-4 w-4 text-[hsl(var(--info))] mt-0.5 shrink-0" />
+              <p className="text-[13px] text-muted-foreground">
+                Anexe a transcrição da reunião de onboarding para que a IA possa preencher automaticamente as perguntas.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'reuniao' && (
+          <MeetingSection
             onboardingId={onboardingId || ''}
-            fileName={ob.transcricao_vendas_nome}
-            fileSize={ob.transcricao_vendas_tamanho}
-            fileUrl={ob.transcricao_vendas_url}
-            fileContent={ob.transcricao_vendas_conteudo}
-            uploadedAt={ob.transcricao_vendas_uploaded_at}
-            disabled={isConcluido}
-            onUploaded={(data) => handleTranscriptionUploaded('vendas', data)}
-            onRemoved={() => handleTranscriptionRemoved('vendas')}
+            questions={questions || []}
+            respostas={respostas || []}
+            transcricaoOnboardingConteudo={ob.transcricao_onboarding_conteudo}
+            isConcluido={isConcluido}
+            onAnswerBlur={handleAnswerBlur}
+            onAiComplete={() => {}}
+            onRefreshRespostas={() => queryClient.invalidateQueries({ queryKey: ['onboarding-respostas', onboardingId] })}
           />
-          <TranscriptionUploadCard
-            title="Transcrição da Reunião de Onboarding"
-            type="onboarding"
-            onboardingId={onboardingId || ''}
-            fileName={ob.transcricao_onboarding_nome}
-            fileSize={ob.transcricao_onboarding_tamanho}
-            fileUrl={ob.transcricao_onboarding_url}
-            fileContent={ob.transcricao_onboarding_conteudo}
-            uploadedAt={ob.transcricao_onboarding_uploaded_at}
-            disabled={isConcluido}
-            onUploaded={(data) => handleTranscriptionUploaded('onboarding', data)}
-            onRemoved={() => handleTranscriptionRemoved('onboarding')}
+        )}
+
+        {activeTab === 'atividades' && (
+          <ActivitiesSection
+            atividades={atividades || []}
+            isConcluido={isConcluido}
+            csMembers={csMembers}
+            trafficMembers={trafficMembers}
+            onToggle={handleToggleAtividade}
+            onResponsavelChange={handleResponsavelChange}
           />
-        </div>
-        <div className="flex items-start gap-3 p-3 px-4 rounded-[10px] border border-[hsl(var(--info)/0.2)] bg-[hsl(var(--info)/0.08)]">
-          <Info className="h-4 w-4 text-[hsl(var(--info))] mt-0.5 shrink-0" />
-          <p className="text-[13px] text-muted-foreground">
-            Anexe a transcrição da reunião de onboarding para que a IA possa preencher automaticamente as perguntas.
-          </p>
-        </div>
-      </div>
-
-      {/* Separator */}
-      <div className="my-8 h-px" style={{ background: 'linear-gradient(90deg, transparent, hsl(var(--border)), transparent)' }} />
-
-      {/* SECTION 2 — Reunião de Onboarding */}
-      <div ref={reuniaoRef} data-section="reuniao" className="space-y-4" style={{ animationDelay: '80ms', animationFillMode: 'both' }}>
-        <MeetingSection
-          onboardingId={onboardingId || ''}
-          questions={questions || []}
-          respostas={respostas || []}
-          transcricaoOnboardingConteudo={ob.transcricao_onboarding_conteudo}
-          isConcluido={isConcluido}
-          onAnswerBlur={handleAnswerBlur}
-          onAiComplete={() => {}}
-          onRefreshRespostas={() => queryClient.invalidateQueries({ queryKey: ['onboarding-respostas', onboardingId] })}
-        />
-      </div>
-
-      {/* Separator */}
-      <div className="my-8 h-px" style={{ background: 'linear-gradient(90deg, transparent, hsl(var(--border)), transparent)' }} />
-
-      {/* SECTION 3 — Atividades */}
-      <div ref={atividadesRef} data-section="atividades" className="pb-8 space-y-4" style={{ animationDelay: '120ms', animationFillMode: 'both' }}>
-        <ActivitiesSection
-          atividades={atividades || []}
-          isConcluido={isConcluido}
-          csMembers={csMembers}
-          trafficMembers={trafficMembers}
-          onToggle={handleToggleAtividade}
-          onResponsavelChange={handleResponsavelChange}
-        />
+        )}
       </div>
 
       {/* Complete Dialog */}
