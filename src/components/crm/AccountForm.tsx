@@ -338,7 +338,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
         street_number: account.street_number || '',
         address_complement: account.address_complement || '',
       });
-      setTimeout(() => { skipAutoSave.current = false; }, 100);
+      setMidiasAtivas(account.midias_ativas || ['meta_ads']);
     } else {
       skipAutoSave.current = true;
       setFormData({
