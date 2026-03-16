@@ -103,7 +103,7 @@ export function AppSidebar() {
   }, [isLoading, routesByModule, currentPath, initActiveGroup]);
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center justify-between">
           <img src={petronLogo} alt="Petron" className="h-16 w-auto" />
