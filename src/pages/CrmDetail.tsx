@@ -1,15 +1,13 @@
 import { useState } from 'react';
 import { useClientIntelligence } from '@/hooks/useClientIntelligence';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Pencil, Trash2, ExternalLink, Phone, Mail, MapPin, Lock, Star, Users, FileText, Package, TrendingUp, CheckSquare, Clock } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, ExternalLink, Phone, Mail, MapPin, Lock, Star, Users, FileText, Package, TrendingUp, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { TaskStatusBadge } from '@/components/crm/StatusBadge';
 import { ContractForm } from '@/components/crm/ContractForm';
-import { TaskForm } from '@/components/crm/TaskForm';
 import { AccountForm } from '@/components/crm/AccountForm';
 import { AccountRemoveDialog, RemovalType } from '@/components/crm/AccountRemoveDialog';
 import { ClientDeliverables } from '@/components/crm/ClientDeliverables';
@@ -19,7 +17,7 @@ import { ConcorrentesCard } from '@/components/crm/intelligence/ConcorrentesCard
 import { ArquivosCard } from '@/components/crm/intelligence/ArquivosCard';
 import { ClientTrafficSection } from '@/components/crm/ClientTrafficSection';
 import { useCrm } from '@/contexts/CrmContext';
-import { Contract, Task, ContractStatus, TaskStatus, Account } from '@/types/crm';
+import { Contract, ContractStatus, Account } from '@/types/crm';
 import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
 import { toast } from '@/hooks/use-toast';
 import { useSensitivePermission } from '@/hooks/useSensitivePermission';
@@ -58,26 +56,24 @@ export default function CrmDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const {
-    accounts, loading, getAccountById, getContractsByAccount, getTasksByAccount,
+    accounts, loading, getAccountById, getContractsByAccount,
     updateAccount, softDeleteAccount, churnAccount, addContract, updateContract,
-    deleteContract, addTask, updateTask, deleteTask,
+    deleteContract,
   } = useCrm();
   const { services } = useSettings();
 
   const account = getAccountById(id!);
   const contracts = getContractsByAccount(id!);
-  const tasks = getTasksByAccount(id!);
+  
   const { canViewFinancialValues } = useSensitivePermission();
   const showFinancialValues = canViewFinancialValues();
   const { events: historyEvents, loading: historyLoading } = useAccountHistory(id);
   const { links: clienteLinks, concorrentes, anexos, loading: intelLoading, deleteAnexo } = useClientIntelligence(id);
 
   const [contractFormOpen, setContractFormOpen] = useState(false);
-  const [taskFormOpen, setTaskFormOpen] = useState(false);
   const [accountFormOpen, setAccountFormOpen] = useState(false);
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | undefined>();
-  const [editingTask, setEditingTask] = useState<Task | undefined>();
 
   const RestrictedValue = () => (
     <TooltipProvider><Tooltip><TooltipTrigger asChild>
@@ -133,12 +129,7 @@ export default function CrmDetail() {
     if (editingContract) { await updateContract(editingContract.id, data); } else { await addContract(data); }
     setEditingContract(undefined);
   };
-  const handleTaskSubmit = async (data: { title: string; status: TaskStatus; account_id: string | null; due_date: string | null }) => {
-    if (editingTask) { await updateTask(editingTask.id, data); } else { await addTask({ ...data, account_id: id! }); }
-    setEditingTask(undefined);
-  };
   const handleDeleteContract = async (contractId: string) => { await deleteContract(contractId); };
-  const handleDeleteTask = async (taskId: string) => { await deleteTask(taskId); };
 
   const handleRemoveConfirm = async (type: RemovalType, churnDate?: string) => {
     if (!account) return;
@@ -315,50 +306,7 @@ export default function CrmDetail() {
         <ArquivosCard anexos={anexos} loading={intelLoading} onDelete={deleteAnexo} />
       </div>
 
-      {/* Tarefas — full width */}
-      <Card className="rounded-2xl">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-            <CheckSquare className="h-3.5 w-3.5" />Tarefas
-          </CardTitle>
-          <Button size="sm" onClick={() => setTaskFormOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" />Nova
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {tasks.length === 0 ? (
-            <p className="text-muted-foreground text-sm text-center py-4">Nenhuma tarefa cadastrada</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground">Título</TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground">Status</TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground">Vencimento</TableHead>
-                  <TableHead className="w-[80px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tasks.map((task) => (
-                  <TableRow key={task.id} className="h-11">
-                    <TableCell className="font-medium text-sm">{task.title}</TableCell>
-                    <TableCell><TaskStatusBadge status={task.status} /></TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{task.due_date ? formatDate(task.due_date) : '-'}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingTask(task); setTaskFormOpen(true); }}><Pencil className="h-3.5 w-3.5" /></Button>
-                        <ConfirmDeleteDialog itemName={task.title} onConfirm={() => handleDeleteTask(task.id)}>
-                          <Button variant="ghost" size="icon" className="h-7 w-7"><Trash2 className="h-3.5 w-3.5" /></Button>
-                        </ConfirmDeleteDialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+
 
       {/* Histórico — full width */}
       <Card className="rounded-2xl">
@@ -411,7 +359,7 @@ export default function CrmDetail() {
 
       <AccountForm open={accountFormOpen} onClose={() => setAccountFormOpen(false)} onSubmit={handleAccountSubmit} account={account} />
       <ContractForm open={contractFormOpen} onClose={() => { setContractFormOpen(false); setEditingContract(undefined); }} onSubmit={handleContractSubmit} contract={editingContract} accountId={id!} />
-      <TaskForm open={taskFormOpen} onClose={() => { setTaskFormOpen(false); setEditingTask(undefined); }} onSubmit={handleTaskSubmit} task={editingTask} accounts={accounts} />
+      
       <AccountRemoveDialog open={removeDialogOpen} onOpenChange={setRemoveDialogOpen} account={account} onConfirm={handleRemoveConfirm} />
     </div>
   );
