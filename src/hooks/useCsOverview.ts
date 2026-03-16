@@ -410,14 +410,7 @@ export function useCsOverview() {
         return isValid(d) && d >= m && d <= mEnd;
       });
 
-      const activeAtM = accounts.filter(a => {
-        if (a.status === 'active') return true;
-        if (a.churned_at) {
-          const d = parseISO(a.churned_at);
-          return isValid(d) && d >= m;
-        }
-        return false;
-      }).length;
+      const activeAtM = accounts.filter(a => isActiveAtMonthStartByDate(a, m)).length;
 
       churnHistory.push({
         label,
