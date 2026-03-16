@@ -222,6 +222,7 @@ export function useTrafficOptimizations() {
     weeklyCycle,
     loading,
     currentMemberId,
+    isAdmin,
     todayStr,
     todayCheckins,
     todayHighComplexity,
