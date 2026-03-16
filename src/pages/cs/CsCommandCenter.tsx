@@ -163,6 +163,9 @@ export default function CsCommandCenter() {
         </div>
       )}
 
+      {/* FINANCIAL METRICS — LT, LTV, CHURN */}
+      {loading ? <SectionSkeleton rows={3} /> : <FinancialSection metrics={financialMetrics} monthLabel={selectedMonthLabel} />}
+
       {/* ALERTS */}
       {loading ? <SectionSkeleton rows={2} /> : <AlertsCard alerts={alerts} navigate={navigate} />}
 
