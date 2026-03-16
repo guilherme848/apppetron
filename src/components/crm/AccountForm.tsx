@@ -482,6 +482,49 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
     }
   };
 
+  const [cepLoading, setCepLoading] = useState(false);
+  const [cepError, setCepError] = useState('');
+
+  const handlePostalCodeBlur = async () => {
+    if (isEditing && !skipAutoSave.current) {
+      await flush();
+    }
+    setCepError('');
+    const cleanCep = formData.postal_code.replace(/\D/g, '');
+    if (cleanCep.length !== 8) return;
+
+    setCepLoading(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+      const data = await res.json();
+      if (data.erro) {
+        setCepError('CEP não encontrado');
+        setCepLoading(false);
+        return;
+      }
+      const updates: Partial<typeof formData> = {};
+      if (data.uf) updates.state = data.uf;
+      if (data.localidade) updates.city = data.localidade;
+      if (data.bairro) updates.neighborhood = data.bairro;
+      if (data.logradouro) updates.street = data.logradouro;
+      if (data.complemento && !formData.address_complement) updates.address_complement = data.complemento;
+
+      if (Object.keys(updates).length > 0) {
+        setFormData(prev => ({ ...prev, ...updates }));
+        if (isEditing && !skipAutoSave.current) {
+          Object.entries(updates).forEach(([key, value]) => {
+            queueChange({ [key]: value });
+          });
+          await flush();
+        }
+      }
+    } catch {
+      setCepError('Erro ao buscar CEP');
+    } finally {
+      setCepLoading(false);
+    }
+  };
+
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatPhone(e.target.value);
     if (formatted.replace(/\D/g, '').length <= 11) {
