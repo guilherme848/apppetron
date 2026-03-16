@@ -195,9 +195,9 @@ export function useTrafficOptimizations() {
 
   const todayCheckins = useMemo(() => {
     return optimizations.filter(
-      (o) => o.optimization_date === todayStr && o.task_type === 'checkin' && o.member_id === currentMemberId
+      (o) => o.optimization_date === todayStr && o.task_type === 'checkin' && (isAdmin || o.member_id === currentMemberId)
     );
-  }, [optimizations, todayStr, currentMemberId]);
+  }, [optimizations, todayStr, currentMemberId, isAdmin]);
 
   const todayWeekday = useMemo(() => {
     const d = new Date().getDay(); // 0=Sun, 1=Mon...
@@ -205,17 +205,17 @@ export function useTrafficOptimizations() {
   }, []);
 
   const todayHighComplexity = useMemo(() => {
-    if (!currentMemberId) return [];
+    if (!isAdmin && !currentMemberId) return [];
     return weeklyCycle.filter(
-      (w) => w.weekday === todayWeekday && w.manager_member_id === currentMemberId
+      (w) => w.weekday === todayWeekday && (isAdmin || w.manager_member_id === currentMemberId)
     );
-  }, [weeklyCycle, todayWeekday, currentMemberId]);
+  }, [weeklyCycle, todayWeekday, currentMemberId, isAdmin]);
 
   const openMediumTasks = useMemo(() => {
     return optimizations.filter(
-      (o) => o.task_type === 'media' && o.member_id === currentMemberId
+      (o) => o.task_type === 'media' && (isAdmin || o.member_id === currentMemberId)
     );
-  }, [optimizations, currentMemberId]);
+  }, [optimizations, currentMemberId, isAdmin]);
 
   return {
     optimizations,
