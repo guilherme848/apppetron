@@ -112,7 +112,7 @@ function DraggableClientCard({
         <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50" />
       </div>
 
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 cursor-pointer" onClick={onClick}>
         <p className="text-[13px] font-semibold text-foreground truncate">{clientName}</p>
         {clientNiche && (
           <span className="inline-block mt-0.5 text-[10px] text-muted-foreground bg-muted/60 border border-border/40 rounded px-1.5 py-0.5">
