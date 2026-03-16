@@ -120,6 +120,18 @@ export function useCsOverview() {
   const monthStart = selectedMonth;
   const monthEnd = endOfMonth(selectedMonth);
 
+  const isActiveAtMonthStartByDate = useCallback((account: any, referenceStart: Date) => {
+    if (!account.start_date) return false;
+    const startDate = parseISO(account.start_date);
+    if (!isValid(startDate) || startDate > referenceStart) return false;
+
+    if (!account.churned_at) return true;
+    const churnDate = parseISO(account.churned_at);
+    if (!isValid(churnDate)) return true;
+
+    return churnDate > referenceStart;
+  }, []);
+
   // KPIs
   const kpiData = useMemo((): CsOverviewKPI => {
     const active = accounts.filter(a => a.status === 'active');
@@ -231,16 +243,8 @@ export function useCsOverview() {
 
   // Clients that were active at start of selected month
   const activeAtMonthStart = useMemo(() => {
-    return accounts.filter(a => {
-      if (a.status === 'active') return true;
-      // Client was active at month start if churned_at >= monthStart
-      if (a.churned_at) {
-        const d = parseISO(a.churned_at);
-        return isValid(d) && d >= monthStart;
-      }
-      return false;
-    });
-  }, [accounts, monthStart]);
+    return accounts.filter(a => isActiveAtMonthStartByDate(a, monthStart));
+  }, [accounts, monthStart, isActiveAtMonthStartByDate]);
 
   // Churn by niche (filtered by month)
   const churnByNiche = useMemo((): ChurnDimensionItem[] => {
@@ -387,15 +391,8 @@ export function useCsOverview() {
 
     const revenueLost = churnedInMonth.reduce((s, a) => s + Number(a.monthly_value || 0), 0);
 
-    // Active at start of selected month
-    const activeAtStart = accounts.filter(a => {
-      if (a.status === 'active') return true;
-      if (a.churned_at) {
-        const d = parseISO(a.churned_at);
-        return isValid(d) && d >= monthStart;
-      }
-      return false;
-    }).length;
+    // Active at start of selected month (same rule as executive dashboard)
+    const activeAtStart = accounts.filter(a => isActiveAtMonthStartByDate(a, monthStart)).length;
 
     const churnRate = activeAtStart > 0 ? (churnedInMonth.length / activeAtStart) * 100 : 0;
 
@@ -413,14 +410,7 @@ export function useCsOverview() {
         return isValid(d) && d >= m && d <= mEnd;
       });
 
-      const activeAtM = accounts.filter(a => {
-        if (a.status === 'active') return true;
-        if (a.churned_at) {
-          const d = parseISO(a.churned_at);
-          return isValid(d) && d >= m;
-        }
-        return false;
-      }).length;
+      const activeAtM = accounts.filter(a => isActiveAtMonthStartByDate(a, m)).length;
 
       churnHistory.push({
         label,
