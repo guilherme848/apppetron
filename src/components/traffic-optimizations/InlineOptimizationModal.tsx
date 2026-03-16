@@ -63,13 +63,10 @@ export function InlineOptimizationModal({
   const [saving, setSaving] = useState(false);
   const [shimmerLoading, setShimmerLoading] = useState(true);
 
-  // Available platforms for this client
+  // Available platforms for this client based on midias_ativas
   const availablePlatforms = useMemo(() => {
     if (!client?.midias_ativas || client.midias_ativas.length === 0) return PLATFORM_OPTIONS;
-    return PLATFORM_OPTIONS.filter(p =>
-      client.midias_ativas!.some(m => m.toLowerCase().replace(/\s+/g, '_').includes(p.value.replace('_', '')))
-      || client.midias_ativas!.some(m => p.label.toLowerCase().includes(m.toLowerCase()))
-    );
+    return PLATFORM_OPTIONS.filter(p => client.midias_ativas!.includes(p.value));
   }, [client?.midias_ativas]);
 
   // Sync state when modal opens
