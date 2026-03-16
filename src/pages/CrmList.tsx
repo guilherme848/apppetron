@@ -162,6 +162,7 @@ export default function CrmList() {
 
   const sortedAndFilteredAccounts = useMemo(() => {
     const filtered = accounts.filter((account) => {
+      if (account.name.toLowerCase() === 'petron') return false;
       if (account.status === 'archived') return false;
       if (!showChurned && account.status === 'churned') return false;
       if (search && !account.name.toLowerCase().includes(search.toLowerCase())) return false;
