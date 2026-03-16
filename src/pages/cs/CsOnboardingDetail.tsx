@@ -68,6 +68,8 @@ export default function CsOnboardingDetail() {
   const { data: respostas, isLoading: loadingRespostas } = useOnboardingRespostas(onboardingId || null);
   const { data: questions, isLoading: loadingQuestions } = useOnboardingQuestions();
 
+  const { data: checkupData } = useClienteCheckup(onboardingId || null);
+
   const upsertResposta = useUpsertResposta();
   const updateAtividade = useUpdateAtividade();
   const completeOnboarding = useCompleteOnboarding();
