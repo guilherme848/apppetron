@@ -102,18 +102,21 @@ function DraggableClientCard({
     <div
       ref={setNodeRef}
       style={style}
+      {...listeners}
+      {...attributes}
+      onClick={() => { if (!isDragging) onClick?.(); }}
       className={cn(
         'group flex items-center gap-2 rounded-[10px] border border-border/60 bg-card px-3 py-2.5 mb-1.5 transition-all duration-150',
         isDragging
           ? 'opacity-40 scale-[1.02] shadow-lg cursor-grabbing'
-          : 'hover:border-border hover:bg-muted/40 cursor-grab',
+          : 'hover:border-border hover:bg-muted/40 cursor-pointer',
       )}
     >
-      <div {...listeners} {...attributes} className="shrink-0 cursor-grab active:cursor-grabbing">
+      <div className="shrink-0">
         <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50" />
       </div>
 
-      <div className="flex-1 min-w-0 cursor-pointer" onClick={onClick}>
+      <div className="flex-1 min-w-0">
         <p className="text-[13px] font-semibold text-foreground truncate">{clientName}</p>
         {clientNiche && (
           <span className="inline-block mt-0.5 text-[10px] text-muted-foreground bg-muted/60 border border-border/40 rounded px-1.5 py-0.5">
