@@ -334,17 +334,11 @@ export function useCsOverview() {
           continue;
         }
         const stillActive = cohortClients.filter(a => {
-          if (a.status === 'active') return true;
-          // Check if churned after check month
-          if (a.churned_at) {
-            const churnDate = parseISO(a.churned_at);
-            return isValid(churnDate) && churnDate > endOfMonth(checkMonth);
-          }
-          if (a.updated_at && (a.status === 'inactive' || a.status === 'churned' || a.status === 'canceled')) {
-            const upd = parseISO(a.updated_at);
-            return isValid(upd) && upd > endOfMonth(checkMonth);
-          }
-          return true;
+          // If never churned, still active
+          if (!a.churned_at) return true;
+          // If churned after target month end, still active at that point
+          const churnDate = parseISO(a.churned_at);
+          return isValid(churnDate) && churnDate > endOfMonth(checkMonth);
         });
         monthValues.push(Math.round((stillActive.length / total) * 100));
       }
