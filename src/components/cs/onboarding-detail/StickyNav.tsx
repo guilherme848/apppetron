@@ -139,7 +139,7 @@ export default function StickyNav({ activeTab, onTabChange, transcriptionCount, 
             >
               <tab.icon className="h-4 w-4" />
               <span className="hidden sm:inline">{tab.label}</span>
-              <ProgressBadge value={progress.value} total={progress.total} type={tab.type} />
+              <ProgressBadge value={progress.value} total={progress.total} type={tab.type} classificacao={tab.type === 'checkup' ? checkupClassificacao : undefined} />
               {isActive && (
                 <div className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full" style={{ background: 'linear-gradient(90deg, #F97316, #f43f5e)' }} />
               )}
