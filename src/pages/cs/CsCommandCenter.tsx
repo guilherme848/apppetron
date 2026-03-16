@@ -66,7 +66,7 @@ function KpiCard({
         <div className={cn(
           "text-2xl font-bold font-mono",
           danger && "text-destructive",
-          warning && "text-yellow-500",
+          warning && "text-warning",
           accent && "text-primary",
           !danger && !warning && !accent && "text-foreground",
         )}>
