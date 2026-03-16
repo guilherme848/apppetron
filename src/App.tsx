@@ -204,6 +204,7 @@ const App = () => (
                         <Route path="/cs" element={<CsCommandCenter />} />
                         <Route path="/cs/dashboard" element={<CsDashboard />} />
                         <Route path="/cs/onboarding" element={<CsOnboarding />} />
+                        <Route path="/cs/onboarding/:onboardingId" element={<CsOnboardingDetail />} />
                         <Route path="/cs/onboarding/meeting/:meetingId" element={<CsOnboardingMeeting />} />
                         <Route path="/cs/meetings" element={<CsMeetings />} />
                         <Route path="/cs/nps" element={<CsNps />} />
