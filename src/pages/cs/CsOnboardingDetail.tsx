@@ -371,7 +371,6 @@ export default function CsOnboardingDetail() {
           />
         )}
       </div>
-      </div>
 
       {/* Complete Dialog */}
       <AlertDialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
