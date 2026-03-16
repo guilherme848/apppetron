@@ -112,10 +112,11 @@ const tabs = [
   { key: 'checkup', label: 'Checkup do Cliente', icon: ClipboardCheck, type: 'checkup' as const },
 ];
 
-export default function StickyNav({ activeTab, onTabChange, transcriptionCount, answeredCount, totalQuestions, completedActivities, totalActivities }: StickyNavProps) {
-  const getProgress = (type: 'transcription' | 'answers' | 'activities') => {
+export default function StickyNav({ activeTab, onTabChange, transcriptionCount, answeredCount, totalQuestions, completedActivities, totalActivities, checkupFilled, checkupClassificacao }: StickyNavProps) {
+  const getProgress = (type: 'transcription' | 'answers' | 'activities' | 'checkup') => {
     if (type === 'transcription') return { value: transcriptionCount, total: 2 };
     if (type === 'answers') return { value: answeredCount, total: totalQuestions };
+    if (type === 'checkup') return { value: checkupFilled, total: 7 };
     return { value: completedActivities, total: totalActivities };
   };
 
