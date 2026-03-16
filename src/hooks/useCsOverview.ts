@@ -387,12 +387,12 @@ export function useCsOverview() {
 
     const revenueLost = churnedInMonth.reduce((s, a) => s + Number(a.monthly_value || 0), 0);
 
-    // Active at start of selected month (approximate: active + churned during/after selected month)
+    // Active at start of selected month
     const activeAtStart = accounts.filter(a => {
       if (a.status === 'active') return true;
-      if (a.status === 'inactive' || a.status === 'churned' || a.status === 'canceled') {
-        const d = a.updated_at ? parseISO(a.updated_at) : null;
-        return d && isValid(d) && d >= monthStart;
+      if (a.churned_at) {
+        const d = parseISO(a.churned_at);
+        return isValid(d) && d >= monthStart;
       }
       return false;
     }).length;
