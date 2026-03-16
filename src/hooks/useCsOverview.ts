@@ -243,16 +243,8 @@ export function useCsOverview() {
 
   // Clients that were active at start of selected month
   const activeAtMonthStart = useMemo(() => {
-    return accounts.filter(a => {
-      if (a.status === 'active') return true;
-      // Client was active at month start if churned_at >= monthStart
-      if (a.churned_at) {
-        const d = parseISO(a.churned_at);
-        return isValid(d) && d >= monthStart;
-      }
-      return false;
-    });
-  }, [accounts, monthStart]);
+    return accounts.filter(a => isActiveAtMonthStartByDate(a, monthStart));
+  }, [accounts, monthStart, isActiveAtMonthStartByDate]);
 
   // Churn by niche (filtered by month)
   const churnByNiche = useMemo((): ChurnDimensionItem[] => {
