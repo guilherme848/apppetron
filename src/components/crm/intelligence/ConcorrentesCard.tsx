@@ -13,6 +13,7 @@ interface ConcorrentesCardProps {
   concorrentes: ClienteConcorrente[];
   loading: boolean;
   clienteId?: string;
+  onSaved?: () => void;
 }
 
 interface Draft {

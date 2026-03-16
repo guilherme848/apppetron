@@ -11,6 +11,7 @@ interface LinksCardProps {
   links: ClienteLink[];
   loading: boolean;
   clienteId?: string;
+  onSaved?: () => void;
 }
 
 const TIPO_CONFIG: Record<string, { icon: React.ElementType; color: string; label: string }> = {
