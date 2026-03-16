@@ -13,10 +13,37 @@ interface StickyNavProps {
   checkupClassificacao: string | null;
 }
 
-function ProgressBadge({ value, total, type }: { value: number; total: number; type: 'transcription' | 'answers' | 'activities' }) {
+function ProgressBadge({ value, total, type, classificacao }: { value: number; total: number; type: 'transcription' | 'answers' | 'activities' | 'checkup'; classificacao?: string | null }) {
   let bgClass = '';
   let textClass = '';
   let borderClass = '';
+
+  if (type === 'checkup') {
+    if (classificacao) {
+      const colorMap: Record<string, { bg: string; text: string; border: string }> = {
+        A: { bg: 'bg-[hsl(var(--success)/0.12)]', text: 'text-[hsl(var(--success))]', border: 'border-[hsl(var(--success)/0.25)]' },
+        B: { bg: 'bg-[hsl(258,90%,66%,0.12)]', text: 'text-[hsl(258,90%,66%)]', border: 'border-[hsl(258,90%,66%,0.25)]' },
+        C: { bg: 'bg-[hsl(var(--warning)/0.12)]', text: 'text-[hsl(var(--warning))]', border: 'border-[hsl(var(--warning)/0.25)]' },
+        D: { bg: 'bg-destructive/12', text: 'text-destructive', border: 'border-destructive/25' },
+      };
+      const c = colorMap[classificacao] || colorMap.D;
+      bgClass = c.bg; textClass = c.text; borderClass = c.border;
+    } else if (value > 0) {
+      bgClass = 'bg-[hsl(var(--warning)/0.12)]';
+      textClass = 'text-[hsl(var(--warning))]';
+      borderClass = 'border-[hsl(var(--warning)/0.25)]';
+    } else {
+      bgClass = 'bg-muted';
+      textClass = 'text-muted-foreground';
+      borderClass = 'border-border';
+    }
+    const label = classificacao ? `Perfil ${classificacao}` : value > 0 ? `${value}/7 respondidas` : 'Pendente';
+    return (
+      <span className={cn('text-[10px] font-semibold px-[7px] py-[2px] rounded-[10px] border', bgClass, textClass, borderClass)}>
+        {label}
+      </span>
+    );
+  }
 
   if (type === 'transcription') {
     if (value >= 2) {
