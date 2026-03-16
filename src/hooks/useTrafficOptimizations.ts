@@ -234,6 +234,8 @@ export function useTrafficOptimizations() {
     addWeeklyCycleEntry,
     removeWeeklyCycleEntry,
     moveWeeklyCycleEntry,
+    clearWeeklyCycle,
+    replaceWeeklyCycle,
     refetch: fetchAll,
   };
 }
