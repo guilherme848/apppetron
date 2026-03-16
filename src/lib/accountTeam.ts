@@ -7,6 +7,15 @@ import { Account, ResponsibleRoleKey, RESPONSIBLE_ROLE_OPTIONS } from '@/types/c
 // Standard role keys used across all task types
 export type RoleKey = 'designer' | 'videomaker' | 'social' | 'traffic' | 'support' | 'cs';
 
+// Plan capability flags that control which roles are visible
+export interface PlanFlags {
+  has_content: boolean;
+  has_traffic: boolean;
+}
+
+// Default flags: all roles visible
+export const DEFAULT_PLAN_FLAGS: PlanFlags = { has_content: true, has_traffic: true };
+
 // Map role key to account field name
 export const ROLE_KEY_TO_ACCOUNT_FIELD: Record<RoleKey, keyof Account> = {
   designer: 'designer_member_id',
@@ -38,12 +47,21 @@ export const ROLE_OPTIONS: { value: RoleKey; label: string }[] = [
 ];
 
 /**
+ * Returns the list of roles that should be visible based on the plan's capabilities.
+ * - Designer, Videomaker, Atendimento, CS → always visible
+ * - Social Media → visible only if has_content = true
+ * - Tráfego → visible only if has_traffic = true
+ */
+export function getVisibleRoles(flags: PlanFlags = DEFAULT_PLAN_FLAGS): RoleKey[] {
+  const roles: RoleKey[] = ['designer', 'videomaker'];
+  if (flags.has_content) roles.push('social');
+  if (flags.has_traffic) roles.push('traffic');
+  roles.push('support', 'cs');
+  return roles;
+}
+
+/**
  * Resolves the assignee ID from the client's account team based on the role key.
- * This is the central function for auto-assignment across all task types.
- * 
- * @param account - The client account containing team member IDs
- * @param roleKey - The role key (designer, videomaker, social, traffic, support, cs)
- * @returns The member ID for that role, or null if not defined
  */
 export function resolveAssigneeFromAccountTeam(
   account: Account | null | undefined,
@@ -60,10 +78,6 @@ export function resolveAssigneeFromAccountTeam(
 
 /**
  * Checks if a specific role is defined in the client's account team.
- * 
- * @param account - The client account
- * @param roleKey - The role key to check
- * @returns True if the role has a member assigned
  */
 export function isRoleDefinedInAccountTeam(
   account: Account | null | undefined,
@@ -73,53 +87,49 @@ export function isRoleDefinedInAccountTeam(
 }
 
 /**
- * Gets the list of missing roles from the client's account team.
- * 
- * @param account - The client account
- * @returns Array of role keys that are not defined
+ * Gets the list of missing roles from the client's account team,
+ * considering only the visible roles for the plan.
  */
-export function getMissingRoles(account: Account | null | undefined): RoleKey[] {
-  if (!account) return Object.keys(ROLE_KEY_TO_ACCOUNT_FIELD) as RoleKey[];
+export function getMissingRoles(account: Account | null | undefined, flags?: PlanFlags): RoleKey[] {
+  const visibleRoles = getVisibleRoles(flags);
+  if (!account) return visibleRoles;
   
-  return (Object.keys(ROLE_KEY_TO_ACCOUNT_FIELD) as RoleKey[]).filter(
+  return visibleRoles.filter(
     (roleKey) => !isRoleDefinedInAccountTeam(account, roleKey)
   );
 }
 
 /**
- * Gets the list of defined roles in the client's account team.
- * 
- * @param account - The client account
- * @returns Array of role keys that have members assigned
+ * Gets the list of defined roles in the client's account team,
+ * considering only the visible roles for the plan.
  */
-export function getDefinedRoles(account: Account | null | undefined): RoleKey[] {
+export function getDefinedRoles(account: Account | null | undefined, flags?: PlanFlags): RoleKey[] {
   if (!account) return [];
   
-  return (Object.keys(ROLE_KEY_TO_ACCOUNT_FIELD) as RoleKey[]).filter(
+  const visibleRoles = getVisibleRoles(flags);
+  return visibleRoles.filter(
     (roleKey) => isRoleDefinedInAccountTeam(account, roleKey)
   );
 }
 
 /**
- * Calculates the account team completion status.
- * 
- * @param account - The client account
- * @returns Object with completion info
+ * Calculates the account team completion status,
+ * considering only the visible roles for the plan.
  */
-export function getAccountTeamStatus(account: Account | null | undefined): {
+export function getAccountTeamStatus(account: Account | null | undefined, flags?: PlanFlags): {
   isComplete: boolean;
   total: number;
   defined: number;
   missing: RoleKey[];
   missingLabels: string[];
 } {
-  const allRoles = Object.keys(ROLE_KEY_TO_ACCOUNT_FIELD) as RoleKey[];
-  const missing = getMissingRoles(account);
-  const defined = allRoles.length - missing.length;
+  const visibleRoles = getVisibleRoles(flags);
+  const missing = getMissingRoles(account, flags);
+  const defined = visibleRoles.length - missing.length;
   
   return {
     isComplete: missing.length === 0,
-    total: allRoles.length,
+    total: visibleRoles.length,
     defined,
     missing,
     missingLabels: missing.map((r) => ROLE_KEY_LABELS[r]),
@@ -128,11 +138,6 @@ export function getAccountTeamStatus(account: Account | null | undefined): {
 
 /**
  * Validates if a task can be created for the given client and role.
- * Returns an error message if validation fails, null otherwise.
- * 
- * @param account - The client account
- * @param roleKey - The role key for the task
- * @returns Error message or null
  */
 export function validateTaskAssignment(
   account: Account | null | undefined,
@@ -156,7 +161,6 @@ export function validateTaskAssignment(
 
 /**
  * Helper to check if account team has at least the essential roles for content.
- * Essential roles for content: social
  */
 export function hasEssentialContentRoles(account: Account | null | undefined): boolean {
   return isRoleDefinedInAccountTeam(account, 'social');
@@ -164,7 +168,6 @@ export function hasEssentialContentRoles(account: Account | null | undefined): b
 
 /**
  * Helper to check if account team has at least the essential roles for traffic.
- * Essential roles for traffic: designer
  */
 export function hasEssentialTrafficRoles(account: Account | null | undefined): boolean {
   return isRoleDefinedInAccountTeam(account, 'designer');
@@ -172,7 +175,6 @@ export function hasEssentialTrafficRoles(account: Account | null | undefined): b
 
 /**
  * Helper to check if account team has at least the essential roles for CS.
- * Essential roles for CS: cs
  */
 export function hasEssentialCsRoles(account: Account | null | undefined): boolean {
   return isRoleDefinedInAccountTeam(account, 'cs');

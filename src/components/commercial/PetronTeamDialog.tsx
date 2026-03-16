@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -8,7 +8,7 @@ import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { PETRON_INTERNAL_ACCOUNT_ID } from '@/hooks/useAgencyContentProduction';
-import { ROLE_OPTIONS, ROLE_KEY_TO_ACCOUNT_FIELD, ROLE_KEY_LABELS, RoleKey } from '@/lib/accountTeam';
+import { ROLE_OPTIONS, ROLE_KEY_TO_ACCOUNT_FIELD, ROLE_KEY_LABELS, RoleKey, getVisibleRoles, PlanFlags, DEFAULT_PLAN_FLAGS } from '@/lib/accountTeam';
 
 interface PetronTeamDialogProps {
   open: boolean;
@@ -22,6 +22,7 @@ interface TeamData {
   traffic_member_id: string | null;
   support_member_id: string | null;
   cs_member_id: string | null;
+  service_id: string | null;
 }
 
 export function PetronTeamDialog({ open, onOpenChange }: PetronTeamDialogProps) {
@@ -30,6 +31,7 @@ export function PetronTeamDialog({ open, onOpenChange }: PetronTeamDialogProps) 
   const [loading, setLoading] = useState(true);
   const [savingField, setSavingField] = useState<string | null>(null);
   const [teamData, setTeamData] = useState<TeamData | null>(null);
+  const [planFlags, setPlanFlags] = useState<PlanFlags>(DEFAULT_PLAN_FLAGS);
 
   useEffect(() => {
     if (open) {
@@ -41,7 +43,7 @@ export function PetronTeamDialog({ open, onOpenChange }: PetronTeamDialogProps) 
     setLoading(true);
     const { data, error } = await supabase
       .from('accounts')
-      .select('designer_member_id, videomaker_member_id, social_member_id, traffic_member_id, support_member_id, cs_member_id')
+      .select('designer_member_id, videomaker_member_id, social_member_id, traffic_member_id, support_member_id, cs_member_id, service_id')
       .eq('id', PETRON_INTERNAL_ACCOUNT_ID)
       .single();
     
@@ -50,14 +52,28 @@ export function PetronTeamDialog({ open, onOpenChange }: PetronTeamDialogProps) 
       toast.error('Erro ao carregar time Petron');
     } else {
       setTeamData(data);
+      // Fetch plan flags
+      if (data?.service_id) {
+        const { data: svc } = await supabase
+          .from('services')
+          .select('has_content, has_traffic')
+          .eq('id', data.service_id)
+          .single();
+        if (svc) {
+          setPlanFlags({ has_content: svc.has_content ?? true, has_traffic: svc.has_traffic ?? true });
+        }
+      }
     }
     setLoading(false);
   };
 
+  const visibleRoles = useMemo(() => getVisibleRoles(planFlags), [planFlags]);
+  const visibleRoleOptions = ROLE_OPTIONS.filter(r => visibleRoles.includes(r.value));
+
   const getValue = (roleKey: RoleKey): string | null => {
     if (!teamData) return null;
     const field = ROLE_KEY_TO_ACCOUNT_FIELD[roleKey];
-    return teamData[field as keyof TeamData] || null;
+    return (teamData as any)[field] || null;
   };
 
   const handleChange = async (roleKey: RoleKey, memberId: string) => {
@@ -83,15 +99,14 @@ export function PetronTeamDialog({ open, onOpenChange }: PetronTeamDialogProps) 
   };
 
   const getTeamStatus = () => {
-    if (!teamData) return { isComplete: false, defined: 0, total: 6, missingLabels: [] };
+    if (!teamData) return { isComplete: false, defined: 0, total: visibleRoles.length, missingLabels: [] };
     
-    const roles: RoleKey[] = ['designer', 'videomaker', 'social', 'traffic', 'support', 'cs'];
     const missing: string[] = [];
     let defined = 0;
     
-    roles.forEach((roleKey) => {
+    visibleRoles.forEach((roleKey) => {
       const field = ROLE_KEY_TO_ACCOUNT_FIELD[roleKey];
-      if (teamData[field as keyof TeamData]) {
+      if ((teamData as any)[field]) {
         defined++;
       } else {
         missing.push(ROLE_KEY_LABELS[roleKey]);
@@ -101,7 +116,7 @@ export function PetronTeamDialog({ open, onOpenChange }: PetronTeamDialogProps) 
     return {
       isComplete: missing.length === 0,
       defined,
-      total: 6,
+      total: visibleRoles.length,
       missingLabels: missing,
     };
   };
@@ -144,7 +159,7 @@ export function PetronTeamDialog({ open, onOpenChange }: PetronTeamDialogProps) 
           </div>
         ) : (
           <div className="space-y-4 mt-4">
-            {ROLE_OPTIONS.map((role) => {
+            {visibleRoleOptions.map((role) => {
               const currentValue = getValue(role.value);
               const isSaving = savingField === ROLE_KEY_TO_ACCOUNT_FIELD[role.value];
               const isMissing = !currentValue;

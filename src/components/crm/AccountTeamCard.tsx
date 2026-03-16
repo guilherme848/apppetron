@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -6,7 +6,8 @@ import { Users, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { Account, RESPONSIBLE_ROLE_OPTIONS, ResponsibleRoleKey } from '@/types/crm';
-import { getAccountTeamStatus } from '@/lib/accountTeam';
+import { getAccountTeamStatus, getVisibleRoles, PlanFlags, DEFAULT_PLAN_FLAGS, ROLE_KEY_LABELS } from '@/lib/accountTeam';
+import { useSettings } from '@/contexts/SettingsContext';
 import { toast } from 'sonner';
 
 interface AccountTeamCardProps {
@@ -15,11 +16,23 @@ interface AccountTeamCardProps {
 }
 
 export function AccountTeamCard({ account, onUpdate }: AccountTeamCardProps) {
-  const { getActiveMembers, getMemberById } = useTeamMembers();
+  const { getActiveMembers } = useTeamMembers();
+  const { services } = useSettings();
   const activeMembers = getActiveMembers();
   const [savingField, setSavingField] = useState<string | null>(null);
-  
-  const teamStatus = getAccountTeamStatus(account);
+
+  // Derive plan flags from the account's service
+  const planFlags: PlanFlags = useMemo(() => {
+    if (!account.service_id) return DEFAULT_PLAN_FLAGS;
+    const svc = services.find((s: any) => s.id === account.service_id);
+    if (!svc) return DEFAULT_PLAN_FLAGS;
+    return { has_content: (svc as any).has_content ?? true, has_traffic: (svc as any).has_traffic ?? true };
+  }, [account.service_id, services]);
+
+  const visibleRoles = useMemo(() => getVisibleRoles(planFlags), [planFlags]);
+  const teamStatus = getAccountTeamStatus(account, planFlags);
+
+  const visibleRoleOptions = RESPONSIBLE_ROLE_OPTIONS.filter(r => visibleRoles.includes(r.value));
 
   const getValue = (roleKey: ResponsibleRoleKey): string | null => {
     const option = RESPONSIBLE_ROLE_OPTIONS.find(o => o.value === roleKey);
@@ -69,7 +82,7 @@ export function AccountTeamCard({ account, onUpdate }: AccountTeamCardProps) {
         )}
       </CardHeader>
       <CardContent className="space-y-3">
-        {RESPONSIBLE_ROLE_OPTIONS.map((role) => {
+        {visibleRoleOptions.map((role) => {
           const currentValue = getValue(role.value);
           const isSaving = savingField === role.field;
           const isMissing = !currentValue;
