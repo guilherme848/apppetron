@@ -436,16 +436,6 @@ export default function CrmList() {
                       </TableCell>
                     )}
                     <TableCell>
-                      {checkupStyle ? (
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-md border ${checkupStyle}`}>
-                          {account.checkup_classificacao === 'A' && <Star className="h-3 w-3 fill-current" />}
-                          Perfil {account.checkup_classificacao}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground text-xs">Sem classificação</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
                       <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-semibold rounded-md border ${
                         account.status === 'active' ? 'bg-[hsl(var(--success)/.12)] text-[hsl(var(--success))] border-[hsl(var(--success)/.25)]' :
                         account.status === 'churned' ? 'bg-destructive/12 text-destructive border-destructive/25' :
