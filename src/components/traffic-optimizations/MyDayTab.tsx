@@ -61,7 +61,7 @@ export function OptimizationMyDayTab({
   addOptimization,
   onNewOptimization,
 }: Props) {
-  const [selectedManagerId, setSelectedManagerId] = useState<string>('__self__');
+  const [selectedManagerId, setSelectedManagerId] = useState<string>(isAdmin ? '__all__' : '__self__');
   const [modalOpen, setModalOpen] = useState(false);
   const [modalClientId, setModalClientId] = useState('');
   const [modalTaskType, setModalTaskType] = useState('checkin');
