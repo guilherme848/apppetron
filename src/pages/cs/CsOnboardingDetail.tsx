@@ -362,6 +362,21 @@ export default function CsOnboardingDetail() {
             onResponsavelChange={handleResponsavelChange}
           />
         )}
+
+        {activeTab === 'checkup' && onboarding.client_id && (
+          <CheckupSection
+            onboardingId={onboardingId || ''}
+            clientId={onboarding.client_id}
+            isConcluido={isConcluido}
+          />
+        )}
+            isConcluido={isConcluido}
+            csMembers={csMembers}
+            trafficMembers={trafficMembers}
+            onToggle={handleToggleAtividade}
+            onResponsavelChange={handleResponsavelChange}
+          />
+        )}
       </div>
 
       {/* Complete Dialog */}
