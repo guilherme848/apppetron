@@ -1,23 +1,26 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Pencil, TrendingUp, Target, DollarSign, BarChart3, AlertTriangle, RefreshCw, Pin } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Pencil, TrendingUp, Target, DollarSign, BarChart2,
+  AlertTriangle, RefreshCw, Pin, AlertCircle, Calendar,
+} from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Line, ComposedChart, ResponsiveContainer, Legend, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ComposedChart, ResponsiveContainer, Cell, Tooltip } from 'recharts';
 import MrrBaseConfig from '@/components/commercial/MrrBaseConfig';
 import MrrScenarioCard, { type ScenarioConfig, calcScenarioMonths } from '@/components/commercial/MrrScenarioCard';
 import MrrScenariosChart from '@/components/commercial/MrrScenariosChart';
 import MonthDetailTab, { type MonthData } from '@/components/commercial/MonthDetailTab';
 import { usePlatformData } from '@/hooks/usePlatformData';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 const MONTH_NAMES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -57,15 +60,21 @@ const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', curren
 const pct = (v: number, t: number) => t > 0 ? Math.round((v / t) * 100) : 0;
 
 function getProgressColor(p: number) {
-  if (p >= 100) return '[&>div]:bg-green-500';
-  if (p >= 90) return '[&>div]:bg-yellow-500';
-  return '[&>div]:bg-red-500';
+  if (p >= 100) return 'bg-emerald-500';
+  if (p >= 70) return 'bg-amber-500';
+  return 'bg-red-500';
+}
+
+function getProgressTextColor(p: number) {
+  if (p >= 100) return 'text-emerald-500';
+  if (p >= 70) return 'text-amber-500';
+  return 'text-red-500';
 }
 
 function getDiffColor(v: number) {
-  if (v > 0) return 'text-green-600 dark:text-green-400';
+  if (v > 0) return 'text-emerald-600 dark:text-emerald-400';
   if (v < 0) return 'text-red-600 dark:text-red-400';
-  return 'text-muted-foreground';
+  return 'text-foreground';
 }
 
 /** Calculate Nova Previsão for each month */
@@ -90,6 +99,48 @@ function calcNovaPrevisao(
   return result;
 }
 
+/* ── KPI Card component ───────────────────────────────────── */
+function KpiCard({
+  label,
+  value,
+  sub,
+  icon: Icon,
+  valueColor,
+  children,
+  delay = 0,
+  loading,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  icon: any;
+  valueColor?: string;
+  children?: React.ReactNode;
+  delay?: number;
+  loading?: boolean;
+}) {
+  return (
+    <div
+      className="relative rounded-2xl border border-border bg-card p-5 transition-all duration-150 hover:border-foreground/20 animate-fade-in"
+      style={{ animationDelay: `${delay}ms`, animationFillMode: 'both' }}
+    >
+      <div className="flex items-start justify-between">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</p>
+        <Icon className="h-[18px] w-[18px] text-muted-foreground/60" />
+      </div>
+      {loading ? (
+        <Skeleton className="h-9 w-32 mt-2" />
+      ) : (
+        <p className={cn('mt-2 text-[32px] font-extrabold leading-none tracking-tight font-mono', valueColor || 'text-foreground')}>
+          {value}
+        </p>
+      )}
+      {sub && <p className="mt-1.5 text-xs text-muted-foreground">{sub}</p>}
+      {children}
+    </div>
+  );
+}
+
 export default function CommercialPlanningPage() {
   const [year, setYear] = useState(new Date().getFullYear());
   const { loading, error, lastFetched, activeClients, totalMrr, avgTicket, monthlyActuals, refetch } = usePlatformData(year);
@@ -108,7 +159,6 @@ export default function CommercialPlanningPage() {
     return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
   }, [scenarios]);
 
-  // Targets still from localStorage (user-defined)
   const TARGET_STORAGE_KEY = `commercial-targets-${year}`;
   const [targets, setTargets] = useState<{ target: number; targetInbound: number; targetIndicacao: number; targetProspeccao: number }[]>(() => {
     try {
@@ -129,7 +179,6 @@ export default function CommercialPlanningPage() {
 
   const currentMonth = new Date().getMonth();
 
-  // Build MonthData from platform + targets
   const data: MonthData[] = useMemo(() => {
     return monthlyActuals.map((ma, i) => ({
       month: i,
@@ -149,7 +198,6 @@ export default function CommercialPlanningPage() {
     }));
   }, [monthlyActuals, targets]);
 
-  // BP: use locked values or compute from Cenário Bom
   const bpMonthly: number[] = useMemo(() => {
     if (bpLocked) return bpLocked;
     const janClientes = monthlyActuals[0]?.activeClientsAtMonth ?? activeClients;
@@ -158,7 +206,6 @@ export default function CommercialPlanningPage() {
     return months.map(m => m.mrr);
   }, [bpLocked, monthlyActuals, activeClients, avgTicket, scenarios.cenarioBom]);
 
-  // Nova Previsão from Cenário Bom config
   const novaPrevisao = useMemo(() =>
     calcNovaPrevisao(monthlyActuals, avgTicket, scenarios.cenarioBom, currentMonth),
     [monthlyActuals, avgTicket, scenarios.cenarioBom, currentMonth]
@@ -194,25 +241,25 @@ export default function CommercialPlanningPage() {
   const gapFechamento = projecaoFechamento - bpAnual;
   const pctFechamento = pct(projecaoFechamento, bpAnual);
 
-  // Alert: contracts needed
   const remainingMonths = 11 - currentMonth;
   const contratosNecessarios = useMemo(() => {
     if (gapFechamento >= 0 || remainingMonths <= 0 || avgTicket <= 0) return 0;
     return Math.ceil(Math.abs(gapFechamento) / avgTicket / remainingMonths);
   }, [gapFechamento, remainingMonths, avgTicket]);
 
-  // ---- Chart data: BP / Realizado / Nova Previsão ----
+  // ---- Chart data ----
   const chartData = useMemo(() => MONTHS.map((name, i) => ({
     name,
     bp: bpMonthly[i] || 0,
     realizado: i <= currentMonth ? (data[i]?.mrrAtMonth ?? 0) : null,
     novaPrevisao: i > currentMonth ? novaPrevisao[i] : null,
+    isCurrent: i === currentMonth,
   })), [bpMonthly, data, novaPrevisao, currentMonth]);
 
   const chartConfig = {
-    bp: { label: 'BP Original', color: 'hsl(220 14% 40%)' },
-    realizado: { label: 'Realizado', color: 'hsl(21 90% 57%)' },
-    novaPrevisao: { label: 'Nova Previsão', color: 'hsl(213 94% 55%)' },
+    bp: { label: 'BP Original', color: '#F97316' },
+    realizado: { label: 'Realizado', color: '#f43f5e' },
+    novaPrevisao: { label: 'Nova Previsão', color: '#6366f1' },
   };
 
   const channelData = useMemo(() => {
@@ -223,8 +270,9 @@ export default function CommercialPlanningPage() {
       const metaAno = targets.reduce((s, t) => s + t[targetKeys[ch]], 0);
       const realizadoAno = data.reduce((s, d) => s + d[ch], 0);
       const contribuicao = realizadoTotal > 0 ? Math.round((realizadoAno / realizadoTotal) * 100) : 0;
-      const monthlyData = data.map((d, i) => ({ name: MONTHS[i], value: i <= currentMonth ? d[ch] : 0 }));
-      return { key: ch, label: labels[ch], metaAno, realizadoAno, contribuicao, monthlyData };
+      const progressPct = metaAno > 0 ? Math.round((realizadoAno / metaAno) * 100) : 0;
+      const monthlyData = data.map((d, i) => ({ name: MONTHS[i], value: i <= currentMonth ? d[ch] : 0, isCurrent: i === currentMonth }));
+      return { key: ch, label: labels[ch], metaAno, realizadoAno, contribuicao, progressPct, monthlyData };
     });
   }, [data, targets, realizadoTotal, currentMonth]);
 
@@ -254,7 +302,6 @@ export default function CommercialPlanningPage() {
     setEditModalOpen(false);
   };
 
-  // ---- Table rows ----
   const tableGapAnual = gapFechamento;
 
   if (error) {
@@ -270,7 +317,7 @@ export default function CommercialPlanningPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* ── Header ────────────────────────────────────────── */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Planejamento Comercial</h1>
@@ -278,7 +325,7 @@ export default function CommercialPlanningPage() {
         </div>
         <div className="flex items-center gap-3">
           <Select value={String(year)} onValueChange={v => setYear(Number(v))}>
-            <SelectTrigger className="w-28">
+            <SelectTrigger className="w-28 rounded-lg bg-card border-border">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -287,23 +334,36 @@ export default function CommercialPlanningPage() {
               ))}
             </SelectContent>
           </Select>
-          <Button onClick={openEditModal} className="bg-accent text-accent-foreground hover:bg-accent/90">
-            <Pencil className="h-4 w-4 mr-1" /> Editar Metas
+          <Button
+            onClick={openEditModal}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-all duration-150 hover:scale-[1.02] active:scale-[0.98] hover:shadow-[0_0_20px_hsl(var(--primary)/0.19)]"
+          >
+            <Pencil className="h-4 w-4 mr-1.5" /> Editar Metas
           </Button>
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* ── Tabs ──────────────────────────────────────────── */}
       <Tabs defaultValue="planning" className="w-full">
-        <TabsList className="w-full sm:w-auto">
-          <TabsTrigger value="planning">Planejamento Comercial</TabsTrigger>
-          <TabsTrigger value="scenarios">Análise de Cenários</TabsTrigger>
-          <TabsTrigger value="monthly">Mês a Mês</TabsTrigger>
+        <TabsList className="w-full sm:w-auto bg-transparent border-b border-border rounded-none p-0 h-auto gap-1">
+          {[
+            { value: 'planning', label: 'Planejamento Comercial' },
+            { value: 'scenarios', label: 'Análise de Cenários' },
+            { value: 'monthly', label: 'Mês a Mês' },
+          ].map(tab => (
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
+              className="rounded-lg rounded-b-none border-b-2 border-transparent px-4 h-10 text-sm text-muted-foreground data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:border-b-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent hover:text-foreground hover:bg-muted/40 transition-all duration-150"
+            >
+              {tab.label}
+            </TabsTrigger>
+          ))}
         </TabsList>
 
-        {/* Tab 1 — Planejamento Comercial */}
+        {/* ══ Tab 1 — Planejamento Comercial ══════════════════ */}
         <TabsContent value="planning" className="space-y-6 mt-6">
-          {/* MRR Base Config */}
+          {/* Top KPI Cards */}
           <MrrBaseConfig
             ticketMedio={avgTicket}
             clientesAtuais={activeClients}
@@ -315,14 +375,17 @@ export default function CommercialPlanningPage() {
 
           {/* Alert banner */}
           {gapFechamento < 0 && (
-            <div className="flex items-start gap-3 p-4 rounded-lg bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800">
-              <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5 shrink-0" />
-              <div className="text-sm">
-                <p className="font-semibold text-yellow-800 dark:text-yellow-300">
-                  ⚠️ Com o ritmo atual, você fechará o ano {fmt(Math.abs(gapFechamento))} abaixo do BP.
+            <div
+              className="flex items-start gap-3 rounded-xl border px-5 py-3.5 animate-fade-in"
+              style={{ backgroundColor: 'hsl(45 93% 47% / 0.08)', borderColor: 'hsl(45 93% 47% / 0.25)' }}
+            >
+              <AlertTriangle className="h-[18px] w-[18px] text-amber-500 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  Com o ritmo atual, você fechará o ano {fmt(Math.abs(gapFechamento))} abaixo do BP.
                 </p>
                 {contratosNecessarios > 0 && (
-                  <p className="text-yellow-700 dark:text-yellow-400 mt-1">
+                  <p className="text-[13px] text-muted-foreground mt-0.5">
                     É necessário adicionar ~{contratosNecessarios} novos contratos/mês nos próximos {remainingMonths} meses para bater a meta.
                   </p>
                 )}
@@ -330,191 +393,239 @@ export default function CommercialPlanningPage() {
             </div>
           )}
 
-          {/* KPI Cards — 5 cards */}
+          {/* BP KPI Cards — 5 cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">BP Anual</CardTitle>
-                <Pin className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{fmt(bpAnual)}</div>
-                {bpLocked && <p className="text-[10px] text-muted-foreground">Congelado</p>}
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Realizado Até Agora</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{fmt(realizadoTotal)}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Gap Acumulado</CardTitle>
-                <Target className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className={`text-2xl font-bold ${getDiffColor(gapAcumulado)}`}>
-                  {gapAcumulado >= 0 ? '+' : ''}{fmt(gapAcumulado)}
+            <KpiCard label="BP ANUAL" value={fmt(bpAnual)} icon={Target} delay={0} loading={loading}>
+              {bpLocked && (
+                <Badge className="mt-2 text-[10px] bg-emerald-500/12 text-emerald-600 dark:text-emerald-400 border-0 rounded">
+                  Congelado
+                </Badge>
+              )}
+            </KpiCard>
+
+            <KpiCard label="REALIZADO ATÉ AGORA" value={fmt(realizadoTotal)} icon={TrendingUp} delay={40} loading={loading} />
+
+            <KpiCard
+              label="GAP ACUMULADO"
+              value={`${gapAcumulado >= 0 ? '+' : ''}${fmt(gapAcumulado)}`}
+              valueColor={getDiffColor(gapAcumulado)}
+              sub={`vs BP proporcional ao mês`}
+              icon={AlertCircle}
+              delay={80}
+              loading={loading}
+            />
+
+            <KpiCard label="PROJEÇÃO DE FECHAMENTO" value={fmt(projecaoFechamento)} icon={TrendingUp} delay={120} loading={loading} />
+
+            <KpiCard
+              label="GAP DE FECHAMENTO"
+              value={`${gapFechamento >= 0 ? '+' : ''}${fmt(gapFechamento)}`}
+              valueColor={getDiffColor(gapFechamento)}
+              icon={Target}
+              delay={160}
+              loading={loading}
+            >
+              <div className="mt-2">
+                <div className="h-1 rounded-full bg-border overflow-hidden">
+                  <div
+                    className={cn('h-full rounded-full transition-all duration-500', getProgressColor(pctFechamento))}
+                    style={{ width: `${Math.min(pctFechamento, 100)}%` }}
+                  />
                 </div>
-                <p className="text-[10px] text-muted-foreground">vs BP proporcional até {MONTHS[currentMonth]}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Projeção de Fechamento</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{fmt(projecaoFechamento)}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Gap de Fechamento</CardTitle>
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className={`text-2xl font-bold ${getDiffColor(gapFechamento)}`}>
-                  {gapFechamento >= 0 ? '+' : ''}{fmt(gapFechamento)}
-                </div>
-                <Progress value={Math.min(pctFechamento, 120)} className={`mt-2 ${getProgressColor(pctFechamento)}`} />
-                <p className="text-[10px] text-muted-foreground mt-1">{pctFechamento}% do BP</p>
-              </CardContent>
-            </Card>
+                <p className={cn('text-[11px] mt-1 font-medium', getProgressTextColor(pctFechamento))}>
+                  {pctFechamento}% do BP
+                </p>
+              </div>
+            </KpiCard>
           </div>
 
-          {/* Chart — BP / Realizado / Nova Previsão */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">BP x Realizado x Nova Previsão</CardTitle>
-              <p className="text-xs text-muted-foreground">■ BP Original &nbsp; ■ Realizado &nbsp; ■ Nova Previsão</p>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={chartConfig} className="h-[350px] w-full">
-                <ComposedChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="name" className="text-xs" />
-                  <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} className="text-xs" />
-                  <ChartTooltip
-                    content={<ChartTooltipContent
-                      formatter={(value, name) => {
-                        const label = chartConfig[name as keyof typeof chartConfig]?.label || name;
-                        return <span>{label}: {fmt(Number(value))}</span>;
-                      }}
-                    />}
-                  />
-                  <Legend />
-                  <Bar dataKey="bp" name="BP Original" fill="hsl(220 14% 40%)" radius={[4, 4, 0, 0]} barSize={22} />
-                  <Bar dataKey="realizado" name="Realizado" fill="hsl(21 90% 57%)" radius={[4, 4, 0, 0]} barSize={22} />
-                  <Bar dataKey="novaPrevisao" name="Nova Previsão" fill="hsl(213 94% 55%)" radius={[4, 4, 0, 0]} barSize={22} />
-                </ComposedChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
+          {/* ── Chart: BP x Realizado x Nova Previsão ──────── */}
+          <div className="rounded-2xl border border-border bg-card p-6 animate-fade-in" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
+            <div className="flex items-center gap-2 mb-1">
+              <BarChart2 className="h-4 w-4 text-muted-foreground" />
+              <h3 className="text-sm font-semibold text-foreground">BP x Realizado x Nova Previsão</h3>
+            </div>
+            <div className="flex items-center gap-4 mb-4">
+              {[
+                { label: 'BP Original', color: '#F97316' },
+                { label: 'Realizado', color: '#f43f5e' },
+                { label: 'Nova Previsão', color: '#6366f1' },
+              ].map(item => (
+                <div key={item.label} className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
+                  <span className="text-xs text-muted-foreground">{item.label}</span>
+                </div>
+              ))}
+            </div>
+            <ChartContainer config={chartConfig} className="h-[350px] w-full">
+              <ComposedChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="none" strokeOpacity={0.5} />
+                <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <ChartTooltip
+                  content={<ChartTooltipContent
+                    formatter={(value, name) => {
+                      const label = chartConfig[name as keyof typeof chartConfig]?.label || name;
+                      return <span>{label}: {fmt(Number(value))}</span>;
+                    }}
+                  />}
+                />
+                <Bar dataKey="bp" name="BP Original" fill="#F97316" fillOpacity={0.7} radius={[4, 4, 0, 0]} barSize={20} />
+                <Bar dataKey="realizado" name="Realizado" fill="#f43f5e" radius={[4, 4, 0, 0]} barSize={20} />
+                <Bar dataKey="novaPrevisao" name="Nova Previsão" fill="#6366f1" fillOpacity={0.7} radius={[4, 4, 0, 0]} barSize={20} />
+              </ComposedChart>
+            </ChartContainer>
+          </div>
 
-          {/* Table — BP / Realizado / Gap / Nova Previsão / Gap Anual */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Detalhamento Mensal</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-32">Mês</TableHead>
-                      <TableHead className="text-right">BP (R$)</TableHead>
-                      <TableHead className="text-right">Realizado (R$)</TableHead>
-                      <TableHead className="text-right">Gap BP (R$)</TableHead>
-                      <TableHead className="text-right">Nova Previsão (R$)</TableHead>
-                      <TableHead className="text-right">Gap Anual (R$)</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {MONTHS.map((m, i) => {
-                      const bp = bpMonthly[i] || 0;
-                      const isPastOrCurrent = i <= currentMonth;
-                      const real = isPastOrCurrent ? (data[i]?.mrrAtMonth ?? 0) : null;
-                      const gapBp = real !== null ? real - bp : null;
-                      const np = isPastOrCurrent ? (data[i]?.mrrAtMonth ?? 0) : novaPrevisao[i];
-                      return (
-                        <TableRow key={m} className={i === currentMonth ? 'bg-orange-50/50 dark:bg-orange-950/10' : i < currentMonth ? 'bg-muted/20' : ''}>
-                          <TableCell className="font-medium text-sm">
-                            {m}
-                            {i === currentMonth && <Badge className="ml-2 text-[9px] bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300 border-none">Atual</Badge>}
-                          </TableCell>
-                          <TableCell className="text-right text-sm">{fmt(bp)}</TableCell>
-                          <TableCell className="text-right text-sm">{real !== null ? fmt(real) : '—'}</TableCell>
-                          <TableCell className={`text-right text-sm font-medium ${gapBp !== null ? getDiffColor(gapBp) : ''}`}>
-                            {gapBp !== null ? `${gapBp >= 0 ? '+' : ''}${fmt(gapBp)}` : '—'}
-                          </TableCell>
-                          <TableCell className="text-right text-sm font-medium text-blue-700 dark:text-blue-400">{fmt(np)}</TableCell>
-                          <TableCell className={`text-right text-sm font-medium ${getDiffColor(tableGapAnual)}`}>
-                            {i === 11 ? `${tableGapAnual >= 0 ? '+' : ''}${fmt(tableGapAnual)}` : ''}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                  <TableFooter>
-                    <TableRow className="font-bold">
-                      <TableCell>Total</TableCell>
-                      <TableCell className="text-right">{fmt(bpAnual)}</TableCell>
-                      <TableCell className="text-right">{fmt(realizadoTotal)}</TableCell>
-                      <TableCell className={`text-right ${getDiffColor(gapAcumulado)}`}>
-                        {gapAcumulado >= 0 ? '+' : ''}{fmt(gapAcumulado)}
-                      </TableCell>
-                      <TableCell className="text-right text-blue-700 dark:text-blue-400">{fmt(projecaoFechamento)}</TableCell>
-                      <TableCell className={`text-right ${getDiffColor(gapFechamento)}`}>
-                        {gapFechamento >= 0 ? '+' : ''}{fmt(gapFechamento)}
-                      </TableCell>
-                    </TableRow>
-                  </TableFooter>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
+          {/* ── Table: Detalhamento Mensal ─────────────────── */}
+          <div className="rounded-2xl border border-border bg-card p-6 animate-fade-in" style={{ animationDelay: '240ms', animationFillMode: 'both' }}>
+            <div className="flex items-center gap-2 mb-4">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <h3 className="text-sm font-semibold text-foreground">Detalhamento Mensal</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-border hover:bg-transparent">
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-32 sticky top-0 bg-muted/50">Mês</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-right sticky top-0 bg-muted/50">BP (R$)</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-right sticky top-0 bg-muted/50">Realizado (R$)</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-right sticky top-0 bg-muted/50">Gap BP (R$)</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-right sticky top-0 bg-muted/50">Nova Previsão (R$)</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-right sticky top-0 bg-muted/50">Gap Anual (R$)</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {MONTHS.map((m, i) => {
+                    const bp = bpMonthly[i] || 0;
+                    const isPastOrCurrent = i <= currentMonth;
+                    const real = isPastOrCurrent ? (data[i]?.mrrAtMonth ?? 0) : null;
+                    const gapBp = real !== null ? real - bp : null;
+                    const np = isPastOrCurrent ? (data[i]?.mrrAtMonth ?? 0) : novaPrevisao[i];
+                    return (
+                      <TableRow
+                        key={m}
+                        className={cn(
+                          'h-12 border-border/50 transition-all duration-150',
+                          i < currentMonth && 'bg-muted/10',
+                          'hover:bg-gradient-to-r hover:from-[#F9731608] hover:to-transparent',
+                        )}
+                      >
+                        <TableCell className="text-sm font-medium">
+                          {m}
+                          {i === currentMonth && (
+                            <Badge className="ml-2 text-[10px] font-semibold bg-primary/12 text-primary border-0 rounded px-1.5 py-0">
+                              Atual
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-mono">{fmt(bp)}</TableCell>
+                        <TableCell className="text-right text-sm font-mono">{real !== null ? fmt(real) : <span className="text-muted-foreground">—</span>}</TableCell>
+                        <TableCell className={cn('text-right text-sm font-mono font-medium', gapBp !== null ? getDiffColor(gapBp) : '')}>
+                          {gapBp !== null ? `${gapBp >= 0 ? '+' : ''}${fmt(gapBp)}` : <span className="text-muted-foreground">—</span>}
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-mono font-medium text-indigo-600 dark:text-indigo-400">{fmt(np)}</TableCell>
+                        <TableCell className={cn('text-right text-sm font-mono font-medium', getDiffColor(tableGapAnual))}>
+                          {i === 11 ? `${tableGapAnual >= 0 ? '+' : ''}${fmt(tableGapAnual)}` : ''}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+                <TableFooter>
+                  <TableRow className="font-bold border-t-2 border-border bg-muted/30">
+                    <TableCell className="text-sm font-semibold">Total</TableCell>
+                    <TableCell className="text-right font-mono font-semibold text-sm">{fmt(bpAnual)}</TableCell>
+                    <TableCell className="text-right font-mono font-semibold text-sm">{fmt(realizadoTotal)}</TableCell>
+                    <TableCell className={cn('text-right font-mono font-semibold text-sm', getDiffColor(gapAcumulado))}>
+                      {gapAcumulado >= 0 ? '+' : ''}{fmt(gapAcumulado)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono font-semibold text-sm text-indigo-600 dark:text-indigo-400">{fmt(projecaoFechamento)}</TableCell>
+                    <TableCell className={cn('text-right font-mono font-semibold text-sm', getDiffColor(gapFechamento))}>
+                      {gapFechamento >= 0 ? '+' : ''}{fmt(gapFechamento)}
+                    </TableCell>
+                  </TableRow>
+                </TableFooter>
+              </Table>
+            </div>
+          </div>
 
-          {/* Channel Breakdown */}
+          {/* ── Channel Breakdown ─────────────────────────── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {channelData.map(ch => (
-              <Card key={ch.key}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">{ch.label}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Meta anual</span>
-                    <span className="font-medium">{fmt(ch.metaAno)}</span>
+            {channelData.map((ch, ci) => (
+              <div
+                key={ch.key}
+                className="rounded-2xl border border-border bg-card p-5 animate-fade-in"
+                style={{ animationDelay: `${280 + ci * 40}ms`, animationFillMode: 'both' }}
+              >
+                <h4 className="text-sm font-semibold text-foreground">{ch.label}</h4>
+                <p className="text-xs text-muted-foreground mb-4">Meta anual · Realizado · Contribuição</p>
+
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Meta anual</p>
+                    <p className="text-base font-semibold font-mono text-foreground">{fmt(ch.metaAno)}</p>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Realizado</span>
-                    <span className="font-medium">{fmt(ch.realizadoAno)}</span>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Realizado</p>
+                    <p className="text-base font-semibold font-mono text-foreground">{fmt(ch.realizadoAno)}</p>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Contribuição</span>
-                    <span className="font-medium">{ch.contribuicao}%</span>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Contribuição</p>
+                    <p className={cn(
+                      'text-base font-semibold font-mono',
+                      ch.progressPct >= 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400',
+                    )}>
+                      {ch.contribuicao}%
+                    </p>
                   </div>
-                  <div className="h-[120px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={ch.monthlyData} layout="vertical" margin={{ left: 30, right: 10 }}>
-                        <XAxis type="number" hide />
-                        <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={30} />
-                        <Bar dataKey="value" fill="hsl(21 90% 57%)" radius={[0, 4, 4, 0]} barSize={10} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+
+                {/* Progress bar */}
+                <div className="h-1.5 rounded-full bg-border overflow-hidden mb-4">
+                  <div
+                    className={cn(
+                      'h-full rounded-full transition-all duration-500',
+                      ch.progressPct >= 100
+                        ? 'bg-emerald-500'
+                        : 'bg-gradient-to-r from-[#F97316] to-[#f43f5e]',
+                    )}
+                    style={{ width: `${Math.min(ch.progressPct, 100)}%` }}
+                  />
+                </div>
+
+                {/* Mini bar chart */}
+                <div className="h-[60px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={ch.monthlyData} margin={{ left: 0, right: 0, top: 0, bottom: 0 }}>
+                      <Tooltip
+                        cursor={false}
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          fontSize: '12px',
+                        }}
+                        formatter={(value: number) => [fmt(value), '']}
+                        labelFormatter={(label) => label}
+                      />
+                      <Bar dataKey="value" radius={[2, 2, 0, 0]}>
+                        {ch.monthlyData.map((entry, idx) => (
+                          <Cell
+                            key={`cell-${idx}`}
+                            fill={entry.isCurrent ? '#F97316' : '#F9731650'}
+                          />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
             ))}
           </div>
         </TabsContent>
 
-        {/* Tab 2 — Análise de Cenários */}
+        {/* ══ Tab 2 — Análise de Cenários ═════════════════════ */}
         <TabsContent value="scenarios" className="space-y-6 mt-6">
           <MrrScenarioCard
             label="Cenário Inicial" emoji="🔴" colorClass="red"
@@ -542,22 +653,22 @@ export default function CommercialPlanningPage() {
           />
         </TabsContent>
 
-        {/* Tab 3 — Mês a Mês */}
+        {/* ══ Tab 3 — Mês a Mês ══════════════════════════════ */}
         <TabsContent value="monthly" className="mt-6">
           <MonthDetailTab data={data} onDataChange={() => {}} readOnly bpAdicaoMensal={scenarios.cenarioBom.adicaoMensal} ticketMedio={avgTicket} year={year} />
         </TabsContent>
       </Tabs>
 
-      {/* Edit Modal (global targets) */}
+      {/* ── Edit Modal ────────────────────────────────────── */}
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle>Editar Metas</DialogTitle>
             <DialogDescription>Defina as metas de faturamento por canal</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
-              <Label>Mês</Label>
+              <Label className="text-xs text-muted-foreground">Mês</Label>
               <Select value={String(modalMonth)} onValueChange={v => setModalMonth(v === 'all' ? 'all' : Number(v))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -567,19 +678,19 @@ export default function CommercialPlanningPage() {
               </Select>
             </div>
             <div>
-              <Label>Meta Total do Mês (R$)</Label>
+              <Label className="text-xs text-muted-foreground">Meta Total do Mês (R$)</Label>
               <Input type="number" value={modalTarget} onChange={e => setModalTarget(e.target.value)} />
             </div>
             <div>
-              <Label>Meta Inbound (R$)</Label>
+              <Label className="text-xs text-muted-foreground">Meta Inbound (R$)</Label>
               <Input type="number" value={modalInbound} onChange={e => setModalInbound(e.target.value)} />
             </div>
             <div>
-              <Label>Meta Indicação (R$)</Label>
+              <Label className="text-xs text-muted-foreground">Meta Indicação (R$)</Label>
               <Input type="number" value={modalIndicacao} onChange={e => setModalIndicacao(e.target.value)} />
             </div>
             <div>
-              <Label>Meta Prospecção Ativa (R$)</Label>
+              <Label className="text-xs text-muted-foreground">Meta Prospecção Ativa (R$)</Label>
               <Input type="number" value={modalProspeccao} onChange={e => setModalProspeccao(e.target.value)} />
             </div>
             {!modalValid && modalTargetNum > 0 && (
@@ -591,7 +702,11 @@ export default function CommercialPlanningPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditModalOpen(false)}>Cancelar</Button>
-            <Button onClick={saveModal} disabled={!modalValid} className="bg-accent text-accent-foreground hover:bg-accent/90">
+            <Button
+              onClick={saveModal}
+              disabled={!modalValid}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]"
+            >
               Salvar Metas
             </Button>
           </DialogFooter>
