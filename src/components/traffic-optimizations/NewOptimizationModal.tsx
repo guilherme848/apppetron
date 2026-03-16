@@ -30,7 +30,7 @@ export function NewOptimizationModal({ open, onOpenChange, accounts, teamMembers
   }, [teamMembers]);
 
   const [form, setForm] = useState({
-    client_id: '',
+    client_id: initialClientId || '',
     platform: 'meta_ads',
     task_type: 'checkin',
     description: '',
@@ -41,6 +41,12 @@ export function NewOptimizationModal({ open, onOpenChange, accounts, teamMembers
     checkin_campanhas_rodando: false,
     checkin_alertas: false,
   });
+
+  // Sync initialClientId when modal opens
+  useState(() => {});
+  if (open && initialClientId && form.client_id !== initialClientId) {
+    setForm((f) => ({ ...f, client_id: initialClientId }));
+  }
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async () => {
