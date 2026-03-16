@@ -12,19 +12,65 @@ interface StickyNavProps {
 }
 
 function ProgressBadge({ value, total, type }: { value: number; total: number; type: 'transcription' | 'answers' | 'activities' }) {
-  let colorClass = '';
+  let bgClass = '';
+  let textClass = '';
+  let borderClass = '';
+
   if (type === 'transcription') {
-    colorClass = value >= 2 ? 'bg-[hsl(var(--success)/0.12)] text-[hsl(var(--success))]' : value >= 1 ? 'bg-[hsl(45,93%,47%,0.12)] text-[hsl(45,93%,47%)]' : 'bg-destructive/10 text-destructive';
+    if (value >= 2) {
+      bgClass = 'bg-[hsl(var(--success)/0.12)]';
+      textClass = 'text-[hsl(var(--success))]';
+      borderClass = 'border-[hsl(var(--success)/0.25)]';
+    } else if (value >= 1) {
+      bgClass = 'bg-[hsl(var(--warning)/0.12)]';
+      textClass = 'text-[hsl(var(--warning))]';
+      borderClass = 'border-[hsl(var(--warning)/0.25)]';
+    } else {
+      bgClass = 'bg-destructive/12';
+      textClass = 'text-destructive';
+      borderClass = 'border-destructive/25';
+    }
   } else if (type === 'answers') {
-    colorClass = total > 0 && value === total ? 'bg-[hsl(var(--success)/0.12)] text-[hsl(var(--success))]' : value > 0 ? 'bg-[hsl(45,93%,47%,0.12)] text-[hsl(45,93%,47%)]' : 'bg-destructive/10 text-destructive';
+    if (total > 0 && value === total) {
+      bgClass = 'bg-[hsl(var(--success)/0.12)]';
+      textClass = 'text-[hsl(var(--success))]';
+      borderClass = 'border-[hsl(var(--success)/0.25)]';
+    } else if (value > 0) {
+      bgClass = 'bg-[hsl(var(--warning)/0.12)]';
+      textClass = 'text-[hsl(var(--warning))]';
+      borderClass = 'border-[hsl(var(--warning)/0.25)]';
+    } else {
+      bgClass = 'bg-destructive/12';
+      textClass = 'text-destructive';
+      borderClass = 'border-destructive/25';
+    }
   } else {
-    colorClass = total > 0 && value === total ? 'bg-[hsl(var(--success)/0.12)] text-[hsl(var(--success))]' : value > 0 ? 'bg-[hsl(var(--accent)/0.12)] text-[hsl(var(--accent))]' : 'bg-muted text-muted-foreground';
+    if (total > 0 && value === total) {
+      bgClass = 'bg-[hsl(var(--success)/0.12)]';
+      textClass = 'text-[hsl(var(--success))]';
+      borderClass = 'border-[hsl(var(--success)/0.25)]';
+    } else if (value > 0) {
+      bgClass = 'bg-primary/12';
+      textClass = 'text-primary';
+      borderClass = 'border-primary/25';
+    } else {
+      bgClass = 'bg-muted';
+      textClass = 'text-muted-foreground';
+      borderClass = 'border-border';
+    }
   }
 
-  const label = type === 'transcription' ? `${value}/2 anexadas` : type === 'answers' ? `${value}/${total} respondidas` : `${value}/${total} concluídas`;
+  const label = type === 'transcription'
+    ? `${value}/2 anexadas`
+    : type === 'answers'
+      ? `${value}/${total} respondidas`
+      : `${value}/${total} concluídas`;
 
   return (
-    <span className={cn('text-[10px] font-semibold px-1.5 py-0.5 rounded', colorClass)}>
+    <span className={cn(
+      'text-[10px] font-semibold px-[7px] py-[2px] rounded-[10px] border',
+      bgClass, textClass, borderClass
+    )}>
       {label}
     </span>
   );
@@ -44,7 +90,7 @@ export default function StickyNav({ activeTab, onTabChange, transcriptionCount, 
   };
 
   return (
-    <div className="sticky top-[60px] z-30 bg-card/80 backdrop-blur-xl border-b border-border/50 -mx-4 px-8 md:-mx-6 md:px-10">
+    <div className="sticky top-[60px] z-50 bg-card/80 backdrop-blur-xl border-b border-border/50 -mx-4 px-8 md:-mx-6 md:px-10">
       <div className="flex items-center gap-1 h-12">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.key;
@@ -54,8 +100,10 @@ export default function StickyNav({ activeTab, onTabChange, transcriptionCount, 
               key={tab.key}
               onClick={() => onTabChange(tab.key)}
               className={cn(
-                'flex items-center gap-2 px-4 h-full text-sm transition-all duration-150 relative',
-                isActive ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'
+                'flex items-center gap-2 px-4 h-full text-sm transition-all duration-150 relative rounded-lg',
+                isActive
+                  ? 'text-foreground font-semibold'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
               )}
             >
               <tab.icon className="h-4 w-4" />

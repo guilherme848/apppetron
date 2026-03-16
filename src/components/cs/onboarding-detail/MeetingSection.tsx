@@ -1,6 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { Sparkles, CheckCircle2, AlertCircle, ChevronDown } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -82,7 +81,6 @@ export default function MeetingSection({
 
   const handleLocalChange = (perguntaId: string, value: string) => {
     setLocalAnswers(prev => ({ ...prev, [perguntaId]: value }));
-    // Clear AI badge on manual edit
     setAiFilledIds(prev => { const n = new Set(prev); n.delete(perguntaId); return n; });
   };
 
@@ -111,7 +109,6 @@ export default function MeetingSection({
           newLocal[qId] = answer;
           newAiIds.add(qId);
           filledCount++;
-          // Save to DB
           onAnswerBlur(qId, answer);
         }
       }
@@ -130,6 +127,14 @@ export default function MeetingSection({
   };
 
   const hasTranscription = !!transcricaoOnboardingConteudo?.trim();
+  const totalQ = questions?.length || 0;
+
+  // Progress color
+  const progressColorClass = answeredCount === 0
+    ? 'text-destructive'
+    : answeredCount < totalQ
+      ? 'text-[hsl(var(--warning))]'
+      : 'text-[hsl(var(--success))]';
 
   return (
     <div className="space-y-4">
@@ -138,9 +143,9 @@ export default function MeetingSection({
           Reunião de Onboarding
         </h2>
         <div className="flex items-center gap-3">
-          <Badge variant="outline" className={cn('text-xs font-semibold', answeredCount === questions?.length && questions?.length ? 'bg-[hsl(var(--success)/0.12)] text-[hsl(var(--success))] border-[hsl(var(--success)/0.25)]' : '')}>
-            {answeredCount} de {questions?.length || 0} respondidas
-          </Badge>
+          <span className={cn('text-[13px] font-semibold', progressColorClass)}>
+            {answeredCount} de {totalQ} respondidas
+          </span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -149,12 +154,12 @@ export default function MeetingSection({
                     variant="outline"
                     size="sm"
                     disabled={!hasTranscription || aiLoading || isConcluido}
-                    onClick={() => setShowAiDialog(true)}
+                    onClick={() => hasTranscription && setShowAiDialog(true)}
                     className={cn(
-                      'gap-2 text-[13px] font-semibold border rounded-lg',
+                      'gap-2 text-[13px] font-semibold border rounded-lg transition-all duration-200',
                       hasTranscription
-                        ? 'bg-[hsl(258,90%,66%,0.15)] border-[hsl(258,90%,66%,0.4)] text-[hsl(258,90%,66%)] hover:bg-[hsl(258,90%,66%,0.25)]'
-                        : ''
+                        ? 'bg-[hsl(258,90%,66%,0.15)] border-[hsl(258,90%,66%,0.4)] text-[hsl(258,90%,66%)] hover:bg-[hsl(258,90%,66%,0.25)] hover:shadow-[0_0_16px_hsl(258,90%,66%,0.19)]'
+                        : 'bg-muted border-border text-muted-foreground cursor-not-allowed'
                     )}
                   >
                     <Sparkles className="h-4 w-4" />
@@ -210,35 +215,50 @@ export default function MeetingSection({
 
           return (
             <AccordionItem key={block.key} value={block.key} className="border rounded-xl mb-2 overflow-hidden">
-              <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <AccordionTrigger className={cn(
+                'px-4 py-3 hover:no-underline transition-colors',
+                '[&[data-state=open]]:bg-secondary [&[data-state=open]]:border-b [&[data-state=open]]:border-border/50'
+              )}>
                 <div className="flex items-center gap-2 flex-1">
                   {isComplete && <CheckCircle2 className="h-4 w-4 text-[hsl(var(--success))]" />}
                   <span className="text-sm font-semibold text-foreground">{block.title}</span>
-                  <Badge variant="outline" className={cn('ml-auto mr-2 text-[10px] font-semibold', isComplete ? 'bg-[hsl(var(--success)/0.12)] text-[hsl(var(--success))] border-[hsl(var(--success)/0.25)]' : '')}>
+                  <span className={cn(
+                    'ml-auto mr-2 text-[10px] font-semibold px-[7px] py-[2px] rounded-[10px] border',
+                    isComplete
+                      ? 'bg-[hsl(var(--success)/0.12)] text-[hsl(var(--success))] border-[hsl(var(--success)/0.25)]'
+                      : blockAnswered > 0
+                        ? 'bg-[hsl(var(--warning)/0.12)] text-[hsl(var(--warning))] border-[hsl(var(--warning)/0.25)]'
+                        : 'bg-muted text-muted-foreground border-border'
+                  )}>
                     {blockAnswered}/{blockTotal}
-                  </Badge>
+                  </span>
                 </div>
               </AccordionTrigger>
-              <AccordionContent className="px-4 pb-4 space-y-4">
-                {block.questions.map((q: any) => (
-                  <div key={q.id} className="space-y-1.5">
-                    <label className="text-xs font-semibold text-muted-foreground">{q.question_text}</label>
-                    <Textarea
-                      placeholder={q.placeholder || 'Resposta...'}
-                      value={getAnswer(q.id)}
-                      onChange={(e) => handleLocalChange(q.id, e.target.value)}
-                      onBlur={(e) => onAnswerBlur(q.id, e.target.value)}
-                      className="min-h-[60px] resize-y text-sm"
-                      disabled={isConcluido}
-                    />
-                    {aiFilledIds.has(q.id) && (
-                      <div className="flex items-center gap-1 text-[10px] text-[hsl(258,90%,66%)]">
-                        <Sparkles className="h-2.5 w-2.5" />
-                        Preenchido por IA
-                      </div>
-                    )}
-                  </div>
-                ))}
+              <AccordionContent className="px-5 pb-4 pt-4 bg-card">
+                <div className="space-y-0">
+                  {block.questions.map((q: any, idx: number) => (
+                    <div key={q.id} className={cn(
+                      'space-y-1.5 py-4',
+                      idx < block.questions.length - 1 && 'border-b border-border/50'
+                    )}>
+                      <label className="text-xs font-semibold text-muted-foreground">{q.question_text}</label>
+                      <Textarea
+                        placeholder={q.placeholder || 'Resposta...'}
+                        value={getAnswer(q.id)}
+                        onChange={(e) => handleLocalChange(q.id, e.target.value)}
+                        onBlur={(e) => onAnswerBlur(q.id, e.target.value)}
+                        className="min-h-[60px] resize-y text-sm"
+                        disabled={isConcluido}
+                      />
+                      {aiFilledIds.has(q.id) && (
+                        <div className="flex items-center gap-1 text-[10px] text-[hsl(258,90%,66%)]">
+                          <Sparkles className="h-2.5 w-2.5" />
+                          Preenchido por IA
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </AccordionContent>
             </AccordionItem>
           );

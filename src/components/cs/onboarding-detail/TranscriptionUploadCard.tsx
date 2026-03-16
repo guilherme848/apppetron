@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
 import { Upload, FileCheck, RefreshCw, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -35,11 +34,9 @@ export default function TranscriptionUploadCard({
   const [showContent, setShowContent] = useState(false);
 
   const extractText = async (file: File): Promise<string> => {
-    // For text-based files, read directly
     if (file.type === 'text/plain' || file.name.endsWith('.md') || file.name.endsWith('.txt')) {
       return file.text();
     }
-    // For other formats, try to read as text (best effort)
     try {
       return await file.text();
     } catch {
@@ -55,7 +52,6 @@ export default function TranscriptionUploadCard({
     setUploading(true);
     try {
       const path = `${onboardingId}/${type}/${file.name}`;
-
       const { error: uploadError } = await supabase.storage
         .from('onboarding-transcricoes')
         .upload(path, file, { upsert: true });
@@ -115,7 +111,7 @@ export default function TranscriptionUploadCard({
 
   if (hasFile) {
     return (
-      <div className="rounded-2xl border border-[hsl(var(--success)/0.3)] bg-card p-5 space-y-3 animate-fade-in">
+      <div className="rounded-2xl border border-[hsl(var(--success)/0.3)] bg-card p-5 space-y-3 animate-fade-in min-h-[160px]">
         <div className="flex items-start gap-3">
           <FileCheck className="h-5 w-5 text-[hsl(var(--success))] mt-0.5 shrink-0" />
           <div className="flex-1 min-w-0">
@@ -174,8 +170,10 @@ export default function TranscriptionUploadCard({
   return (
     <div
       className={cn(
-        'rounded-2xl border-2 border-dashed bg-card p-6 flex flex-col items-center gap-3 cursor-pointer transition-all duration-200',
-        dragging ? 'border-primary/60 bg-primary/5' : 'border-border hover:border-primary/40 hover:bg-primary/5',
+        'rounded-2xl border-2 border-dashed bg-card p-6 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-200 min-h-[160px]',
+        dragging
+          ? 'border-primary/60 bg-primary/5'
+          : 'border-muted-foreground/30 hover:border-primary/60 hover:bg-primary/5',
         uploading && 'opacity-60 pointer-events-none',
         disabled && 'opacity-50 pointer-events-none'
       )}
@@ -184,12 +182,12 @@ export default function TranscriptionUploadCard({
       onDragLeave={() => setDragging(false)}
       onDrop={handleDrop}
     >
-      <Upload className="h-6 w-6 text-muted-foreground" />
-      <p className="text-sm font-semibold text-foreground">{title}</p>
-      <p className="text-[13px] text-muted-foreground text-center">
+      <Upload className="h-7 w-7 text-muted-foreground" />
+      <p className="text-sm font-semibold text-foreground mt-3">{title}</p>
+      <p className="text-xs text-muted-foreground text-center mt-1">
         {uploading ? 'Enviando...' : 'Arraste um arquivo ou clique para selecionar'}
       </p>
-      <p className="text-[11px] text-muted-foreground">.txt, .pdf, .docx, .doc, .md — máx 10MB</p>
+      <p className="text-[11px] text-muted-foreground mt-2">.txt, .pdf, .docx, .doc, .md — máx 10MB</p>
       <input ref={inputRef} type="file" accept={ACCEPTED} className="hidden" onChange={handleFileChange} />
     </div>
   );
