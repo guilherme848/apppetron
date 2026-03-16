@@ -14,6 +14,7 @@ import { NewOptimizationModal } from '@/components/traffic-optimizations/NewOpti
 
 export default function TrafficOptimizationsPage() {
   const [showNewModal, setShowNewModal] = useState(false);
+  const [preselectedClientId, setPreselectedClientId] = useState<string | null>(null);
   const optimizationsData = useTrafficOptimizations();
   const { accounts } = useCrm();
   const { members: teamMembers } = useTeamMembers();
@@ -77,6 +78,10 @@ export default function TrafficOptimizationsPage() {
             {...optimizationsData}
             accounts={activeAccounts}
             teamMembers={teamMembers}
+            onClientClick={(clientId) => {
+              setPreselectedClientId(clientId);
+              setShowNewModal(true);
+            }}
           />
         </TabsContent>
 
@@ -100,11 +105,15 @@ export default function TrafficOptimizationsPage() {
       {/* Modal */}
       <NewOptimizationModal
         open={showNewModal}
-        onOpenChange={setShowNewModal}
+        onOpenChange={(open) => {
+          setShowNewModal(open);
+          if (!open) setPreselectedClientId(null);
+        }}
         accounts={activeAccounts}
         teamMembers={teamMembers}
         currentMemberId={optimizationsData.currentMemberId}
         onSubmit={optimizationsData.addOptimization}
+        initialClientId={preselectedClientId}
       />
     </div>
   );

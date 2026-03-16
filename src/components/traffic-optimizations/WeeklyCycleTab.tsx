@@ -74,6 +74,7 @@ interface Props {
     entries: { client_id: string; weekday: number }[],
     managerId?: string,
   ) => Promise<any>;
+  onClientClick?: (clientId: string) => void;
 }
 
 /* ── Draggable Client Card ────────────────────────────────── */
@@ -82,11 +83,13 @@ function DraggableClientCard({
   clientName,
   clientNiche,
   onRemove,
+  onClick,
 }: {
   entryId: string;
   clientName: string;
   clientNiche: string | null;
   onRemove: () => void;
+  onClick?: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: entryId,
@@ -110,7 +113,7 @@ function DraggableClientCard({
         <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50" />
       </div>
 
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 cursor-pointer" onClick={onClick}>
         <p className="text-[13px] font-semibold text-foreground truncate">{clientName}</p>
         {clientNiche && (
           <span className="inline-block mt-0.5 text-[10px] text-muted-foreground bg-muted/60 border border-border/40 rounded px-1.5 py-0.5">
@@ -343,10 +346,12 @@ function NicheGroupedEntries({
   entries,
   getClient,
   onRemove,
+  onClientClick,
 }: {
   entries: WeeklyCycleEntry[];
   getClient: (id: string) => Account | undefined;
   onRemove: (id: string) => void;
+  onClientClick?: (clientId: string) => void;
 }) {
   const grouped = useMemo(() => {
     const map = new Map<string, WeeklyCycleEntry[]>();
@@ -389,6 +394,7 @@ function NicheGroupedEntries({
                 clientName={client?.name || 'Cliente'}
                 clientNiche={client?.niche || null}
                 onRemove={() => onRemove(entry.id)}
+                onClick={() => onClientClick?.(entry.client_id)}
               />
             );
           })}
@@ -413,6 +419,7 @@ export function OptimizationWeeklyCycleTab({
   moveWeeklyCycleEntry,
   clearWeeklyCycle,
   replaceWeeklyCycle,
+  onClientClick,
 }: Props) {
   const [selectedManagerId, setSelectedManagerId] = useState<string | null>(null);
   const [showAiModal, setShowAiModal] = useState(false);
@@ -677,6 +684,7 @@ export function OptimizationWeeklyCycleTab({
                         entries={dayEntries}
                         getClient={getClient}
                         onRemove={removeWeeklyCycleEntry}
+                        onClientClick={onClientClick}
                       />
                       <AddClientPopover
                         availableClients={availableClients}
