@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { SaveStatus } from '@/components/ui/save-status';
 import { cn } from '@/lib/utils';
+import { IntelligenceSection } from '@/components/crm/intelligence/IntelligenceSection';
 import {
   Tooltip,
   TooltipContent,
@@ -999,6 +1000,17 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
               </div>
             </div>
           </div>
+
+          {/* Inteligência do Cliente — only in edit mode */}
+          {isEditing && account && (
+            <>
+              <GradientSeparator />
+              <div className="space-y-4">
+                <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.12em]">Inteligência do Cliente</h3>
+                <IntelligenceSection clienteId={account.id} />
+              </div>
+            </>
+          )}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={handleClose}>

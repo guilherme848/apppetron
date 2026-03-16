@@ -493,6 +493,63 @@ export type Database = {
           },
         ]
       }
+      cliente_anexos: {
+        Row: {
+          arquivo_nome: string
+          arquivo_tamanho: number | null
+          arquivo_tipo: string | null
+          arquivo_url: string
+          categoria: string | null
+          cliente_id: string
+          created_at: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          arquivo_nome: string
+          arquivo_tamanho?: number | null
+          arquivo_tipo?: string | null
+          arquivo_url: string
+          categoria?: string | null
+          cliente_id: string
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          arquivo_nome?: string
+          arquivo_tamanho?: number | null
+          arquivo_tipo?: string | null
+          arquivo_url?: string
+          categoria?: string | null
+          cliente_id?: string
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_anexos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_anexos_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cliente_checkup: {
         Row: {
           atendimento_whatsapp: number | null
@@ -568,6 +625,88 @@ export type Database = {
             columns: ["preenchido_por_id"]
             isOneToOne: false
             referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cliente_concorrentes: {
+        Row: {
+          cliente_id: string
+          created_at: string | null
+          id: string
+          instagram_url: string | null
+          nome: string
+          observacoes: string | null
+          ordem: number | null
+          site_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string | null
+          id?: string
+          instagram_url?: string | null
+          nome: string
+          observacoes?: string | null
+          ordem?: number | null
+          site_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string | null
+          id?: string
+          instagram_url?: string | null
+          nome?: string
+          observacoes?: string | null
+          ordem?: number | null
+          site_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_concorrentes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cliente_links: {
+        Row: {
+          cliente_id: string
+          created_at: string | null
+          id: string
+          label: string | null
+          ordem: number | null
+          tipo: string
+          url: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string | null
+          id?: string
+          label?: string | null
+          ordem?: number | null
+          tipo: string
+          url: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string | null
+          id?: string
+          label?: string | null
+          ordem?: number | null
+          tipo?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_links_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
         ]

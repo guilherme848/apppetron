@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useClientIntelligence } from '@/hooks/useClientIntelligence';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Pencil, Trash2, ExternalLink, Phone, Mail, MapPin, Lock, Star, Users, FileText, Package, TrendingUp, CheckSquare, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,9 @@ import { AccountForm } from '@/components/crm/AccountForm';
 import { AccountRemoveDialog, RemovalType } from '@/components/crm/AccountRemoveDialog';
 import { ClientDeliverables } from '@/components/crm/ClientDeliverables';
 import { AccountTeamCard } from '@/components/crm/AccountTeamCard';
+import { LinksCard } from '@/components/crm/intelligence/LinksCard';
+import { ConcorrentesCard } from '@/components/crm/intelligence/ConcorrentesCard';
+import { ArquivosCard } from '@/components/crm/intelligence/ArquivosCard';
 import { ClientTrafficSection } from '@/components/crm/ClientTrafficSection';
 import { useCrm } from '@/contexts/CrmContext';
 import { Contract, Task, ContractStatus, TaskStatus, Account } from '@/types/crm';
@@ -66,6 +70,7 @@ export default function CrmDetail() {
   const { canViewFinancialValues } = useSensitivePermission();
   const showFinancialValues = canViewFinancialValues();
   const { events: historyEvents, loading: historyLoading } = useAccountHistory(id);
+  const { links: clienteLinks, concorrentes, anexos, loading: intelLoading, deleteAnexo } = useClientIntelligence(id);
 
   const [contractFormOpen, setContractFormOpen] = useState(false);
   const [taskFormOpen, setTaskFormOpen] = useState(false);
@@ -301,6 +306,13 @@ export default function CrmDetail() {
             )}
           </CardContent>
         </Card>
+      </div>
+
+      {/* Inteligência do Cliente */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <LinksCard links={clienteLinks} loading={intelLoading} />
+        <ConcorrentesCard concorrentes={concorrentes} loading={intelLoading} />
+        <ArquivosCard anexos={anexos} loading={intelLoading} onDelete={deleteAnexo} />
       </div>
 
       {/* Tarefas — full width */}
