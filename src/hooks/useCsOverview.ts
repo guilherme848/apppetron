@@ -138,11 +138,11 @@ export function useCsOverview() {
     // At risk = checkup D
     const atRisk = accounts.filter(a => a.status === 'active' && a.checkup_classificacao === 'D');
 
-    // Churn in selected month
+    // Churn in selected month (by churned_at, same as executive dashboard)
     const churned = accounts.filter(a => {
-      if (a.status !== 'inactive' && a.status !== 'churned' && a.status !== 'canceled') return false;
-      const d = a.updated_at ? parseISO(a.updated_at) : null;
-      return d && isValid(d) && d >= monthStart && d <= monthEnd;
+      if (!a.churned_at) return false;
+      const d = parseISO(a.churned_at);
+      return isValid(d) && d >= monthStart && d <= monthEnd;
     });
 
     // Revenue at risk (C or D)
