@@ -233,9 +233,10 @@ export function useCsOverview() {
   const activeAtMonthStart = useMemo(() => {
     return accounts.filter(a => {
       if (a.status === 'active') return true;
-      if (a.status === 'inactive' || a.status === 'churned' || a.status === 'canceled') {
-        const d = a.updated_at ? parseISO(a.updated_at) : null;
-        return d && isValid(d) && d >= monthStart;
+      // Client was active at month start if churned_at >= monthStart
+      if (a.churned_at) {
+        const d = parseISO(a.churned_at);
+        return isValid(d) && d >= monthStart;
       }
       return false;
     });
