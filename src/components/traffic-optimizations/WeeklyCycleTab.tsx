@@ -82,11 +82,13 @@ function DraggableClientCard({
   clientName,
   clientNiche,
   onRemove,
+  onClick,
 }: {
   entryId: string;
   clientName: string;
   clientNiche: string | null;
   onRemove: () => void;
+  onClick?: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: entryId,
