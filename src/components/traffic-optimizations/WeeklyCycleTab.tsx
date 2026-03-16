@@ -561,11 +561,9 @@ export function OptimizationWeeklyCycleTab({
   /* ── Inline modal handlers ──────────────────────────────── */
   const handleOpenInlineModal = useCallback((clientId: string) => {
     setInlineModalClientId(clientId);
-    // If client is in today's weekday column, preselect based on context
-    const isToday = todayEntryClientIds.has(clientId);
-    setInlineModalTaskType(isToday ? 'checkin' : 'checkin');
+    setInlineModalTaskType('alta');
     setInlineModalOpen(true);
-  }, [todayEntryClientIds]);
+  }, []);
 
   const inlineModalClient = useMemo(() => {
     if (!inlineModalClientId) return null;
