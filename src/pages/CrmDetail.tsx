@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useClientIntelligence } from '@/hooks/useClientIntelligence';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Pencil, Trash2, ExternalLink, Phone, Mail, MapPin, Lock, Star, Users, FileText, Package, TrendingUp, CheckSquare, Clock } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, ExternalLink, Phone, Mail, MapPin, Lock, Star, Users, FileText, Package, TrendingUp, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
