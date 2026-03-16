@@ -5,9 +5,10 @@ import { ptBR } from 'date-fns/locale';
 import {
   Users, Rocket, AlertTriangle, Star, TrendingDown, DollarSign,
   RotateCcw, ChevronRight, Clock, Calendar, Activity, UserMinus,
-  ShieldCheck, AlertCircle, Grid3X3,
+  ShieldCheck, AlertCircle, Grid3X3, Percent, BarChart2, TrendingUp,
+  CheckCircle,
 } from 'lucide-react';
-import { useCsOverview, CsAlert, ChurnDimensionItem, CohortRow } from '@/hooks/useCsOverview';
+import { useCsOverview, CsAlert, ChurnDimensionItem, CohortRow, FinancialMetrics, ChurnHistoryItem } from '@/hooks/useCsOverview';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
+  ComposedChart, Line, CartesianGrid,
+} from 'recharts';
 import { tooltipStyle } from '@/lib/dashboardColors';
 
 const formatCurrency = (v: number) =>
@@ -94,6 +98,7 @@ export default function CsCommandCenter() {
   const {
     loading, selectedMonth, setSelectedMonth, monthOptions, isCurrentMonth,
     selectedMonthLabel, kpiData, alerts, healthDist, churnByNiche, churnByPlan, cohortData,
+    financialMetrics,
   } = useCsOverview();
 
   const todayLabel = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
@@ -158,6 +163,9 @@ export default function CsCommandCenter() {
         </div>
       )}
 
+      {/* FINANCIAL METRICS — LT, LTV, CHURN */}
+      {loading ? <SectionSkeleton rows={3} /> : <FinancialSection metrics={financialMetrics} monthLabel={selectedMonthLabel} />}
+
       {/* ALERTS */}
       {loading ? <SectionSkeleton rows={2} /> : <AlertsCard alerts={alerts} navigate={navigate} />}
 
@@ -183,6 +191,176 @@ export default function CsCommandCenter() {
 // ═══════════════════════════════════════════
 // SUB-COMPONENTS
 // ═══════════════════════════════════════════
+
+const formatCurrencyFull = (v: number) =>
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v);
+
+function FinancialSection({ metrics, monthLabel }: { metrics: FinancialMetrics; monthLabel: string }) {
+  const churnRateColor = metrics.churnRate > 5 ? 'text-destructive' : metrics.churnRate > 2 ? 'text-warning' : 'text-success';
+
+  const churnedNames = metrics.churnedClientNames.length <= 3
+    ? metrics.churnedClientNames.join(' · ')
+    : `${metrics.churnedClientNames.slice(0, 3).join(' · ')} e mais ${metrics.churnedClientNames.length - 3}`;
+
+  return (
+    <>
+      {/* Row 1: LT & LTV */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className="transition-all duration-150 hover:border-border/80">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">LT Médio da Base</span>
+              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Clock className="h-4 w-4 text-primary" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold font-mono">{metrics.avgLT.toFixed(1)} meses</div>
+            <p className="text-xs text-muted-foreground mt-1.5">tempo médio de permanência dos clientes ativos</p>
+            <p className="text-[11px] text-muted-foreground font-mono mt-2">
+              Cliente mais antigo: {metrics.maxLT} meses · Cliente mais recente: {metrics.minLT} meses
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="transition-all duration-150 hover:border-border/80">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">LTV Médio</span>
+              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <TrendingUp className="h-4 w-4 text-primary" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold font-mono text-primary">{formatCurrencyFull(metrics.avgLTV)}</div>
+            <p className="text-xs text-muted-foreground mt-1.5">receita total acumulada média por cliente ativo</p>
+            {metrics.maxLTV.name && (
+              <p className="text-[11px] text-muted-foreground font-mono mt-2 truncate">
+                Maior LTV: {formatCurrencyFull(metrics.maxLTV.value)} ({metrics.maxLTV.name})
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Row 2: Churn metrics */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="transition-all duration-150 hover:border-border/80">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Churn Rate</span>
+              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Percent className="h-4 w-4 text-primary" />
+              </div>
+            </div>
+            <div className={cn("text-2xl font-bold font-mono", churnRateColor)}>
+              {metrics.churnRate.toFixed(1)}%
+            </div>
+            <p className="text-xs text-muted-foreground mt-1.5">{monthLabel}</p>
+            <p className="text-[11px] text-muted-foreground mt-2">Meta: ≤ 2%</p>
+          </CardContent>
+        </Card>
+        <Card className="transition-all duration-150 hover:border-border/80">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Cancelamentos</span>
+              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <UserMinus className="h-4 w-4 text-primary" />
+              </div>
+            </div>
+            <div className={cn("text-2xl font-bold font-mono", metrics.churnCount > 0 ? "text-destructive" : "text-foreground")}>
+              {metrics.churnCount}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1.5">{monthLabel}</p>
+            {metrics.churnCount > 0 && (
+              <p className="text-[11px] text-muted-foreground mt-2 truncate">{churnedNames}</p>
+            )}
+          </CardContent>
+        </Card>
+        <Card className="transition-all duration-150 hover:border-border/80">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Receita Perdida</span>
+              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <DollarSign className="h-4 w-4 text-primary" />
+              </div>
+            </div>
+            <div className={cn("text-2xl font-bold font-mono", metrics.revenueLost > 0 ? "text-destructive" : "text-muted-foreground")}>
+              {formatCurrencyFull(metrics.revenueLost)}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1.5">em contratos cancelados no mês</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Row 3: Churn history chart */}
+      <ChurnHistoryCard data={metrics.churnHistory} />
+    </>
+  );
+}
+
+function ChurnHistoryCard({ data }: { data: ChurnHistoryItem[] }) {
+  const hasData = data.some(d => d.cancelations > 0);
+
+  if (!hasData) {
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <BarChart2 className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-semibold">Churn Histórico</CardTitle>
+          </div>
+          <CardDescription>Cancelamentos e churn rate dos últimos 12 meses</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center py-10 text-muted-foreground text-sm">
+            <CheckCircle className="h-6 w-6 text-success mb-2" />
+            Sem dados de churn registrados
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <BarChart2 className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-semibold">Churn Histórico</CardTitle>
+        </div>
+        <CardDescription>Cancelamentos e churn rate dos últimos 12 meses</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="h-[280px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+              <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+              <YAxis yAxisId="left" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} allowDecimals={false} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} unit="%" />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                formatter={(value: number, name: string) => {
+                  if (name === 'cancelations') return [`${value}`, 'Cancelamentos'];
+                  if (name === 'churnRate') return [`${value.toFixed(1)}%`, 'Churn Rate'];
+                  return [value, name];
+                }}
+                labelFormatter={(label) => `Mês: ${label}`}
+              />
+              <Bar yAxisId="left" dataKey="cancelations" radius={[4, 4, 0, 0]} name="cancelations">
+                {data.map((entry, i) => (
+                  <Cell key={i} fill="hsl(var(--destructive))" fillOpacity={entry.isCurrent ? 1 : 0.7} />
+                ))}
+              </Bar>
+              <Line
+                yAxisId="right" type="monotone" dataKey="churnRate" name="churnRate"
+                stroke="hsl(var(--warning))" strokeWidth={2} dot={{ r: 4, fill: 'hsl(var(--warning))' }}
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 function AlertsCard({ alerts, navigate }: { alerts: CsAlert[]; navigate: ReturnType<typeof useNavigate> }) {
   const iconMap: Record<CsAlert['type'], React.ElementType> = {
