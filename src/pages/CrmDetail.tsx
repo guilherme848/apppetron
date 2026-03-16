@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useClientIntelligence } from '@/hooks/useClientIntelligence';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Pencil, Trash2, ExternalLink, Phone, Mail, MapPin, Lock, Star, Users, FileText, Package, TrendingUp, CheckSquare, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
