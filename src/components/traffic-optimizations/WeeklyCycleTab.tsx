@@ -476,6 +476,7 @@ export function OptimizationWeeklyCycleTab({
   accounts,
   teamMembers,
   weeklyCycle,
+  optimizations,
   currentMemberId,
   isAdmin = false,
   loading = false,
@@ -484,6 +485,7 @@ export function OptimizationWeeklyCycleTab({
   moveWeeklyCycleEntry,
   clearWeeklyCycle,
   replaceWeeklyCycle,
+  addOptimization,
   onClientClick,
 }: Props) {
   const [selectedManagerId, setSelectedManagerId] = useState<string | null>(null);
@@ -492,6 +494,11 @@ export function OptimizationWeeklyCycleTab({
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [showManualGrid, setShowManualGrid] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  // Inline optimization modal state
+  const [inlineModalOpen, setInlineModalOpen] = useState(false);
+  const [inlineModalClientId, setInlineModalClientId] = useState<string | null>(null);
+  const [inlineModalTaskType, setInlineModalTaskType] = useState<'checkin' | 'media' | 'alta'>('checkin');
 
   const effectiveManagerId = isAdmin && selectedManagerId ? selectedManagerId : currentMemberId;
 
