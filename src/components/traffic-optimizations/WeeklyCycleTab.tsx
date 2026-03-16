@@ -393,6 +393,7 @@ function NicheGroupedEntries({
                 clientName={client?.name || 'Cliente'}
                 clientNiche={client?.niche || null}
                 onRemove={() => onRemove(entry.id)}
+                onClick={() => onClientClick?.(entry.client_id)}
               />
             );
           })}
