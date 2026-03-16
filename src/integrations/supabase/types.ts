@@ -4138,6 +4138,173 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_atividades: {
+        Row: {
+          atividade_template_id: string | null
+          created_at: string | null
+          data_conclusao: string | null
+          descricao: string | null
+          id: string
+          onboarding_id: string
+          ordem: number | null
+          responsavel_id: string | null
+          responsavel_perfil: string | null
+          status: string
+          titulo: string
+        }
+        Insert: {
+          atividade_template_id?: string | null
+          created_at?: string | null
+          data_conclusao?: string | null
+          descricao?: string | null
+          id?: string
+          onboarding_id: string
+          ordem?: number | null
+          responsavel_id?: string | null
+          responsavel_perfil?: string | null
+          status?: string
+          titulo: string
+        }
+        Update: {
+          atividade_template_id?: string | null
+          created_at?: string | null
+          data_conclusao?: string | null
+          descricao?: string | null
+          id?: string
+          onboarding_id?: string
+          ordem?: number | null
+          responsavel_id?: string | null
+          responsavel_perfil?: string | null
+          status?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_atividades_atividade_template_id_fkey"
+            columns: ["atividade_template_id"]
+            isOneToOne: false
+            referencedRelation: "petron_onboarding_activity_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_atividades_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "onboardings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_atividades_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_reuniao_respostas: {
+        Row: {
+          created_at: string | null
+          id: string
+          onboarding_id: string
+          pergunta_id: string | null
+          resposta: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          onboarding_id: string
+          pergunta_id?: string | null
+          resposta?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          onboarding_id?: string
+          pergunta_id?: string | null
+          resposta?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_reuniao_respostas_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "onboardings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_reuniao_respostas_pergunta_id_fkey"
+            columns: ["pergunta_id"]
+            isOneToOne: false
+            referencedRelation: "cs_onboarding_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboardings: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          cs_owner_id: string | null
+          data_conclusao: string | null
+          data_inicio: string | null
+          id: string
+          status: string
+          traffic_owner_id: string | null
+          transcricao_reuniao_vendas: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          cs_owner_id?: string | null
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          id?: string
+          status?: string
+          traffic_owner_id?: string | null
+          transcricao_reuniao_vendas?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          cs_owner_id?: string | null
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          id?: string
+          status?: string
+          traffic_owner_id?: string | null
+          transcricao_reuniao_vendas?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboardings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboardings_cs_owner_id_fkey"
+            columns: ["cs_owner_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboardings_traffic_owner_id_fkey"
+            columns: ["traffic_owner_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permissions: {
         Row: {
           created_at: string
@@ -6584,7 +6751,15 @@ export type Database = {
       }
       can_edit_commercial: { Args: { _user_id: string }; Returns: boolean }
       can_view_commercial: { Args: { _user_id: string }; Returns: boolean }
+      complete_onboarding: {
+        Args: { p_onboarding_id: string }
+        Returns: undefined
+      }
       generate_contract_number: { Args: never; Returns: string }
+      generate_onboarding_atividades: {
+        Args: { p_onboarding_id: string }
+        Returns: number
+      }
       generate_petron_onboarding_tasks: {
         Args: { p_onboarding_id: string }
         Returns: number

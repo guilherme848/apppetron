@@ -55,6 +55,7 @@ import CsNps from "./pages/cs/CsNps";
 import CsRisk from "./pages/cs/CsRisk";
 import CsClientDetail from "./pages/cs/CsClientDetail";
 import CsOnboardingMeeting from "./pages/cs/CsOnboardingMeeting";
+import CsOnboardingDetail from "./pages/cs/CsOnboardingDetail";
 
 // Settings pages
 import { SettingsLayout } from "./pages/settings/SettingsLayout";
@@ -203,6 +204,7 @@ const App = () => (
                         <Route path="/cs" element={<CsCommandCenter />} />
                         <Route path="/cs/dashboard" element={<CsDashboard />} />
                         <Route path="/cs/onboarding" element={<CsOnboarding />} />
+                        <Route path="/cs/onboarding/:onboardingId" element={<CsOnboardingDetail />} />
                         <Route path="/cs/onboarding/meeting/:meetingId" element={<CsOnboardingMeeting />} />
                         <Route path="/cs/meetings" element={<CsMeetings />} />
                         <Route path="/cs/nps" element={<CsNps />} />
