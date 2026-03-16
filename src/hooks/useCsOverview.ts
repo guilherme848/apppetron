@@ -415,9 +415,9 @@ export function useCsOverview() {
 
       const activeAtM = accounts.filter(a => {
         if (a.status === 'active') return true;
-        if (a.status === 'inactive' || a.status === 'churned' || a.status === 'canceled') {
-          const d = a.updated_at ? parseISO(a.updated_at) : null;
-          return d && isValid(d) && d >= m;
+        if (a.churned_at) {
+          const d = parseISO(a.churned_at);
+          return isValid(d) && d >= m;
         }
         return false;
       }).length;
