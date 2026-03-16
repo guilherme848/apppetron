@@ -129,12 +129,7 @@ export default function CrmDetail() {
     if (editingContract) { await updateContract(editingContract.id, data); } else { await addContract(data); }
     setEditingContract(undefined);
   };
-  const handleTaskSubmit = async (data: { title: string; status: TaskStatus; account_id: string | null; due_date: string | null }) => {
-    if (editingTask) { await updateTask(editingTask.id, data); } else { await addTask({ ...data, account_id: id! }); }
-    setEditingTask(undefined);
-  };
   const handleDeleteContract = async (contractId: string) => { await deleteContract(contractId); };
-  const handleDeleteTask = async (taskId: string) => { await deleteTask(taskId); };
 
   const handleRemoveConfirm = async (type: RemovalType, churnDate?: string) => {
     if (!account) return;
