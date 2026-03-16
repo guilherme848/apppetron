@@ -221,7 +221,7 @@ function AlertsCard({ alerts, navigate }: { alerts: CsAlert[]; navigate: ReturnT
       <CardContent className="pt-0">
         {alerts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center">
-            <ShieldCheck className="h-8 w-8 text-emerald-500 mb-3 opacity-70" />
+            <ShieldCheck className="h-8 w-8 text-success mb-3 opacity-70" />
             <p className="font-semibold text-sm">Tudo em ordem</p>
             <p className="text-sm text-muted-foreground mt-1">Nenhum alerta ativo no momento.</p>
           </div>
