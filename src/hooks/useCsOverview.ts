@@ -228,6 +228,18 @@ export function useCsOverview() {
     };
   }, [accounts, teamMembers]);
 
+  // Clients that were active at start of selected month
+  const activeAtMonthStart = useMemo(() => {
+    return accounts.filter(a => {
+      if (a.status === 'active') return true;
+      if (a.status === 'inactive' || a.status === 'churned' || a.status === 'canceled') {
+        const d = a.updated_at ? parseISO(a.updated_at) : null;
+        return d && isValid(d) && d >= monthStart;
+      }
+      return false;
+    });
+  }, [accounts, monthStart]);
+
   // Churn by niche (filtered by month)
   const churnByNiche = useMemo((): ChurnDimensionItem[] => {
     const churned = accounts.filter(a => {
@@ -243,7 +255,7 @@ export function useCsOverview() {
       if (!byNiche[nicheId]) byNiche[nicheId] = { count: 0, total: 0, name: niche?.name || 'Sem Nicho' };
       byNiche[nicheId].count++;
     });
-    accounts.forEach(a => {
+    activeAtMonthStart.forEach(a => {
       const nicheId = a.niche_id || 'none';
       const niche = niches.find(n => n.id === nicheId);
       if (!byNiche[nicheId]) byNiche[nicheId] = { count: 0, total: 0, name: niche?.name || 'Sem Nicho' };
@@ -254,7 +266,7 @@ export function useCsOverview() {
       .map(d => ({ name: d.name, churnCount: d.count, totalClients: d.total, churnRate: d.total > 0 ? (d.count / d.total) * 100 : 0 }))
       .filter(d => d.churnCount > 0)
       .sort((a, b) => b.churnRate - a.churnRate);
-  }, [accounts, niches, monthStart, monthEnd]);
+  }, [accounts, niches, monthStart, monthEnd, activeAtMonthStart]);
 
   // Churn by plan (only Start, Performance, Escala, Growth)
   const validPlans = ['Start', 'Performance', 'Escala', 'Growth'];
@@ -281,7 +293,7 @@ export function useCsOverview() {
         byPlan[sName].count++;
       }
     });
-    accounts.forEach(a => {
+    activeAtMonthStart.forEach(a => {
       const sName = getServiceName(a.service_id);
       if (sName && validPlans.includes(sName)) {
         byPlan[sName].total++;
@@ -291,7 +303,7 @@ export function useCsOverview() {
     return Object.values(byPlan)
       .map(d => ({ name: d.name, churnCount: d.count, totalClients: d.total, churnRate: d.total > 0 ? (d.count / d.total) * 100 : 0 }))
       .sort((a, b) => b.churnRate - a.churnRate);
-  }, [accounts, services, monthStart, monthEnd]);
+  }, [accounts, services, monthStart, monthEnd, activeAtMonthStart]);
 
   // Cohort analysis (always last 12 months, not filtered)
   const cohortData = useMemo((): CohortRow[] => {
