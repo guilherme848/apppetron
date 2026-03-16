@@ -66,7 +66,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         onOpenChange={(open) => setSidebarExpanded(open)}
         style={{
           '--sidebar-width': '240px',
-          '--sidebar-width-icon': '200px',
+          '--sidebar-width-icon': '52px',
         } as React.CSSProperties}
       >
         <div className="min-h-screen flex w-full">
