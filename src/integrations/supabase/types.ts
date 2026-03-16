@@ -98,6 +98,7 @@ export type Database = {
       accounts: {
         Row: {
           ad_monthly_budget: number | null
+          ad_monthly_budget_google: number | null
           ad_payment_frequency: string | null
           ad_payment_method: string | null
           address_complement: string | null
@@ -120,6 +121,7 @@ export type Database = {
           health_status: string | null
           id: string
           last_contact_at: string | null
+          midias_ativas: string[] | null
           monthly_value: number | null
           name: string
           neighborhood: string | null
@@ -146,6 +148,7 @@ export type Database = {
         }
         Insert: {
           ad_monthly_budget?: number | null
+          ad_monthly_budget_google?: number | null
           ad_payment_frequency?: string | null
           ad_payment_method?: string | null
           address_complement?: string | null
@@ -168,6 +171,7 @@ export type Database = {
           health_status?: string | null
           id?: string
           last_contact_at?: string | null
+          midias_ativas?: string[] | null
           monthly_value?: number | null
           name: string
           neighborhood?: string | null
@@ -194,6 +198,7 @@ export type Database = {
         }
         Update: {
           ad_monthly_budget?: number | null
+          ad_monthly_budget_google?: number | null
           ad_payment_frequency?: string | null
           ad_payment_method?: string | null
           address_complement?: string | null
@@ -216,6 +221,7 @@ export type Database = {
           health_status?: string | null
           id?: string
           last_contact_at?: string | null
+          midias_ativas?: string[] | null
           monthly_value?: number | null
           name?: string
           neighborhood?: string | null

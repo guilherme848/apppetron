@@ -1,0 +1,2 @@
+ALTER TABLE public.accounts ADD COLUMN IF NOT EXISTS midias_ativas text[] DEFAULT ARRAY['meta_ads']::text[];
+ALTER TABLE public.accounts ADD COLUMN IF NOT EXISTS ad_monthly_budget_google numeric DEFAULT NULL;

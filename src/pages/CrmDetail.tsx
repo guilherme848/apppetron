@@ -122,7 +122,7 @@ export default function CrmDetail() {
   };
 
   const handleAccountSubmit = async (data: Partial<Account>) => { await updateAccount(id!, data); };
-  const handleTeamUpdate = async (field: keyof Account, value: string | null) => { await updateAccount(id!, { [field]: value }); };
+  const handleTeamUpdate = async (field: keyof Account, value: string | number | string[] | null) => { await updateAccount(id!, { [field]: value }); };
 
   const handleContractSubmit = async (data: { mrr: number; start_date: string; status: ContractStatus; account_id: string }) => {
     if (editingContract) { await updateContract(editingContract.id, data); } else { await addContract(data); }

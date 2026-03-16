@@ -10,11 +10,12 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { useTraffic } from '@/contexts/TrafficContext';
 import { useSensitivePermission } from '@/hooks/useSensitivePermission';
 import { Link } from 'react-router-dom';
-import { ExternalLink, RotateCcw, Undo2, Lock, Loader2 } from 'lucide-react';
+import { ExternalLink, RotateCcw, Undo2, Lock, Loader2, Facebook, Chrome } from 'lucide-react';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { SaveStatus } from '@/components/ui/save-status';
+import { cn } from '@/lib/utils';
 import {
   Tooltip,
   TooltipContent,
@@ -135,6 +136,9 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
   // Account services (toggles)
   const [accountServiceIds, setAccountServiceIds] = useState<string[]>([]);
   const [loadingServices, setLoadingServices] = useState(false);
+  
+  // Mídias ativas
+  const [midiasAtivas, setMidiasAtivas] = useState<string[]>(account?.midias_ativas || ['meta_ads']);
 
   // Load account services when editing
   useEffect(() => {
@@ -190,7 +194,18 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
   }, [open, account, formData.service_id, services.length]);
 
   const selectedService = services.find(s => s.id === formData.service_id);
+  const serviceHasTraffic = (selectedService as any)?.has_traffic === true;
   const selectedNiche = niches.find(n => n.id === formData.niche_id);
+
+  const toggleMidia = async (midia: string, enabled: boolean) => {
+    const newMidias = enabled
+      ? [...midiasAtivas, midia]
+      : midiasAtivas.filter(m => m !== midia);
+    setMidiasAtivas(newMidias);
+    if (isEditing && account) {
+      await supabase.from('accounts').update({ midias_ativas: newMidias } as any).eq('id', account.id);
+    }
+  };
 
   const fallbackServiceOption = (!selectedService && formData.service_id && (account?.service_name || account?.service_contracted))
     ? {
@@ -254,6 +269,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
       street: data.street || null,
       street_number: data.street_number || null,
       address_complement: data.address_complement || null,
+      midias_ativas: midiasAtivas,
     } as Partial<Account>;
   }, [services, niches, account]);
 
@@ -335,6 +351,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
         street_number: account.street_number || '',
         address_complement: account.address_complement || '',
       });
+      setMidiasAtivas(account.midias_ativas || ['meta_ads']);
       setTimeout(() => { skipAutoSave.current = false; }, 100);
     } else {
       skipAutoSave.current = true;
@@ -364,6 +381,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
         street_number: '',
         address_complement: '',
       });
+      setMidiasAtivas(['meta_ads']);
       setTimeout(() => { skipAutoSave.current = false; }, 100);
     }
     setEmailError('');
@@ -863,6 +881,63 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                     ))}
                   </div>
                 )}
+              </div>
+            </>
+          )}
+
+          {/* Tráfego Pago - only if service has traffic */}
+          {serviceHasTraffic && isEditing && (
+            <>
+              <GradientSeparator />
+              <div className="space-y-4">
+                <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.12em]">Tráfego Pago</h3>
+                
+                <div className="space-y-1.5">
+                  <Label className="text-[12px] font-semibold text-muted-foreground">Mídias Contratadas</Label>
+                  <p className="text-[11px] text-muted-foreground">Selecione as plataformas ativas para este cliente</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Meta Ads toggle */}
+                  <div className={cn(
+                    "flex items-center justify-between rounded-xl border px-4 py-3 transition-all duration-200",
+                    midiasAtivas.includes('meta_ads')
+                      ? "bg-[hsl(var(--info)/.08)] border-[hsl(var(--info)/.40)]"
+                      : "bg-card border-border"
+                  )}>
+                    <div className="flex items-center gap-3">
+                      <Facebook className={cn("h-[18px] w-[18px]", midiasAtivas.includes('meta_ads') ? "text-[hsl(var(--info))]" : "text-muted-foreground")} />
+                      <div>
+                        <p className={cn("text-sm font-semibold", midiasAtivas.includes('meta_ads') ? "text-foreground" : "text-muted-foreground")}>Meta Ads</p>
+                        <p className="text-[10px] text-muted-foreground">Gestão de anúncios no Meta</p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={midiasAtivas.includes('meta_ads')}
+                      onCheckedChange={(checked) => toggleMidia('meta_ads', checked)}
+                    />
+                  </div>
+
+                  {/* Google Ads toggle */}
+                  <div className={cn(
+                    "flex items-center justify-between rounded-xl border px-4 py-3 transition-all duration-200",
+                    midiasAtivas.includes('google_ads')
+                      ? "bg-[hsl(var(--success)/.08)] border-[hsl(var(--success)/.40)]"
+                      : "bg-card border-border"
+                  )}>
+                    <div className="flex items-center gap-3">
+                      <Chrome className={cn("h-[18px] w-[18px]", midiasAtivas.includes('google_ads') ? "text-[hsl(var(--success))]" : "text-muted-foreground")} />
+                      <div>
+                        <p className={cn("text-sm font-semibold", midiasAtivas.includes('google_ads') ? "text-foreground" : "text-muted-foreground")}>Google Ads</p>
+                        <p className="text-[10px] text-muted-foreground">Gestão de anúncios no Google</p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={midiasAtivas.includes('google_ads')}
+                      onCheckedChange={(checked) => toggleMidia('google_ads', checked)}
+                    />
+                  </div>
+                </div>
               </div>
             </>
           )}

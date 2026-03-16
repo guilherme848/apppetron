@@ -75,6 +75,10 @@ export interface Account {
   // Health Score
   health_score?: number | null;
   health_status?: string | null;
+
+  // Mídias Ativas
+  midias_ativas?: string[] | null;
+  ad_monthly_budget_google?: number | null;
 }
 
 // Tipos de cargo responsável para posts
