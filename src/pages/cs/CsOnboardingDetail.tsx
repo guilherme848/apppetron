@@ -25,6 +25,8 @@ import StickyNav from '@/components/cs/onboarding-detail/StickyNav';
 import TranscriptionUploadCard from '@/components/cs/onboarding-detail/TranscriptionUploadCard';
 import MeetingSection from '@/components/cs/onboarding-detail/MeetingSection';
 import ActivitiesSection from '@/components/cs/onboarding-detail/ActivitiesSection';
+import CheckupSection from '@/components/cs/onboarding-detail/CheckupSection';
+import { useClienteCheckup, countFilled } from '@/hooks/useClienteCheckup';
 
 function getPlanBadgeClass(planName?: string): string {
   if (!planName) return 'bg-muted text-muted-foreground border-border';
