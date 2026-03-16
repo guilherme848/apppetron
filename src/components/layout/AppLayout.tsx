@@ -1,4 +1,4 @@
-import { ReactNode, createContext, useContext } from 'react';
+import { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
@@ -11,21 +11,6 @@ import { useSidebarPreference } from '@/hooks/useSidebarPreference';
 interface AppLayoutProps {
   children: ReactNode;
 }
-
-// Context to share group expand/collapse with AppSidebar
-interface SidebarGroupsContextType {
-  toggleGroup: (module: string) => void;
-  isGroupExpanded: (module: string) => boolean;
-  initActiveGroup: (module: string) => void;
-}
-
-export const SidebarGroupsContext = createContext<SidebarGroupsContextType>({
-  toggleGroup: () => {},
-  isGroupExpanded: () => false,
-  initActiveGroup: () => {},
-});
-
-export const useSidebarGroups = () => useContext(SidebarGroupsContext);
 
 function Breadcrumb() {
   const location = useLocation();
@@ -57,38 +42,36 @@ function Breadcrumb() {
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
-  const { sidebarExpanded, setSidebarExpanded, toggleGroup, isGroupExpanded, initActiveGroup } = useSidebarPreference();
+  const { sidebarExpanded, setSidebarExpanded } = useSidebarPreference();
 
   return (
-    <SidebarGroupsContext.Provider value={{ toggleGroup, isGroupExpanded, initActiveGroup }}>
-      <SidebarProvider
-        open={sidebarExpanded}
-        onOpenChange={(open) => setSidebarExpanded(open)}
-        style={{
-          '--sidebar-width': '240px',
-          '--sidebar-width-icon': '52px',
-        } as React.CSSProperties}
-      >
-        <div className="min-h-screen flex w-full">
-          <AppSidebar />
-          <main className="flex-1 flex flex-col min-w-0 relative">
-            <header className="h-[60px] border-b border-border flex items-center justify-between px-5 bg-background/80 backdrop-blur-xl sticky top-0 z-30">
-              <div className="flex items-center gap-3">
-                <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors" />
-                <div className="w-px h-5 bg-border" />
-                <Breadcrumb />
-              </div>
-              <div className="flex items-center gap-1">
-                <ThemeToggle />
-                <UserSelector />
-              </div>
-            </header>
-            <div className="flex-1 p-6 animate-fade-in-up relative ambient-glow">
-              {children}
+    <SidebarProvider
+      open={sidebarExpanded}
+      onOpenChange={(open) => setSidebarExpanded(open)}
+      style={{
+        '--sidebar-width': '240px',
+        '--sidebar-width-icon': '200px',
+      } as React.CSSProperties}
+    >
+      <div className="min-h-screen flex w-full">
+        <AppSidebar />
+        <main className="flex-1 flex flex-col min-w-0 relative">
+          <header className="h-[60px] border-b border-border flex items-center justify-between px-5 bg-background/80 backdrop-blur-xl sticky top-0 z-30">
+            <div className="flex items-center gap-3">
+              <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors md:hidden" />
+              <div className="w-px h-5 bg-border md:hidden" />
+              <Breadcrumb />
             </div>
-          </main>
-        </div>
-      </SidebarProvider>
-    </SidebarGroupsContext.Provider>
+            <div className="flex items-center gap-1">
+              <ThemeToggle />
+              <UserSelector />
+            </div>
+          </header>
+          <div className="flex-1 p-6 animate-fade-in-up relative ambient-glow">
+            {children}
+          </div>
+        </main>
+      </div>
+    </SidebarProvider>
   );
 }
