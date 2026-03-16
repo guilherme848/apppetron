@@ -193,7 +193,18 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
   }, [open, account, formData.service_id, services.length]);
 
   const selectedService = services.find(s => s.id === formData.service_id);
+  const serviceHasTraffic = (selectedService as any)?.has_traffic === true;
   const selectedNiche = niches.find(n => n.id === formData.niche_id);
+
+  const toggleMidia = async (midia: string, enabled: boolean) => {
+    const newMidias = enabled
+      ? [...midiasAtivas, midia]
+      : midiasAtivas.filter(m => m !== midia);
+    setMidiasAtivas(newMidias);
+    if (isEditing && account) {
+      await supabase.from('accounts').update({ midias_ativas: newMidias } as any).eq('id', account.id);
+    }
+  };
 
   const fallbackServiceOption = (!selectedService && formData.service_id && (account?.service_name || account?.service_contracted))
     ? {
