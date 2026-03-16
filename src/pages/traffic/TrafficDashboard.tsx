@@ -10,8 +10,6 @@ import {
   ShieldCheck,
   ChevronRight,
   Eye,
-  CircleDollarSign,
-  Image,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +24,7 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { useTrafficOverview } from '@/hooks/useTrafficOverview';
+import { useTrafficOverview, type ManagerStat } from '@/hooks/useTrafficOverview';
 import { TASK_TYPE_OPTIONS } from '@/hooks/useTrafficOptimizations';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -55,6 +53,9 @@ const COMPLEXITY_BADGE: Record<string, string> = {
   Alta: 'bg-[hsl(var(--primary)/.12)] text-[hsl(var(--primary))]',
 };
 
+const fmtCurrency = (v: number) =>
+  v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
 const todayFormatted = format(new Date(), "d 'de' MMMM 'de' yyyy", { locale: ptBR });
 
 /* ── Skeleton loader ─────────────────────── */
@@ -62,24 +63,21 @@ const todayFormatted = format(new Date(), "d 'de' MMMM 'de' yyyy", { locale: ptB
 function DashboardSkeleton() {
   return (
     <div className="space-y-6 px-2 md:px-0 animate-in fade-in duration-200">
-      {/* header */}
       <div className="space-y-2">
         <Skeleton className="h-7 w-40" />
         <Skeleton className="h-4 w-64" />
       </div>
-      {/* kpis */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {Array.from({ length: 5 }).map((_, i) => (
           <Skeleton key={i} className="h-[110px] rounded-2xl" />
         ))}
       </div>
-      {/* alerts */}
       <div className="grid lg:grid-cols-2 gap-4">
         <Skeleton className="h-[320px] rounded-2xl" />
         <Skeleton className="h-[320px] rounded-2xl" />
       </div>
-      {/* table */}
       <Skeleton className="h-[280px] rounded-2xl" />
+      <Skeleton className="h-[240px] rounded-2xl" />
     </div>
   );
 }
@@ -92,6 +90,7 @@ export default function TrafficDashboard() {
 
   const {
     loading,
+    isAdmin,
     totalActiveClients,
     lowBalanceClients,
     todayCheckins,
@@ -99,8 +98,10 @@ export default function TrafficDashboard() {
     weekOptimizations,
     pendingCreatives,
     recentOptimizations,
+    managerStats,
     getClientName,
     getClientBalance,
+    getClientBudget,
   } = useTrafficOverview();
 
   if (loading) return <DashboardSkeleton />;
@@ -119,7 +120,7 @@ export default function TrafficDashboard() {
     {
       label: 'SALDO BAIXO',
       value: lowBalanceClients.length,
-      sub: 'contas precisam de atenção',
+      sub: 'contas abaixo de 20% da verba',
       icon: AlertTriangle,
       color: lowBalanceClients.length > 0 ? 'text-destructive' : '',
       onClick: () => navigate('/traffic/balances'),
@@ -155,6 +156,18 @@ export default function TrafficDashboard() {
   ];
 
   const totalAlerts = lowBalanceClients.length + pendingCreatives.length;
+
+  /* ── Manager stats totals ──────────────── */
+  const managerTotals = managerStats.reduce(
+    (acc, m) => ({
+      clientCount: acc.clientCount + m.clientCount,
+      checkinsToday: acc.checkinsToday + m.checkinsToday,
+      lowBalanceCount: acc.lowBalanceCount + m.lowBalanceCount,
+      weekOptimizations: acc.weekOptimizations + m.weekOptimizations,
+    }),
+    { clientCount: 0, checkinsToday: 0, lowBalanceCount: 0, weekOptimizations: 0 },
+  );
+  const managerTotalClients = managerTotals.clientCount;
 
   return (
     <div className="relative space-y-6">
@@ -192,14 +205,12 @@ export default function TrafficDashboard() {
                   'hover:border-foreground/20',
                 )}
               >
-                {/* top row */}
                 <div className="flex items-start justify-between">
                   <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                     {kpi.label}
                   </span>
                   <Icon className="h-[18px] w-[18px] text-muted-foreground" />
                 </div>
-                {/* value */}
                 <p
                   className={cn(
                     'mt-2 text-[32px] font-extrabold leading-none font-mono',
@@ -208,7 +219,6 @@ export default function TrafficDashboard() {
                 >
                   {kpi.value}
                 </p>
-                {/* sub */}
                 <span className="mt-1.5 block text-xs text-muted-foreground">
                   {kpi.sub}
                 </span>
@@ -225,7 +235,6 @@ export default function TrafficDashboard() {
         >
           {/* ── Left: Sem Check-in Hoje ── */}
           <div className="rounded-2xl border border-border bg-card p-6">
-            {/* title bar */}
             <div className="flex items-center gap-2 mb-4">
               <Clock className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-semibold">Sem Check-in Hoje</span>
@@ -292,7 +301,6 @@ export default function TrafficDashboard() {
 
           {/* ── Right: Alertas Críticos ── */}
           <div className="rounded-2xl border border-border bg-card p-6">
-            {/* title bar */}
             <div className="flex items-center gap-2 mb-4">
               <AlertTriangle className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-semibold">Alertas Críticos</span>
@@ -315,29 +323,35 @@ export default function TrafficDashboard() {
               <div className="max-h-[320px] overflow-y-auto pr-1 scrollbar-styled space-y-4">
                 {/* Saldo Baixo */}
                 {lowBalanceClients.length > 0 && (
-                  <div className="space-y-2">
-                    {lowBalanceClients.slice(0, 5).map((c) => {
+                  <div className="space-y-1">
+                    {lowBalanceClients.slice(0, 8).map((c) => {
                       const bal = getClientBalance(c.id);
+                      const budget = getClientBudget(c.id);
+                      const pct = bal !== null && budget && budget > 0
+                        ? Math.round((bal / budget) * 100)
+                        : null;
                       return (
                         <div
                           key={c.id}
-                          className="flex items-start gap-3 px-2 py-2 rounded-lg hover:bg-gradient-to-r hover:from-[hsl(25_95%_53%/.03)] hover:to-transparent transition-colors"
+                          className="flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-gradient-to-r hover:from-[hsl(0_84%_60%/.03)] hover:to-transparent transition-colors"
                         >
-                          <span className="mt-1.5 h-2 w-2 rounded-full bg-destructive animate-pulse shrink-0" />
+                          <span className="h-2 w-2 rounded-full bg-destructive animate-pulse shrink-0" />
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm">
-                              <span className="font-semibold">{c.name}</span>
-                              <span className="text-muted-foreground"> — saldo abaixo de 20%</span>
-                            </p>
+                            <p className="text-sm font-semibold">{c.name}</p>
                             <p className="text-xs text-muted-foreground font-mono mt-0.5">
-                              Saldo atual: {bal !== null ? bal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'}
-                              {' — '}
-                              Verba: {(c.ad_monthly_budget ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                              Saldo: {bal !== null ? fmtCurrency(bal) : '—'}
+                              {' · '}
+                              Verba: {budget ? fmtCurrency(budget) : '—'}
                             </p>
                           </div>
+                          {pct !== null && (
+                            <span className="inline-flex items-center rounded-md bg-[hsl(var(--destructive)/.12)] px-1.5 py-0.5 text-[11px] font-semibold text-destructive shrink-0">
+                              {pct}%
+                            </span>
+                          )}
                           <button
                             onClick={() => navigate('/traffic/balances')}
-                            className="flex items-center gap-0.5 text-xs text-muted-foreground shrink-0 mt-1 hover:text-foreground transition-colors"
+                            className="flex items-center gap-0.5 text-xs text-muted-foreground shrink-0 hover:text-foreground transition-colors"
                           >
                             Ver Saldo
                             <ChevronRight className="h-3.5 w-3.5" />
@@ -364,7 +378,7 @@ export default function TrafficDashboard() {
                           <span className="text-muted-foreground"> criativos aguardando revisão</span>
                         </p>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          Solicitações em revisão há mais de 2 dias
+                          Solicitações abertas ou em revisão
                         </p>
                       </div>
                       <button
@@ -387,7 +401,6 @@ export default function TrafficDashboard() {
           className="rounded-2xl border border-border bg-card p-6 animate-in fade-in slide-in-from-bottom-3 duration-300"
           style={{ animationDelay: '120ms' }}
         >
-          {/* title bar */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Zap className="h-4 w-4 text-muted-foreground" />
@@ -404,7 +417,6 @@ export default function TrafficDashboard() {
 
           {recentOptimizations.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-14 gap-4">
-              {/* minimal SVG zap illustration */}
               <svg
                 width="48"
                 height="48"
@@ -502,6 +514,168 @@ export default function TrafficDashboard() {
                       </TableRow>
                     );
                   })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
+
+        {/* ═══════ VISÃO POR GESTORES ═══════ */}
+        <div
+          className="rounded-2xl border border-border bg-card p-6 animate-in fade-in slide-in-from-bottom-3 duration-300"
+          style={{ animationDelay: '160ms' }}
+        >
+          <div className="mb-4">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-semibold">Visão por Gestores</span>
+            </div>
+            <p className="text-[13px] text-muted-foreground mt-0.5 ml-6">
+              Desempenho comparativo da equipe de tráfego hoje
+            </p>
+          </div>
+
+          {managerStats.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              Nenhum gestor de tráfego cadastrado
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b border-border/60 hover:bg-transparent">
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground bg-secondary/50 sticky top-0">
+                      Gestor
+                    </TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground bg-secondary/50 sticky top-0 text-center">
+                      Clientes
+                    </TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground bg-secondary/50 sticky top-0 text-center">
+                      Check-ins Hoje
+                    </TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground bg-secondary/50 sticky top-0 text-center">
+                      Saldo Baixo
+                    </TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground bg-secondary/50 sticky top-0 text-center">
+                      Otimizações (Semana)
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {managerStats.map((m) => {
+                    const checkinColor =
+                      m.checkinsToday === m.clientCount && m.clientCount > 0
+                        ? 'text-[hsl(var(--success))]'
+                        : m.checkinsToday > 0
+                          ? 'text-[hsl(var(--warning))]'
+                          : 'text-destructive';
+                    const checkinPct = m.clientCount > 0
+                      ? Math.round((m.checkinsToday / m.clientCount) * 100)
+                      : 0;
+                    return (
+                      <TableRow
+                        key={m.id}
+                        className="h-14 border-b border-border/40 hover:bg-gradient-to-r hover:from-[hsl(25_95%_53%/.03)] hover:to-transparent transition-colors"
+                      >
+                        {/* Gestor */}
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8 rounded-lg text-xs shrink-0">
+                              <AvatarFallback className="rounded-lg bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(0_84%_60%)] text-white text-[10px] font-semibold">
+                                {getInitials(m.name)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="text-sm font-semibold">{m.name}</p>
+                              <p className="text-xs text-muted-foreground">Gestor de Tráfego</p>
+                            </div>
+                          </div>
+                        </TableCell>
+
+                        {/* Clientes */}
+                        <TableCell className="text-center">
+                          <span className="text-sm font-semibold font-mono">{m.clientCount}</span>
+                          <span className="block text-[11px] text-muted-foreground">ativos</span>
+                        </TableCell>
+
+                        {/* Check-ins Hoje */}
+                        <TableCell className="text-center">
+                          <span className={cn('text-sm font-semibold font-mono', checkinColor)}>
+                            {m.checkinsToday}
+                          </span>
+                          <span className="text-sm text-muted-foreground"> / {m.clientCount}</span>
+                          <div className="mx-auto mt-1 max-w-[120px] h-[3px] rounded-full bg-border overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(0_84%_60%)] transition-all duration-300"
+                              style={{ width: `${checkinPct}%` }}
+                            />
+                          </div>
+                        </TableCell>
+
+                        {/* Saldo Baixo */}
+                        <TableCell className="text-center">
+                          {m.lowBalanceCount === 0 ? (
+                            <span className="inline-flex items-center gap-1 text-xs text-[hsl(var(--success))]">
+                              <CheckCircle className="h-3.5 w-3.5" />
+                              Nenhum
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center rounded-md bg-[hsl(var(--destructive)/.12)] px-2 py-0.5 text-[11px] font-semibold text-destructive">
+                              {m.lowBalanceCount} {m.lowBalanceCount === 1 ? 'conta' : 'contas'}
+                            </span>
+                          )}
+                        </TableCell>
+
+                        {/* Otimizações */}
+                        <TableCell className="text-center">
+                          <span
+                            className={cn(
+                              'text-sm font-semibold font-mono',
+                              m.weekOptimizations > 0 ? 'text-[hsl(var(--primary))]' : 'text-muted-foreground',
+                            )}
+                          >
+                            {m.weekOptimizations}
+                          </span>
+                          <span className="block text-[11px] text-muted-foreground">esta semana</span>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+
+                  {/* ── Totals row (admin only) ── */}
+                  {isAdmin && managerStats.length > 1 && (
+                    <TableRow className="h-14 border-t border-border bg-secondary/30 hover:bg-secondary/40">
+                      <TableCell>
+                        <span className="text-[13px] font-semibold">Total</span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className="text-sm font-semibold font-mono">{managerTotals.clientCount}</span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className="text-sm font-semibold font-mono">
+                          {managerTotals.checkinsToday}
+                        </span>
+                        <span className="text-sm text-muted-foreground"> / {managerTotalClients}</span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {managerTotals.lowBalanceCount === 0 ? (
+                          <span className="inline-flex items-center gap-1 text-xs text-[hsl(var(--success))]">
+                            <CheckCircle className="h-3.5 w-3.5" />
+                            Nenhum
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-md bg-[hsl(var(--destructive)/.12)] px-2 py-0.5 text-[11px] font-semibold text-destructive">
+                            {managerTotals.lowBalanceCount} {managerTotals.lowBalanceCount === 1 ? 'conta' : 'contas'}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className="text-sm font-semibold font-mono text-[hsl(var(--primary))]">
+                          {managerTotals.weekOptimizations}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>

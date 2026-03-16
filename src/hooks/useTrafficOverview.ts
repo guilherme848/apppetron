@@ -6,6 +6,7 @@ interface OverviewClient {
   id: string;
   name: string;
   ad_monthly_budget: number | null;
+  ad_payment_method: string | null;
   traffic_member_id: string | null;
   service_id: string | null;
 }
@@ -13,6 +14,7 @@ interface OverviewClient {
 interface OverviewOptimization {
   id: string;
   client_id: string;
+  member_id: string | null;
   task_type: string;
   description: string | null;
   tempo_gasto_minutos: number;
@@ -22,7 +24,7 @@ interface OverviewOptimization {
 
 interface BalanceRow {
   client_id: string;
-  balance: number | null;
+  available_balance: number | null;
 }
 
 interface CreativeRequestRow {
@@ -32,6 +34,15 @@ interface CreativeRequestRow {
   status: string;
 }
 
+export interface ManagerStat {
+  id: string;
+  name: string;
+  clientCount: number;
+  checkinsToday: number;
+  lowBalanceCount: number;
+  weekOptimizations: number;
+}
+
 export function useTrafficOverview() {
   const { user, isAdmin } = useAuth();
   const [currentMemberId, setCurrentMemberId] = useState<string | null>(null);
@@ -39,6 +50,7 @@ export function useTrafficOverview() {
   const [optimizations, setOptimizations] = useState<OverviewOptimization[]>([]);
   const [balances, setBalances] = useState<BalanceRow[]>([]);
   const [creativeRequests, setCreativeRequests] = useState<CreativeRequestRow[]>([]);
+  const [teamMembersMap, setTeamMembersMap] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
 
   // Get current member
@@ -61,7 +73,7 @@ export function useTrafficOverview() {
     // Fetch active clients with has_traffic = true (via service plan)
     const clientsQuery = supabase
       .from('accounts')
-      .select('id, name, ad_monthly_budget, traffic_member_id, service_id, services!inner(has_traffic)')
+      .select('id, name, ad_monthly_budget, ad_payment_method, traffic_member_id, service_id, services!inner(has_traffic)')
       .eq('status', 'active')
       .is('deleted_at', null)
       .eq('services.has_traffic', true);
@@ -70,17 +82,23 @@ export function useTrafficOverview() {
       clientsQuery.eq('traffic_member_id', currentMemberId);
     }
 
+    // Optimizations: admin gets all, non-admin gets own
+    const optsQuery = supabase
+      .from('traffic_optimizations')
+      .select('id, client_id, member_id, task_type, description, tempo_gasto_minutos, optimization_date, created_at')
+      .order('optimization_date', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    if (!isAdmin) {
+      optsQuery.eq('member_id', currentMemberId);
+    }
+
     const [clientsRes, optsRes, balancesRes, creativesRes] = await Promise.all([
       clientsQuery,
-      supabase
-        .from('traffic_optimizations')
-        .select('id, client_id, task_type, description, tempo_gasto_minutos, optimization_date, created_at')
-        .eq('member_id', currentMemberId)
-        .order('optimization_date', { ascending: false })
-        .order('created_at', { ascending: false }),
+      optsQuery,
       supabase
         .from('meta_ad_account_snapshots')
-        .select('ad_account_id, balance, fetched_at')
+        .select('ad_account_id, available_balance, fetched_at')
         .order('fetched_at', { ascending: false }),
       supabase
         .from('traffic_creative_requests')
@@ -88,12 +106,12 @@ export function useTrafficOverview() {
         .in('status', ['pending', 'in_progress']),
     ]);
 
-    if (clientsRes.data) setClients(clientsRes.data as OverviewClient[]);
-    if (optsRes.data) setOptimizations(optsRes.data as OverviewOptimization[]);
+    const clientsData = (clientsRes.data || []) as OverviewClient[];
+    setClients(clientsData);
+    setOptimizations((optsRes.data || []) as OverviewOptimization[]);
 
     // Map balances by client via client_meta_ad_accounts
     if (balancesRes.data) {
-      // Fetch client-adAccount links
       const { data: links } = await supabase
         .from('client_meta_ad_accounts')
         .select('client_id, ad_account_id')
@@ -103,7 +121,7 @@ export function useTrafficOverview() {
         const latestByAccount = new Map<string, number | null>();
         for (const snap of balancesRes.data as any[]) {
           if (!latestByAccount.has(snap.ad_account_id)) {
-            latestByAccount.set(snap.ad_account_id, snap.balance);
+            latestByAccount.set(snap.ad_account_id, snap.available_balance);
           }
         }
 
@@ -111,7 +129,7 @@ export function useTrafficOverview() {
         for (const link of links) {
           const bal = latestByAccount.get(link.ad_account_id);
           if (bal !== undefined) {
-            clientBalances.push({ client_id: link.client_id, balance: bal });
+            clientBalances.push({ client_id: link.client_id, available_balance: bal });
           }
         }
         setBalances(clientBalances);
@@ -119,6 +137,22 @@ export function useTrafficOverview() {
     }
 
     if (creativesRes.data) setCreativeRequests(creativesRes.data as CreativeRequestRow[]);
+
+    // Fetch team member names for manager stats
+    const trafficMemberIds = [...new Set(
+      clientsData.map(c => c.traffic_member_id).filter(Boolean) as string[]
+    )];
+    if (trafficMemberIds.length > 0) {
+      const { data: members } = await supabase
+        .from('team_members')
+        .select('id, name')
+        .in('id', trafficMemberIds);
+      if (members) {
+        const map = new Map<string, string>();
+        members.forEach(m => map.set(m.id, m.name));
+        setTeamMembersMap(map);
+      }
+    }
 
     setLoading(false);
   }, [currentMemberId, isAdmin]);
@@ -151,18 +185,27 @@ export function useTrafficOverview() {
   // KPIs
   const totalActiveClients = myClients.length;
 
+  const isLowBalance = useCallback((client: OverviewClient) => {
+    if (!client.ad_monthly_budget || client.ad_monthly_budget <= 0) return false;
+    // Cartão accounts: balance forced to 0, skip low balance
+    const pm = (client.ad_payment_method || '').toLowerCase();
+    if (pm === 'cartao' || pm === 'cartão' || pm === 'credit_card') return false;
+    const bal = balances.find(b => b.client_id === client.id);
+    if (!bal || bal.available_balance === null) return false;
+    return bal.available_balance < client.ad_monthly_budget * 0.2;
+  }, [balances]);
+
   const lowBalanceClients = useMemo(() => {
-    return myClients.filter(c => {
-      if (!c.ad_monthly_budget || c.ad_monthly_budget <= 0) return false;
-      const bal = balances.find(b => b.client_id === c.id);
-      if (!bal || bal.balance === null) return false;
-      return bal.balance < c.ad_monthly_budget * 0.2;
-    });
-  }, [myClients, balances]);
+    return myClients.filter(isLowBalance);
+  }, [myClients, isLowBalance]);
 
   const todayCheckins = useMemo(() => {
-    return optimizations.filter(o => o.optimization_date === todayStr && o.task_type === 'checkin');
-  }, [optimizations, todayStr]);
+    return optimizations.filter(o =>
+      o.optimization_date === todayStr &&
+      o.task_type === 'checkin' &&
+      (isAdmin || o.member_id === currentMemberId)
+    );
+  }, [optimizations, todayStr, isAdmin, currentMemberId]);
 
   const clientsWithoutCheckin = useMemo(() => {
     const checkedClientIds = new Set(todayCheckins.map(o => o.client_id));
@@ -170,8 +213,11 @@ export function useTrafficOverview() {
   }, [myClients, todayCheckins]);
 
   const weekOptimizations = useMemo(() => {
-    return optimizations.filter(o => o.optimization_date >= weekStart);
-  }, [optimizations, weekStart]);
+    return optimizations.filter(o =>
+      o.optimization_date >= weekStart &&
+      (isAdmin || o.member_id === currentMemberId)
+    );
+  }, [optimizations, weekStart, isAdmin, currentMemberId]);
 
   // Alerts
   const pendingCreatives = useMemo(() => {
@@ -180,17 +226,73 @@ export function useTrafficOverview() {
 
   // Recent optimizations (this week)
   const recentOptimizations = useMemo(() => {
-    return weekOptimizations.slice(0, 20).map(o => ({
+    const myWeek = optimizations.filter(o =>
+      o.optimization_date >= weekStart &&
+      (isAdmin || o.member_id === currentMemberId)
+    );
+    return myWeek.slice(0, 20).map(o => ({
       ...o,
       clientName: clients.find(c => c.id === o.client_id)?.name || '—',
     }));
-  }, [weekOptimizations, clients]);
+  }, [optimizations, weekStart, clients, isAdmin, currentMemberId]);
 
   const getClientName = (clientId: string) => clients.find(c => c.id === clientId)?.name || '—';
-  const getClientBalance = (clientId: string) => balances.find(b => b.client_id === clientId)?.balance ?? null;
+  const getClientBalance = (clientId: string) => balances.find(b => b.client_id === clientId)?.available_balance ?? null;
+  const getClientBudget = (clientId: string) => clients.find(c => c.id === clientId)?.ad_monthly_budget ?? null;
+
+  // ── Manager Stats (Visão por Gestores) ──
+  const managerStats = useMemo((): ManagerStat[] => {
+    const managers = new Map<string, ManagerStat>();
+
+    // Group clients by traffic_member_id
+    for (const client of clients) {
+      if (!client.traffic_member_id) continue;
+      if (!managers.has(client.traffic_member_id)) {
+        managers.set(client.traffic_member_id, {
+          id: client.traffic_member_id,
+          name: teamMembersMap.get(client.traffic_member_id) || 'Gestor',
+          clientCount: 0,
+          checkinsToday: 0,
+          lowBalanceCount: 0,
+          weekOptimizations: 0,
+        });
+      }
+      const stat = managers.get(client.traffic_member_id)!;
+      stat.clientCount++;
+
+      // Check low balance
+      if (isLowBalance(client)) {
+        stat.lowBalanceCount++;
+      }
+    }
+
+    // Count check-ins per manager (today only, task_type = checkin)
+    for (const opt of optimizations) {
+      if (opt.optimization_date !== todayStr || opt.task_type !== 'checkin') continue;
+      if (opt.member_id && managers.has(opt.member_id)) {
+        managers.get(opt.member_id)!.checkinsToday++;
+      }
+    }
+
+    // Count week optimizations per manager
+    for (const opt of optimizations) {
+      if (opt.optimization_date < weekStart) continue;
+      if (opt.member_id && managers.has(opt.member_id)) {
+        managers.get(opt.member_id)!.weekOptimizations++;
+      }
+    }
+
+    let stats = [...managers.values()].sort((a, b) => b.clientCount - a.clientCount);
+    if (!isAdmin && currentMemberId) {
+      stats = stats.filter(s => s.id === currentMemberId);
+    }
+
+    return stats;
+  }, [clients, optimizations, balances, teamMembersMap, todayStr, weekStart, isAdmin, currentMemberId, isLowBalance]);
 
   return {
     loading,
+    isAdmin,
     totalActiveClients,
     lowBalanceClients,
     todayCheckins,
@@ -198,8 +300,10 @@ export function useTrafficOverview() {
     weekOptimizations,
     pendingCreatives,
     recentOptimizations,
+    managerStats,
     getClientName,
     getClientBalance,
+    getClientBudget,
     refetch: fetchData,
   };
 }
