@@ -38,7 +38,8 @@ import {
 } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { WeeklyCycleEntry } from '@/hooks/useTrafficOptimizations';
+import { WeeklyCycleEntry, TrafficOptimization, OptimizationInput } from '@/hooks/useTrafficOptimizations';
+import { InlineOptimizationModal } from './InlineOptimizationModal';
 import { cn } from '@/lib/utils';
 
 /* ── Constants ────────────────────────────────────────────── */
