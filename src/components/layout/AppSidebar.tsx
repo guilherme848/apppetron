@@ -106,13 +106,13 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       {/* Header: always visible — logo + toggle */}
       <SidebarHeader className="border-b border-sidebar-border p-3">
-        <div className="flex items-center justify-between gap-2">
-          <div className={cn(
-            'overflow-hidden transition-all duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)]',
-            isExpanded ? 'w-auto opacity-100' : 'w-0 opacity-0'
-          )}>
+        <div className={cn(
+          'flex items-center gap-2',
+          isExpanded ? 'justify-between' : 'justify-center'
+        )}>
+          {isExpanded && (
             <img src={petronLogo} alt="Petron" className="h-12 w-auto shrink-0" />
-          </div>
+          )}
           <SidebarToggleButton isExpanded={isExpanded} />
         </div>
         {isExpanded && (
