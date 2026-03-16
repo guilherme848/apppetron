@@ -98,6 +98,7 @@ export default function CsCommandCenter() {
   const {
     loading, selectedMonth, setSelectedMonth, monthOptions, isCurrentMonth,
     selectedMonthLabel, kpiData, alerts, healthDist, churnByNiche, churnByPlan, cohortData,
+    financialMetrics,
   } = useCsOverview();
 
   const todayLabel = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
