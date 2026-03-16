@@ -684,6 +684,7 @@ export function OptimizationWeeklyCycleTab({
                         entries={dayEntries}
                         getClient={getClient}
                         onRemove={removeWeeklyCycleEntry}
+                        onClientClick={onClientClick}
                       />
                       <AddClientPopover
                         availableClients={availableClients}
