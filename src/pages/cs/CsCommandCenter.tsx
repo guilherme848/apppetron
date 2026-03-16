@@ -322,7 +322,7 @@ function HealthCard({ data, onClientClick }: { data: any; onClientClick: (id: st
           </div>
         )}
         {data.critical === 0 && (
-          <p className="text-sm text-center py-2 text-emerald-500">Nenhum cliente crítico</p>
+          <p className="text-sm text-center py-2 text-success">Nenhum cliente crítico</p>
         )}
       </CardContent>
     </Card>
