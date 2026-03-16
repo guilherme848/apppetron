@@ -70,6 +70,7 @@ export function LinksCard({ links, loading, clienteId, onSaved }: LinksCardProps
       await intel.upsertLink({ id: extra.id, tipo: 'outro' as LinkTipo, label: extra.label || 'Link', url: extra.url });
     }
     setEditing(false);
+    onSaved?.();
   };
 
   if (loading) {
