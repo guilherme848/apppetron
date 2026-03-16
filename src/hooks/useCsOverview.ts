@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { startOfMonth, endOfMonth, format, subMonths, differenceInDays, parseISO, isValid } from 'date-fns';
+import { startOfMonth, endOfMonth, format, subMonths, differenceInDays, differenceInMonths, parseISO, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export interface CsOverviewKPI {
