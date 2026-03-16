@@ -272,7 +272,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
       address_complement: data.address_complement || null,
       midias_ativas: midiasAtivas,
     } as Partial<Account>;
-  }, [services, niches, account]);
+  }, [services, niches, account, midiasAtivas]);
 
   const { status: saveStatus, saveNow, queueChange, flush } = useAutoSave({
     onSave: async (patch) => {
