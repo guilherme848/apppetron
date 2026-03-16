@@ -65,8 +65,8 @@ export function useClienteCheckup(onboardingId: string | null) {
     queryKey: ['cliente-checkup', onboardingId],
     queryFn: async () => {
       if (!onboardingId) return null;
-      const { data, error } = await supabase
-        .from('cliente_checkup' as any)
+      const { data, error } = await (supabase as any)
+        .from('cliente_checkup')
         .select('*')
         .eq('onboarding_id', onboardingId)
         .maybeSingle();
