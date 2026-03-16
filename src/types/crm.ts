@@ -66,6 +66,15 @@ export interface Account {
   ad_payment_method?: AdPaymentMethod | null;
   ad_monthly_budget?: number | null;
   ad_payment_frequency?: AdPaymentFrequency | null;
+
+  // Checkup do Cliente
+  checkup_classificacao?: string | null;
+  checkup_pontuacao?: number | null;
+  checkup_updated_at?: string | null;
+
+  // Health Score
+  health_score?: number | null;
+  health_status?: string | null;
 }
 
 // Tipos de cargo responsável para posts
