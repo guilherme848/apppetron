@@ -1,4 +1,3 @@
-import { useState, useCallback } from 'react';
 import { LayoutDashboard, ChevronLeft } from 'lucide-react';
 import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
 import {
@@ -10,9 +9,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useRouteAccess } from '@/hooks/useRouteAccess';
 import { useAuth } from '@/contexts/AuthContext';
@@ -68,9 +67,9 @@ export function AppSidebar() {
   const { loading: authLoading } = useAuth();
   const location = useLocation();
   const currentPath = location.pathname;
+  const { state: sidebarState } = useSidebar();
 
-  const [expandedAll, setExpandedAll] = useState(false);
-  const [hoveredModule, setHoveredModule] = useState<string | null>(null);
+  const isExpanded = sidebarState === 'expanded';
 
   const menuRoutes = getMenuRoutes();
   const isLoading = permissionsLoading || authLoading;
@@ -86,26 +85,6 @@ export function AppSidebar() {
     }
   }
 
-  const isModuleActive = useCallback(
-    (module: string) => {
-      const routes = routesByModule[module];
-      if (!routes) return false;
-      return routes.some((r) => isRouteActive(r.path, currentPath));
-    },
-    [routesByModule, currentPath],
-  );
-
-  const isGroupOpen = useCallback(
-    (module: string) => {
-      if (expandedAll) return true;
-      if (hoveredModule === module) return true;
-      if (isModuleActive(module)) return true;
-      if (module === MODULES.MAIN) return true;
-      return false;
-    },
-    [expandedAll, hoveredModule, isModuleActive],
-  );
-
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border p-4">
@@ -115,30 +94,8 @@ export function AppSidebar() {
             alt="Petron"
             className="h-16 w-auto"
           />
-          <TooltipProvider delayDuration={0}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 rounded-full text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-                  onClick={() => setExpandedAll((prev) => !prev)}
-                >
-                  <ChevronLeft
-                    className={cn(
-                      'h-3.5 w-3.5 transition-transform duration-250',
-                      !expandedAll && 'rotate-180',
-                    )}
-                  />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="text-xs">
-                {expandedAll ? 'Recolher menu' : 'Expandir menu'}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <SidebarToggleButton isExpanded={isExpanded} />
         </div>
-        {/* Gradient separator */}
         <div className="mt-3 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
       </SidebarHeader>
 
@@ -150,16 +107,10 @@ export function AppSidebar() {
             const routes = routesByModule[module];
             if (!routes || routes.length === 0) return null;
 
-            const open = isGroupOpen(module);
-            const moduleActive = isModuleActive(module);
+            const moduleActive = routes.some((r) => isRouteActive(r.path, currentPath));
 
             return (
-              <SidebarGroup
-                key={module}
-                className="py-0.5"
-                onMouseEnter={() => !expandedAll && setHoveredModule(module)}
-                onMouseLeave={() => !expandedAll && setHoveredModule(null)}
-              >
+              <SidebarGroup key={module} className="py-0.5">
                 {label && (
                   <div
                     className={cn(
@@ -175,12 +126,8 @@ export function AppSidebar() {
                   </div>
                 )}
 
-                <div
-                  className={cn(
-                    'overflow-hidden transition-all duration-250 ease-[cubic-bezier(0.16,1,0.3,1)]',
-                    open ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0',
-                  )}
-                >
+                {/* In collapsed state, only group labels are shown — no items */}
+                {isExpanded && (
                   <SidebarGroupContent>
                     <SidebarMenu>
                       {routes.map((route) => {
@@ -209,12 +156,44 @@ export function AppSidebar() {
                       })}
                     </SidebarMenu>
                   </SidebarGroupContent>
-                </div>
+                )}
               </SidebarGroup>
             );
           })
         )}
       </SidebarContent>
     </Sidebar>
+  );
+}
+
+function SidebarToggleButton({ isExpanded }: { isExpanded: boolean }) {
+  const { toggleSidebar } = useSidebar();
+
+  return (
+    <TooltipProvider delayDuration={0}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={toggleSidebar}
+            className={cn(
+              'h-7 w-7 rounded-full flex items-center justify-center',
+              'bg-card border border-border',
+              'text-sidebar-foreground/50 hover:text-sidebar-foreground',
+              'transition-colors duration-150',
+            )}
+          >
+            <ChevronLeft
+              className={cn(
+                'h-3.5 w-3.5 transition-transform duration-[250ms]',
+                !isExpanded && 'rotate-180',
+              )}
+            />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="right" className="text-xs">
+          {isExpanded ? 'Recolher menu' : 'Expandir menu'}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
