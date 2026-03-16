@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Plus, Search, X, Check, Trash2, MoreHorizontal, ClipboardList,
+  Plus, Search, X, Check, Trash2, MoreHorizontal, Clock, AlertCircle, AlertTriangle, User,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -44,22 +45,22 @@ import {
 import { useCrmData } from '@/hooks/useCrmData';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useAuth } from '@/contexts/AuthContext';
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
 function getPlanBadgeClass(planName?: string): string {
   if (!planName) return 'bg-muted text-muted-foreground border-border';
   const lower = planName.toLowerCase();
-  if (lower.includes('start')) return 'bg-secondary text-secondary-foreground border-border';
-  if (lower.includes('performance')) return 'bg-[hsl(var(--info)/0.12)] text-[hsl(var(--info))] border-[hsl(var(--info)/0.25)]';
-  if (lower.includes('escala')) return 'bg-[hsl(var(--accent)/0.12)] text-[hsl(var(--accent))] border-[hsl(var(--accent)/0.25)]';
+  if (lower.includes('start')) return 'bg-[hsl(215_16%_43%/0.12)] text-[hsl(215,16%,43%)] border-[hsl(215,16%,43%,0.25)]';
+  if (lower.includes('performance')) return 'bg-[hsl(239,84%,67%,0.12)] text-[hsl(239,84%,67%)] border-[hsl(239,84%,67%,0.25)]';
+  if (lower.includes('escala')) return 'bg-[hsl(25,95%,53%,0.12)] text-[hsl(25,95%,53%)] border-[hsl(25,95%,53%,0.25)]';
   if (lower.includes('growth')) return 'bg-[hsl(258,90%,66%,0.12)] text-[hsl(258,90%,66%)] border-[hsl(258,90%,66%,0.25)]';
   return 'bg-muted text-muted-foreground border-border';
 }
 
-// Avatar with initials
-function MiniAvatar({ name }: { name: string }) {
+// CS Owner Avatar with gradient
+function CsAvatar({ name }: { name: string }) {
   const initials = name
     .split(' ')
     .slice(0, 2)
@@ -67,9 +68,32 @@ function MiniAvatar({ name }: { name: string }) {
     .join('')
     .toUpperCase();
   return (
-    <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-semibold shrink-0">
+    <div
+      className="h-6 w-6 rounded-md flex items-center justify-center text-[10px] font-semibold text-white shrink-0"
+      style={{ background: 'linear-gradient(135deg, #F97316, #f43f5e)' }}
+    >
       {initials}
     </div>
+  );
+}
+
+// Day counter component
+function DayCounter({ dataInicio }: { dataInicio: string }) {
+  const days = differenceInDays(new Date(), new Date(dataInicio));
+  const isWarning = days >= 8 && days <= 9;
+  const isDanger = days >= 10;
+
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 text-[11px] font-medium font-mono',
+        isDanger ? 'text-[#ef4444]' : isWarning ? 'text-[#f59e0b]' : 'text-muted-foreground'
+      )}
+    >
+      {isDanger && <AlertCircle className="h-3 w-3 animate-pulse" />}
+      {isWarning && !isDanger && <Clock className="h-3 w-3" />}
+      {days} {days === 1 ? 'dia' : 'dias'} em onboarding
+    </span>
   );
 }
 
@@ -84,9 +108,9 @@ export default function CsOnboarding() {
   const completeOnboarding = useCompleteOnboarding();
   const deleteOnboarding = useDeleteOnboarding();
 
-  // Filters
+  // Filters — default to "em_andamento"
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('em_andamento');
   const [csFilter, setCsFilter] = useState('all');
   const [planFilter, setPlanFilter] = useState('all');
 
@@ -149,14 +173,22 @@ export default function CsOnboarding() {
     });
   }, [onboardings, search, statusFilter, csFilter, planFilter]);
 
-  const hasActiveFilters = search || statusFilter !== 'all' || csFilter !== 'all' || planFilter !== 'all';
+  const hasActiveFilters = search || statusFilter !== 'em_andamento' || csFilter !== 'all' || planFilter !== 'all';
 
   const clearFilters = () => {
     setSearch('');
-    setStatusFilter('all');
+    setStatusFilter('em_andamento');
     setCsFilter('all');
     setPlanFilter('all');
   };
+
+  // Subtitle text
+  const subtitleText = useMemo(() => {
+    const count = filtered.length;
+    if (statusFilter === 'em_andamento') return `${count} onboarding${count !== 1 ? 's' : ''} em andamento`;
+    if (statusFilter === 'concluido') return `${count} onboarding${count !== 1 ? 's' : ''} concluído${count !== 1 ? 's' : ''}`;
+    return `${count} onboarding${count !== 1 ? 's' : ''}`;
+  }, [filtered.length, statusFilter]);
 
   const handleCreate = async () => {
     if (!createClientId) return;
@@ -203,10 +235,10 @@ export default function CsOnboarding() {
         <div>
           <h1 className="text-2xl font-bold">Onboarding</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {filtered.length} onboarding{filtered.length !== 1 ? 's' : ''}
+            {subtitleText}
           </p>
         </div>
-        <Button onClick={() => setShowCreate(true)} className="gap-2">
+        <Button onClick={() => setShowCreate(true)} className="gap-2 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]">
           <Plus className="h-4 w-4" />
           Novo Onboarding
         </Button>
@@ -267,7 +299,22 @@ export default function CsOnboarding() {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-48 rounded-2xl" />
+            <div key={i} className="rounded-2xl border border-border bg-card p-5 space-y-3">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-5 w-20 rounded-md" />
+              </div>
+              <Skeleton className="h-5 w-16 rounded-md" />
+              <Skeleton className="h-1.5 w-full rounded-full" />
+              <Skeleton className="h-4 w-48" />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-6 w-6 rounded-md" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+                <Skeleton className="h-4 w-20" />
+              </div>
+            </div>
           ))}
         </div>
       ) : filtered.length === 0 ? (
@@ -285,7 +332,7 @@ export default function CsOnboarding() {
           <p className="text-sm text-muted-foreground mb-6 max-w-sm">
             Clientes recém-chegados aparecerão aqui assim que o onboarding for iniciado.
           </p>
-          <Button onClick={() => setShowCreate(true)} className="gap-2">
+          <Button onClick={() => setShowCreate(true)} className="gap-2 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]">
             <Plus className="h-4 w-4" />
             Iniciar Onboarding
           </Button>
@@ -296,6 +343,7 @@ export default function CsOnboarding() {
           {filtered.map((ob, idx) => {
             const isConcluido = ob.status === 'concluido';
             const progress = ob.atividades_total ? (ob.atividades_concluidas! / ob.atividades_total) * 100 : 0;
+            const hasNoActivities = ob.atividades_total === 0;
 
             return (
               <div
@@ -303,44 +351,53 @@ export default function CsOnboarding() {
                 onClick={() => navigate(`/cs/onboarding/${ob.id}`)}
                 className={cn(
                   'group relative bg-card rounded-2xl p-5 border cursor-pointer transition-all duration-200',
-                  'hover:-translate-y-0.5 hover:border-primary/40',
-                  isConcluido ? 'border-[#10b98130] opacity-70' : 'border-border'
+                  'hover:-translate-y-0.5 hover:border-[hsl(25,95%,53%,0.4)]',
+                  isConcluido ? 'border-[#10b98130] opacity-60' : 'border-border'
                 )}
-                style={{ animationDelay: `${idx * 40}ms`, animationFillMode: 'both' }}
+                style={{
+                  animation: `fade-in 280ms cubic-bezier(0.16, 1, 0.3, 1) ${idx * 40}ms both`,
+                }}
               >
-                {/* Menu */}
-                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Menu ⋯ — visible on hover */}
+                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                      <Button variant="ghost" size="icon" className="h-7 w-7">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
+                      <button className="h-7 w-7 rounded-lg bg-muted/80 hover:bg-muted flex items-center justify-center transition-colors">
+                        <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                      </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenuContent
+                      align="end"
+                      className="min-w-[180px] rounded-[10px] p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       {!isConcluido && (
-                        <DropdownMenuItem onClick={() => setCompleteTarget(ob)}>
-                          <Check className="h-4 w-4 mr-2 text-[hsl(var(--success))]" />
-                          Concluir Onboarding
-                        </DropdownMenuItem>
+                        <>
+                          <DropdownMenuItem onClick={() => setCompleteTarget(ob)} className="gap-2 rounded-lg">
+                            <Check className="h-4 w-4 text-[hsl(160,84%,39%)]" />
+                            Concluir Onboarding
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                        </>
                       )}
-                      <DropdownMenuItem onClick={() => setDeleteTarget(ob)} className="text-destructive">
-                        <Trash2 className="h-4 w-4 mr-2" />
+                      <DropdownMenuItem onClick={() => setDeleteTarget(ob)} className="gap-2 rounded-lg text-destructive focus:text-destructive">
+                        <Trash2 className="h-4 w-4" />
                         Excluir Onboarding
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
 
-                {/* Client name + badges */}
-                <div className="flex items-center gap-2 flex-wrap mb-3">
+                {/* Client name + status badge */}
+                <div className="flex items-center gap-2 flex-wrap mb-3 pr-8">
                   <span className="text-[15px] font-semibold truncate">{ob.client_name}</span>
                   <Badge
                     variant="outline"
                     className={cn(
                       'text-[11px] font-semibold px-2 py-0.5 rounded-md border',
                       isConcluido
-                        ? 'bg-[hsl(var(--success)/0.12)] text-[hsl(var(--success))] border-[hsl(var(--success)/0.25)]'
-                        : 'bg-[hsl(var(--accent)/0.12)] text-[hsl(var(--accent))] border-[hsl(var(--accent)/0.25)]'
+                        ? 'bg-[hsl(160,84%,39%,0.12)] text-[hsl(160,84%,39%)] border-[hsl(160,84%,39%,0.25)]'
+                        : 'bg-[hsl(25,95%,53%,0.12)] text-[hsl(25,95%,53%)] border-[hsl(25,95%,53%,0.25)]'
                     )}
                   >
                     {ONBOARDING_STATUS_LABELS[ob.status as keyof typeof ONBOARDING_STATUS_LABELS]}
@@ -351,42 +408,60 @@ export default function CsOnboarding() {
                 {ob.client_service_name && (
                   <Badge
                     variant="outline"
-                    className={cn('text-[11px] font-semibold px-2 py-0.5 rounded-md border mb-3', getPlanBadgeClass(ob.client_service_name))}
+                    className={cn('text-[11px] font-semibold px-2 py-[3px] rounded-md border mb-3', getPlanBadgeClass(ob.client_service_name))}
                   >
                     {ob.client_service_name}
                   </Badge>
                 )}
 
                 {/* Progress bar */}
-                <div className="mb-2">
-                  <div className="w-full h-1.5 rounded-full bg-border overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-300"
-                      style={{
-                        width: `${progress}%`,
-                        background: 'linear-gradient(90deg, #F97316, #f43f5e)',
-                      }}
-                    />
+                <div className="mb-3">
+                  <div className="w-full h-1.5 rounded-[4px] bg-border overflow-hidden" style={{ minHeight: '6px' }}>
+                    {!hasNoActivities && (
+                      <div
+                        className="h-full rounded-[4px] transition-all duration-300"
+                        style={{
+                          width: `${progress}%`,
+                          background: 'linear-gradient(90deg, #F97316, #f43f5e)',
+                        }}
+                      />
+                    )}
                   </div>
-                  <p className="text-[11px] text-muted-foreground mt-1">
-                    {ob.atividades_concluidas} de {ob.atividades_total} atividades concluídas
-                  </p>
+                  {hasNoActivities ? (
+                    <p className="text-[11px] text-[#f59e0b] mt-1 flex items-center gap-1 font-medium">
+                      <AlertTriangle className="h-3 w-3" />
+                      Atividades não configuradas
+                    </p>
+                  ) : (
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      {ob.atividades_concluidas} de {ob.atividades_total} atividades concluídas
+                    </p>
+                  )}
                 </div>
 
-                {/* CS owner + date */}
+                {/* CS owner + day counter / date */}
                 <div className="flex items-center justify-between text-xs text-muted-foreground mt-3">
                   {ob.cs_owner_name ? (
                     <div className="flex items-center gap-1.5">
-                      <MiniAvatar name={ob.cs_owner_name} />
-                      <span>{ob.cs_owner_name}</span>
+                      <CsAvatar name={ob.cs_owner_name} />
+                      <span className="text-xs text-muted-foreground">{ob.cs_owner_name}</span>
                     </div>
                   ) : (
-                    <span>Sem responsável CS</span>
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-6 w-6 rounded-md bg-muted flex items-center justify-center shrink-0">
+                        <User className="h-3.5 w-3.5 text-muted-foreground" />
+                      </div>
+                      <span className="text-[11px] text-muted-foreground">Sem responsável CS</span>
+                    </div>
                   )}
-                  {ob.data_inicio && (
-                    <span className="text-[11px]">
-                      {format(new Date(ob.data_inicio), 'dd/MM/yyyy', { locale: ptBR })}
-                    </span>
+                  {isConcluido ? (
+                    ob.data_conclusao && (
+                      <span className="text-[11px] text-muted-foreground font-mono">
+                        Concluído em {format(new Date(ob.data_conclusao), 'dd/MM/yyyy', { locale: ptBR })}
+                      </span>
+                    )
+                  ) : (
+                    ob.data_inicio && <DayCounter dataInicio={ob.data_inicio} />
                   )}
                 </div>
               </div>
@@ -460,7 +535,7 @@ export default function CsOnboarding() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreate(false)}>Cancelar</Button>
-            <Button onClick={handleCreate} disabled={!createClientId || createOnboarding.isPending}>
+            <Button onClick={handleCreate} disabled={!createClientId || createOnboarding.isPending} className="transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]">
               {createOnboarding.isPending ? 'Criando...' : 'Criar Onboarding'}
             </Button>
           </DialogFooter>
@@ -478,7 +553,7 @@ export default function CsOnboarding() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleComplete} disabled={completeOnboarding.isPending}>
+            <AlertDialogAction onClick={handleComplete} disabled={completeOnboarding.isPending} className="transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]">
               {completeOnboarding.isPending ? 'Concluindo...' : 'Concluir'}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -491,10 +566,10 @@ export default function CsOnboarding() {
           <AlertDialogHeader>
             <div className="flex justify-center mb-3">
               <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center">
-                <Trash2 className="h-6 w-6 text-destructive" />
+                <AlertCircle className="h-8 w-8 text-destructive" />
               </div>
             </div>
-            <AlertDialogTitle className="text-center text-destructive text-lg">Excluir onboarding?</AlertDialogTitle>
+            <AlertDialogTitle className="text-center text-destructive text-lg font-bold">Excluir onboarding?</AlertDialogTitle>
             <AlertDialogDescription className="text-center">
               Esta ação é irreversível. Todas as atividades, respostas e a transcrição vinculadas serão permanentemente removidas.
             </AlertDialogDescription>
@@ -514,7 +589,7 @@ export default function CsOnboarding() {
             <AlertDialogAction
               onClick={handleDelete}
               disabled={deleteConfirmName.trim().toLowerCase() !== (deleteTarget?.client_name || '').toLowerCase() || deleteOnboarding.isPending}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
             >
               {deleteOnboarding.isPending ? 'Excluindo...' : 'Excluir permanentemente'}
             </AlertDialogAction>
