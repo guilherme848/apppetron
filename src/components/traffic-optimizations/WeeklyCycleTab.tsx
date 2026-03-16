@@ -86,12 +86,16 @@ function DraggableClientCard({
   entryId,
   clientName,
   clientNiche,
+  isOptimizedToday,
+  isHighComplexity,
   onRemove,
   onClick,
 }: {
   entryId: string;
   clientName: string;
   clientNiche: string | null;
+  isOptimizedToday: boolean;
+  isHighComplexity: boolean;
   onRemove: () => void;
   onClick?: () => void;
 }) {
@@ -106,29 +110,77 @@ function DraggableClientCard({
     <div
       ref={setNodeRef}
       style={style}
-      {...listeners}
-      {...attributes}
-      onClick={() => { if (!isDragging) onClick?.(); }}
       className={cn(
-        'group flex items-center gap-2 rounded-[10px] border border-border/60 bg-card px-3 py-2.5 mb-1.5 transition-all duration-150',
+        'group relative flex items-center gap-2 rounded-[10px] border bg-card px-3 py-2.5 mb-1.5 transition-all duration-150',
+        isOptimizedToday && 'border-l-2 border-l-emerald-500/40',
         isDragging
-          ? 'opacity-40 scale-[1.02] shadow-lg cursor-grabbing'
-          : 'hover:border-border hover:bg-muted/40 cursor-pointer',
+          ? 'opacity-40 scale-[1.02] shadow-lg'
+          : 'hover:bg-muted/50 hover:border-border',
+        !isDragging && !isOptimizedToday && 'border-border/60',
       )}
     >
-      <div className="shrink-0">
+      {/* Drag handle zone */}
+      <div
+        {...listeners}
+        {...attributes}
+        className="shrink-0 cursor-grab active:cursor-grabbing p-0.5 -ml-1 rounded hover:bg-muted/60 transition-colors"
+        onClick={(e) => e.stopPropagation()}
+      >
         <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50" />
       </div>
 
-      <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-semibold text-foreground truncate">{clientName}</p>
+      {/* Clickable content zone */}
+      <div
+        className="flex-1 min-w-0 cursor-pointer"
+        onClick={() => { if (!isDragging) onClick?.(); }}
+      >
+        <div className="flex items-center gap-1.5">
+          {/* Status dot */}
+          <span
+            className={cn(
+              'inline-block h-2 w-2 rounded-full shrink-0 transition-colors duration-300',
+              isOptimizedToday
+                ? 'bg-emerald-500 animate-pulse'
+                : 'bg-muted-foreground/30',
+            )}
+          />
+          <p className="text-[13px] font-semibold text-foreground truncate">{clientName}</p>
+          {isHighComplexity && (
+            <Badge className="text-[10px] font-semibold px-1.5 py-0 h-4 bg-primary/12 text-primary border-0 rounded shrink-0">
+              Alta
+            </Badge>
+          )}
+        </div>
         {clientNiche && (
-          <span className="inline-block mt-0.5 text-[10px] text-muted-foreground bg-muted/60 border border-border/40 rounded px-1.5 py-0.5">
+          <span className="inline-block mt-0.5 ml-3.5 text-[10px] text-muted-foreground bg-muted/60 border border-border/40 rounded px-1.5 py-0.5">
             {clientNiche}
+          </span>
+        )}
+        {isOptimizedToday && (
+          <span className="block ml-3.5 mt-0.5 text-[10px] text-emerald-500 font-medium">
+            ✓ Otimizado hoje
           </span>
         )}
       </div>
 
+      {/* Hover plus icon with tooltip */}
+      <TooltipProvider delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={(e) => { e.stopPropagation(); if (!isDragging) onClick?.(); }}
+              className="shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-150 p-0.5 rounded hover:bg-primary/10"
+            >
+              <Plus className="h-3.5 w-3.5 text-primary" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs">
+            Registrar otimização
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      {/* Remove button */}
       <button
         onClick={(e) => { e.stopPropagation(); onRemove(); }}
         className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-destructive/10"
