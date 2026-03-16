@@ -1,0 +1,1 @@
+ALTER TABLE public.user_preferences ADD COLUMN IF NOT EXISTS expanded_groups jsonb NOT NULL DEFAULT '[]'::jsonb;
