@@ -78,6 +78,7 @@ export default function TrafficOptimizationsPage() {
             {...optimizationsData}
             accounts={activeAccounts}
             teamMembers={teamMembers}
+            addOptimization={optimizationsData.addOptimization}
             onClientClick={(clientId) => {
               setPreselectedClientId(clientId);
               setShowNewModal(true);
