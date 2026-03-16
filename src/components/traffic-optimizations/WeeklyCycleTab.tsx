@@ -868,6 +868,8 @@ export function OptimizationWeeklyCycleTab({
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
+      </AlertDialog>
+
       {/* ── Inline Optimization Modal ─────────────────────── */}
       <InlineOptimizationModal
         open={inlineModalOpen}
