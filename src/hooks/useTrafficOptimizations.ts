@@ -190,6 +190,61 @@ export function useTrafficOptimizations() {
     return { data, error: null };
   };
 
+  const clearWeeklyCycle = async (managerId?: string) => {
+    const targetId = managerId || currentMemberId;
+    if (!targetId) return { error: 'Membro não encontrado' };
+    const { error } = await supabase
+      .from('traffic_optimization_weekly_cycle')
+      .delete()
+      .eq('manager_member_id', targetId);
+    if (error) {
+      toast.error('Erro ao limpar ciclo');
+      return { error };
+    }
+    setWeeklyCycle((prev) => prev.filter((w) => w.manager_member_id !== targetId));
+    return { error: null };
+  };
+
+  const replaceWeeklyCycle = async (
+    entries: { client_id: string; weekday: number }[],
+    managerId?: string
+  ) => {
+    const targetId = managerId || currentMemberId;
+    if (!targetId) return { error: 'Membro não encontrado' };
+    const { error: delError } = await supabase
+      .from('traffic_optimization_weekly_cycle')
+      .delete()
+      .eq('manager_member_id', targetId);
+    if (delError) {
+      toast.error('Erro ao limpar ciclo existente');
+      return { error: delError };
+    }
+    const rows = entries.map((e, i) => ({
+      client_id: e.client_id,
+      manager_member_id: targetId,
+      weekday: e.weekday,
+      sort_order: i,
+    }));
+    if (rows.length === 0) {
+      setWeeklyCycle((prev) => prev.filter((w) => w.manager_member_id !== targetId));
+      return { error: null };
+    }
+    const { data, error } = await supabase
+      .from('traffic_optimization_weekly_cycle')
+      .insert(rows)
+      .select();
+    if (error) {
+      toast.error('Erro ao salvar ciclo');
+      await fetchWeeklyCycle();
+      return { error };
+    }
+    setWeeklyCycle((prev) => [
+      ...prev.filter((w) => w.manager_member_id !== targetId),
+      ...(data as WeeklyCycleEntry[]),
+    ]);
+    return { data, error: null };
+  };
+
   // Today's pending check-ins (clients assigned to current member that haven't been checked in today)
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
 
@@ -234,6 +289,8 @@ export function useTrafficOptimizations() {
     addWeeklyCycleEntry,
     removeWeeklyCycleEntry,
     moveWeeklyCycleEntry,
+    clearWeeklyCycle,
+    replaceWeeklyCycle,
     refetch: fetchAll,
   };
 }
