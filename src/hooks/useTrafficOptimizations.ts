@@ -53,7 +53,7 @@ export const TASK_TYPE_OPTIONS = [
 ];
 
 export function useTrafficOptimizations() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [optimizations, setOptimizations] = useState<TrafficOptimization[]>([]);
   const [weeklyCycle, setWeeklyCycle] = useState<WeeklyCycleEntry[]>([]);
   const [loading, setLoading] = useState(true);
