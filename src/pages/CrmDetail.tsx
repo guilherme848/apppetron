@@ -301,8 +301,8 @@ export default function CrmDetail() {
 
       {/* Inteligência do Cliente */}
       <div className="grid gap-4 md:grid-cols-3">
-        <LinksCard links={clienteLinks} loading={intelLoading} />
-        <ConcorrentesCard concorrentes={concorrentes} loading={intelLoading} />
+        <LinksCard links={clienteLinks} loading={intelLoading} clienteId={id} />
+        <ConcorrentesCard concorrentes={concorrentes} loading={intelLoading} clienteId={id} />
         <ArquivosCard anexos={anexos} loading={intelLoading} onDelete={deleteAnexo} />
       </div>
 
