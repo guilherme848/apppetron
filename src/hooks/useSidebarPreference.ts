@@ -4,24 +4,21 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export function useSidebarPreference() {
   const { user } = useAuth();
-  const [sidebarExpanded, setSidebarExpanded] = useState(true);
+  const [sidebarExpanded, setSidebarExpandedState] = useState(true);
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
-  // Load preference from Supabase
   useEffect(() => {
     if (!user?.id) return;
-
     (async () => {
       const { data } = await supabase
         .from('user_preferences')
         .select('sidebar_expanded, expanded_groups')
         .eq('user_id', user.id)
         .maybeSingle();
-
       if (data) {
-        setSidebarExpanded(data.sidebar_expanded);
+        setSidebarExpandedState(data.sidebar_expanded);
         if (Array.isArray(data.expanded_groups)) {
           setExpandedGroups(data.expanded_groups as string[]);
         }
@@ -43,12 +40,10 @@ export function useSidebarPreference() {
     }, 300);
   }, [user?.id]);
 
-  const toggleSidebar = useCallback(() => {
-    setSidebarExpanded(prev => {
-      const newValue = !prev;
-      persistPrefs({ sidebar_expanded: newValue });
-      return newValue;
-    });
+  // Accepts a boolean (used by SidebarProvider's onOpenChange)
+  const setSidebarExpanded = useCallback((value: boolean) => {
+    setSidebarExpandedState(value);
+    persistPrefs({ sidebar_expanded: value });
   }, [persistPrefs]);
 
   const toggleGroup = useCallback((module: string) => {
@@ -65,12 +60,11 @@ export function useSidebarPreference() {
     return expandedGroups.includes(module);
   }, [expandedGroups]);
 
-  // Initialize active group as expanded if no saved preference
   const initActiveGroup = useCallback((module: string) => {
     if (loaded && expandedGroups.length === 0) {
       setExpandedGroups([module]);
     }
   }, [loaded, expandedGroups.length]);
 
-  return { sidebarExpanded, toggleSidebar, loaded, toggleGroup, isGroupExpanded, initActiveGroup };
+  return { sidebarExpanded, setSidebarExpanded, loaded, toggleGroup, isGroupExpanded, initActiveGroup };
 }

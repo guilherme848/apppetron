@@ -57,13 +57,13 @@ function Breadcrumb() {
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
-  const { sidebarExpanded, toggleSidebar, toggleGroup, isGroupExpanded, initActiveGroup } = useSidebarPreference();
+  const { sidebarExpanded, setSidebarExpanded, toggleGroup, isGroupExpanded, initActiveGroup } = useSidebarPreference();
 
   return (
     <SidebarGroupsContext.Provider value={{ toggleGroup, isGroupExpanded, initActiveGroup }}>
       <SidebarProvider
         open={sidebarExpanded}
-        onOpenChange={toggleSidebar}
+        onOpenChange={(open) => setSidebarExpanded(open)}
         style={{
           '--sidebar-width': '240px',
           '--sidebar-width-icon': '200px',
