@@ -368,7 +368,7 @@ export default function CrmList() {
                   <div className="flex items-center text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Valor Mensal<SortIcon columnKey="monthly_value" /></div>
                 </TableHead>
               )}
-              <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Classificação</TableHead>
+              
               <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Status</TableHead>
               <TableHead className="w-[100px] text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Ações</TableHead>
             </TableRow>
@@ -376,7 +376,7 @@ export default function CrmList() {
           <TableBody>
             {paginatedAccounts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={showFinancialValues ? 8 : 7} className="text-center py-16">
+                <TableCell colSpan={showFinancialValues ? 7 : 6} className="text-center py-16">
                   <div className="flex flex-col items-center gap-3">
                     <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center">
                       <Search className="h-7 w-7 text-muted-foreground" />
@@ -435,16 +435,6 @@ export default function CrmList() {
                         <span className="text-sm font-semibold font-mono text-foreground">{formatCurrency(account.monthly_value)}</span>
                       </TableCell>
                     )}
-                    <TableCell>
-                      {checkupStyle ? (
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-md border ${checkupStyle}`}>
-                          {account.checkup_classificacao === 'A' && <Star className="h-3 w-3 fill-current" />}
-                          Perfil {account.checkup_classificacao}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground text-xs">Sem classificação</span>
-                      )}
-                    </TableCell>
                     <TableCell>
                       <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-semibold rounded-md border ${
                         account.status === 'active' ? 'bg-[hsl(var(--success)/.12)] text-[hsl(var(--success))] border-[hsl(var(--success)/.25)]' :
