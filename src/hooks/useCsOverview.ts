@@ -120,6 +120,18 @@ export function useCsOverview() {
   const monthStart = selectedMonth;
   const monthEnd = endOfMonth(selectedMonth);
 
+  const isActiveAtMonthStartByDate = useCallback((account: any, referenceStart: Date) => {
+    if (!account.start_date) return false;
+    const startDate = parseISO(account.start_date);
+    if (!isValid(startDate) || startDate > referenceStart) return false;
+
+    if (!account.churned_at) return true;
+    const churnDate = parseISO(account.churned_at);
+    if (!isValid(churnDate)) return true;
+
+    return churnDate > referenceStart;
+  }, []);
+
   // KPIs
   const kpiData = useMemo((): CsOverviewKPI => {
     const active = accounts.filter(a => a.status === 'active');
