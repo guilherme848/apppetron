@@ -339,6 +339,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
         address_complement: account.address_complement || '',
       });
       setMidiasAtivas(account.midias_ativas || ['meta_ads']);
+      setTimeout(() => { skipAutoSave.current = false; }, 100);
     } else {
       skipAutoSave.current = true;
       setFormData({
