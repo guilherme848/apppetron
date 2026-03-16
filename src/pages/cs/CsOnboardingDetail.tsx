@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Check, Trash2, ChevronRight, Info, CheckCircle2, User, AlertCircle, Sparkles } from 'lucide-react';
+import { Check, Trash2, ChevronRight, Info, AlertCircle, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -17,7 +17,7 @@ import {
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
@@ -31,9 +31,28 @@ function getPlanBadgeClass(planName?: string): string {
   const lower = planName.toLowerCase();
   if (lower.includes('start')) return 'bg-secondary text-secondary-foreground border-border';
   if (lower.includes('performance')) return 'bg-[hsl(var(--info)/0.12)] text-[hsl(var(--info))] border-[hsl(var(--info)/0.25)]';
-  if (lower.includes('escala')) return 'bg-[hsl(var(--accent)/0.12)] text-[hsl(var(--accent))] border-[hsl(var(--accent)/0.25)]';
+  if (lower.includes('escala')) return 'bg-primary/12 text-primary border-primary/25';
   if (lower.includes('growth')) return 'bg-[hsl(258,90%,66%,0.12)] text-[hsl(258,90%,66%)] border-[hsl(258,90%,66%,0.25)]';
   return 'bg-muted text-muted-foreground border-border';
+}
+
+function DayCounter({ dataInicio }: { dataInicio: string }) {
+  const days = differenceInDays(new Date(), new Date(dataInicio));
+  if (days < 0) return null;
+
+  const isDanger = days >= 10;
+  const isWarning = days >= 8 && days < 10;
+
+  return (
+    <span className={cn(
+      'text-xs font-medium font-mono flex items-center gap-1',
+      isDanger ? 'text-destructive' : isWarning ? 'text-[hsl(var(--warning))]' : 'text-muted-foreground'
+    )}>
+      {isDanger && <AlertCircle className="h-[13px] w-[13px] animate-pulse" />}
+      {isWarning && <Clock className="h-[13px] w-[13px]" />}
+      {days} dias em onboarding
+    </span>
+  );
 }
 
 export default function CsOnboardingDetail() {
@@ -57,7 +76,6 @@ export default function CsOnboardingDetail() {
   const [deleteConfirmName, setDeleteConfirmName] = useState('');
   const [activeTab, setActiveTab] = useState('transcricoes');
 
-  // Section refs for scroll
   const transcricoesRef = useRef<HTMLDivElement>(null);
   const reuniaoRef = useRef<HTMLDivElement>(null);
   const atividadesRef = useRef<HTMLDivElement>(null);
@@ -75,7 +93,6 @@ export default function CsOnboardingDetail() {
     ).length;
   }, [questions, respostas]);
 
-  // Count transcriptions attached
   const transcriptionCount = useMemo(() => {
     if (!onboarding) return 0;
     let count = 0;
@@ -84,14 +101,16 @@ export default function CsOnboardingDetail() {
     return count;
   }, [onboarding]);
 
-  // Scroll to section
   const handleTabChange = useCallback((tab: string) => {
     setActiveTab(tab);
     const ref = tab === 'transcricoes' ? transcricoesRef : tab === 'reuniao' ? reuniaoRef : atividadesRef;
-    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const el = ref.current;
+    if (el) {
+      const y = el.getBoundingClientRect().top + window.scrollY - 120;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
   }, []);
 
-  // Update active tab on scroll
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -102,7 +121,7 @@ export default function CsOnboardingDetail() {
           }
         });
       },
-      { rootMargin: '-120px 0px -60% 0px', threshold: 0 }
+      { rootMargin: '-120px 0px -60% 0px', threshold: 0.3 }
     );
 
     [transcricoesRef, reuniaoRef, atividadesRef].forEach(ref => {
@@ -215,11 +234,11 @@ export default function CsOnboardingDetail() {
         <div className="space-y-2">
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-2xl font-bold">{onboarding.client_name}</h1>
-            <Badge variant="outline" className={cn('text-xs font-semibold border', isConcluido ? 'bg-[hsl(var(--success)/0.12)] text-[hsl(var(--success))] border-[hsl(var(--success)/0.25)]' : 'bg-[hsl(var(--accent)/0.12)] text-[hsl(var(--accent))] border-[hsl(var(--accent)/0.25)]')}>
+            <Badge variant="outline" className={cn('text-[11px] font-semibold border rounded-md px-2 py-0.5', isConcluido ? 'bg-[hsl(var(--success)/0.12)] text-[hsl(var(--success))] border-[hsl(var(--success)/0.25)]' : 'bg-primary/12 text-primary border-primary/25')}>
               {ONBOARDING_STATUS_LABELS[onboarding.status as keyof typeof ONBOARDING_STATUS_LABELS]}
             </Badge>
             {onboarding.client_service_name && (
-              <Badge variant="outline" className={cn('text-xs font-semibold border', getPlanBadgeClass(onboarding.client_service_name))}>
+              <Badge variant="outline" className={cn('text-[11px] font-semibold border rounded-md px-2 py-0.5', getPlanBadgeClass(onboarding.client_service_name))}>
                 {onboarding.client_service_name}
               </Badge>
             )}
@@ -229,6 +248,10 @@ export default function CsOnboardingDetail() {
             {onboarding.cs_owner_name && <span>CS: {onboarding.cs_owner_name}</span>}
             {onboarding.traffic_owner_name && <span>Tráfego: {onboarding.traffic_owner_name}</span>}
           </div>
+          {/* Day counter */}
+          {!isConcluido && onboarding.data_inicio && (
+            <DayCounter dataInicio={onboarding.data_inicio} />
+          )}
         </div>
         <div className="flex items-center gap-2">
           {!isConcluido && (
@@ -261,7 +284,6 @@ export default function CsOnboardingDetail() {
 
       {/* SECTION 1 — Transcrições */}
       <div ref={transcricoesRef} data-section="transcricoes" className="pt-8 space-y-4" style={{ animationDelay: '40ms', animationFillMode: 'both' }}>
-        <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
         <h2 className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
           Transcrições
         </h2>
@@ -293,17 +315,19 @@ export default function CsOnboardingDetail() {
             onRemoved={() => handleTranscriptionRemoved('onboarding')}
           />
         </div>
-        <div className="flex items-start gap-3 p-3 rounded-lg border border-[hsl(var(--info)/0.2)] bg-[hsl(var(--info)/0.06)]">
+        <div className="flex items-start gap-3 p-3 px-4 rounded-[10px] border border-[hsl(var(--info)/0.2)] bg-[hsl(var(--info)/0.08)]">
           <Info className="h-4 w-4 text-[hsl(var(--info))] mt-0.5 shrink-0" />
-          <p className="text-xs text-muted-foreground">
-            Anexe as transcrições das reuniões para que a IA possa preencher automaticamente as perguntas do onboarding.
+          <p className="text-[13px] text-muted-foreground">
+            Anexe a transcrição da reunião de onboarding para que a IA possa preencher automaticamente as perguntas.
           </p>
         </div>
       </div>
 
+      {/* Separator */}
+      <div className="my-8 h-px" style={{ background: 'linear-gradient(90deg, transparent, hsl(var(--border)), transparent)' }} />
+
       {/* SECTION 2 — Reunião de Onboarding */}
-      <div ref={reuniaoRef} data-section="reuniao" className="pt-8 space-y-4" style={{ animationDelay: '80ms', animationFillMode: 'both' }}>
-        <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      <div ref={reuniaoRef} data-section="reuniao" className="space-y-4" style={{ animationDelay: '80ms', animationFillMode: 'both' }}>
         <MeetingSection
           onboardingId={onboardingId || ''}
           questions={questions || []}
@@ -316,9 +340,11 @@ export default function CsOnboardingDetail() {
         />
       </div>
 
+      {/* Separator */}
+      <div className="my-8 h-px" style={{ background: 'linear-gradient(90deg, transparent, hsl(var(--border)), transparent)' }} />
+
       {/* SECTION 3 — Atividades */}
-      <div ref={atividadesRef} data-section="atividades" className="pt-8 pb-8 space-y-4" style={{ animationDelay: '120ms', animationFillMode: 'both' }}>
-        <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      <div ref={atividadesRef} data-section="atividades" className="pb-8 space-y-4" style={{ animationDelay: '120ms', animationFillMode: 'both' }}>
         <ActivitiesSection
           atividades={atividades || []}
           isConcluido={isConcluido}
