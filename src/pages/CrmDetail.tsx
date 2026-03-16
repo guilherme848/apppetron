@@ -68,7 +68,7 @@ export default function CrmDetail() {
   const { canViewFinancialValues } = useSensitivePermission();
   const showFinancialValues = canViewFinancialValues();
   const { events: historyEvents, loading: historyLoading } = useAccountHistory(id);
-  const { links: clienteLinks, concorrentes, anexos, loading: intelLoading, deleteAnexo } = useClientIntelligence(id);
+  const { links: clienteLinks, concorrentes, anexos, loading: intelLoading, deleteAnexo, refetch: refetchIntel } = useClientIntelligence(id);
 
   const [contractFormOpen, setContractFormOpen] = useState(false);
   const [accountFormOpen, setAccountFormOpen] = useState(false);
@@ -301,8 +301,8 @@ export default function CrmDetail() {
 
       {/* Inteligência do Cliente */}
       <div className="grid gap-4 md:grid-cols-3">
-        <LinksCard links={clienteLinks} loading={intelLoading} />
-        <ConcorrentesCard concorrentes={concorrentes} loading={intelLoading} />
+        <LinksCard links={clienteLinks} loading={intelLoading} clienteId={id} onSaved={refetchIntel} />
+        <ConcorrentesCard concorrentes={concorrentes} loading={intelLoading} clienteId={id} onSaved={refetchIntel} />
         <ArquivosCard anexos={anexos} loading={intelLoading} onDelete={deleteAnexo} />
       </div>
 
