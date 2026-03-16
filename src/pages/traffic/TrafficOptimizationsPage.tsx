@@ -68,6 +68,7 @@ export default function TrafficOptimizationsPage() {
             accounts={activeAccounts}
             teamMembers={teamMembers}
             onNewOptimization={() => setShowNewModal(true)}
+            addOptimization={optimizationsData.addOptimization}
           />
         </TabsContent>
 
