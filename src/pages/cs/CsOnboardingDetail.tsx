@@ -291,6 +291,8 @@ export default function CsOnboardingDetail() {
         totalQuestions={questions?.length || 0}
         completedActivities={completedCount}
         totalActivities={totalCount}
+        checkupFilled={checkupFilled}
+        checkupClassificacao={checkupClassificacao}
       />
 
       {/* Tab content — only active tab is rendered */}
