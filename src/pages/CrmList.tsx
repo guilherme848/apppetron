@@ -376,7 +376,7 @@ export default function CrmList() {
           <TableBody>
             {paginatedAccounts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={showFinancialValues ? 8 : 7} className="text-center py-16">
+                <TableCell colSpan={showFinancialValues ? 7 : 6} className="text-center py-16">
                   <div className="flex flex-col items-center gap-3">
                     <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center">
                       <Search className="h-7 w-7 text-muted-foreground" />
