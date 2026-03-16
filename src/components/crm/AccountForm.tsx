@@ -368,6 +368,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
         street_number: '',
         address_complement: '',
       });
+      setMidiasAtivas(['meta_ads']);
       setTimeout(() => { skipAutoSave.current = false; }, 100);
     }
     setEmailError('');
