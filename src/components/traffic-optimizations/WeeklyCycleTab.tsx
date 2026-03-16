@@ -19,6 +19,7 @@ interface Props {
   teamMembers: { id: string; name: string }[];
   weeklyCycle: WeeklyCycleEntry[];
   currentMemberId: string | null;
+  isAdmin?: boolean;
   addWeeklyCycleEntry: (clientId: string, weekday: number) => Promise<any>;
   removeWeeklyCycleEntry: (id: string) => Promise<any>;
   moveWeeklyCycleEntry: (id: string, newWeekday: number) => Promise<any>;
@@ -28,6 +29,7 @@ export function OptimizationWeeklyCycleTab({
   accounts,
   weeklyCycle,
   currentMemberId,
+  isAdmin = false,
   addWeeklyCycleEntry,
   removeWeeklyCycleEntry,
   moveWeeklyCycleEntry,
@@ -38,12 +40,14 @@ export function OptimizationWeeklyCycleTab({
   const getClientName = (id: string) => accounts.find((a) => a.id === id)?.name || 'Cliente';
 
   const myClients = useMemo(() => {
+    if (isAdmin) return accounts;
     return accounts.filter((a) => a.traffic_member_id === currentMemberId);
-  }, [accounts, currentMemberId]);
+  }, [accounts, currentMemberId, isAdmin]);
 
   const myCycle = useMemo(() => {
+    if (isAdmin) return weeklyCycle;
     return weeklyCycle.filter((w) => w.manager_member_id === currentMemberId);
-  }, [weeklyCycle, currentMemberId]);
+  }, [weeklyCycle, currentMemberId, isAdmin]);
 
   const assignedClientIds = useMemo(() => new Set(myCycle.map((w) => w.client_id)), [myCycle]);
   const availableClients = useMemo(() => myClients.filter((c) => !assignedClientIds.has(c.id)), [myClients, assignedClientIds]);

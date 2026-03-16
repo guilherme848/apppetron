@@ -12,6 +12,7 @@ interface Props {
   todayHighComplexity: WeeklyCycleEntry[];
   openMediumTasks: TrafficOptimization[];
   currentMemberId: string | null;
+  isAdmin?: boolean;
   todayStr: string;
   optimizations: TrafficOptimization[];
   onNewOptimization: () => void;
@@ -23,16 +24,18 @@ export function OptimizationMyDayTab({
   todayHighComplexity,
   openMediumTasks,
   currentMemberId,
+  isAdmin = false,
   todayStr,
   optimizations,
   onNewOptimization,
 }: Props) {
   const getClientName = (id: string) => accounts.find((a) => a.id === id)?.name || 'Cliente';
 
-  // Clients assigned to current manager that haven't been checked-in today
+  // Clients assigned to current manager (or all if admin)
   const myClients = useMemo(() => {
+    if (isAdmin) return accounts;
     return accounts.filter((a) => a.traffic_member_id === currentMemberId);
-  }, [accounts, currentMemberId]);
+  }, [accounts, currentMemberId, isAdmin]);
 
   const checkedInClientIds = useMemo(() => {
     return new Set(todayCheckins.map((c) => c.client_id));
@@ -46,10 +49,10 @@ export function OptimizationMyDayTab({
   const todayAltaDone = useMemo(() => {
     return new Set(
       optimizations
-        .filter((o) => o.optimization_date === todayStr && o.task_type === 'alta' && o.member_id === currentMemberId)
+        .filter((o) => o.optimization_date === todayStr && o.task_type === 'alta' && (isAdmin || o.member_id === currentMemberId))
         .map((o) => o.client_id)
     );
-  }, [optimizations, todayStr, currentMemberId]);
+  }, [optimizations, todayStr, currentMemberId, isAdmin]);
 
   const completedCheckins = checkedInClientIds.size;
   const totalClients = myClients.length;
