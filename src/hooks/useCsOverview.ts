@@ -13,6 +13,28 @@ export interface CsOverviewKPI {
   revenueAtRisk: number;
 }
 
+export interface FinancialMetrics {
+  avgLT: number;
+  avgLTV: number;
+  maxLT: number;
+  minLT: number;
+  maxLTV: { value: number; name: string };
+  churnRate: number;
+  churnCount: number;
+  revenueLost: number;
+  churnedClientNames: string[];
+  churnHistory: ChurnHistoryItem[];
+}
+
+export interface ChurnHistoryItem {
+  label: string;
+  month: string;
+  cancelations: number;
+  churnRate: number;
+  revenueLost: number;
+  isCurrent: boolean;
+}
+
 export interface CsAlert {
   id: string;
   type: 'onboarding_delayed' | 'meeting_overdue' | 'traffic_no_checkin' | 'recent_churn';
