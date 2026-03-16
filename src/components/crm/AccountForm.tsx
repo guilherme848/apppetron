@@ -10,7 +10,7 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { useTraffic } from '@/contexts/TrafficContext';
 import { useSensitivePermission } from '@/hooks/useSensitivePermission';
 import { Link } from 'react-router-dom';
-import { ExternalLink, RotateCcw, Undo2, Lock, Loader2 } from 'lucide-react';
+import { ExternalLink, RotateCcw, Undo2, Lock, Loader2, Facebook, Chrome } from 'lucide-react';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
