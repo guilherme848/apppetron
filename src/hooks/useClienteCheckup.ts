@@ -122,9 +122,9 @@ export function useUpsertCheckup() {
         .maybeSingle();
 
       if (existing) {
-        const { error } = await supabase
-          .from('cliente_checkup' as any)
-          .update(payload as any)
+        const { error } = await (supabase as any)
+          .from('cliente_checkup')
+          .update(payload)
           .eq('id', (existing as any).id);
         if (error) throw error;
       } else {
