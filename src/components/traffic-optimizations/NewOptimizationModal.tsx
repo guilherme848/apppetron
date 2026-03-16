@@ -43,10 +43,11 @@ export function NewOptimizationModal({ open, onOpenChange, accounts, teamMembers
   });
 
   // Sync initialClientId when modal opens
-  useState(() => {});
-  if (open && initialClientId && form.client_id !== initialClientId) {
-    setForm((f) => ({ ...f, client_id: initialClientId }));
-  }
+  useEffect(() => {
+    if (open && initialClientId) {
+      setForm((f) => ({ ...f, client_id: initialClientId }));
+    }
+  }, [open, initialClientId]);
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async () => {
