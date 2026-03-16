@@ -419,6 +419,7 @@ export function OptimizationWeeklyCycleTab({
   moveWeeklyCycleEntry,
   clearWeeklyCycle,
   replaceWeeklyCycle,
+  onClientClick,
 }: Props) {
   const [selectedManagerId, setSelectedManagerId] = useState<string | null>(null);
   const [showAiModal, setShowAiModal] = useState(false);
