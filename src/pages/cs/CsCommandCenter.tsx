@@ -5,9 +5,10 @@ import { ptBR } from 'date-fns/locale';
 import {
   Users, Rocket, AlertTriangle, Star, TrendingDown, DollarSign,
   RotateCcw, ChevronRight, Clock, Calendar, Activity, UserMinus,
-  ShieldCheck, AlertCircle, Grid3X3,
+  ShieldCheck, AlertCircle, Grid3X3, Percent, BarChart2, TrendingUp,
+  CheckCircle,
 } from 'lucide-react';
-import { useCsOverview, CsAlert, ChurnDimensionItem, CohortRow } from '@/hooks/useCsOverview';
+import { useCsOverview, CsAlert, ChurnDimensionItem, CohortRow, FinancialMetrics, ChurnHistoryItem } from '@/hooks/useCsOverview';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
+  ComposedChart, Line, CartesianGrid,
+} from 'recharts';
 import { tooltipStyle } from '@/lib/dashboardColors';
 
 const formatCurrency = (v: number) =>
