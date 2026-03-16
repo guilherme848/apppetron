@@ -368,7 +368,7 @@ export default function CrmDetail() {
 
       <AccountForm open={accountFormOpen} onClose={() => setAccountFormOpen(false)} onSubmit={handleAccountSubmit} account={account} />
       <ContractForm open={contractFormOpen} onClose={() => { setContractFormOpen(false); setEditingContract(undefined); }} onSubmit={handleContractSubmit} contract={editingContract} accountId={id!} />
-      <TaskForm open={taskFormOpen} onClose={() => { setTaskFormOpen(false); setEditingTask(undefined); }} onSubmit={handleTaskSubmit} task={editingTask} accounts={accounts} />
+      
       <AccountRemoveDialog open={removeDialogOpen} onOpenChange={setRemoveDialogOpen} account={account} onConfirm={handleRemoveConfirm} />
     </div>
   );
