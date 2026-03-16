@@ -406,11 +406,15 @@ function NicheGroupedEntries({
   getClient,
   onRemove,
   onClientClick,
+  todayOptimizedClientIds,
+  highComplexityClientIds,
 }: {
   entries: WeeklyCycleEntry[];
   getClient: (id: string) => Account | undefined;
   onRemove: (id: string) => void;
   onClientClick?: (clientId: string) => void;
+  todayOptimizedClientIds: Set<string>;
+  highComplexityClientIds: Set<string>;
 }) {
   const grouped = useMemo(() => {
     const map = new Map<string, WeeklyCycleEntry[]>();
@@ -452,6 +456,8 @@ function NicheGroupedEntries({
                 entryId={entry.id}
                 clientName={client?.name || 'Cliente'}
                 clientNiche={client?.niche || null}
+                isOptimizedToday={todayOptimizedClientIds.has(entry.client_id)}
+                isHighComplexity={highComplexityClientIds.has(entry.client_id)}
                 onRemove={() => onRemove(entry.id)}
                 onClick={() => onClientClick?.(entry.client_id)}
               />
