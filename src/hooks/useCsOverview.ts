@@ -189,9 +189,9 @@ export function useCsOverview() {
     const currentMonthStart = startOfMonth(now);
     const currentMonthEnd = endOfMonth(now);
     accounts.filter(a => {
-      if (a.status !== 'inactive' && a.status !== 'churned' && a.status !== 'canceled') return false;
-      const d = a.updated_at ? parseISO(a.updated_at) : null;
-      return d && isValid(d) && d >= currentMonthStart && d <= currentMonthEnd;
+      if (!a.churned_at) return false;
+      const d = parseISO(a.churned_at);
+      return isValid(d) && d >= currentMonthStart && d <= currentMonthEnd;
     }).forEach(a => {
       result.push({
         id: `churn-${a.id}`,
