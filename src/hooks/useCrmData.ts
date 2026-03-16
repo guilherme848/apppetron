@@ -48,6 +48,8 @@ const mapAccount = (data: any): Account => ({
   checkup_updated_at: data.checkup_updated_at,
   health_score: data.health_score,
   health_status: data.health_status,
+  midias_ativas: data.midias_ativas,
+  ad_monthly_budget_google: data.ad_monthly_budget_google,
 });
 
 const mapContract = (data: any): Contract => ({
