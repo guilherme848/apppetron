@@ -138,11 +138,11 @@ export function useCsOverview() {
     // At risk = checkup D
     const atRisk = accounts.filter(a => a.status === 'active' && a.checkup_classificacao === 'D');
 
-    // Churn in selected month
+    // Churn in selected month (by churned_at, same as executive dashboard)
     const churned = accounts.filter(a => {
-      if (a.status !== 'inactive' && a.status !== 'churned' && a.status !== 'canceled') return false;
-      const d = a.updated_at ? parseISO(a.updated_at) : null;
-      return d && isValid(d) && d >= monthStart && d <= monthEnd;
+      if (!a.churned_at) return false;
+      const d = parseISO(a.churned_at);
+      return isValid(d) && d >= monthStart && d <= monthEnd;
     });
 
     // Revenue at risk (C or D)
@@ -189,9 +189,9 @@ export function useCsOverview() {
     const currentMonthStart = startOfMonth(now);
     const currentMonthEnd = endOfMonth(now);
     accounts.filter(a => {
-      if (a.status !== 'inactive' && a.status !== 'churned' && a.status !== 'canceled') return false;
-      const d = a.updated_at ? parseISO(a.updated_at) : null;
-      return d && isValid(d) && d >= currentMonthStart && d <= currentMonthEnd;
+      if (!a.churned_at) return false;
+      const d = parseISO(a.churned_at);
+      return isValid(d) && d >= currentMonthStart && d <= currentMonthEnd;
     }).forEach(a => {
       result.push({
         id: `churn-${a.id}`,
@@ -233,9 +233,10 @@ export function useCsOverview() {
   const activeAtMonthStart = useMemo(() => {
     return accounts.filter(a => {
       if (a.status === 'active') return true;
-      if (a.status === 'inactive' || a.status === 'churned' || a.status === 'canceled') {
-        const d = a.updated_at ? parseISO(a.updated_at) : null;
-        return d && isValid(d) && d >= monthStart;
+      // Client was active at month start if churned_at >= monthStart
+      if (a.churned_at) {
+        const d = parseISO(a.churned_at);
+        return isValid(d) && d >= monthStart;
       }
       return false;
     });
@@ -244,9 +245,9 @@ export function useCsOverview() {
   // Churn by niche (filtered by month)
   const churnByNiche = useMemo((): ChurnDimensionItem[] => {
     const churned = accounts.filter(a => {
-      if (a.status !== 'inactive' && a.status !== 'churned' && a.status !== 'canceled') return false;
-      const d = a.updated_at ? parseISO(a.updated_at) : null;
-      return d && isValid(d) && d >= monthStart && d <= monthEnd;
+      if (!a.churned_at) return false;
+      const d = parseISO(a.churned_at);
+      return isValid(d) && d >= monthStart && d <= monthEnd;
     });
 
     const byNiche: Record<string, { count: number; total: number; name: string }> = {};
@@ -273,9 +274,9 @@ export function useCsOverview() {
   const validPlans = ['Start', 'Performance', 'Escala', 'Growth'];
   const churnByPlan = useMemo((): ChurnDimensionItem[] => {
     const churned = accounts.filter(a => {
-      if (a.status !== 'inactive' && a.status !== 'churned' && a.status !== 'canceled') return false;
-      const d = a.updated_at ? parseISO(a.updated_at) : null;
-      return d && isValid(d) && d >= monthStart && d <= monthEnd;
+      if (!a.churned_at) return false;
+      const d = parseISO(a.churned_at);
+      return isValid(d) && d >= monthStart && d <= monthEnd;
     });
 
     const byPlan: Record<string, { count: number; total: number; name: string }> = {};
@@ -333,17 +334,11 @@ export function useCsOverview() {
           continue;
         }
         const stillActive = cohortClients.filter(a => {
-          if (a.status === 'active') return true;
-          // Check if churned after check month
-          if (a.churned_at) {
-            const churnDate = parseISO(a.churned_at);
-            return isValid(churnDate) && churnDate > endOfMonth(checkMonth);
-          }
-          if (a.updated_at && (a.status === 'inactive' || a.status === 'churned' || a.status === 'canceled')) {
-            const upd = parseISO(a.updated_at);
-            return isValid(upd) && upd > endOfMonth(checkMonth);
-          }
-          return true;
+          // If never churned, still active
+          if (!a.churned_at) return true;
+          // If churned after target month end, still active at that point
+          const churnDate = parseISO(a.churned_at);
+          return isValid(churnDate) && churnDate > endOfMonth(checkMonth);
         });
         monthValues.push(Math.round((stillActive.length / total) * 100));
       }
@@ -385,19 +380,19 @@ export function useCsOverview() {
 
     // Churn in selected month
     const churnedInMonth = accounts.filter(a => {
-      if (a.status !== 'inactive' && a.status !== 'churned' && a.status !== 'canceled') return false;
-      const d = a.updated_at ? parseISO(a.updated_at) : null;
-      return d && isValid(d) && d >= monthStart && d <= monthEnd;
+      if (!a.churned_at) return false;
+      const d = parseISO(a.churned_at);
+      return isValid(d) && d >= monthStart && d <= monthEnd;
     });
 
     const revenueLost = churnedInMonth.reduce((s, a) => s + Number(a.monthly_value || 0), 0);
 
-    // Active at start of selected month (approximate: active + churned during/after selected month)
+    // Active at start of selected month
     const activeAtStart = accounts.filter(a => {
       if (a.status === 'active') return true;
-      if (a.status === 'inactive' || a.status === 'churned' || a.status === 'canceled') {
-        const d = a.updated_at ? parseISO(a.updated_at) : null;
-        return d && isValid(d) && d >= monthStart;
+      if (a.churned_at) {
+        const d = parseISO(a.churned_at);
+        return isValid(d) && d >= monthStart;
       }
       return false;
     }).length;
@@ -413,16 +408,16 @@ export function useCsOverview() {
       const label = format(m, "MMM/yy", { locale: ptBR }).replace(/^\w/, c => c.toUpperCase());
 
       const churnedThisMonth = accounts.filter(a => {
-        if (a.status !== 'inactive' && a.status !== 'churned' && a.status !== 'canceled') return false;
-        const d = a.updated_at ? parseISO(a.updated_at) : null;
-        return d && isValid(d) && d >= m && d <= mEnd;
+        if (!a.churned_at) return false;
+        const d = parseISO(a.churned_at);
+        return isValid(d) && d >= m && d <= mEnd;
       });
 
       const activeAtM = accounts.filter(a => {
         if (a.status === 'active') return true;
-        if (a.status === 'inactive' || a.status === 'churned' || a.status === 'canceled') {
-          const d = a.updated_at ? parseISO(a.updated_at) : null;
-          return d && isValid(d) && d >= m;
+        if (a.churned_at) {
+          const d = parseISO(a.churned_at);
+          return isValid(d) && d >= m;
         }
         return false;
       }).length;
