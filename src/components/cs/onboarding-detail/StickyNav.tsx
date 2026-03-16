@@ -1,4 +1,4 @@
-import { FileText, MessageSquare, CheckSquare } from 'lucide-react';
+import { FileText, MessageSquare, CheckSquare, ClipboardCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface StickyNavProps {
@@ -9,6 +9,8 @@ interface StickyNavProps {
   totalQuestions: number;
   completedActivities: number;
   totalActivities: number;
+  checkupFilled: number;
+  checkupClassificacao: string | null;
 }
 
 function ProgressBadge({ value, total, type }: { value: number; total: number; type: 'transcription' | 'answers' | 'activities' }) {
