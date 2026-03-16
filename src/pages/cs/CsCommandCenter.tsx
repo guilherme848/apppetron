@@ -339,7 +339,7 @@ function ChurnNicheCard({ data, monthLabel }: { data: ChurnDimensionItem[]; mont
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center py-8 text-muted-foreground text-sm">
-            <ShieldCheck className="h-6 w-6 text-emerald-500 mb-2" />
+            <ShieldCheck className="h-6 w-6 text-success mb-2" />
             Sem churn em {monthLabel}
           </div>
         </CardContent>
