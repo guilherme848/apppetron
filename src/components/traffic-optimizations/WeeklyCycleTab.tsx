@@ -868,7 +868,18 @@ export function OptimizationWeeklyCycleTab({
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog>
+      {/* ── Inline Optimization Modal ─────────────────────── */}
+      <InlineOptimizationModal
+        open={inlineModalOpen}
+        onOpenChange={(open) => {
+          setInlineModalOpen(open);
+          if (!open) setInlineModalClientId(null);
+        }}
+        client={inlineModalClient}
+        currentMemberId={currentMemberId}
+        onSubmit={addOptimization}
+        preselectedTaskType={inlineModalTaskType}
+      />
     </div>
   );
 }
