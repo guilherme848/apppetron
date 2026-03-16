@@ -4254,7 +4254,17 @@ export type Database = {
           id: string
           status: string
           traffic_owner_id: string | null
+          transcricao_onboarding_conteudo: string | null
+          transcricao_onboarding_nome: string | null
+          transcricao_onboarding_tamanho: number | null
+          transcricao_onboarding_uploaded_at: string | null
+          transcricao_onboarding_url: string | null
           transcricao_reuniao_vendas: string | null
+          transcricao_vendas_conteudo: string | null
+          transcricao_vendas_nome: string | null
+          transcricao_vendas_tamanho: number | null
+          transcricao_vendas_uploaded_at: string | null
+          transcricao_vendas_url: string | null
           updated_at: string | null
         }
         Insert: {
@@ -4266,7 +4276,17 @@ export type Database = {
           id?: string
           status?: string
           traffic_owner_id?: string | null
+          transcricao_onboarding_conteudo?: string | null
+          transcricao_onboarding_nome?: string | null
+          transcricao_onboarding_tamanho?: number | null
+          transcricao_onboarding_uploaded_at?: string | null
+          transcricao_onboarding_url?: string | null
           transcricao_reuniao_vendas?: string | null
+          transcricao_vendas_conteudo?: string | null
+          transcricao_vendas_nome?: string | null
+          transcricao_vendas_tamanho?: number | null
+          transcricao_vendas_uploaded_at?: string | null
+          transcricao_vendas_url?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -4278,7 +4298,17 @@ export type Database = {
           id?: string
           status?: string
           traffic_owner_id?: string | null
+          transcricao_onboarding_conteudo?: string | null
+          transcricao_onboarding_nome?: string | null
+          transcricao_onboarding_tamanho?: number | null
+          transcricao_onboarding_uploaded_at?: string | null
+          transcricao_onboarding_url?: string | null
           transcricao_reuniao_vendas?: string | null
+          transcricao_vendas_conteudo?: string | null
+          transcricao_vendas_nome?: string | null
+          transcricao_vendas_tamanho?: number | null
+          transcricao_vendas_uploaded_at?: string | null
+          transcricao_vendas_url?: string | null
           updated_at?: string | null
         }
         Relationships: [
