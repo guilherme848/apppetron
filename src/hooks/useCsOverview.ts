@@ -391,15 +391,8 @@ export function useCsOverview() {
 
     const revenueLost = churnedInMonth.reduce((s, a) => s + Number(a.monthly_value || 0), 0);
 
-    // Active at start of selected month
-    const activeAtStart = accounts.filter(a => {
-      if (a.status === 'active') return true;
-      if (a.churned_at) {
-        const d = parseISO(a.churned_at);
-        return isValid(d) && d >= monthStart;
-      }
-      return false;
-    }).length;
+    // Active at start of selected month (same rule as executive dashboard)
+    const activeAtStart = accounts.filter(a => isActiveAtMonthStartByDate(a, monthStart)).length;
 
     const churnRate = activeAtStart > 0 ? (churnedInMonth.length / activeAtStart) * 100 : 0;
 
