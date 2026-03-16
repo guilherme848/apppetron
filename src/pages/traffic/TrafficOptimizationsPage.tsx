@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Wrench, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTrafficOptimizations } from '@/hooks/useTrafficOptimizations';
 import { useCrm } from '@/contexts/CrmContext';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
+import { supabase } from '@/integrations/supabase/client';
 import { OptimizationMyDayTab } from '@/components/traffic-optimizations/MyDayTab';
 import { OptimizationWeeklyCycleTab } from '@/components/traffic-optimizations/WeeklyCycleTab';
 import { OptimizationLogTab } from '@/components/traffic-optimizations/LogTab';
@@ -16,8 +17,22 @@ export default function TrafficOptimizationsPage() {
   const optimizationsData = useTrafficOptimizations();
   const { accounts } = useCrm();
   const { members: teamMembers } = useTeamMembers();
+  const [trafficServiceIds, setTrafficServiceIds] = useState<Set<string>>(new Set());
 
-  const activeAccounts = accounts.filter((a) => a.status === 'active' && !a.deleted_at);
+  // Fetch service IDs that have traffic enabled
+  useEffect(() => {
+    supabase
+      .from('services')
+      .select('id')
+      .eq('has_traffic', true)
+      .then(({ data }) => {
+        if (data) setTrafficServiceIds(new Set(data.map((s: any) => s.id)));
+      });
+  }, []);
+
+  const activeAccounts = accounts.filter(
+    (a) => a.status === 'active' && !a.deleted_at && a.service_id && trafficServiceIds.has(a.service_id)
+  );
 
   return (
     <div className="space-y-6">
