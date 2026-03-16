@@ -55,6 +55,7 @@ import CsNps from "./pages/cs/CsNps";
 import CsRisk from "./pages/cs/CsRisk";
 import CsClientDetail from "./pages/cs/CsClientDetail";
 import CsOnboardingMeeting from "./pages/cs/CsOnboardingMeeting";
+import CsOnboardingDetail from "./pages/cs/CsOnboardingDetail";
 
 // Settings pages
 import { SettingsLayout } from "./pages/settings/SettingsLayout";
