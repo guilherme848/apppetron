@@ -6,6 +6,7 @@ import { UserSelector } from './UserSelector';
 import { ThemeToggle } from './ThemeToggle';
 import { routeRegistry } from '@/config/routeRegistry';
 import { ChevronRight } from 'lucide-react';
+import { useSidebarPreference } from '@/hooks/useSidebarPreference';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -51,12 +52,20 @@ function Breadcrumb() {
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
+  const { sidebarExpanded, toggleSidebar, loaded } = useSidebarPreference();
+
   return (
-    <SidebarProvider>
+    <SidebarProvider
+      open={sidebarExpanded}
+      onOpenChange={toggleSidebar}
+      style={{
+        '--sidebar-width': '240px',
+        '--sidebar-width-icon': '200px',
+      } as React.CSSProperties}
+    >
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <main className="flex-1 flex flex-col min-w-0 relative">
-          {/* Header — 60px, glassmorphism */}
           <header className="h-[60px] border-b border-border flex items-center justify-between px-5 bg-background/80 backdrop-blur-xl sticky top-0 z-30">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors" />
