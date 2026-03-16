@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Pencil, Trash2, Loader2, ExternalLink, Phone, Mail, MapPin, Lock } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Loader2, ExternalLink, Phone, Mail, MapPin, Lock, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
