@@ -61,6 +61,7 @@ export function ConcorrentesCard({ concorrentes, loading, clienteId, onSaved }: 
       });
     }
     setEditing(false);
+    onSaved?.();
   };
 
   if (loading) {
