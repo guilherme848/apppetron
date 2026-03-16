@@ -109,6 +109,7 @@ const tabs = [
   { key: 'transcricoes', label: 'Transcrições', icon: FileText, type: 'transcription' as const },
   { key: 'reuniao', label: 'Reunião de Onboarding', icon: MessageSquare, type: 'answers' as const },
   { key: 'atividades', label: 'Atividades', icon: CheckSquare, type: 'activities' as const },
+  { key: 'checkup', label: 'Checkup do Cliente', icon: ClipboardCheck, type: 'checkup' as const },
 ];
 
 export default function StickyNav({ activeTab, onTabChange, transcriptionCount, answeredCount, totalQuestions, completedActivities, totalActivities }: StickyNavProps) {
