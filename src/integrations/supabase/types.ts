@@ -6491,6 +6491,7 @@ export type Database = {
       user_preferences: {
         Row: {
           created_at: string
+          expanded_groups: Json
           id: string
           sidebar_expanded: boolean
           updated_at: string
@@ -6498,6 +6499,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          expanded_groups?: Json
           id?: string
           sidebar_expanded?: boolean
           updated_at?: string
@@ -6505,6 +6507,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          expanded_groups?: Json
           id?: string
           sidebar_expanded?: boolean
           updated_at?: string

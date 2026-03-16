@@ -1,4 +1,5 @@
-import { LayoutDashboard, ChevronLeft } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { LayoutDashboard, ChevronLeft, ChevronDown } from 'lucide-react';
 import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
 import {
   Sidebar,
@@ -18,6 +19,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getMenuRoutes, RouteDefinition, MODULES } from '@/config/routeRegistry';
 import { cn } from '@/lib/utils';
 import petronLogo from '@/assets/petron-logo.png';
+import { useSidebarGroups } from './AppLayout';
 
 function getRouteIcon(route: RouteDefinition): React.ElementType {
   return route.icon || LayoutDashboard;
@@ -68,6 +70,7 @@ export function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
   const { state: sidebarState } = useSidebar();
+  const { toggleGroup, isGroupExpanded, initActiveGroup } = useSidebarGroups();
 
   const isExpanded = sidebarState === 'expanded';
 
@@ -85,15 +88,25 @@ export function AppSidebar() {
     }
   }
 
+  // Auto-expand the group containing the active route on first load
+  const initializedRef = useRef(false);
+  useEffect(() => {
+    if (isLoading || initializedRef.current) return;
+    initializedRef.current = true;
+    for (const { module } of moduleConfig) {
+      const routes = routesByModule[module];
+      if (routes?.some((r) => isRouteActive(r.path, currentPath))) {
+        initActiveGroup(module);
+        break;
+      }
+    }
+  }, [isLoading, routesByModule, currentPath, initActiveGroup]);
+
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center justify-between">
-          <img
-            src={petronLogo}
-            alt="Petron"
-            className="h-16 w-auto"
-          />
+          <img src={petronLogo} alt="Petron" className="h-16 w-auto" />
           <SidebarToggleButton isExpanded={isExpanded} />
         </div>
         <div className="mt-3 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
@@ -108,54 +121,75 @@ export function AppSidebar() {
             if (!routes || routes.length === 0) return null;
 
             const moduleActive = routes.some((r) => isRouteActive(r.path, currentPath));
+            // MAIN module (no label) is always open; others are click-toggled
+            const hasLabel = !!label;
+            const groupOpen = !hasLabel || isGroupExpanded(module);
 
             return (
               <SidebarGroup key={module} className="py-0.5">
-                {label && (
-                  <div
+                {hasLabel && (
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(module)}
                     className={cn(
-                      'px-3 py-2 cursor-default select-none',
+                      'w-full flex items-center justify-between px-3 py-2 cursor-pointer select-none',
                       'text-[10px] font-semibold uppercase tracking-[0.12em]',
+                      'transition-colors duration-150',
                       moduleActive
                         ? 'text-sidebar-primary'
-                        : 'text-sidebar-foreground/35',
-                      'transition-colors duration-200',
+                        : 'text-sidebar-foreground/35 hover:text-sidebar-foreground/70',
                     )}
                   >
-                    {label}
-                  </div>
+                    <span>{label}</span>
+                    {isExpanded && (
+                      <ChevronDown
+                        className={cn(
+                          'h-3 w-3 transition-transform duration-200 ease-out',
+                          !groupOpen && '-rotate-90',
+                        )}
+                      />
+                    )}
+                  </button>
                 )}
 
-                {/* In collapsed state, only group labels are shown — no items */}
                 {isExpanded && (
-                  <SidebarGroupContent>
-                    <SidebarMenu>
-                      {routes.map((route) => {
-                        const Icon = getRouteIcon(route);
-                        const isActive = isRouteActive(route.path, currentPath);
+                  <div
+                    className={cn(
+                      'overflow-hidden transition-all ease-out',
+                      groupOpen
+                        ? 'max-h-[600px] opacity-100 duration-200'
+                        : 'max-h-0 opacity-0 duration-150',
+                    )}
+                  >
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        {routes.map((route) => {
+                          const Icon = getRouteIcon(route);
+                          const isActive = isRouteActive(route.path, currentPath);
 
-                        return (
-                          <SidebarMenuItem key={route.id}>
-                            <SidebarMenuButton asChild data-active={isActive}>
-                              <RouterNavLink
-                                to={route.path}
-                                end
-                                className={cn(
-                                  'flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 text-[13px] relative',
-                                  isActive
-                                    ? 'text-sidebar-primary font-medium bg-primary/[0.08] sidebar-active-indicator'
-                                    : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50',
-                                )}
-                              >
-                                <Icon className="h-4 w-4 shrink-0" />
-                                <span className="truncate">{route.label}</span>
-                              </RouterNavLink>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        );
-                      })}
-                    </SidebarMenu>
-                  </SidebarGroupContent>
+                          return (
+                            <SidebarMenuItem key={route.id}>
+                              <SidebarMenuButton asChild data-active={isActive}>
+                                <RouterNavLink
+                                  to={route.path}
+                                  end
+                                  className={cn(
+                                    'flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 text-[13px] relative',
+                                    isActive
+                                      ? 'text-sidebar-primary font-medium bg-primary/[0.08] sidebar-active-indicator'
+                                      : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50',
+                                  )}
+                                >
+                                  <Icon className="h-4 w-4 shrink-0" />
+                                  <span className="truncate">{route.label}</span>
+                                </RouterNavLink>
+                              </SidebarMenuButton>
+                            </SidebarMenuItem>
+                          );
+                        })}
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </div>
                 )}
               </SidebarGroup>
             );
