@@ -340,6 +340,104 @@ export function useCsOverview() {
     return rows;
   }, [accounts]);
 
+  // Financial metrics
+  const financialMetrics = useMemo((): FinancialMetrics => {
+    const active = accounts.filter(a => a.status === 'active');
+
+    // LT per active client (months since start_date)
+    const ltValues = active
+      .filter(a => a.start_date)
+      .map(a => {
+        const start = parseISO(a.start_date);
+        return isValid(start) ? differenceInMonths(now, start) : 0;
+      });
+
+    const avgLT = ltValues.length > 0 ? ltValues.reduce((s, v) => s + v, 0) / ltValues.length : 0;
+    const maxLT = ltValues.length > 0 ? Math.max(...ltValues) : 0;
+    const minLT = ltValues.length > 0 ? Math.min(...ltValues) : 0;
+
+    // LTV per active client (LT * monthly_value)
+    const ltvValues = active
+      .filter(a => a.start_date && a.monthly_value)
+      .map(a => {
+        const start = parseISO(a.start_date);
+        const lt = isValid(start) ? differenceInMonths(now, start) : 0;
+        return { value: lt * Number(a.monthly_value || 0), name: a.name };
+      });
+
+    const avgLTV = ltvValues.length > 0 ? ltvValues.reduce((s, v) => s + v.value, 0) / ltvValues.length : 0;
+    const maxLTVEntry = ltvValues.length > 0
+      ? ltvValues.reduce((max, v) => v.value > max.value ? v : max, ltvValues[0])
+      : { value: 0, name: '' };
+
+    // Churn in selected month
+    const churnedInMonth = accounts.filter(a => {
+      if (a.status !== 'inactive' && a.status !== 'churned' && a.status !== 'canceled') return false;
+      const d = a.updated_at ? parseISO(a.updated_at) : null;
+      return d && isValid(d) && d >= monthStart && d <= monthEnd;
+    });
+
+    const revenueLost = churnedInMonth.reduce((s, a) => s + Number(a.monthly_value || 0), 0);
+
+    // Active at start of selected month (approximate: active + churned during/after selected month)
+    const activeAtStart = accounts.filter(a => {
+      if (a.status === 'active') return true;
+      if (a.status === 'inactive' || a.status === 'churned' || a.status === 'canceled') {
+        const d = a.updated_at ? parseISO(a.updated_at) : null;
+        return d && isValid(d) && d >= monthStart;
+      }
+      return false;
+    }).length;
+
+    const churnRate = activeAtStart > 0 ? (churnedInMonth.length / activeAtStart) * 100 : 0;
+
+    // Churn history (last 12 months, always)
+    const churnHistory: ChurnHistoryItem[] = [];
+    const currentMonthKey = format(startOfMonth(now), 'yyyy-MM');
+    for (let i = 11; i >= 0; i--) {
+      const m = startOfMonth(subMonths(now, i));
+      const mEnd = endOfMonth(m);
+      const label = format(m, "MMM/yy", { locale: ptBR }).replace(/^\w/, c => c.toUpperCase());
+
+      const churnedThisMonth = accounts.filter(a => {
+        if (a.status !== 'inactive' && a.status !== 'churned' && a.status !== 'canceled') return false;
+        const d = a.updated_at ? parseISO(a.updated_at) : null;
+        return d && isValid(d) && d >= m && d <= mEnd;
+      });
+
+      const activeAtM = accounts.filter(a => {
+        if (a.status === 'active') return true;
+        if (a.status === 'inactive' || a.status === 'churned' || a.status === 'canceled') {
+          const d = a.updated_at ? parseISO(a.updated_at) : null;
+          return d && isValid(d) && d >= m;
+        }
+        return false;
+      }).length;
+
+      churnHistory.push({
+        label,
+        month: format(m, 'yyyy-MM'),
+        cancelations: churnedThisMonth.length,
+        churnRate: activeAtM > 0 ? (churnedThisMonth.length / activeAtM) * 100 : 0,
+        revenueLost: churnedThisMonth.reduce((s, a) => s + Number(a.monthly_value || 0), 0),
+        isCurrent: format(m, 'yyyy-MM') === currentMonthKey,
+      });
+    }
+
+    return {
+      avgLT: Math.round(avgLT * 10) / 10,
+      avgLTV,
+      maxLT,
+      minLT,
+      maxLTV: maxLTVEntry,
+      churnRate: Math.round(churnRate * 10) / 10,
+      churnCount: churnedInMonth.length,
+      revenueLost,
+      churnedClientNames: churnedInMonth.map(a => a.name),
+      churnHistory,
+    };
+  }, [accounts, monthStart, monthEnd]);
+
   const selectedMonthLabel = format(selectedMonth, "MMMM yyyy", { locale: ptBR }).replace(/^\w/, c => c.toUpperCase());
 
   return {
@@ -355,6 +453,7 @@ export function useCsOverview() {
     churnByNiche,
     churnByPlan,
     cohortData,
+    financialMetrics,
     refetch: fetchData,
   };
 }
