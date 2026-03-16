@@ -852,38 +852,6 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
             </div>
           </div>
 
-          {/* Serviços Contratados - only show when editing */}
-          {isEditing && (
-            <>
-              <GradientSeparator />
-              <div className="space-y-4">
-                <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.12em]">Serviços Contratados</h3>
-                {loadingServices ? (
-                  <div className="flex items-center gap-2 py-4">
-                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Carregando serviços...</span>
-                  </div>
-                ) : services.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-2">Nenhum plano cadastrado no sistema.</p>
-                ) : (
-                  <div className="grid grid-cols-1 gap-3">
-                    {services.filter(s => s.active).map((service) => (
-                      <div
-                        key={service.id}
-                        className="flex items-center justify-between rounded-xl border border-border px-4 py-3 transition-colors hover:border-primary/20"
-                      >
-                        <span className="text-sm font-medium">{service.name}</span>
-                        <Switch
-                          checked={accountServiceIds.includes(service.id)}
-                          onCheckedChange={(checked) => toggleAccountService(service.id, checked)}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </>
-          )}
 
           {/* Tráfego Pago - only if service has traffic */}
           {serviceHasTraffic && isEditing && (
