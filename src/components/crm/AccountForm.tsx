@@ -427,6 +427,28 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
   const handleSelectChange = (field: keyof typeof formData) => (value: string) => {
     const actualValue = value === 'none' || value === 'inherit' ? '' : value;
     setFormData(prev => ({ ...prev, [field]: actualValue }));
+
+    // When service (plan) changes, clear team fields that no longer apply
+    if (field === 'service_id' && isEditing && account) {
+      const newService = services.find(s => s.id === actualValue);
+      const extraUpdates: Record<string, any> = {};
+
+      if (newService && !(newService as any).has_traffic && account.traffic_member_id) {
+        extraUpdates.traffic_member_id = null;
+        toast.info('O gestor de tráfego foi removido pois o novo plano não inclui tráfego pago.');
+      }
+      if (newService && !(newService as any).has_content && account.social_member_id) {
+        extraUpdates.social_member_id = null;
+        toast.info('O responsável de Social Media foi removido pois o novo plano não inclui conteúdo.');
+      }
+
+      if (Object.keys(extraUpdates).length > 0 && !skipAutoSave.current) {
+        // Save plan change + team nullifications together
+        saveNow({ [field]: actualValue, ...extraUpdates });
+        return;
+      }
+    }
+
     if (isEditing && !skipAutoSave.current) {
       saveNow({ [field]: actualValue });
     }

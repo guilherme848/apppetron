@@ -1,8 +1,10 @@
+import { useMemo } from 'react';
 import { Account } from '@/types/crm';
-import { getAccountTeamStatus, ROLE_KEY_LABELS, RoleKey } from '@/lib/accountTeam';
+import { getAccountTeamStatus, PlanFlags, DEFAULT_PLAN_FLAGS } from '@/lib/accountTeam';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, AlertTriangle, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useSettings } from '@/contexts/SettingsContext';
 
 interface AccountTeamStatusProps {
   account: Account | null | undefined;
@@ -11,7 +13,16 @@ interface AccountTeamStatusProps {
 }
 
 export function AccountTeamStatus({ account, showDetails = false, className }: AccountTeamStatusProps) {
-  const status = getAccountTeamStatus(account);
+  const { services } = useSettings();
+
+  const planFlags: PlanFlags = useMemo(() => {
+    if (!account?.service_id) return DEFAULT_PLAN_FLAGS;
+    const svc = services.find((s: any) => s.id === account.service_id);
+    if (!svc) return DEFAULT_PLAN_FLAGS;
+    return { has_content: (svc as any).has_content ?? true, has_traffic: (svc as any).has_traffic ?? true };
+  }, [account?.service_id, services]);
+
+  const status = getAccountTeamStatus(account, planFlags);
   
   if (!account) {
     return null;
