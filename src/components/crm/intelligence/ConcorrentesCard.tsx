@@ -24,7 +24,7 @@ interface Draft {
   observacoes: string;
 }
 
-export function ConcorrentesCard({ concorrentes, loading, clienteId }: ConcorrentesCardProps) {
+export function ConcorrentesCard({ concorrentes, loading, clienteId, onSaved }: ConcorrentesCardProps) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [editing, setEditing] = useState(false);
   const intel = useClientIntelligence(editing ? clienteId : null);
