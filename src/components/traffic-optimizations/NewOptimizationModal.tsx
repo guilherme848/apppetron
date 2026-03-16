@@ -18,6 +18,7 @@ interface Props {
   teamMembers: { id: string; name: string; role_id?: string | null; active?: boolean }[];
   currentMemberId: string | null;
   onSubmit: (input: OptimizationInput) => Promise<any>;
+  initialClientId?: string | null;
 }
 
 export function NewOptimizationModal({ open, onOpenChange, accounts, teamMembers, currentMemberId, onSubmit }: Props) {
