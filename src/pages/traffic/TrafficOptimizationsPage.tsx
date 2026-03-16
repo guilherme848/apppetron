@@ -14,6 +14,7 @@ import { NewOptimizationModal } from '@/components/traffic-optimizations/NewOpti
 
 export default function TrafficOptimizationsPage() {
   const [showNewModal, setShowNewModal] = useState(false);
+  const [preselectedClientId, setPreselectedClientId] = useState<string | null>(null);
   const optimizationsData = useTrafficOptimizations();
   const { accounts } = useCrm();
   const { members: teamMembers } = useTeamMembers();
