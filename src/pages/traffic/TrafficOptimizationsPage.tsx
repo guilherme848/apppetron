@@ -105,11 +105,15 @@ export default function TrafficOptimizationsPage() {
       {/* Modal */}
       <NewOptimizationModal
         open={showNewModal}
-        onOpenChange={setShowNewModal}
+        onOpenChange={(open) => {
+          setShowNewModal(open);
+          if (!open) setPreselectedClientId(null);
+        }}
         accounts={activeAccounts}
         teamMembers={teamMembers}
         currentMemberId={optimizationsData.currentMemberId}
         onSubmit={optimizationsData.addOptimization}
+        initialClientId={preselectedClientId}
       />
     </div>
   );
