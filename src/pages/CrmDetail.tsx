@@ -308,6 +308,13 @@ export default function CrmDetail() {
         </Card>
       </div>
 
+      {/* Inteligência do Cliente */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <LinksCard links={clienteLinks} loading={intelLoading} />
+        <ConcorrentesCard concorrentes={concorrentes} loading={intelLoading} />
+        <ArquivosCard anexos={anexos} loading={intelLoading} onDelete={deleteAnexo} />
+      </div>
+
       {/* Tarefas — full width */}
       <Card className="rounded-2xl">
         <CardHeader className="flex flex-row items-center justify-between">
