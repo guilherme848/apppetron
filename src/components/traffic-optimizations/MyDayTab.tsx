@@ -49,10 +49,10 @@ export function OptimizationMyDayTab({
   const todayAltaDone = useMemo(() => {
     return new Set(
       optimizations
-        .filter((o) => o.optimization_date === todayStr && o.task_type === 'alta' && o.member_id === currentMemberId)
+        .filter((o) => o.optimization_date === todayStr && o.task_type === 'alta' && (isAdmin || o.member_id === currentMemberId))
         .map((o) => o.client_id)
     );
-  }, [optimizations, todayStr, currentMemberId]);
+  }, [optimizations, todayStr, currentMemberId, isAdmin]);
 
   const completedCheckins = checkedInClientIds.size;
   const totalClients = myClients.length;
