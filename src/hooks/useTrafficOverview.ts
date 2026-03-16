@@ -7,6 +7,7 @@ interface OverviewClient {
   name: string;
   ad_monthly_budget: number | null;
   traffic_member_id: string | null;
+  service_id: string | null;
 }
 
 interface OverviewOptimization {
