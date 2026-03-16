@@ -104,15 +104,27 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border p-4">
-        <div className="flex items-center justify-between">
-          <img src={petronLogo} alt="Petron" className="h-16 w-auto" />
+      {/* Header: always visible — logo + toggle */}
+      <SidebarHeader className="border-b border-sidebar-border p-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className={cn(
+            'overflow-hidden transition-all duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)]',
+            isExpanded ? 'w-auto opacity-100' : 'w-0 opacity-0'
+          )}>
+            <img src={petronLogo} alt="Petron" className="h-12 w-auto shrink-0" />
+          </div>
           <SidebarToggleButton isExpanded={isExpanded} />
         </div>
-        <div className="mt-3 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+        {isExpanded && (
+          <div className="mt-2 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+        )}
       </SidebarHeader>
 
-      <SidebarContent className="py-2">
+      {/* Menu content: visible only when expanded, with transition */}
+      <SidebarContent className={cn(
+        'py-2 transition-opacity duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)]',
+        isExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none'
+      )}>
         {isLoading ? (
           <SidebarSkeleton />
         ) : (
@@ -121,7 +133,6 @@ export function AppSidebar() {
             if (!routes || routes.length === 0) return null;
 
             const moduleActive = routes.some((r) => isRouteActive(r.path, currentPath));
-            // MAIN module (no label) is always open; others are click-toggled
             const hasLabel = !!label;
             const groupOpen = !hasLabel || isGroupExpanded(module);
 
@@ -141,56 +152,52 @@ export function AppSidebar() {
                     )}
                   >
                     <span>{label}</span>
-                    {isExpanded && (
-                      <ChevronDown
-                        className={cn(
-                          'h-3 w-3 transition-transform duration-200 ease-out',
-                          !groupOpen && '-rotate-90',
-                        )}
-                      />
-                    )}
+                    <ChevronDown
+                      className={cn(
+                        'h-3 w-3 transition-transform duration-200 ease-out',
+                        !groupOpen && '-rotate-90',
+                      )}
+                    />
                   </button>
                 )}
 
-                {isExpanded && (
-                  <div
-                    className={cn(
-                      'overflow-hidden transition-all ease-out',
-                      groupOpen
-                        ? 'max-h-[600px] opacity-100 duration-200'
-                        : 'max-h-0 opacity-0 duration-150',
-                    )}
-                  >
-                    <SidebarGroupContent>
-                      <SidebarMenu>
-                        {routes.map((route) => {
-                          const Icon = getRouteIcon(route);
-                          const isActive = isRouteActive(route.path, currentPath);
+                <div
+                  className={cn(
+                    'overflow-hidden transition-all ease-out',
+                    groupOpen
+                      ? 'max-h-[600px] opacity-100 duration-200'
+                      : 'max-h-0 opacity-0 duration-150',
+                  )}
+                >
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      {routes.map((route) => {
+                        const Icon = getRouteIcon(route);
+                        const isActive = isRouteActive(route.path, currentPath);
 
-                          return (
-                            <SidebarMenuItem key={route.id}>
-                              <SidebarMenuButton asChild data-active={isActive}>
-                                <RouterNavLink
-                                  to={route.path}
-                                  end
-                                  className={cn(
-                                    'flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 text-[13px] relative',
-                                    isActive
-                                      ? 'text-sidebar-primary font-medium bg-primary/[0.08] sidebar-active-indicator'
-                                      : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50',
-                                  )}
-                                >
-                                  <Icon className="h-4 w-4 shrink-0" />
-                                  <span className="truncate">{route.label}</span>
-                                </RouterNavLink>
-                              </SidebarMenuButton>
-                            </SidebarMenuItem>
-                          );
-                        })}
-                      </SidebarMenu>
-                    </SidebarGroupContent>
-                  </div>
-                )}
+                        return (
+                          <SidebarMenuItem key={route.id}>
+                            <SidebarMenuButton asChild data-active={isActive}>
+                              <RouterNavLink
+                                to={route.path}
+                                end
+                                className={cn(
+                                  'flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 text-[13px] relative',
+                                  isActive
+                                    ? 'text-sidebar-primary font-medium bg-primary/[0.08] sidebar-active-indicator'
+                                    : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50',
+                                )}
+                              >
+                                <Icon className="h-4 w-4 shrink-0" />
+                                <span className="truncate">{route.label}</span>
+                              </RouterNavLink>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        );
+                      })}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </div>
               </SidebarGroup>
             );
           })
@@ -210,7 +217,7 @@ function SidebarToggleButton({ isExpanded }: { isExpanded: boolean }) {
           <button
             onClick={toggleSidebar}
             className={cn(
-              'h-7 w-7 rounded-full flex items-center justify-center',
+              'h-7 w-7 shrink-0 rounded-full flex items-center justify-center',
               'bg-card border border-border',
               'text-sidebar-foreground/50 hover:text-sidebar-foreground',
               'transition-colors duration-150',
