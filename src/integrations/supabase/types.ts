@@ -57,6 +57,9 @@ export type Database = {
           ad_payment_method: string | null
           address_complement: string | null
           billing_day: number | null
+          checkup_classificacao: string | null
+          checkup_pontuacao: number | null
+          checkup_updated_at: string | null
           churned_at: string | null
           city: string | null
           contact_email: string | null
@@ -102,6 +105,9 @@ export type Database = {
           ad_payment_method?: string | null
           address_complement?: string | null
           billing_day?: number | null
+          checkup_classificacao?: string | null
+          checkup_pontuacao?: number | null
+          checkup_updated_at?: string | null
           churned_at?: string | null
           city?: string | null
           contact_email?: string | null
@@ -147,6 +153,9 @@ export type Database = {
           ad_payment_method?: string | null
           address_complement?: string | null
           billing_day?: number | null
+          checkup_classificacao?: string | null
+          checkup_pontuacao?: number | null
+          checkup_updated_at?: string | null
           churned_at?: string | null
           city?: string | null
           contact_email?: string | null
@@ -429,6 +438,85 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cliente_checkup: {
+        Row: {
+          atendimento_whatsapp: number | null
+          atividade_redes: number | null
+          bonus_acabamento: boolean | null
+          classificacao: string | null
+          client_id: string
+          created_at: string | null
+          habitantes_raio: number | null
+          id: string
+          maturidade_comercial: number | null
+          mix_produtos: number | null
+          onboarding_id: string
+          pontuacao_total: number | null
+          preenchido_por_id: string | null
+          producao_video: number | null
+          tamanho_operacao: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          atendimento_whatsapp?: number | null
+          atividade_redes?: number | null
+          bonus_acabamento?: boolean | null
+          classificacao?: string | null
+          client_id: string
+          created_at?: string | null
+          habitantes_raio?: number | null
+          id?: string
+          maturidade_comercial?: number | null
+          mix_produtos?: number | null
+          onboarding_id: string
+          pontuacao_total?: number | null
+          preenchido_por_id?: string | null
+          producao_video?: number | null
+          tamanho_operacao?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          atendimento_whatsapp?: number | null
+          atividade_redes?: number | null
+          bonus_acabamento?: boolean | null
+          classificacao?: string | null
+          client_id?: string
+          created_at?: string | null
+          habitantes_raio?: number | null
+          id?: string
+          maturidade_comercial?: number | null
+          mix_produtos?: number | null
+          onboarding_id?: string
+          pontuacao_total?: number | null
+          preenchido_por_id?: string | null
+          producao_video?: number | null
+          tamanho_operacao?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_checkup_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_checkup_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: true
+            referencedRelation: "onboardings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_checkup_preenchido_por_id_fkey"
+            columns: ["preenchido_por_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
             referencedColumns: ["id"]
           },
         ]

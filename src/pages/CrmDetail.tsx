@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Pencil, Trash2, Loader2, ExternalLink, Phone, Mail, MapPin, Lock } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Loader2, ExternalLink, Phone, Mail, MapPin, Lock, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -207,6 +207,45 @@ export default function CrmDetail() {
             </div>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               <AccountStatusBadge status={account.status} />
+              {/* Checkup classification badge */}
+              {(account as any).checkup_classificacao ? (() => {
+                const cls = (account as any).checkup_classificacao as string;
+                const pts = (account as any).checkup_pontuacao;
+                const updAt = (account as any).checkup_updated_at;
+                const colorMap: Record<string, string> = { A: '#10b981', B: '#6366f1', C: '#f59e0b', D: '#ef4444' };
+                const c = colorMap[cls] || '#6b7280';
+                return (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span
+                          className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-md border cursor-help"
+                          style={{ color: c, background: `${c}1f`, borderColor: `${c}40` }}
+                        >
+                          {cls === 'A' && <Star className="h-3 w-3 fill-current" />}
+                          Perfil {cls}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Pontuação: {pts} pts{updAt ? ` — Atualizado em ${new Date(updAt).toLocaleDateString('pt-BR')}` : ''}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                );
+              })() : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex items-center text-xs text-muted-foreground px-2.5 py-0.5 rounded-md border border-border bg-muted cursor-help">
+                        Sem classificação
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Checkup não realizado</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
               {account.niche && <span className="text-sm text-muted-foreground">• {account.niche}</span>}
               <span className="text-sm text-muted-foreground">
                 • Cliente desde {formatDate(account.created_at)}

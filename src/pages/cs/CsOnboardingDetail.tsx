@@ -25,6 +25,8 @@ import StickyNav from '@/components/cs/onboarding-detail/StickyNav';
 import TranscriptionUploadCard from '@/components/cs/onboarding-detail/TranscriptionUploadCard';
 import MeetingSection from '@/components/cs/onboarding-detail/MeetingSection';
 import ActivitiesSection from '@/components/cs/onboarding-detail/ActivitiesSection';
+import CheckupSection from '@/components/cs/onboarding-detail/CheckupSection';
+import { useClienteCheckup, countFilled } from '@/hooks/useClienteCheckup';
 
 function getPlanBadgeClass(planName?: string): string {
   if (!planName) return 'bg-muted text-muted-foreground border-border';
@@ -66,6 +68,8 @@ export default function CsOnboardingDetail() {
   const { data: respostas, isLoading: loadingRespostas } = useOnboardingRespostas(onboardingId || null);
   const { data: questions, isLoading: loadingQuestions } = useOnboardingQuestions();
 
+  const { data: checkupData } = useClienteCheckup(onboardingId || null);
+
   const upsertResposta = useUpsertResposta();
   const updateAtividade = useUpdateAtividade();
   const completeOnboarding = useCompleteOnboarding();
@@ -100,6 +104,13 @@ export default function CsOnboardingDetail() {
     if ((onboarding as any).transcricao_onboarding_nome) count++;
     return count;
   }, [onboarding]);
+
+  const checkupFilled = useMemo(() => {
+    if (!checkupData) return 0;
+    const dims = ['atividade_redes', 'producao_video', 'mix_produtos', 'atendimento_whatsapp', 'maturidade_comercial', 'habitantes_raio', 'tamanho_operacao'] as const;
+    return dims.filter(d => (checkupData as any)[d] != null).length;
+  }, [checkupData]);
+  const checkupClassificacao = checkupData?.classificacao || null;
 
   const handleTabChange = useCallback((tab: string) => {
     setActiveTab(tab);
@@ -280,6 +291,8 @@ export default function CsOnboardingDetail() {
         totalQuestions={questions?.length || 0}
         completedActivities={completedCount}
         totalActivities={totalCount}
+        checkupFilled={checkupFilled}
+        checkupClassificacao={checkupClassificacao}
       />
 
       {/* Tab content — only active tab is rendered */}
@@ -347,6 +360,14 @@ export default function CsOnboardingDetail() {
             trafficMembers={trafficMembers}
             onToggle={handleToggleAtividade}
             onResponsavelChange={handleResponsavelChange}
+          />
+        )}
+
+        {activeTab === 'checkup' && onboarding.client_id && (
+          <CheckupSection
+            onboardingId={onboardingId || ''}
+            clientId={onboarding.client_id}
+            isConcluido={isConcluido}
           />
         )}
       </div>
