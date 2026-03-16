@@ -17,7 +17,7 @@ import { ConcorrentesCard } from '@/components/crm/intelligence/ConcorrentesCard
 import { ArquivosCard } from '@/components/crm/intelligence/ArquivosCard';
 import { ClientTrafficSection } from '@/components/crm/ClientTrafficSection';
 import { useCrm } from '@/contexts/CrmContext';
-import { Contract, Task, ContractStatus, TaskStatus, Account } from '@/types/crm';
+import { Contract, ContractStatus, Account } from '@/types/crm';
 import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
 import { toast } from '@/hooks/use-toast';
 import { useSensitivePermission } from '@/hooks/useSensitivePermission';
