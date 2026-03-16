@@ -370,13 +370,7 @@ export default function CsOnboardingDetail() {
             isConcluido={isConcluido}
           />
         )}
-            isConcluido={isConcluido}
-            csMembers={csMembers}
-            trafficMembers={trafficMembers}
-            onToggle={handleToggleAtividade}
-            onResponsavelChange={handleResponsavelChange}
-          />
-        )}
+      </div>
       </div>
 
       {/* Complete Dialog */}
