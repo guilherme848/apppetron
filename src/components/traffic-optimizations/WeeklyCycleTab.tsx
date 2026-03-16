@@ -58,12 +58,14 @@ interface Account {
   name: string;
   traffic_member_id?: string | null;
   niche?: string | null;
+  midias_ativas?: string[] | null;
 }
 
 interface Props {
   accounts: Account[];
   teamMembers: { id: string; name: string }[];
   weeklyCycle: WeeklyCycleEntry[];
+  optimizations: TrafficOptimization[];
   currentMemberId: string | null;
   isAdmin?: boolean;
   loading?: boolean;
@@ -75,6 +77,7 @@ interface Props {
     entries: { client_id: string; weekday: number }[],
     managerId?: string,
   ) => Promise<any>;
+  addOptimization: (input: OptimizationInput) => Promise<any>;
   onClientClick?: (clientId: string) => void;
 }
 
