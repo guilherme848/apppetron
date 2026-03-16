@@ -68,7 +68,7 @@ export default function CrmDetail() {
   const { canViewFinancialValues } = useSensitivePermission();
   const showFinancialValues = canViewFinancialValues();
   const { events: historyEvents, loading: historyLoading } = useAccountHistory(id);
-  const { links: clienteLinks, concorrentes, anexos, loading: intelLoading, deleteAnexo } = useClientIntelligence(id);
+  const { links: clienteLinks, concorrentes, anexos, loading: intelLoading, deleteAnexo, refetch: refetchIntel } = useClientIntelligence(id);
 
   const [contractFormOpen, setContractFormOpen] = useState(false);
   const [accountFormOpen, setAccountFormOpen] = useState(false);
