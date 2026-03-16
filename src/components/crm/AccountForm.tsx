@@ -135,6 +135,9 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
   // Account services (toggles)
   const [accountServiceIds, setAccountServiceIds] = useState<string[]>([]);
   const [loadingServices, setLoadingServices] = useState(false);
+  
+  // Mídias ativas
+  const [midiasAtivas, setMidiasAtivas] = useState<string[]>(account?.midias_ativas || ['meta_ads']);
 
   // Load account services when editing
   useEffect(() => {
