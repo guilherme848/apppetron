@@ -64,7 +64,7 @@ export default function CrmDetail() {
 
   const account = getAccountById(id!);
   const contracts = getContractsByAccount(id!);
-  const tasks = getTasksByAccount(id!);
+  
   const { canViewFinancialValues } = useSensitivePermission();
   const showFinancialValues = canViewFinancialValues();
   const { events: historyEvents, loading: historyLoading } = useAccountHistory(id);
