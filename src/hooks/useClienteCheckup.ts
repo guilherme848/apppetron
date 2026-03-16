@@ -128,9 +128,9 @@ export function useUpsertCheckup() {
           .eq('id', (existing as any).id);
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from('cliente_checkup' as any)
-          .insert(payload as any);
+        const { error } = await (supabase as any)
+          .from('cliente_checkup')
+          .insert(payload);
         if (error) throw error;
       }
 
