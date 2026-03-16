@@ -15,6 +15,7 @@ import { useAutoSave } from '@/hooks/useAutoSave';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { SaveStatus } from '@/components/ui/save-status';
+import { cn } from '@/lib/utils';
 import {
   Tooltip,
   TooltipContent,
