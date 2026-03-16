@@ -65,6 +65,7 @@ export interface CohortRow {
   months: (number | null)[];
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useCsOverview() {
   const [accounts, setAccounts] = useState<any[]>([]);
   const [onboardings, setOnboardings] = useState<any[]>([]);
