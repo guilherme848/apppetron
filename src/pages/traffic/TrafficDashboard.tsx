@@ -1,20 +1,20 @@
+import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Users,
   AlertTriangle,
-  CheckCircle2,
+  CheckCircle,
   Clock,
   Zap,
   ExternalLink,
-  Loader2,
   ShieldCheck,
+  ChevronRight,
+  Eye,
   CircleDollarSign,
   Image,
-  ChevronRight,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -24,15 +24,15 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTrafficOverview } from '@/hooks/useTrafficOverview';
 import { TASK_TYPE_OPTIONS } from '@/hooks/useTrafficOptimizations';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
-const COMPLEXITY_COLORS: Record<string, string> = {
-  Leve: 'bg-muted text-muted-foreground',
-  Média: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-  Alta: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
-};
+/* ── helpers ─────────────────────────────── */
 
 function getInitials(name: string) {
   return name
@@ -43,8 +43,53 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
+const taskTypeLabel = (type: string) =>
+  TASK_TYPE_OPTIONS.find((t) => t.value === type)?.label || type;
+
+const taskTypeComplexity = (type: string) =>
+  TASK_TYPE_OPTIONS.find((t) => t.value === type)?.complexity || 'Leve';
+
+const COMPLEXITY_BADGE: Record<string, string> = {
+  Leve: 'bg-[hsl(var(--success)/.12)] text-[hsl(var(--success))]',
+  Média: 'bg-[hsl(var(--info)/.12)] text-[hsl(var(--info))]',
+  Alta: 'bg-[hsl(var(--primary)/.12)] text-[hsl(var(--primary))]',
+};
+
+const todayFormatted = format(new Date(), "d 'de' MMMM 'de' yyyy", { locale: ptBR });
+
+/* ── Skeleton loader ─────────────────────── */
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6 px-2 md:px-0 animate-in fade-in duration-200">
+      {/* header */}
+      <div className="space-y-2">
+        <Skeleton className="h-7 w-40" />
+        <Skeleton className="h-4 w-64" />
+      </div>
+      {/* kpis */}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-[110px] rounded-2xl" />
+        ))}
+      </div>
+      {/* alerts */}
+      <div className="grid lg:grid-cols-2 gap-4">
+        <Skeleton className="h-[320px] rounded-2xl" />
+        <Skeleton className="h-[320px] rounded-2xl" />
+      </div>
+      {/* table */}
+      <Skeleton className="h-[280px] rounded-2xl" />
+    </div>
+  );
+}
+
+/* ── Main ────────────────────────────────── */
+
 export default function TrafficDashboard() {
   const navigate = useNavigate();
+  const noCheckinRef = useRef<HTMLDivElement>(null);
+
   const {
     loading,
     totalActiveClients,
@@ -58,365 +103,401 @@ export default function TrafficDashboard() {
     getClientBalance,
   } = useTrafficOverview();
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+  if (loading) return <DashboardSkeleton />;
 
-  const taskTypeLabel = (type: string) =>
-    TASK_TYPE_OPTIONS.find((t) => t.value === type)?.label || type;
-  const taskTypeComplexity = (type: string) =>
-    TASK_TYPE_OPTIONS.find((t) => t.value === type)?.complexity || 'Leve';
-
+  /* ── KPI definitions ───────────────────── */
   const kpis = [
     {
-      label: 'Clientes Ativos',
+      label: 'CLIENTES ATIVOS',
       value: totalActiveClients,
+      sub: 'com tráfego pago ativo',
       icon: Users,
-      borderColor: 'border-l-blue-500',
-      iconColor: 'text-blue-500',
-      valueColor: 'text-foreground',
-      onClick: undefined,
+      color: '',
+      onClick: undefined as (() => void) | undefined,
+      glow: '',
     },
     {
-      label: 'Saldo Baixo',
+      label: 'SALDO BAIXO',
       value: lowBalanceClients.length,
+      sub: 'contas precisam de atenção',
       icon: AlertTriangle,
-      borderColor: 'border-l-destructive',
-      iconColor: 'text-destructive',
-      valueColor: 'text-destructive',
+      color: lowBalanceClients.length > 0 ? 'text-destructive' : '',
       onClick: () => navigate('/traffic/balances'),
+      glow: lowBalanceClients.length > 0 ? 'shadow-[0_0_20px_hsl(0_84%_60%/.08)]' : '',
     },
     {
-      label: 'Check-ins Hoje',
+      label: 'CHECK-INS HOJE',
       value: todayCheckins.length,
-      icon: CheckCircle2,
-      borderColor: 'border-l-emerald-500',
-      iconColor: 'text-emerald-600',
-      valueColor: 'text-emerald-600',
-      onClick: undefined,
+      sub: `de ${totalActiveClients} clientes`,
+      icon: CheckCircle,
+      color: todayCheckins.length > 0 ? 'text-[hsl(var(--success))]' : '',
+      onClick: undefined as (() => void) | undefined,
+      glow: '',
     },
     {
-      label: 'Sem Check-in',
+      label: 'SEM CHECK-IN',
       value: clientsWithoutCheckin.length,
+      sub: 'aguardando check-in hoje',
       icon: Clock,
-      borderColor: 'border-l-yellow-500',
-      iconColor: 'text-yellow-600',
-      valueColor: 'text-yellow-600',
-      onClick: () => navigate('/traffic/optimizations'),
+      color: clientsWithoutCheckin.length > 0 ? 'text-[hsl(var(--warning))]' : '',
+      onClick: () => noCheckinRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+      glow: clientsWithoutCheckin.length > 0 ? 'shadow-[0_0_20px_hsl(45_93%_47%/.08)]' : '',
     },
     {
-      label: 'Otimizações (Semana)',
+      label: 'OTIMIZAÇÕES (SEMANA)',
       value: weekOptimizations.length,
+      sub: 'registradas esta semana',
       icon: Zap,
-      borderColor: 'border-l-purple-500',
-      iconColor: 'text-purple-600',
-      valueColor: 'text-foreground',
-      onClick: undefined,
+      color: weekOptimizations.length > 0 ? 'text-[hsl(var(--primary))]' : '',
+      onClick: undefined as (() => void) | undefined,
+      glow: '',
     },
   ];
 
-  const hasNoAlerts =
-    clientsWithoutCheckin.length === 0 &&
-    lowBalanceClients.length === 0 &&
-    pendingCreatives.length === 0;
+  const totalAlerts = lowBalanceClients.length + pendingCreatives.length;
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Visão Geral — Tráfego Pago
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Painel operacional do gestor de tráfego
-        </p>
-      </div>
+    <div className="relative space-y-6">
+      {/* ambient gradient (dark mode) */}
+      <div className="pointer-events-none fixed inset-x-0 top-0 h-[420px] z-0 dark:bg-[radial-gradient(ellipse_80%_40%_at_50%_-10%,hsl(25_95%_53%/.04),transparent)]" />
 
-      {/* ───────── KPI CARDS ───────── */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {kpis.map((kpi) => {
-          const Icon = kpi.icon;
-          return (
-            <Card
-              key={kpi.label}
-              className={cn(
-                'border-l-4 bg-card shadow-sm transition-all',
-                kpi.borderColor,
-                kpi.onClick && 'cursor-pointer hover:shadow-md hover:-translate-y-0.5',
-              )}
-              onClick={kpi.onClick}
-            >
-              <CardContent className="p-4 flex flex-col gap-1">
-                <div className="flex items-center gap-2">
-                  <Icon className={cn('h-4 w-4', kpi.iconColor)} />
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+      <div className="relative z-10 space-y-6">
+
+        {/* ═══════ HEADER ═══════ */}
+        <div
+          className="animate-in fade-in slide-in-from-bottom-2 duration-300"
+          style={{ animationDelay: '0ms' }}
+        >
+          <h1 className="text-2xl font-bold tracking-tight">Visão Geral</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Tráfego Pago · {todayFormatted}
+          </p>
+        </div>
+
+        {/* ═══════ KPI CARDS ═══════ */}
+        <div
+          className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 animate-in fade-in slide-in-from-bottom-3 duration-300"
+          style={{ animationDelay: '40ms' }}
+        >
+          {kpis.map((kpi) => {
+            const Icon = kpi.icon;
+            return (
+              <div
+                key={kpi.label}
+                onClick={kpi.onClick}
+                className={cn(
+                  'group rounded-2xl border border-border bg-card p-5 transition-all duration-150',
+                  kpi.onClick && 'cursor-pointer',
+                  kpi.glow,
+                  'hover:border-foreground/20',
+                )}
+              >
+                {/* top row */}
+                <div className="flex items-start justify-between">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                     {kpi.label}
                   </span>
+                  <Icon className="h-[18px] w-[18px] text-muted-foreground" />
                 </div>
-                <p className={cn('text-3xl font-bold leading-none mt-1', kpi.valueColor)}>
+                {/* value */}
+                <p
+                  className={cn(
+                    'mt-2 text-[32px] font-extrabold leading-none font-mono',
+                    kpi.color || 'text-foreground',
+                  )}
+                >
                   {kpi.value}
                 </p>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                {/* sub */}
+                <span className="mt-1.5 block text-xs text-muted-foreground">
+                  {kpi.sub}
+                </span>
+              </div>
+            );
+          })}
+        </div>
 
-      {/* ───────── ALERTS SECTION ───────── */}
-      <div className="grid lg:grid-cols-2 gap-5">
-        {/* Left — Sem Check-in */}
-        <Card className="shadow-sm">
-          <CardHeader className="pb-3 border-b bg-yellow-50/60 dark:bg-yellow-900/10 rounded-t-lg">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-yellow-600" />
-              <CardTitle className="text-sm font-semibold text-yellow-800 dark:text-yellow-400">
-                Sem Check-in Hoje
-              </CardTitle>
+        {/* ═══════ ALERTS GRID ═══════ */}
+        <div
+          ref={noCheckinRef}
+          className="grid lg:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-3 duration-300"
+          style={{ animationDelay: '80ms' }}
+        >
+          {/* ── Left: Sem Check-in Hoje ── */}
+          <div className="rounded-2xl border border-border bg-card p-6">
+            {/* title bar */}
+            <div className="flex items-center gap-2 mb-4">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-semibold">Sem Check-in Hoje</span>
               {clientsWithoutCheckin.length > 0 && (
-                <Badge variant="attention" className="ml-auto text-xs">
+                <span className="ml-auto inline-flex items-center rounded-[10px] bg-[hsl(var(--warning)/.12)] px-2 py-0.5 text-[11px] font-semibold text-[hsl(var(--warning))]">
                   {clientsWithoutCheckin.length}
-                </Badge>
+                </span>
               )}
             </div>
-          </CardHeader>
-          <CardContent className="pt-4">
+
             {clientsWithoutCheckin.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-6 text-center gap-2">
-                <CheckCircle2 className="h-8 w-8 text-emerald-500" />
-                <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
-                  Todos os check-ins realizados hoje!
+              <div className="flex flex-col items-center justify-center py-10 gap-2">
+                <ShieldCheck className="h-7 w-7 text-[hsl(var(--success))]" />
+                <p className="text-sm font-semibold text-[hsl(var(--success))]">
+                  Todos em dia!
+                </p>
+                <p className="text-[13px] text-muted-foreground">
+                  Todos os clientes já têm check-in hoje.
                 </p>
               </div>
             ) : (
-              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                {clientsWithoutCheckin.map((c) => (
-                  <div
-                    key={c.id}
-                    className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <Avatar className="h-7 w-7 text-xs">
-                        <AvatarFallback className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300 text-[10px] font-semibold">
+              <>
+                <div className="max-h-[320px] overflow-y-auto pr-1 scrollbar-styled space-y-0 divide-y divide-border/60">
+                  {clientsWithoutCheckin.slice(0, 15).map((c) => (
+                    <div
+                      key={c.id}
+                      className="flex items-center gap-3 h-[52px] px-2 hover:bg-gradient-to-r hover:from-[hsl(25_95%_53%/.03)] hover:to-transparent transition-colors"
+                    >
+                      <Avatar className="h-8 w-8 rounded-lg text-xs shrink-0">
+                        <AvatarFallback className="rounded-lg bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(0_84%_60%)] text-white text-[10px] font-semibold">
                           {getInitials(c.name)}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-sm truncate">{c.name}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold truncate">{c.name}</p>
+                        <p className="text-xs text-muted-foreground">Nunca fez check-in</p>
+                      </div>
+                      <button
+                        onClick={() => navigate('/traffic/optimizations')}
+                        className="flex items-center gap-0.5 text-xs font-semibold text-[hsl(var(--primary))] shrink-0 hover:scale-[1.02] active:scale-[0.98] transition-transform"
+                      >
+                        Fazer Check-in
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-xs text-primary shrink-0"
+                  ))}
+                </div>
+                {clientsWithoutCheckin.length > 15 && (
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/60">
+                    <span className="text-[11px] text-muted-foreground">
+                      Mostrando 15 de {clientsWithoutCheckin.length} clientes
+                    </span>
+                    <button
                       onClick={() => navigate('/traffic/optimizations')}
+                      className="text-xs font-semibold text-[hsl(var(--primary))]"
                     >
-                      Fazer Check-in
-                      <ChevronRight className="h-3 w-3 ml-0.5" />
-                    </Button>
+                      Ver todos
+                    </button>
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Right — Alertas Críticos */}
-        <Card className="shadow-sm">
-          <CardHeader className="pb-3 border-b bg-red-50/60 dark:bg-red-900/10 rounded-t-lg">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-destructive" />
-              <CardTitle className="text-sm font-semibold text-red-800 dark:text-red-400">
-                Alertas Críticos
-              </CardTitle>
-              {(lowBalanceClients.length + pendingCreatives.length > 0) && (
-                <Badge variant="destructive" className="ml-auto text-xs">
-                  {lowBalanceClients.length + pendingCreatives.length}
-                </Badge>
+          {/* ── Right: Alertas Críticos ── */}
+          <div className="rounded-2xl border border-border bg-card p-6">
+            {/* title bar */}
+            <div className="flex items-center gap-2 mb-4">
+              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-semibold">Alertas Críticos</span>
+              {totalAlerts > 0 && (
+                <span className="ml-auto inline-flex items-center rounded-[10px] bg-[hsl(var(--destructive)/.12)] px-2 py-0.5 text-[11px] font-semibold text-destructive">
+                  {totalAlerts}
+                </span>
               )}
             </div>
-          </CardHeader>
-          <CardContent className="pt-4">
-            {lowBalanceClients.length === 0 && pendingCreatives.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-6 text-center gap-2">
-                <ShieldCheck className="h-8 w-8 text-emerald-500" />
-                <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+
+            {totalAlerts === 0 ? (
+              <div className="relative flex flex-col items-center justify-center py-10 gap-2">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,hsl(var(--success)/.04),transparent_70%)]" />
+                <ShieldCheck className="h-7 w-7 text-[hsl(var(--success))]" />
+                <p className="text-sm font-semibold text-[hsl(var(--success))]">
                   Nenhum alerta no momento
                 </p>
               </div>
             ) : (
-              <div className="space-y-4 max-h-64 overflow-y-auto pr-1">
+              <div className="max-h-[320px] overflow-y-auto pr-1 scrollbar-styled space-y-4">
                 {/* Saldo Baixo */}
                 {lowBalanceClients.length > 0 && (
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-1.5">
-                        <CircleDollarSign className="h-3.5 w-3.5 text-destructive" />
-                        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          Saldo Baixo
-                        </span>
-                      </div>
-                      <Button
-                        variant="link"
-                        size="sm"
-                        className="h-auto p-0 text-xs text-destructive"
-                        onClick={() => navigate('/traffic/balances')}
-                      >
-                        Ver todos <ExternalLink className="h-3 w-3 ml-1" />
-                      </Button>
-                    </div>
+                  <div className="space-y-2">
                     {lowBalanceClients.slice(0, 5).map((c) => {
                       const bal = getClientBalance(c.id);
                       return (
                         <div
                           key={c.id}
-                          className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-muted/50 transition-colors"
+                          className="flex items-start gap-3 px-2 py-2 rounded-lg hover:bg-gradient-to-r hover:from-[hsl(25_95%_53%/.03)] hover:to-transparent transition-colors"
                         >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <Avatar className="h-7 w-7 text-xs">
-                              <AvatarFallback className="bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 text-[10px] font-semibold">
-                                {getInitials(c.name)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-sm truncate">{c.name}</span>
+                          <span className="mt-1.5 h-2 w-2 rounded-full bg-destructive animate-pulse shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm">
+                              <span className="font-semibold">{c.name}</span>
+                              <span className="text-muted-foreground"> — saldo abaixo de 20%</span>
+                            </p>
+                            <p className="text-xs text-muted-foreground font-mono mt-0.5">
+                              Saldo atual: {bal !== null ? bal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'}
+                              {' — '}
+                              Verba: {(c.ad_monthly_budget ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            </p>
                           </div>
-                          <span className="text-sm font-semibold text-destructive shrink-0 ml-2">
-                            {bal !== null
-                              ? bal.toLocaleString('pt-BR', {
-                                  style: 'currency',
-                                  currency: 'BRL',
-                                })
-                              : '—'}
-                          </span>
+                          <button
+                            onClick={() => navigate('/traffic/balances')}
+                            className="flex items-center gap-0.5 text-xs text-muted-foreground shrink-0 mt-1 hover:text-foreground transition-colors"
+                          >
+                            Ver Saldo
+                            <ChevronRight className="h-3.5 w-3.5" />
+                          </button>
                         </div>
                       );
                     })}
                   </div>
                 )}
 
-                {/* Separator */}
+                {/* separator */}
                 {lowBalanceClients.length > 0 && pendingCreatives.length > 0 && (
-                  <div className="border-t" />
+                  <div className="border-t border-border/60" />
                 )}
 
                 {/* Criativos Pendentes */}
                 {pendingCreatives.length > 0 && (
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-1.5">
-                        <Image className="h-3.5 w-3.5 text-yellow-600" />
-                        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          Criativos Pendentes
-                        </span>
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-3 px-2 py-2 rounded-lg hover:bg-gradient-to-r hover:from-[hsl(25_95%_53%/.03)] hover:to-transparent transition-colors">
+                      <span className="mt-1.5 h-2 w-2 rounded-full bg-[hsl(var(--warning))] shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm">
+                          <span className="font-semibold">{pendingCreatives.length}</span>
+                          <span className="text-muted-foreground"> criativos aguardando revisão</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Solicitações em revisão há mais de 2 dias
+                        </p>
                       </div>
-                      <Button
-                        variant="link"
-                        size="sm"
-                        className="h-auto p-0 text-xs text-yellow-600"
+                      <button
                         onClick={() => navigate('/traffic/creative-requests')}
+                        className="flex items-center gap-0.5 text-xs text-muted-foreground shrink-0 mt-1 hover:text-foreground transition-colors"
                       >
-                        Ver todos <ExternalLink className="h-3 w-3 ml-1" />
-                      </Button>
+                        Ver Criativos
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </button>
                     </div>
-                    {pendingCreatives.slice(0, 5).map((cr) => (
-                      <div
-                        key={cr.id}
-                        className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-muted/50 transition-colors cursor-pointer"
-                        onClick={() =>
-                          navigate(`/traffic/creative-requests/${cr.id}`)
-                        }
-                      >
-                        <span className="text-sm truncate">{cr.title}</span>
-                        <span className="text-xs text-muted-foreground shrink-0 ml-2">
-                          {getClientName(cr.client_id)}
-                        </span>
-                      </div>
-                    ))}
                   </div>
                 )}
               </div>
             )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* ───────── RECENT OPTIMIZATIONS ───────── */}
-      <Card className="shadow-sm">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Otimizações Recentes — Semana Atual
-            </CardTitle>
-            <Button
-              variant="link"
-              size="sm"
-              className="h-auto p-0 text-xs"
-              onClick={() => navigate('/traffic/optimizations')}
-            >
-              Ver tudo <ExternalLink className="h-3 w-3 ml-1" />
-            </Button>
           </div>
-        </CardHeader>
-        <CardContent>
+        </div>
+
+        {/* ═══════ RECENT OPTIMIZATIONS TABLE ═══════ */}
+        <div
+          className="rounded-2xl border border-border bg-card p-6 animate-in fade-in slide-in-from-bottom-3 duration-300"
+          style={{ animationDelay: '120ms' }}
+        >
+          {/* title bar */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-semibold">Otimizações Recentes — Semana Atual</span>
+            </div>
+            <button
+              onClick={() => navigate('/traffic/optimizations')}
+              className="flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Ver tudo
+              <ExternalLink className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
           {recentOptimizations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-10 text-center gap-3">
-              <Zap className="h-10 w-10 text-muted-foreground/40" />
-              <p className="text-sm text-muted-foreground">
-                Nenhuma otimização registrada esta semana.
-              </p>
+            <div className="flex flex-col items-center justify-center py-14 gap-4">
+              {/* minimal SVG zap illustration */}
+              <svg
+                width="48"
+                height="48"
+                viewBox="0 0 48 48"
+                fill="none"
+                className="text-muted-foreground/30"
+              >
+                <path
+                  d="M26 4L8 28h14l-4 16L38 20H24l2-16z"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <div className="text-center">
+                <p className="text-base font-semibold">
+                  Nenhuma otimização registrada esta semana
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  As otimizações realizadas aparecerão aqui.
+                </p>
+              </div>
+              <Button
+                className="mt-2 hover:scale-[1.02] active:scale-[0.98] transition-transform"
+                onClick={() => navigate('/traffic/optimizations')}
+              >
+                + Registrar Otimização
+              </Button>
             </div>
           ) : (
-            <div className="rounded-lg border overflow-hidden">
+            <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/40">
-                    <TableHead className="text-xs font-semibold">Data</TableHead>
-                    <TableHead className="text-xs font-semibold">Cliente</TableHead>
-                    <TableHead className="text-xs font-semibold">Tipo</TableHead>
-                    <TableHead className="text-xs font-semibold">Descrição</TableHead>
-                    <TableHead className="text-xs font-semibold text-right">
+                  <TableRow className="border-b border-border/60 hover:bg-transparent">
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground bg-secondary/50 sticky top-0">
+                      Data
+                    </TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground bg-secondary/50 sticky top-0">
+                      Cliente
+                    </TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground bg-secondary/50 sticky top-0">
+                      Tipo
+                    </TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground bg-secondary/50 sticky top-0">
+                      Descrição
+                    </TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground bg-secondary/50 sticky top-0 text-right">
                       Tempo
                     </TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground bg-secondary/50 sticky top-0 w-10" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recentOptimizations.map((o, idx) => {
+                  {recentOptimizations.map((o) => {
                     const complexity = taskTypeComplexity(o.task_type);
+                    const dateStr = new Date(o.optimization_date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
                     return (
                       <TableRow
                         key={o.id}
-                        className={cn(
-                          idx % 2 === 0
-                            ? 'bg-card'
-                            : 'bg-muted/20',
-                          'hover:bg-muted/40 transition-colors',
-                        )}
+                        className="group h-[52px] border-b border-border/40 hover:bg-gradient-to-r hover:from-[hsl(25_95%_53%/.03)] hover:to-transparent transition-colors"
                       >
-                        <TableCell className="whitespace-nowrap text-sm">
-                          {new Date(
-                            o.optimization_date + 'T12:00:00',
-                          ).toLocaleDateString('pt-BR')}
+                        <TableCell className="text-xs font-mono text-muted-foreground whitespace-nowrap">
+                          {dateStr}
                         </TableCell>
-                        <TableCell className="text-sm font-medium">
+                        <TableCell className="text-sm font-semibold">
                           {o.clientName}
                         </TableCell>
                         <TableCell>
                           <span
                             className={cn(
-                              'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold',
-                              COMPLEXITY_COLORS[complexity] ||
-                                'bg-muted text-muted-foreground',
+                              'inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold',
+                              COMPLEXITY_BADGE[complexity] || COMPLEXITY_BADGE.Leve,
                             )}
                           >
                             {taskTypeLabel(o.task_type)}
                           </span>
                         </TableCell>
-                        <TableCell className="max-w-[220px] truncate text-sm text-muted-foreground">
+                        <TableCell className="max-w-[220px] text-[13px] text-muted-foreground truncate">
                           {o.description || '—'}
                         </TableCell>
-                        <TableCell className="text-right whitespace-nowrap text-sm tabular-nums">
-                          {o.tempo_gasto_minutos} min
+                        <TableCell className="text-right text-xs font-mono text-muted-foreground whitespace-nowrap">
+                          {o.tempo_gasto_minutos}min
+                        </TableCell>
+                        <TableCell>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button className="opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                                <Eye className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>Ver detalhes</TooltipContent>
+                          </Tooltip>
                         </TableCell>
                       </TableRow>
                     );
@@ -425,8 +506,9 @@ export default function TrafficDashboard() {
               </Table>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+
+      </div>
     </div>
   );
 }

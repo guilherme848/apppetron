@@ -323,6 +323,28 @@
   background: linear-gradient(180deg, #F97316, #f43f5e);
 }
 
+/* ─── Styled scrollbar for panels ─── */
+.scrollbar-styled {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.scrollbar-styled:hover {
+  scrollbar-color: hsl(25 95% 53% / 0.3) transparent;
+}
+.scrollbar-styled::-webkit-scrollbar {
+  width: 4px;
+}
+.scrollbar-styled::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-styled::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background: transparent;
+}
+.scrollbar-styled:hover::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #F97316, #f43f5e);
+}
+
 .table-row-hover:hover {
   background: linear-gradient(90deg, hsl(25 95% 53% / 0.05), transparent) !important;
 }
