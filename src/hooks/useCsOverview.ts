@@ -274,9 +274,9 @@ export function useCsOverview() {
   const validPlans = ['Start', 'Performance', 'Escala', 'Growth'];
   const churnByPlan = useMemo((): ChurnDimensionItem[] => {
     const churned = accounts.filter(a => {
-      if (a.status !== 'inactive' && a.status !== 'churned' && a.status !== 'canceled') return false;
-      const d = a.updated_at ? parseISO(a.updated_at) : null;
-      return d && isValid(d) && d >= monthStart && d <= monthEnd;
+      if (!a.churned_at) return false;
+      const d = parseISO(a.churned_at);
+      return isValid(d) && d >= monthStart && d <= monthEnd;
     });
 
     const byPlan: Record<string, { count: number; total: number; name: string }> = {};
