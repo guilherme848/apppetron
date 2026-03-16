@@ -533,7 +533,45 @@ export function OptimizationWeeklyCycleTab({
     [accounts],
   );
 
-  /* ── DnD ──────────────────────────────────────────────────── */
+  /* ── Today's status sets ────────────────────────────────── */
+  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const todayWeekday = useMemo(() => {
+    const d = new Date().getDay();
+    return d === 0 ? 1 : d;
+  }, []);
+
+  const todayOptimizedClientIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const o of optimizations) {
+      if (o.optimization_date === todayStr) ids.add(o.client_id);
+    }
+    return ids;
+  }, [optimizations, todayStr]);
+
+  // High complexity = clients that have "alta" task type entries in the cycle for today's weekday
+  // We determine "high complexity" based on context: if the entry is in today's weekday column
+  const todayEntryClientIds = useMemo(() => {
+    return new Set(myCycle.filter(w => w.weekday === todayWeekday).map(w => w.client_id));
+  }, [myCycle, todayWeekday]);
+
+  // For now, mark as high complexity if client is scheduled for today (the user spec says to show badge)
+  // We'll use a simple heuristic: empty for now, will be set per-column below
+  const highComplexityClientIds = useMemo(() => new Set<string>(), []);
+
+  /* ── Inline modal handlers ──────────────────────────────── */
+  const handleOpenInlineModal = useCallback((clientId: string) => {
+    setInlineModalClientId(clientId);
+    // If client is in today's weekday column, preselect based on context
+    const isToday = todayEntryClientIds.has(clientId);
+    setInlineModalTaskType(isToday ? 'checkin' : 'checkin');
+    setInlineModalOpen(true);
+  }, [todayEntryClientIds]);
+
+  const inlineModalClient = useMemo(() => {
+    if (!inlineModalClientId) return null;
+    return accounts.find(a => a.id === inlineModalClientId) || null;
+  }, [inlineModalClientId, accounts]);
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
   );
