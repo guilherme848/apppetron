@@ -408,9 +408,9 @@ export function useCsOverview() {
       const label = format(m, "MMM/yy", { locale: ptBR }).replace(/^\w/, c => c.toUpperCase());
 
       const churnedThisMonth = accounts.filter(a => {
-        if (a.status !== 'inactive' && a.status !== 'churned' && a.status !== 'canceled') return false;
-        const d = a.updated_at ? parseISO(a.updated_at) : null;
-        return d && isValid(d) && d >= m && d <= mEnd;
+        if (!a.churned_at) return false;
+        const d = parseISO(a.churned_at);
+        return isValid(d) && d >= m && d <= mEnd;
       });
 
       const activeAtM = accounts.filter(a => {
