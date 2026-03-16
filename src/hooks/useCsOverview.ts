@@ -1,0 +1,338 @@
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { startOfMonth, endOfMonth, format, subMonths, differenceInDays, parseISO, isValid } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
+export interface CsOverviewKPI {
+  activeClients: number;
+  onboardingClients: number;
+  onboardingOnTime: number;
+  onboardingDelayed: number;
+  atRiskClients: number;
+  churnCount: number;
+  revenueAtRisk: number;
+}
+
+export interface CsAlert {
+  id: string;
+  type: 'onboarding_delayed' | 'meeting_overdue' | 'traffic_no_checkin' | 'recent_churn';
+  clientId: string;
+  clientName: string;
+  details: string;
+  severity: 'high' | 'medium';
+}
+
+export interface HealthDistData {
+  healthy: number;
+  attention: number;
+  critical: number;
+  unclassified: number;
+  criticalClients: { id: string; name: string; csOwner: string | null }[];
+}
+
+export interface ChurnDimensionItem {
+  name: string;
+  churnCount: number;
+  totalClients: number;
+  churnRate: number;
+}
+
+export interface CohortRow {
+  label: string;
+  totalClients: number;
+  months: (number | null)[];
+}
+
+export function useCsOverview() {
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [onboardings, setOnboardings] = useState<any[]>([]);
+  const [checkups, setCheckups] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
+  const [niches, setNiches] = useState<any[]>([]);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const now = new Date();
+  const [selectedMonth, setSelectedMonth] = useState<Date>(startOfMonth(now));
+
+  // Generate month options (current + last 12)
+  const monthOptions = useMemo(() => {
+    const options: { value: string; label: string }[] = [];
+    for (let i = 0; i < 13; i++) {
+      const d = subMonths(now, i);
+      const monthStart = startOfMonth(d);
+      options.push({
+        value: monthStart.toISOString(),
+        label: format(monthStart, "MMMM yyyy", { locale: ptBR }).replace(/^\w/, c => c.toUpperCase()),
+      });
+    }
+    return options;
+  }, []);
+
+  const isCurrentMonth = useMemo(() => {
+    return startOfMonth(now).getTime() === selectedMonth.getTime();
+  }, [selectedMonth]);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    const [acRes, obRes, ckRes, svcRes, nicRes, tmRes] = await Promise.all([
+      supabase.from('accounts').select('*').is('deleted_at', null),
+      supabase.from('onboardings').select('*'),
+      supabase.from('cliente_checkup').select('*'),
+      supabase.from('services').select('id, name').order('name'),
+      supabase.from('niches').select('id, name').order('name'),
+      supabase.from('team_members').select('id, name'),
+    ]);
+    if (acRes.data) setAccounts(acRes.data);
+    if (obRes.data) setOnboardings(obRes.data);
+    if (ckRes.data) setCheckups(ckRes.data);
+    if (svcRes.data) setServices(svcRes.data);
+    if (nicRes.data) setNiches(nicRes.data);
+    if (tmRes.data) setTeamMembers(tmRes.data);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const monthStart = selectedMonth;
+  const monthEnd = endOfMonth(selectedMonth);
+
+  // KPIs
+  const kpiData = useMemo((): CsOverviewKPI => {
+    const active = accounts.filter(a => a.status === 'active');
+
+    // Onboarding in selected month
+    const onbInMonth = onboardings.filter(o => {
+      if (!o.data_inicio) return false;
+      const d = parseISO(o.data_inicio);
+      return isValid(d) && d >= monthStart && d <= monthEnd && o.status !== 'concluido';
+    });
+    const delayed = onbInMonth.filter(o => {
+      if (!o.data_inicio) return false;
+      return differenceInDays(now, parseISO(o.data_inicio)) > 10;
+    });
+
+    // At risk = checkup D
+    const atRisk = accounts.filter(a => a.status === 'active' && a.checkup_classificacao === 'D');
+
+    // Churn in selected month
+    const churned = accounts.filter(a => {
+      if (a.status !== 'inactive' && a.status !== 'churned' && a.status !== 'canceled') return false;
+      const d = a.updated_at ? parseISO(a.updated_at) : null;
+      return d && isValid(d) && d >= monthStart && d <= monthEnd;
+    });
+
+    // Revenue at risk (C or D)
+    const revenueAtRisk = accounts
+      .filter(a => a.status === 'active' && (a.checkup_classificacao === 'C' || a.checkup_classificacao === 'D'))
+      .reduce((sum, a) => sum + Number(a.monthly_value || 0), 0);
+
+    return {
+      activeClients: active.length,
+      onboardingClients: onbInMonth.length,
+      onboardingOnTime: onbInMonth.length - delayed.length,
+      onboardingDelayed: delayed.length,
+      atRiskClients: atRisk.length,
+      churnCount: churned.length,
+      revenueAtRisk,
+    };
+  }, [accounts, onboardings, monthStart, monthEnd]);
+
+  // Alerts (always today, not filtered by month)
+  const alerts = useMemo((): CsAlert[] => {
+    const result: CsAlert[] = [];
+
+    // Onboarding delayed >10 days
+    const delayedOnb = onboardings.filter(o => {
+      if (o.status === 'concluido') return false;
+      if (!o.data_inicio) return false;
+      return differenceInDays(now, parseISO(o.data_inicio)) > 10;
+    });
+    delayedOnb.forEach(o => {
+      const account = accounts.find(a => a.id === o.client_id);
+      if (account) {
+        result.push({
+          id: `onb-${o.id}`,
+          type: 'onboarding_delayed',
+          clientId: account.id,
+          clientName: account.name,
+          details: `Onboarding há ${differenceInDays(now, parseISO(o.data_inicio))} dias`,
+          severity: 'high',
+        });
+      }
+    });
+
+    // Recent churn (this month)
+    const currentMonthStart = startOfMonth(now);
+    const currentMonthEnd = endOfMonth(now);
+    accounts.filter(a => {
+      if (a.status !== 'inactive' && a.status !== 'churned' && a.status !== 'canceled') return false;
+      const d = a.updated_at ? parseISO(a.updated_at) : null;
+      return d && isValid(d) && d >= currentMonthStart && d <= currentMonthEnd;
+    }).forEach(a => {
+      result.push({
+        id: `churn-${a.id}`,
+        type: 'recent_churn',
+        clientId: a.id,
+        clientName: a.name,
+        details: 'Cancelou neste mês',
+        severity: 'high',
+      });
+    });
+
+    return result.slice(0, 20);
+  }, [accounts, onboardings]);
+
+  // Health distribution based on checkup
+  const healthDist = useMemo((): HealthDistData => {
+    const active = accounts.filter(a => a.status === 'active');
+    const healthy = active.filter(a => a.checkup_classificacao === 'A' || a.checkup_classificacao === 'B');
+    const attention = active.filter(a => a.checkup_classificacao === 'C');
+    const critical = active.filter(a => a.checkup_classificacao === 'D');
+    const unclassified = active.filter(a => !a.checkup_classificacao);
+
+    const criticalClients = critical.slice(0, 3).map(a => ({
+      id: a.id,
+      name: a.name,
+      csOwner: a.cs_member_id ? (teamMembers.find(t => t.id === a.cs_member_id)?.name || null) : null,
+    }));
+
+    return {
+      healthy: healthy.length,
+      attention: attention.length,
+      critical: critical.length,
+      unclassified: unclassified.length,
+      criticalClients,
+    };
+  }, [accounts, teamMembers]);
+
+  // Churn by niche (filtered by month)
+  const churnByNiche = useMemo((): ChurnDimensionItem[] => {
+    const churned = accounts.filter(a => {
+      if (a.status !== 'inactive' && a.status !== 'churned' && a.status !== 'canceled') return false;
+      const d = a.updated_at ? parseISO(a.updated_at) : null;
+      return d && isValid(d) && d >= monthStart && d <= monthEnd;
+    });
+
+    const byNiche: Record<string, { count: number; total: number; name: string }> = {};
+    churned.forEach(a => {
+      const nicheId = a.niche_id || 'none';
+      const niche = niches.find(n => n.id === nicheId);
+      if (!byNiche[nicheId]) byNiche[nicheId] = { count: 0, total: 0, name: niche?.name || 'Sem Nicho' };
+      byNiche[nicheId].count++;
+    });
+    accounts.forEach(a => {
+      const nicheId = a.niche_id || 'none';
+      const niche = niches.find(n => n.id === nicheId);
+      if (!byNiche[nicheId]) byNiche[nicheId] = { count: 0, total: 0, name: niche?.name || 'Sem Nicho' };
+      byNiche[nicheId].total++;
+    });
+
+    return Object.values(byNiche)
+      .map(d => ({ name: d.name, churnCount: d.count, totalClients: d.total, churnRate: d.total > 0 ? (d.count / d.total) * 100 : 0 }))
+      .filter(d => d.churnCount > 0)
+      .sort((a, b) => b.churnRate - a.churnRate);
+  }, [accounts, niches, monthStart, monthEnd]);
+
+  // Churn by plan (only Start, Performance, Escala, Growth)
+  const validPlans = ['Start', 'Performance', 'Escala', 'Growth'];
+  const churnByPlan = useMemo((): ChurnDimensionItem[] => {
+    const churned = accounts.filter(a => {
+      if (a.status !== 'inactive' && a.status !== 'churned' && a.status !== 'canceled') return false;
+      const d = a.updated_at ? parseISO(a.updated_at) : null;
+      return d && isValid(d) && d >= monthStart && d <= monthEnd;
+    });
+
+    const byPlan: Record<string, { count: number; total: number; name: string }> = {};
+    validPlans.forEach(name => {
+      byPlan[name] = { count: 0, total: 0, name };
+    });
+
+    const getServiceName = (sId: string | null) => {
+      if (!sId) return null;
+      return services.find(s => s.id === sId)?.name || null;
+    };
+
+    churned.forEach(a => {
+      const sName = getServiceName(a.service_id);
+      if (sName && validPlans.includes(sName)) {
+        byPlan[sName].count++;
+      }
+    });
+    accounts.forEach(a => {
+      const sName = getServiceName(a.service_id);
+      if (sName && validPlans.includes(sName)) {
+        byPlan[sName].total++;
+      }
+    });
+
+    return Object.values(byPlan)
+      .map(d => ({ name: d.name, churnCount: d.count, totalClients: d.total, churnRate: d.total > 0 ? (d.count / d.total) * 100 : 0 }))
+      .sort((a, b) => b.churnRate - a.churnRate);
+  }, [accounts, services, monthStart, monthEnd]);
+
+  // Cohort analysis (always last 12 months, not filtered)
+  const cohortData = useMemo((): CohortRow[] => {
+    const rows: CohortRow[] = [];
+    for (let i = 11; i >= 0; i--) {
+      const cohortMonth = startOfMonth(subMonths(now, i));
+      const label = format(cohortMonth, "MMM/yy", { locale: ptBR }).replace(/^\w/, c => c.toUpperCase());
+
+      const cohortClients = accounts.filter(a => {
+        if (!a.start_date) return false;
+        const d = parseISO(a.start_date);
+        return isValid(d) && startOfMonth(d).getTime() === cohortMonth.getTime();
+      });
+
+      const total = cohortClients.length;
+      if (total === 0) {
+        rows.push({ label, totalClients: 0, months: Array(12).fill(null) });
+        continue;
+      }
+
+      const monthValues: (number | null)[] = [];
+      for (let m = 0; m < 12; m++) {
+        const checkMonth = startOfMonth(subMonths(now, i - m));
+        if (checkMonth > startOfMonth(now)) {
+          monthValues.push(null);
+          continue;
+        }
+        const stillActive = cohortClients.filter(a => {
+          if (a.status === 'active') return true;
+          // Check if churned after check month
+          if (a.churned_at) {
+            const churnDate = parseISO(a.churned_at);
+            return isValid(churnDate) && churnDate > endOfMonth(checkMonth);
+          }
+          if (a.updated_at && (a.status === 'inactive' || a.status === 'churned' || a.status === 'canceled')) {
+            const upd = parseISO(a.updated_at);
+            return isValid(upd) && upd > endOfMonth(checkMonth);
+          }
+          return true;
+        });
+        monthValues.push(Math.round((stillActive.length / total) * 100));
+      }
+
+      rows.push({ label, totalClients: total, months: monthValues });
+    }
+    return rows;
+  }, [accounts]);
+
+  const selectedMonthLabel = format(selectedMonth, "MMMM yyyy", { locale: ptBR }).replace(/^\w/, c => c.toUpperCase());
+
+  return {
+    loading,
+    selectedMonth,
+    setSelectedMonth,
+    monthOptions,
+    isCurrentMonth,
+    selectedMonthLabel,
+    kpiData,
+    alerts,
+    healthDist,
+    churnByNiche,
+    churnByPlan,
+    cohortData,
+    refetch: fetchData,
+  };
+}
