@@ -105,6 +105,13 @@ export default function CsOnboardingDetail() {
     return count;
   }, [onboarding]);
 
+  const checkupFilled = useMemo(() => {
+    if (!checkupData) return 0;
+    const dims = ['atividade_redes', 'producao_video', 'mix_produtos', 'atendimento_whatsapp', 'maturidade_comercial', 'habitantes_raio', 'tamanho_operacao'] as const;
+    return dims.filter(d => (checkupData as any)[d] != null).length;
+  }, [checkupData]);
+  const checkupClassificacao = checkupData?.classificacao || null;
+
   const handleTabChange = useCallback((tab: string) => {
     setActiveTab(tab);
     const ref = tab === 'transcricoes' ? transcricoesRef : tab === 'reuniao' ? reuniaoRef : atividadesRef;
