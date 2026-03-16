@@ -21,7 +21,7 @@ interface Props {
   initialClientId?: string | null;
 }
 
-export function NewOptimizationModal({ open, onOpenChange, accounts, teamMembers, currentMemberId, onSubmit }: Props) {
+export function NewOptimizationModal({ open, onOpenChange, accounts, teamMembers, currentMemberId, onSubmit, initialClientId }: Props) {
   const today = new Date().toISOString().split('T')[0];
 
   // Filtrar apenas gestores de tráfego
