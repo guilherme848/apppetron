@@ -315,50 +315,7 @@ export default function CrmDetail() {
         <ArquivosCard anexos={anexos} loading={intelLoading} onDelete={deleteAnexo} />
       </div>
 
-      {/* Tarefas — full width */}
-      <Card className="rounded-2xl">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-            <CheckSquare className="h-3.5 w-3.5" />Tarefas
-          </CardTitle>
-          <Button size="sm" onClick={() => setTaskFormOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" />Nova
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {tasks.length === 0 ? (
-            <p className="text-muted-foreground text-sm text-center py-4">Nenhuma tarefa cadastrada</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground">Título</TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground">Status</TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground">Vencimento</TableHead>
-                  <TableHead className="w-[80px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tasks.map((task) => (
-                  <TableRow key={task.id} className="h-11">
-                    <TableCell className="font-medium text-sm">{task.title}</TableCell>
-                    <TableCell><TaskStatusBadge status={task.status} /></TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{task.due_date ? formatDate(task.due_date) : '-'}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingTask(task); setTaskFormOpen(true); }}><Pencil className="h-3.5 w-3.5" /></Button>
-                        <ConfirmDeleteDialog itemName={task.title} onConfirm={() => handleDeleteTask(task.id)}>
-                          <Button variant="ghost" size="icon" className="h-7 w-7"><Trash2 className="h-3.5 w-3.5" /></Button>
-                        </ConfirmDeleteDialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+
 
       {/* Histórico — full width */}
       <Card className="rounded-2xl">
