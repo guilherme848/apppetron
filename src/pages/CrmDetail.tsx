@@ -56,9 +56,9 @@ export default function CrmDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const {
-    accounts, loading, getAccountById, getContractsByAccount, getTasksByAccount,
+    accounts, loading, getAccountById, getContractsByAccount,
     updateAccount, softDeleteAccount, churnAccount, addContract, updateContract,
-    deleteContract, addTask, updateTask, deleteTask,
+    deleteContract,
   } = useCrm();
   const { services } = useSettings();
 
