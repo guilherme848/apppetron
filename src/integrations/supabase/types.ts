@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_history: {
+        Row: {
+          account_id: string
+          created_at: string
+          description: string | null
+          event_type: string
+          id: string
+          member_id: string | null
+          metadata: Json | null
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          description?: string | null
+          event_type: string
+          id?: string
+          member_id?: string | null
+          metadata?: Json | null
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          description?: string | null
+          event_type?: string
+          id?: string
+          member_id?: string | null
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_history_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_history_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       account_services: {
         Row: {
           account_id: string
