@@ -58,12 +58,13 @@ export function useTrafficOverview() {
     if (!currentMemberId) return;
     setLoading(true);
 
-    // Fetch active clients assigned to this manager
+    // Fetch active clients with has_traffic = true (via service plan)
     const clientsQuery = supabase
       .from('accounts')
-      .select('id, name, ad_monthly_budget, traffic_member_id')
+      .select('id, name, ad_monthly_budget, traffic_member_id, service_id, services!inner(has_traffic)')
       .eq('status', 'active')
-      .is('deleted_at', null);
+      .is('deleted_at', null)
+      .eq('services.has_traffic', true);
 
     if (!isAdmin) {
       clientsQuery.eq('traffic_member_id', currentMemberId);
