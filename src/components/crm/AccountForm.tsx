@@ -916,23 +916,32 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
             <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.12em]">Endereço</h3>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="country">País</Label>
-                <Input
-                  id="country"
-                  value={formData.country}
-                  onChange={handleTextChange('country')}
-                  onBlur={handleTextBlur('country')}
-                  placeholder="Brasil"
-                />
+                <Label htmlFor="postal_code">CEP</Label>
+                <div className="relative">
+                  <Input
+                    id="postal_code"
+                    value={formData.postal_code}
+                    onChange={handlePostalCodeChange}
+                    onBlur={handlePostalCodeBlur}
+                    placeholder="00000-000"
+                    disabled={cepLoading}
+                  />
+                  {cepLoading && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+                {cepError && <p className="text-xs text-destructive">{cepError}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="postal_code">CEP</Label>
+                <Label htmlFor="state">Estado</Label>
                 <Input
-                  id="postal_code"
-                  value={formData.postal_code}
-                  onChange={handlePostalCodeChange}
-                  onBlur={handleTextBlur('postal_code')}
-                  placeholder="00000-000"
+                  id="state"
+                  value={formData.state}
+                  onChange={handleTextChange('state')}
+                  onBlur={handleTextBlur('state')}
+                  placeholder="SP"
                 />
               </div>
               <div className="space-y-2">
