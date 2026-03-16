@@ -74,6 +74,7 @@ interface Props {
     entries: { client_id: string; weekday: number }[],
     managerId?: string,
   ) => Promise<any>;
+  onClientClick?: (clientId: string) => void;
 }
 
 /* ── Draggable Client Card ────────────────────────────────── */
