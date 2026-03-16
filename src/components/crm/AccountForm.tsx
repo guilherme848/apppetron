@@ -268,6 +268,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
       street: data.street || null,
       street_number: data.street_number || null,
       address_complement: data.address_complement || null,
+      midias_ativas: midiasAtivas,
     } as Partial<Account>;
   }, [services, niches, account]);
 
