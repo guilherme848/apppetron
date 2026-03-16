@@ -115,8 +115,8 @@ export function useUpsertCheckup() {
         preenchido_por_id: memberData?.id || null,
       };
 
-      const { data: existing } = await supabase
-        .from('cliente_checkup' as any)
+      const { data: existing } = await (supabase as any)
+        .from('cliente_checkup')
         .select('id')
         .eq('onboarding_id', onboardingId)
         .maybeSingle();
