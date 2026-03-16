@@ -71,11 +71,9 @@ export default function CrmDetail() {
   const { links: clienteLinks, concorrentes, anexos, loading: intelLoading, deleteAnexo } = useClientIntelligence(id);
 
   const [contractFormOpen, setContractFormOpen] = useState(false);
-  const [taskFormOpen, setTaskFormOpen] = useState(false);
   const [accountFormOpen, setAccountFormOpen] = useState(false);
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | undefined>();
-  const [editingTask, setEditingTask] = useState<Task | undefined>();
 
   const RestrictedValue = () => (
     <TooltipProvider><Tooltip><TooltipTrigger asChild>
