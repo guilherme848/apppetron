@@ -27,7 +27,7 @@ const FIXED_TYPES: { tipo: LinkTipo; placeholder: string }[] = [
   { tipo: 'google_meu_negocio', placeholder: 'URL do perfil no Google' },
 ];
 
-export function LinksCard({ links, loading, clienteId }: LinksCardProps) {
+export function LinksCard({ links, loading, clienteId, onSaved }: LinksCardProps) {
   const [editing, setEditing] = useState(false);
   const intel = useClientIntelligence(editing ? clienteId : null);
 
