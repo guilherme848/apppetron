@@ -1,5 +1,4 @@
-import { useEffect, useRef } from 'react';
-import { LayoutDashboard, ChevronLeft, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
 import {
   Sidebar,
@@ -12,14 +11,12 @@ import {
   SidebarHeader,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useRouteAccess } from '@/hooks/useRouteAccess';
 import { useAuth } from '@/contexts/AuthContext';
 import { getMenuRoutes, RouteDefinition, MODULES } from '@/config/routeRegistry';
 import { cn } from '@/lib/utils';
 import petronLogo from '@/assets/petron-logo.png';
-import { useSidebarGroups } from './AppLayout';
 
 function getRouteIcon(route: RouteDefinition): React.ElementType {
   return route.icon || LayoutDashboard;
@@ -40,37 +37,12 @@ function isRouteActive(routePath: string, currentPath: string): boolean {
   return currentPath === routePath;
 }
 
-function SidebarSkeleton() {
-  return (
-    <>
-      {[1, 2, 3, 4].map((group) => (
-        <SidebarGroup key={group}>
-          <Skeleton className="h-3 w-20 mb-3 ml-3 rounded" />
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {[1, 2].map((i) => (
-                <SidebarMenuItem key={i}>
-                  <div className="flex items-center gap-3 px-3 py-2">
-                    <Skeleton className="h-4 w-4 rounded" />
-                    <Skeleton className="h-3 w-24 rounded" />
-                  </div>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      ))}
-    </>
-  );
-}
-
 export function AppSidebar() {
   const { canAccess, loading: permissionsLoading } = useRouteAccess();
   const { loading: authLoading } = useAuth();
   const location = useLocation();
   const currentPath = location.pathname;
-  const { state: sidebarState } = useSidebar();
-  const { toggleGroup, isGroupExpanded, initActiveGroup } = useSidebarGroups();
+  const { state: sidebarState, toggleSidebar } = useSidebar();
 
   const isExpanded = sidebarState === 'expanded';
 
@@ -88,101 +60,99 @@ export function AppSidebar() {
     }
   }
 
-  // Auto-expand the group containing the active route on first load
-  const initializedRef = useRef(false);
-  useEffect(() => {
-    if (isLoading || initializedRef.current) return;
-    initializedRef.current = true;
-    for (const { module } of moduleConfig) {
-      const routes = routesByModule[module];
-      if (routes?.some((r) => isRouteActive(r.path, currentPath))) {
-        initActiveGroup(module);
-        break;
-      }
-    }
-  }, [isLoading, routesByModule, currentPath, initActiveGroup]);
-
   return (
     <Sidebar collapsible="icon">
-      {/* Header: always visible — logo + toggle */}
-      <SidebarHeader className="border-b border-sidebar-border p-3">
-        <div className={cn(
-          'flex items-center gap-2',
-          isExpanded ? 'justify-between' : 'justify-center'
-        )}>
-          {isExpanded && (
-            <img src={petronLogo} alt="Petron" className="h-12 w-auto shrink-0" />
-          )}
-          <SidebarToggleButton isExpanded={isExpanded} />
+      {/* Header — logo + toggle button */}
+      <SidebarHeader className="border-b border-sidebar-border px-3 py-3">
+        <div className="flex items-center justify-between">
+          <img
+            src={petronLogo}
+            alt="Petron"
+            className={cn(
+              'shrink-0 transition-all duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)]',
+              isExpanded ? 'h-10 w-auto opacity-100' : 'h-8 w-auto opacity-80',
+            )}
+          />
+          <TooltipProvider delayDuration={0}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={toggleSidebar}
+                  className={cn(
+                    'h-7 w-7 shrink-0 rounded-full flex items-center justify-center',
+                    'bg-card border border-border',
+                    'text-sidebar-foreground/50',
+                    'hover:bg-accent hover:border-border hover:text-sidebar-foreground',
+                    'transition-all duration-150',
+                  )}
+                >
+                  {isExpanded ? (
+                    <ChevronsLeft className="h-3.5 w-3.5 transition-transform duration-300 ease-out" />
+                  ) : (
+                    <ChevronsRight className="h-3.5 w-3.5 transition-transform duration-300 ease-out" />
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="text-xs">
+                {isExpanded ? 'Recolher menu' : 'Expandir menu'}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
-        {isExpanded && (
-          <div className="mt-2 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-        )}
+        <div className="mt-2 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
       </SidebarHeader>
 
-      {/* Menu content: visible only when expanded, with transition */}
-      <SidebarContent className={cn(
-        'py-2 transition-opacity duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)]',
-        isExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none'
-      )}>
-        {isLoading ? (
-          <SidebarSkeleton />
-        ) : (
+      {/* Navigation */}
+      <SidebarContent className="py-2 petron-sidebar-scroll">
+        {!isLoading &&
           moduleConfig.map(({ module, label }) => {
             const routes = routesByModule[module];
             if (!routes || routes.length === 0) return null;
 
             const moduleActive = routes.some((r) => isRouteActive(r.path, currentPath));
-            const hasLabel = !!label;
-            const groupOpen = !hasLabel || isGroupExpanded(module);
 
             return (
               <SidebarGroup key={module} className="py-0.5">
-                {hasLabel && (
-                  <button
-                    type="button"
-                    onClick={() => toggleGroup(module)}
+                {/* Group label — always visible */}
+                {label && (
+                  <div
                     className={cn(
-                      'w-full flex items-center justify-between px-3 py-2 cursor-pointer select-none',
+                      'px-3 py-2 select-none',
                       'text-[10px] font-semibold uppercase tracking-[0.12em]',
-                      'transition-colors duration-150',
+                      'transition-colors duration-200',
                       moduleActive
                         ? 'text-sidebar-primary'
-                        : 'text-sidebar-foreground/35 hover:text-sidebar-foreground/70',
+                        : 'text-sidebar-foreground/35',
                     )}
                   >
-                    <span>{label}</span>
-                    <ChevronDown
-                      className={cn(
-                        'h-3 w-3 transition-transform duration-200 ease-out',
-                        !groupOpen && '-rotate-90',
-                      )}
-                    />
-                  </button>
+                    {label}
+                  </div>
                 )}
 
-                <div
-                  className={cn(
-                    'overflow-hidden transition-all ease-out',
-                    groupOpen
-                      ? 'max-h-[600px] opacity-100 duration-200'
-                      : 'max-h-0 opacity-0 duration-150',
-                  )}
-                >
+                {/* Sub-items — only when expanded */}
+                {isExpanded && (
                   <SidebarGroupContent>
                     <SidebarMenu>
-                      {routes.map((route) => {
+                      {routes.map((route, idx) => {
                         const Icon = getRouteIcon(route);
                         const isActive = isRouteActive(route.path, currentPath);
 
                         return (
-                          <SidebarMenuItem key={route.id}>
+                          <SidebarMenuItem
+                            key={route.id}
+                            className="animate-fade-in"
+                            style={{
+                              animationDelay: `${idx * 30}ms`,
+                              animationFillMode: 'both',
+                            }}
+                          >
                             <SidebarMenuButton asChild data-active={isActive}>
                               <RouterNavLink
                                 to={route.path}
                                 end
                                 className={cn(
-                                  'flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 text-[13px] relative',
+                                  'flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] relative',
+                                  'transition-all duration-150',
                                   isActive
                                     ? 'text-sidebar-primary font-medium bg-primary/[0.08] sidebar-active-indicator'
                                     : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50',
@@ -197,44 +167,11 @@ export function AppSidebar() {
                       })}
                     </SidebarMenu>
                   </SidebarGroupContent>
-                </div>
+                )}
               </SidebarGroup>
             );
-          })
-        )}
+          })}
       </SidebarContent>
     </Sidebar>
-  );
-}
-
-function SidebarToggleButton({ isExpanded }: { isExpanded: boolean }) {
-  const { toggleSidebar } = useSidebar();
-
-  return (
-    <TooltipProvider delayDuration={0}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            onClick={toggleSidebar}
-            className={cn(
-              'h-7 w-7 shrink-0 rounded-full flex items-center justify-center',
-              'bg-card border border-border',
-              'text-sidebar-foreground/50 hover:text-sidebar-foreground',
-              'transition-colors duration-150',
-            )}
-          >
-            <ChevronLeft
-              className={cn(
-                'h-3.5 w-3.5 transition-transform duration-[250ms]',
-                !isExpanded && 'rotate-180',
-              )}
-            />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side="right" className="text-xs">
-          {isExpanded ? 'Recolher menu' : 'Expandir menu'}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
   );
 }
