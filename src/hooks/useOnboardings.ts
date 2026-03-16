@@ -66,13 +66,16 @@ export function useOnboardingsList() {
         .from('onboardings')
         .select(`
           *,
-          accounts:client_id (name, service_id, services:service_id (name)),
-          cs_owner:cs_owner_id (name),
-          traffic_owner:traffic_owner_id (name)
+          accounts!onboardings_client_id_fkey (name, service_id, services:service_id (name)),
+          cs_owner:team_members!onboardings_cs_owner_id_fkey (name),
+          traffic_owner:team_members!onboardings_traffic_owner_id_fkey (name)
         `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('useOnboardingsList error:', error);
+        throw error;
+      }
 
       // Fetch activity counts per onboarding
       const ids = (data || []).map((d: any) => d.id);
