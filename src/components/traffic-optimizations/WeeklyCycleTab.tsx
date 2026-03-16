@@ -38,7 +38,8 @@ import {
 } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { WeeklyCycleEntry } from '@/hooks/useTrafficOptimizations';
+import { WeeklyCycleEntry, TrafficOptimization, OptimizationInput } from '@/hooks/useTrafficOptimizations';
+import { InlineOptimizationModal } from './InlineOptimizationModal';
 import { cn } from '@/lib/utils';
 
 /* ── Constants ────────────────────────────────────────────── */
@@ -57,12 +58,14 @@ interface Account {
   name: string;
   traffic_member_id?: string | null;
   niche?: string | null;
+  midias_ativas?: string[] | null;
 }
 
 interface Props {
   accounts: Account[];
   teamMembers: { id: string; name: string }[];
   weeklyCycle: WeeklyCycleEntry[];
+  optimizations: TrafficOptimization[];
   currentMemberId: string | null;
   isAdmin?: boolean;
   loading?: boolean;
@@ -74,6 +77,7 @@ interface Props {
     entries: { client_id: string; weekday: number }[],
     managerId?: string,
   ) => Promise<any>;
+  addOptimization: (input: OptimizationInput) => Promise<any>;
   onClientClick?: (clientId: string) => void;
 }
 
@@ -82,12 +86,16 @@ function DraggableClientCard({
   entryId,
   clientName,
   clientNiche,
+  isOptimizedToday,
+  isHighComplexity,
   onRemove,
   onClick,
 }: {
   entryId: string;
   clientName: string;
   clientNiche: string | null;
+  isOptimizedToday: boolean;
+  isHighComplexity: boolean;
   onRemove: () => void;
   onClick?: () => void;
 }) {
@@ -102,29 +110,77 @@ function DraggableClientCard({
     <div
       ref={setNodeRef}
       style={style}
-      {...listeners}
-      {...attributes}
-      onClick={() => { if (!isDragging) onClick?.(); }}
       className={cn(
-        'group flex items-center gap-2 rounded-[10px] border border-border/60 bg-card px-3 py-2.5 mb-1.5 transition-all duration-150',
+        'group relative flex items-center gap-2 rounded-[10px] border bg-card px-3 py-2.5 mb-1.5 transition-all duration-150',
+        isOptimizedToday && 'border-l-2 border-l-emerald-500/40',
         isDragging
-          ? 'opacity-40 scale-[1.02] shadow-lg cursor-grabbing'
-          : 'hover:border-border hover:bg-muted/40 cursor-pointer',
+          ? 'opacity-40 scale-[1.02] shadow-lg'
+          : 'hover:bg-muted/50 hover:border-border',
+        !isDragging && !isOptimizedToday && 'border-border/60',
       )}
     >
-      <div className="shrink-0">
+      {/* Drag handle zone */}
+      <div
+        {...listeners}
+        {...attributes}
+        className="shrink-0 cursor-grab active:cursor-grabbing p-0.5 -ml-1 rounded hover:bg-muted/60 transition-colors"
+        onClick={(e) => e.stopPropagation()}
+      >
         <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50" />
       </div>
 
-      <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-semibold text-foreground truncate">{clientName}</p>
+      {/* Clickable content zone */}
+      <div
+        className="flex-1 min-w-0 cursor-pointer"
+        onClick={() => { if (!isDragging) onClick?.(); }}
+      >
+        <div className="flex items-center gap-1.5">
+          {/* Status dot */}
+          <span
+            className={cn(
+              'inline-block h-2 w-2 rounded-full shrink-0 transition-colors duration-300',
+              isOptimizedToday
+                ? 'bg-emerald-500 animate-pulse'
+                : 'bg-muted-foreground/30',
+            )}
+          />
+          <p className="text-[13px] font-semibold text-foreground truncate">{clientName}</p>
+          {isHighComplexity && (
+            <Badge className="text-[10px] font-semibold px-1.5 py-0 h-4 bg-primary/12 text-primary border-0 rounded shrink-0">
+              Alta
+            </Badge>
+          )}
+        </div>
         {clientNiche && (
-          <span className="inline-block mt-0.5 text-[10px] text-muted-foreground bg-muted/60 border border-border/40 rounded px-1.5 py-0.5">
+          <span className="inline-block mt-0.5 ml-3.5 text-[10px] text-muted-foreground bg-muted/60 border border-border/40 rounded px-1.5 py-0.5">
             {clientNiche}
+          </span>
+        )}
+        {isOptimizedToday && (
+          <span className="block ml-3.5 mt-0.5 text-[10px] text-emerald-500 font-medium">
+            ✓ Otimizado hoje
           </span>
         )}
       </div>
 
+      {/* Hover plus icon with tooltip */}
+      <TooltipProvider delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={(e) => { e.stopPropagation(); if (!isDragging) onClick?.(); }}
+              className="shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-150 p-0.5 rounded hover:bg-primary/10"
+            >
+              <Plus className="h-3.5 w-3.5 text-primary" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs">
+            Registrar otimização
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      {/* Remove button */}
       <button
         onClick={(e) => { e.stopPropagation(); onRemove(); }}
         className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-destructive/10"
@@ -350,11 +406,15 @@ function NicheGroupedEntries({
   getClient,
   onRemove,
   onClientClick,
+  todayOptimizedClientIds,
+  highComplexityClientIds,
 }: {
   entries: WeeklyCycleEntry[];
   getClient: (id: string) => Account | undefined;
   onRemove: (id: string) => void;
   onClientClick?: (clientId: string) => void;
+  todayOptimizedClientIds: Set<string>;
+  highComplexityClientIds: Set<string>;
 }) {
   const grouped = useMemo(() => {
     const map = new Map<string, WeeklyCycleEntry[]>();
@@ -396,6 +456,8 @@ function NicheGroupedEntries({
                 entryId={entry.id}
                 clientName={client?.name || 'Cliente'}
                 clientNiche={client?.niche || null}
+                isOptimizedToday={todayOptimizedClientIds.has(entry.client_id)}
+                isHighComplexity={highComplexityClientIds.has(entry.client_id)}
                 onRemove={() => onRemove(entry.id)}
                 onClick={() => onClientClick?.(entry.client_id)}
               />
@@ -414,6 +476,7 @@ export function OptimizationWeeklyCycleTab({
   accounts,
   teamMembers,
   weeklyCycle,
+  optimizations,
   currentMemberId,
   isAdmin = false,
   loading = false,
@@ -422,6 +485,7 @@ export function OptimizationWeeklyCycleTab({
   moveWeeklyCycleEntry,
   clearWeeklyCycle,
   replaceWeeklyCycle,
+  addOptimization,
   onClientClick,
 }: Props) {
   const [selectedManagerId, setSelectedManagerId] = useState<string | null>(null);
@@ -430,6 +494,11 @@ export function OptimizationWeeklyCycleTab({
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [showManualGrid, setShowManualGrid] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  // Inline optimization modal state
+  const [inlineModalOpen, setInlineModalOpen] = useState(false);
+  const [inlineModalClientId, setInlineModalClientId] = useState<string | null>(null);
+  const [inlineModalTaskType, setInlineModalTaskType] = useState<'checkin' | 'media' | 'alta'>('checkin');
 
   const effectiveManagerId = isAdmin && selectedManagerId ? selectedManagerId : currentMemberId;
 
@@ -464,7 +533,45 @@ export function OptimizationWeeklyCycleTab({
     [accounts],
   );
 
-  /* ── DnD ──────────────────────────────────────────────────── */
+  /* ── Today's status sets ────────────────────────────────── */
+  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const todayWeekday = useMemo(() => {
+    const d = new Date().getDay();
+    return d === 0 ? 1 : d;
+  }, []);
+
+  const todayOptimizedClientIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const o of optimizations) {
+      if (o.optimization_date === todayStr) ids.add(o.client_id);
+    }
+    return ids;
+  }, [optimizations, todayStr]);
+
+  // High complexity = clients that have "alta" task type entries in the cycle for today's weekday
+  // We determine "high complexity" based on context: if the entry is in today's weekday column
+  const todayEntryClientIds = useMemo(() => {
+    return new Set(myCycle.filter(w => w.weekday === todayWeekday).map(w => w.client_id));
+  }, [myCycle, todayWeekday]);
+
+  // For now, mark as high complexity if client is scheduled for today (the user spec says to show badge)
+  // We'll use a simple heuristic: empty for now, will be set per-column below
+  const highComplexityClientIds = useMemo(() => new Set<string>(), []);
+
+  /* ── Inline modal handlers ──────────────────────────────── */
+  const handleOpenInlineModal = useCallback((clientId: string) => {
+    setInlineModalClientId(clientId);
+    // If client is in today's weekday column, preselect based on context
+    const isToday = todayEntryClientIds.has(clientId);
+    setInlineModalTaskType(isToday ? 'checkin' : 'checkin');
+    setInlineModalOpen(true);
+  }, [todayEntryClientIds]);
+
+  const inlineModalClient = useMemo(() => {
+    if (!inlineModalClientId) return null;
+    return accounts.find(a => a.id === inlineModalClientId) || null;
+  }, [inlineModalClientId, accounts]);
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
   );
@@ -687,7 +794,9 @@ export function OptimizationWeeklyCycleTab({
                         entries={dayEntries}
                         getClient={getClient}
                         onRemove={removeWeeklyCycleEntry}
-                        onClientClick={onClientClick}
+                        onClientClick={handleOpenInlineModal}
+                        todayOptimizedClientIds={todayOptimizedClientIds}
+                        highComplexityClientIds={day.value === todayWeekday ? todayEntryClientIds : highComplexityClientIds}
                       />
                       <AddClientPopover
                         availableClients={availableClients}
@@ -760,6 +869,19 @@ export function OptimizationWeeklyCycleTab({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* ── Inline Optimization Modal ─────────────────────── */}
+      <InlineOptimizationModal
+        open={inlineModalOpen}
+        onOpenChange={(open) => {
+          setInlineModalOpen(open);
+          if (!open) setInlineModalClientId(null);
+        }}
+        client={inlineModalClient}
+        currentMemberId={currentMemberId}
+        onSubmit={addOptimization}
+        preselectedTaskType={inlineModalTaskType}
+      />
     </div>
   );
 }
