@@ -345,10 +345,12 @@ function NicheGroupedEntries({
   entries,
   getClient,
   onRemove,
+  onClientClick,
 }: {
   entries: WeeklyCycleEntry[];
   getClient: (id: string) => Account | undefined;
   onRemove: (id: string) => void;
+  onClientClick?: (clientId: string) => void;
 }) {
   const grouped = useMemo(() => {
     const map = new Map<string, WeeklyCycleEntry[]>();
