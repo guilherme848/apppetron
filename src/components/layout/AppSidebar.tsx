@@ -30,6 +30,7 @@ const moduleConfig: { module: string; label: string | null }[] = [
   { module: MODULES.CONTENT, label: 'Criação' },
   { module: MODULES.TRAFFIC, label: 'Tráfego Pago' },
   { module: MODULES.CS, label: 'Customer Success' },
+  { module: MODULES.PETRON_OS, label: 'Petron OS' },
   { module: MODULES.SETTINGS, label: 'Sistema' },
 ];
 
