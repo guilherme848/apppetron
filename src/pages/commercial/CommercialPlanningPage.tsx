@@ -381,7 +381,7 @@ export default function CommercialPlanningPage() {
 
       {/* ── Tabs ──────────────────────────────────────────── */}
       <Tabs defaultValue="planning" className="w-full">
-        <TabsList className="w-full sm:w-auto bg-transparent border-b border-border rounded-none p-0 h-auto gap-1">
+        <TabsList className="w-full sm:w-auto bg-muted/50 border border-border/50 rounded-[10px] p-1 h-auto gap-0.5">
           {[
             { value: 'planning', label: 'Planejamento Comercial' },
             { value: 'scenarios', label: 'Análise de Cenários' },
@@ -390,7 +390,7 @@ export default function CommercialPlanningPage() {
             <TabsTrigger
               key={tab.value}
               value={tab.value}
-              className="rounded-lg rounded-b-none border-b-2 border-transparent px-4 h-10 text-sm text-muted-foreground data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:border-b-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent hover:text-foreground hover:bg-muted/40 transition-all duration-150"
+              className="rounded-lg px-4 h-9 text-sm text-muted-foreground data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border hover:text-foreground transition-all duration-150"
             >
               {tab.label}
             </TabsTrigger>
