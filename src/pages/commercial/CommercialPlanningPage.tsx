@@ -695,7 +695,8 @@ export default function CommercialPlanningPage() {
                   </ResponsiveContainer>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </TabsContent>
 
