@@ -17,7 +17,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Eye, Trash2, ChevronUp, ChevronDown, Lock, AlertCircle, ExternalLink, MessageSquareWarning, CheckCircle2, Archive } from 'lucide-react';
+import { GripVertical, Eye, Trash2, ChevronUp, ChevronDown, Lock, AlertCircle, ExternalLink, MessageSquareWarning, CheckCircle2, Archive, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
