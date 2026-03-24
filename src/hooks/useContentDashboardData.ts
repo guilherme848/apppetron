@@ -524,7 +524,7 @@ export function useContentDashboardData() {
         if (ra !== rb) return ra - rb;
         return b.netDeliveries - a.netDeliveries;
       });
-  }, [filteredPosts, changeRequests, filters.dateRange, metasMap]);
+  }, [filteredPosts, enrichedPosts, changeRequests, filters.dateRange, metasMap]);
 
   // ── Alerts ──
   const productionAlerts = useMemo(() => {
