@@ -449,6 +449,7 @@ export function useContentDashboardData() {
       setFilters(prev => ({ ...prev, [key]: value }));
     },
     posts: filteredPosts,
+    enrichedPosts,
     batches,
     accounts,
     teamMembers,
@@ -461,6 +462,7 @@ export function useContentDashboardData() {
     postsByStatus,
     batchesByStage,
     productivityByProfessional,
+    currentMonthProductivity,
     productionAlerts,
     weeklyChartData,
     accountsByProfessionalByRole,
