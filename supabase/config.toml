@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.external-api]
 verify_jwt = false
+
+[functions.suggest-content]
+verify_jwt = false

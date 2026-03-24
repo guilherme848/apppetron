@@ -335,6 +335,13 @@ export default function ContentProduction() {
         batchId={selectedBatchId}
         onSubmit={handlePostSubmit}
       />
+
+      <SuggestContentModal
+        open={suggestOpen}
+        onOpenChange={setSuggestOpen}
+        accounts={accounts}
+        onContentAdded={() => window.location.reload()}
+      />
     </div>
   );
 }
