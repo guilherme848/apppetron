@@ -92,6 +92,15 @@ export function NumerosGeraisTab({ data }: NumerosGeraisTabProps) {
   const [profFilter, setProfFilter] = useState('all');
   const [clientFilter, setClientFilter] = useState('all');
 
+  const statusCounts = useMemo(() => {
+    const posts = filteredPosts || [];
+    const total = posts.length;
+    const todo = posts.filter((p: any) => p.status === 'todo').length;
+    const doing = posts.filter((p: any) => p.status === 'doing').length;
+    const done = posts.filter((p: any) => p.status === 'done').length;
+    return { total, todo, doing, done };
+  }, [filteredPosts]);
+
   // Enriched change requests for retrabalho section
   const enrichedCRs = useMemo(() => {
     const postMap = new Map(filteredPosts.map((p: any) => [p.id, p]));
