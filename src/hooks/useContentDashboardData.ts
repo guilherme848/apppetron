@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { startOfDay, subDays, format, parseISO, isAfter, isBefore, isToday, startOfMonth, endOfMonth, differenceInBusinessDays, startOfWeek, endOfWeek, subWeeks } from 'date-fns';
+import {
+  startOfDay, subDays, format, parseISO, isAfter, isBefore, isToday,
+  startOfMonth, endOfMonth, differenceInBusinessDays, startOfWeek, endOfWeek,
+  subWeeks, differenceInDays, getDate, getDaysInMonth, addWeeks, isWithinInterval,
+  subMonths,
+} from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { BatchStatus, PostStatus, BATCH_STATUS_OPTIONS } from '@/types/contentProduction';
 
 export interface DashboardPost {
@@ -15,6 +21,7 @@ export interface DashboardPost {
   data_conclusao: string | null;
   created_at: string;
   updated_at: string;
+  due_date: string | null;
 }
 
 export interface DashboardBatch {
@@ -64,8 +71,6 @@ export interface MetaProducaoDiaria {
   ativo: boolean;
 }
 
-const ROLE_KEYS = ['designer', 'videomaker', 'social', 'traffic', 'support', 'cs'];
-
 export interface ChangeRequestData {
   id: string;
   post_id: string;
@@ -73,6 +78,8 @@ export interface ChangeRequestData {
   status: string;
   resolved_at: string | null;
 }
+
+const ROLE_KEYS = ['designer', 'videomaker', 'social', 'traffic', 'support', 'cs'];
 
 export function useContentDashboardData() {
   const [posts, setPosts] = useState<DashboardPost[]>([]);
@@ -98,7 +105,7 @@ export function useContentDashboardData() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     const [postsRes, batchesRes, accountsRes, membersRes, changeRequestsRes, metasRes] = await Promise.all([
-      supabase.from('content_posts').select('id, batch_id, title, status, responsible_role_key, assignee_id, started_at, completed_at, data_conclusao, created_at, updated_at'),
+      supabase.from('content_posts').select('id, batch_id, title, status, responsible_role_key, assignee_id, started_at, completed_at, data_conclusao, created_at, updated_at, due_date'),
       supabase.from('content_batches').select('id, client_id, month_ref, status, planning_due_date, archived, created_at').eq('archived', false),
       supabase.from('accounts').select('id, name, designer_member_id, videomaker_member_id, social_member_id, traffic_member_id, support_member_id, cs_member_id').eq('status', 'active'),
       supabase.from('team_members').select('id, name, role_id, active').eq('active', true),
@@ -115,23 +122,18 @@ export function useContentDashboardData() {
     setLoading(false);
   }, []);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Create batch lookup
   const batchMap = useMemo(() => new Map(batches.map(b => [b.id, b])), [batches]);
   const accountMap = useMemo(() => new Map(accounts.map(a => [a.id, a])), [accounts]);
   const memberMap = useMemo(() => new Map(teamMembers.map(m => [m.id, m])), [teamMembers]);
 
-  // Metas lookup by cargo
   const metasMap = useMemo(() => {
     const map: Record<string, number> = {};
     metas.forEach(m => { map[m.cargo] = m.meta_diaria; });
     return map;
   }, [metas]);
 
-  // Enrich posts with batch data
   const enrichedPosts = useMemo(() => {
     return posts.map(p => {
       const batch = batchMap.get(p.batch_id);
@@ -144,16 +146,10 @@ export function useContentDashboardData() {
     }).filter(p => p.batch && !p.batch.archived);
   }, [posts, batchMap, accountMap, memberMap]);
 
-  // Get unique month refs
-  const monthRefs = useMemo(() => {
-    const refs = [...new Set(batches.map(b => b.month_ref))].sort().reverse();
-    return refs;
-  }, [batches]);
+  const monthRefs = useMemo(() => [...new Set(batches.map(b => b.month_ref))].sort().reverse(), [batches]);
 
-  // Apply filters
   const filteredPosts = useMemo(() => {
     const today = startOfDay(new Date());
-    
     return enrichedPosts.filter(p => {
       if (filters.dateRange.from && filters.dateRange.to) {
         const postDate = p.data_conclusao ? parseISO(p.data_conclusao) : p.completed_at ? parseISO(p.completed_at) : parseISO(p.created_at);
@@ -176,7 +172,7 @@ export function useContentDashboardData() {
     });
   }, [enrichedPosts, filters]);
 
-  // Executive metrics
+  // ── KPI metrics ──
   const metrics = useMemo(() => {
     const today = startOfDay(new Date());
     const { from, to } = filters.dateRange;
@@ -188,23 +184,23 @@ export function useContentDashboardData() {
       return !isBefore(completedDate, from) && !isAfter(completedDate, to);
     });
 
+    const inProgress = filteredPosts.filter(p => p.status === 'doing');
     const openPosts = filteredPosts.filter(p => p.status !== 'done');
 
     const overduePosts = filteredPosts.filter(p => {
       if (p.status === 'done') return false;
-      const dueDate = p.batch?.planning_due_date ? parseISO(p.batch.planning_due_date) : null;
-      return dueDate && isBefore(dueDate, today);
+      const dueDate = p.due_date ? parseISO(p.due_date) : p.batch?.planning_due_date ? parseISO(p.batch.planning_due_date) : null;
+      return dueDate && isBefore(dueDate, today) && !p.data_conclusao;
     });
 
-    const completedWithDueDate = completedInPeriod.filter(p => p.batch?.planning_due_date);
+    const completedWithDueDate = completedInPeriod.filter(p => p.due_date || p.batch?.planning_due_date);
     const onTimeCount = completedWithDueDate.filter(p => {
-      const dueDate = parseISO(p.batch!.planning_due_date!);
+      const dueDate = p.due_date ? parseISO(p.due_date) : parseISO(p.batch!.planning_due_date!);
       const completedDate = p.data_conclusao ? parseISO(p.data_conclusao) : parseISO(p.completed_at!);
       return !isAfter(completedDate, dueDate);
     }).length;
-    const onTimeRate = completedWithDueDate.length > 0 
-      ? Math.round((onTimeCount / completedWithDueDate.length) * 100) 
-      : 0;
+    const onTimeRate = completedWithDueDate.length > 0
+      ? Math.round((onTimeCount / completedWithDueDate.length) * 100) : 0;
 
     const activeBatches = batches.filter(b => !b.archived && b.status !== 'scheduling');
     const overdueBatches = activeBatches.filter(b => {
@@ -212,47 +208,94 @@ export function useContentDashboardData() {
       return isBefore(parseISO(b.planning_due_date), today);
     });
 
+    // Change request metrics
+    const postIdSet = new Set(filteredPosts.map(p => p.id));
+    const relevantCRs = changeRequests.filter(cr => postIdSet.has(cr.post_id));
+    const postsWithChanges = new Set(relevantCRs.map(cr => cr.post_id)).size;
+    const reworkCount = postsWithChanges;
+    const reworkRate = completedInPeriod.length > 0 ? Math.round((reworkCount / completedInPeriod.length) * 100 * 10) / 10 : 0;
+    const netDeliveries = completedInPeriod.length - reworkCount;
+
+    // Production time
+    const productionTimes = completedInPeriod
+      .filter(p => p.created_at && (p.data_conclusao || p.completed_at))
+      .map(p => {
+        const start = parseISO(p.created_at);
+        const end = p.data_conclusao ? parseISO(p.data_conclusao) : parseISO(p.completed_at!);
+        return Math.max(differenceInDays(end, start), 0);
+      });
+    const avgProductionTime = productionTimes.length > 0
+      ? Math.round((productionTimes.reduce((s, v) => s + v, 0) / productionTimes.length) * 10) / 10 : 0;
+    const minProductionTime = productionTimes.length > 0 ? Math.min(...productionTimes) : 0;
+    const maxProductionTime = productionTimes.length > 0 ? Math.max(...productionTimes) : 0;
+
+    // Team capacity
+    const businessDaysInMonth = Math.max(differenceInBusinessDays(endOfMonth(today), startOfMonth(today)), 1);
+    const productionRoles = ['designer', 'videomaker', 'social'];
+    const uniqueAssignees = new Set<string>();
+    filteredPosts.forEach(p => {
+      if (p.assignee_id && p.responsible_role_key && productionRoles.includes(p.responsible_role_key)) {
+        uniqueAssignees.add(`${p.assignee_id}-${p.responsible_role_key}`);
+      }
+    });
+
+    let totalCapacity = 0;
+    uniqueAssignees.forEach(key => {
+      const role = key.split('-').pop()!;
+      totalCapacity += (metasMap[role] || 0) * businessDaysInMonth;
+    });
+
+    const committed = filteredPosts.filter(p =>
+      p.status !== 'done' && p.assignee_id && p.responsible_role_key && productionRoles.includes(p.responsible_role_key)
+    ).length;
+    const available = Math.max(totalCapacity - committed, 0);
+    const occupancyPct = totalCapacity > 0 ? Math.round((committed / totalCapacity) * 100) : 0;
+
     return {
       completedInPeriod: completedInPeriod.length,
+      inProgress: inProgress.length,
       openPosts: openPosts.length,
       overduePosts: overduePosts.length,
       onTimeRate,
       activeBatches: activeBatches.length,
       overdueBatches: overdueBatches.length,
+      reworkCount,
+      reworkRate,
+      netDeliveries,
+      avgProductionTime,
+      minProductionTime,
+      maxProductionTime,
+      totalCapacity,
+      committed,
+      available,
+      occupancyPct,
     };
-  }, [filteredPosts, batches, filters.dateRange]);
+  }, [filteredPosts, batches, filters.dateRange, changeRequests, metasMap]);
 
-  // Completed by day using data_conclusao
+  // ── Completed by day ──
   const completedByDay = useMemo(() => {
     const days: Record<string, number> = {};
     const { from, to } = filters.dateRange;
-    
     let current = new Date(from);
     while (!isAfter(current, to)) {
       days[format(current, 'yyyy-MM-dd')] = 0;
       current = new Date(current.getTime() + 24 * 60 * 60 * 1000);
     }
-
     filteredPosts.forEach(p => {
       if (p.status === 'done') {
         const dateStr = p.data_conclusao || p.completed_at;
         if (dateStr) {
           const day = format(parseISO(dateStr), 'yyyy-MM-dd');
-          if (days[day] !== undefined) {
-            days[day]++;
-          }
+          if (days[day] !== undefined) days[day]++;
         }
       }
     });
-
     return Object.entries(days).map(([date, count]) => ({
-      date,
-      label: format(parseISO(date), 'dd/MM'),
-      count,
+      date, label: format(parseISO(date), 'dd/MM'), count,
     }));
   }, [filteredPosts, filters.dateRange]);
 
-  // Posts by status
+  // ── Posts by status ──
   const postsByStatus = useMemo(() => {
     const statusCounts = { todo: 0, doing: 0, done: 0 };
     filteredPosts.forEach(p => { statusCounts[p.status]++; });
@@ -263,7 +306,7 @@ export function useContentDashboardData() {
     ];
   }, [filteredPosts]);
 
-  // Batches by pipeline stage
+  // ── Batches by stage ──
   const batchesByStage = useMemo(() => {
     const stageCounts: Record<string, number> = {};
     BATCH_STATUS_OPTIONS.forEach(s => stageCounts[s.value] = 0);
@@ -271,158 +314,210 @@ export function useContentDashboardData() {
     return BATCH_STATUS_OPTIONS.map(s => ({ stage: s.label, count: stageCounts[s.value] || 0 }));
   }, [batches]);
 
-  // Productivity by professional (using data_conclusao)
+  // ── Productivity by professional ──
   const productivityByProfessional = useMemo(() => {
     const today = startOfDay(new Date());
     const { from, to } = filters.dateRange;
+    const changePostIds = new Set(changeRequests.map(cr => cr.post_id));
     const stats: Record<string, {
-      id: string;
-      name: string;
-      completedToday: number;
-      completedInPeriod: number;
-      wip: number;
-      overdue: number;
-      onTimeCount: number;
-      totalWithDueDate: number;
+      id: string; name: string; role: string;
+      completedInPeriod: number; completedToday: number; wip: number; overdue: number;
+      onTimeCount: number; totalWithDueDate: number;
+      postsWithChanges: number; dailyCounts: Record<number, number>;
+      productionTimes: number[];
     }> = {};
 
-    teamMembers.forEach(m => {
-      stats[m.id] = {
-        id: m.id, name: m.name, completedToday: 0, completedInPeriod: 0,
-        wip: 0, overdue: 0, onTimeCount: 0, totalWithDueDate: 0,
-      };
-    });
-
     filteredPosts.forEach(p => {
-      if (!p.assignee_id) return;
-      const stat = stats[p.assignee_id];
-      if (!stat) return;
+      if (!p.assignee_id || !p.responsible_role_key) return;
+      if (!['designer', 'videomaker', 'social'].includes(p.responsible_role_key)) return;
+
+      const key = `${p.assignee_id}-${p.responsible_role_key}`;
+      if (!stats[key]) {
+        stats[key] = {
+          id: p.assignee_id, name: p.assignee?.name || 'Desconhecido', role: p.responsible_role_key,
+          completedInPeriod: 0, completedToday: 0, wip: 0, overdue: 0,
+          onTimeCount: 0, totalWithDueDate: 0, postsWithChanges: 0,
+          dailyCounts: {}, productionTimes: [],
+        };
+      }
+      const s = stats[key];
 
       if (p.status === 'done') {
         const dateStr = p.data_conclusao || p.completed_at;
         if (dateStr) {
-          const completedDate = parseISO(dateStr);
-          if (isToday(completedDate)) stat.completedToday++;
-          if (!isBefore(completedDate, from) && !isAfter(completedDate, to)) {
-            stat.completedInPeriod++;
-            if (p.batch?.planning_due_date) {
-              stat.totalWithDueDate++;
-              if (!isAfter(completedDate, parseISO(p.batch.planning_due_date))) stat.onTimeCount++;
+          const cd = parseISO(dateStr);
+          if (isToday(cd)) s.completedToday++;
+          if (!isBefore(cd, from) && !isAfter(cd, to)) {
+            s.completedInPeriod++;
+            if (changePostIds.has(p.id)) s.postsWithChanges++;
+            const day = getDate(cd);
+            s.dailyCounts[day] = (s.dailyCounts[day] || 0) + 1;
+            if (p.due_date || p.batch?.planning_due_date) {
+              s.totalWithDueDate++;
+              const dueDate = p.due_date ? parseISO(p.due_date) : parseISO(p.batch!.planning_due_date!);
+              if (!isAfter(cd, dueDate)) s.onTimeCount++;
             }
+            // production time
+            const created = parseISO(p.created_at);
+            const prodTime = Math.max(differenceInDays(cd, created), 0);
+            s.productionTimes.push(prodTime);
           }
         }
       } else {
-        stat.wip++;
-        const dueDate = p.batch?.planning_due_date ? parseISO(p.batch.planning_due_date) : null;
-        if (dueDate && isBefore(dueDate, today)) stat.overdue++;
+        s.wip++;
+        const dueDate = p.due_date ? parseISO(p.due_date) : p.batch?.planning_due_date ? parseISO(p.batch.planning_due_date) : null;
+        if (dueDate && isBefore(parseISO(dueDate as any), today)) s.overdue++;
       }
     });
 
-    return Object.values(stats)
-      .filter(s => s.completedInPeriod > 0 || s.wip > 0)
-      .map(s => ({ ...s, onTimeRate: s.totalWithDueDate > 0 ? Math.round((s.onTimeCount / s.totalWithDueDate) * 100) : 0 }))
-      .sort((a, b) => b.completedInPeriod - a.completedInPeriod);
-  }, [filteredPosts, teamMembers, filters.dateRange]);
+    const businessDays = Math.max(differenceInBusinessDays(filters.dateRange.to, filters.dateRange.from), 1);
+    const businessDaysInMonth = Math.max(differenceInBusinessDays(endOfMonth(new Date()), startOfMonth(new Date())), 1);
 
-  // Daily productivity stats per professional (for new panel)
-  const dailyProductivityStats = useMemo(() => {
-    const today = startOfDay(new Date());
-    const { from, to } = filters.dateRange;
-    const thisWeekStart = startOfWeek(today, { weekStartsOn: 1 });
-    const thisWeekEnd = endOfWeek(today, { weekStartsOn: 1 });
+    const thisWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+    const thisWeekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
     const lastWeekStart = subWeeks(thisWeekStart, 1);
     const lastWeekEnd = subWeeks(thisWeekEnd, 1);
 
-    // Business days in period
-    const businessDays = Math.max(differenceInBusinessDays(to, from), 1);
-    const thisWeekBusinessDays = Math.max(differenceInBusinessDays(
-      isBefore(today, thisWeekEnd) ? today : thisWeekEnd,
-      thisWeekStart
-    ), 1);
+    return Object.values(stats)
+      .filter(s => s.completedInPeriod > 0 || s.wip > 0)
+      .map(s => {
+        const meta = metasMap[s.role] || 0;
+        const avgPerDay = Math.round((s.completedInPeriod / businessDays) * 10) / 10;
+        const avgProdTime = s.productionTimes.length > 0
+          ? Math.round((s.productionTimes.reduce((a, b) => a + b, 0) / s.productionTimes.length) * 10) / 10 : 0;
+        const punctuality = s.totalWithDueDate > 0 ? Math.round((s.onTimeCount / s.totalWithDueDate) * 100) : 0;
+        const changeRate = s.completedInPeriod > 0 ? Math.round((s.postsWithChanges / s.completedInPeriod) * 100) : 0;
+        const netDeliveries = s.completedInPeriod - s.postsWithChanges;
+        const capacityMonthly = meta * businessDaysInMonth;
+        const committed = s.wip;
+        const availableCapacity = Math.max(capacityMonthly - committed, 0);
+        const occupancyPct = capacityMonthly > 0 ? Math.round((committed / capacityMonthly) * 100) : 0;
 
-    const statsMap: Record<string, {
-      id: string;
-      name: string;
-      role: string;
-      totalInPeriod: number;
-      todayCount: number;
-      thisWeekCount: number;
-      thisMonthCount: number;
-      lastWeekCount: number;
-      lastWeekBusinessDays: number;
-    }> = {};
+        // Weekly trend
+        let thisWeekCount = 0;
+        let lastWeekCount = 0;
+        filteredPosts.forEach(p => {
+          if (p.assignee_id !== s.id || p.responsible_role_key !== s.role) return;
+          if (p.status !== 'done') return;
+          const ds = p.data_conclusao || p.completed_at;
+          if (!ds) return;
+          const cd = parseISO(ds);
+          if (!isBefore(cd, thisWeekStart) && !isAfter(cd, thisWeekEnd)) thisWeekCount++;
+          if (!isBefore(cd, lastWeekStart) && !isAfter(cd, lastWeekEnd)) lastWeekCount++;
+        });
+        const trendPct = lastWeekCount > 0
+          ? Math.round(((thisWeekCount / 5 - lastWeekCount / 5) / (lastWeekCount / 5)) * 100)
+          : thisWeekCount > 0 ? 100 : 0;
 
-    filteredPosts.forEach(p => {
-      if (!p.assignee_id || !p.responsible_role_key) return;
-      if (!['designer', 'videomaker', 'social'].includes(p.responsible_role_key)) return;
-      if (p.status !== 'done') return;
+        // Best day
+        let bestDay = { day: 0, count: 0 };
+        Object.entries(s.dailyCounts).forEach(([d, c]) => {
+          if (c > bestDay.count) bestDay = { day: Number(d), count: c };
+        });
 
-      const dateStr = p.data_conclusao || p.completed_at;
-      if (!dateStr) return;
-      const cd = parseISO(dateStr);
-
-      const key = `${p.assignee_id}-${p.responsible_role_key}`;
-      if (!statsMap[key]) {
-        statsMap[key] = {
-          id: p.assignee_id,
-          name: p.assignee?.name || 'Desconhecido',
-          role: p.responsible_role_key,
-          totalInPeriod: 0, todayCount: 0, thisWeekCount: 0,
-          thisMonthCount: 0, lastWeekCount: 0, lastWeekBusinessDays: 5,
+        return {
+          id: s.id, name: s.name, role: s.role,
+          completedInPeriod: s.completedInPeriod,
+          completedToday: s.completedToday,
+          thisWeekCount,
+          thisMonthCount: s.completedInPeriod,
+          wip: s.wip, overdue: s.overdue,
+          avgPerDay, meta, trendPct,
+          avgProdTime, punctuality, changeRate,
+          netDeliveries, postsWithChanges: s.postsWithChanges,
+          capacityMonthly, committed, availableCapacity, occupancyPct,
+          bestDay, dailyCounts: s.dailyCounts,
+          businessDays,
         };
+      })
+      .sort((a, b) => {
+        const roleOrder = ['designer', 'videomaker', 'social'];
+        const ra = roleOrder.indexOf(a.role);
+        const rb = roleOrder.indexOf(b.role);
+        if (ra !== rb) return ra - rb;
+        return b.netDeliveries - a.netDeliveries;
+      });
+  }, [filteredPosts, changeRequests, filters.dateRange, metasMap]);
+
+  // ── Alerts ──
+  const productionAlerts = useMemo(() => {
+    const alerts: { id: string; name: string; role: string; description: string; severity: 'high' | 'medium' }[] = [];
+    productivityByProfessional.forEach(p => {
+      if (p.overdue > 3) {
+        alerts.push({ id: `${p.id}-overdue`, name: p.name, role: p.role, description: `${p.overdue} atrasados`, severity: 'high' });
       }
-      const s = statsMap[key];
-
-      if (!isBefore(cd, from) && !isAfter(cd, to)) s.totalInPeriod++;
-      if (isToday(cd)) s.todayCount++;
-      if (!isBefore(cd, thisWeekStart) && !isAfter(cd, thisWeekEnd)) s.thisWeekCount++;
-      if (!isBefore(cd, lastWeekStart) && !isAfter(cd, lastWeekEnd)) s.lastWeekCount++;
-
-      const monthStart = startOfMonth(today);
-      const monthEnd = endOfMonth(today);
-      if (!isBefore(cd, monthStart) && !isAfter(cd, monthEnd)) s.thisMonthCount++;
+      if (p.meta > 0 && p.avgPerDay < p.meta * 0.7) {
+        alerts.push({ id: `${p.id}-lowprod`, name: p.name, role: p.role, description: `Abaixo de 70% da meta (${p.avgPerDay}/${p.meta})`, severity: 'medium' });
+      }
+      if (p.occupancyPct > 90) {
+        alerts.push({ id: `${p.id}-capacity`, name: p.name, role: p.role, description: `Capacidade esgotada (${p.occupancyPct}%)`, severity: 'high' });
+      }
+      if (p.changeRate > 15) {
+        alerts.push({ id: `${p.id}-rework`, name: p.name, role: p.role, description: `Taxa de retrabalho ${p.changeRate}%`, severity: 'medium' });
+      }
     });
+    return alerts;
+  }, [productivityByProfessional]);
 
-    // Also add professionals with WIP but no completions
-    filteredPosts.forEach(p => {
-      if (!p.assignee_id || !p.responsible_role_key) return;
-      if (!['designer', 'videomaker', 'social'].includes(p.responsible_role_key)) return;
-      if (p.status === 'done') return;
-      const key = `${p.assignee_id}-${p.responsible_role_key}`;
-      if (!statsMap[key]) {
-        statsMap[key] = {
-          id: p.assignee_id,
-          name: p.assignee?.name || 'Desconhecido',
-          role: p.responsible_role_key,
-          totalInPeriod: 0, todayCount: 0, thisWeekCount: 0,
-          thisMonthCount: 0, lastWeekCount: 0, lastWeekBusinessDays: 5,
+  // ── Weekly chart data ──
+  const weeklyChartData = useMemo(() => {
+    const today = startOfDay(new Date());
+    const monthStart2 = startOfMonth(today);
+    const weeks: { label: string; start: Date; end: Date }[] = [];
+    let ws = startOfWeek(monthStart2, { locale: ptBR });
+    for (let i = 0; i < 5; i++) {
+      const we = endOfWeek(ws, { locale: ptBR });
+      weeks.push({ label: `Sem ${i + 1}`, start: ws, end: we });
+      ws = addWeeks(ws, 1);
+    }
+
+    const allProfs = productivityByProfessional;
+    return weeks.map(w => {
+      const row: any = { week: w.label };
+      allProfs.forEach(s => {
+        let count = 0;
+        filteredPosts.forEach(p => {
+          if (p.assignee_id !== s.id || p.responsible_role_key !== s.role) return;
+          if (p.status !== 'done') return;
+          const ds = p.data_conclusao || p.completed_at;
+          if (!ds) return;
+          const cd = parseISO(ds);
+          if (isWithinInterval(cd, { start: w.start, end: w.end })) count++;
+        });
+        row[`${s.name}_${s.role}`] = count;
+      });
+      return row;
+    });
+  }, [productivityByProfessional, filteredPosts]);
+
+  // ── Batch progress ──
+  const batchProgress = useMemo(() => {
+    const today = startOfDay(new Date());
+    return batches
+      .filter(b => !b.archived)
+      .map(b => {
+        const batchPosts = posts.filter(p => p.batch_id === b.id);
+        const donePosts = batchPosts.filter(p => p.status === 'done').length;
+        const totalPosts = batchPosts.length;
+        const progress = totalPosts > 0 ? Math.round((donePosts / totalPosts) * 100) : 0;
+        const dueDate = b.planning_due_date ? parseISO(b.planning_due_date) : null;
+        const isOverdue = dueDate && isBefore(dueDate, today) && progress < 100;
+        const client = b.client_id ? accountMap.get(b.client_id) : null;
+        return {
+          id: b.id, clientName: client?.name || 'Sem cliente', monthRef: b.month_ref,
+          status: b.status, statusLabel: BATCH_STATUS_OPTIONS.find(s => s.value === b.status)?.label || b.status,
+          planningDueDate: b.planning_due_date, done: donePosts, total: totalPosts, progress, isOverdue,
+          risk: isOverdue ? 'high' as const : progress < 50 && dueDate && isBefore(dueDate, new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)) ? 'medium' as const : 'low' as const,
         };
-      }
-    });
+      })
+      .sort((a, b) => {
+        if (a.risk !== b.risk) return ({ high: 0, medium: 1, low: 2 })[a.risk] - ({ high: 0, medium: 1, low: 2 })[b.risk];
+        if (a.planningDueDate && b.planningDueDate) return new Date(a.planningDueDate).getTime() - new Date(b.planningDueDate).getTime();
+        return 0;
+      });
+  }, [batches, posts, accountMap]);
 
-    return Object.values(statsMap).map(s => {
-      const avgPerDay = s.totalInPeriod / businessDays;
-      const thisWeekAvg = s.thisWeekCount / thisWeekBusinessDays;
-      const lastWeekAvg = s.lastWeekCount / 5;
-      const trendPct = lastWeekAvg > 0 ? ((thisWeekAvg - lastWeekAvg) / lastWeekAvg) * 100 : thisWeekAvg > 0 ? 100 : 0;
-
-      return {
-        ...s,
-        avgPerDay: Math.round(avgPerDay * 10) / 10,
-        meta: metasMap[s.role] || 0,
-        trendPct: Math.round(trendPct),
-        businessDays,
-      };
-    }).sort((a, b) => {
-      const roleOrder = ['designer', 'videomaker', 'social'];
-      const ra = roleOrder.indexOf(a.role);
-      const rb = roleOrder.indexOf(b.role);
-      if (ra !== rb) return ra - rb;
-      return b.avgPerDay - a.avgPerDay;
-    });
-  }, [filteredPosts, filters.dateRange, metasMap]);
-
-  // Accounts by professional by role
+  // ── Accounts by professional by role ──
   const accountsByProfessionalByRole = useMemo(() => {
     const roleStats: Record<string, Record<string, { id: string; name: string; count: number; accounts: string[] }>> = {};
     ROLE_KEYS.forEach(role => { roleStats[role] = {}; });
@@ -445,61 +540,17 @@ export function useContentDashboardData() {
     }));
   }, [accounts, memberMap]);
 
-  // Batch progress for table
-  const batchProgress = useMemo(() => {
-    const today = startOfDay(new Date());
-    return batches
-      .filter(b => !b.archived)
-      .map(b => {
-        const batchPosts = posts.filter(p => p.batch_id === b.id);
-        const donePosts = batchPosts.filter(p => p.status === 'done').length;
-        const totalPosts = batchPosts.length;
-        const progress = totalPosts > 0 ? Math.round((donePosts / totalPosts) * 100) : 0;
-        const dueDate = b.planning_due_date ? parseISO(b.planning_due_date) : null;
-        const isOverdue = dueDate && isBefore(dueDate, today) && progress < 100;
-        const client = b.client_id ? accountMap.get(b.client_id) : null;
-        return {
-          id: b.id, clientName: client?.name || 'Sem cliente', monthRef: b.month_ref,
-          status: b.status, statusLabel: BATCH_STATUS_OPTIONS.find(s => s.value === b.status)?.label || b.status,
-          planningDueDate: b.planning_due_date, done: donePosts, total: totalPosts, progress, isOverdue,
-          risk: isOverdue ? 'high' as const : progress < 50 && dueDate && isBefore(dueDate, new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)) ? 'medium' as const : 'low' as const,
-        };
-      })
-      .sort((a, b) => {
-        if (a.risk !== b.risk) {
-          const riskOrder = { high: 0, medium: 1, low: 2 };
-          return riskOrder[a.risk] - riskOrder[b.risk];
-        }
-        if (a.planningDueDate && b.planningDueDate) return new Date(a.planningDueDate).getTime() - new Date(b.planningDueDate).getTime();
-        return 0;
-      });
-  }, [batches, posts, accountMap]);
-
-  // Post report data
-  const postReport = useMemo(() => {
-    return filteredPosts.map(p => ({
-      id: p.id, title: p.title, clientName: p.client?.name || 'Sem cliente',
-      monthRef: p.batch?.month_ref || '', status: p.status, roleKey: p.responsible_role_key || '',
-      assigneeName: p.assignee?.name || '', dueDate: p.batch?.planning_due_date || null,
-      completedAt: p.completed_at, dataConclusao: p.data_conclusao, updatedAt: p.updated_at, batchId: p.batch_id,
-    }));
-  }, [filteredPosts]);
-
-  // Change request metrics
+  // ── Change request metrics for Alterações tab ──
   const changeRequestMetrics = useMemo(() => {
     const postIdSet = new Set(filteredPosts.map(p => p.id));
     const relevantRequests = changeRequests.filter(cr => postIdSet.has(cr.post_id));
     const postsWithChanges = new Set(relevantRequests.map(cr => cr.post_id)).size;
     const totalPosts = filteredPosts.length;
     const reworkRate = totalPosts > 0 ? (postsWithChanges / totalPosts) * 100 : 0;
-    const resolvedRequests = relevantRequests.filter(cr => cr.status === 'done' && cr.resolved_at);
-    const avgResolutionMs = resolvedRequests.length > 0
-      ? resolvedRequests.reduce((sum, cr) => sum + (new Date(cr.resolved_at!).getTime() - new Date(cr.requested_at).getTime()), 0) / resolvedRequests.length
-      : 0;
     return {
       totalRequests: relevantRequests.length,
       openRequests: relevantRequests.filter(cr => cr.status === 'open' || cr.status === 'in_progress').length,
-      postsWithChanges, reworkRate, avgResolutionHours: avgResolutionMs / (1000 * 60 * 60),
+      postsWithChanges, reworkRate,
     };
   }, [filteredPosts, changeRequests]);
 
@@ -523,10 +574,10 @@ export function useContentDashboardData() {
     postsByStatus,
     batchesByStage,
     productivityByProfessional,
-    dailyProductivityStats,
+    productionAlerts,
+    weeklyChartData,
     accountsByProfessionalByRole,
     batchProgress,
-    postReport,
     changeRequestMetrics,
     refetch: fetchData,
   };
