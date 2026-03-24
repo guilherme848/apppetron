@@ -75,6 +75,11 @@ export default function CrmDetail() {
   const showFinancialValues = canViewFinancialValues();
   const { events: historyEvents, loading: historyLoading } = useAccountHistory(id);
   const { links: clienteLinks, concorrentes, anexos, loading: intelLoading, deleteAnexo, refetch: refetchIntel } = useClientIntelligence(id);
+  const {
+    inteligencia, arquivos: arquivosIntel, acoes, loading: expandedLoading, completude,
+    upsertInteligencia, uploadArquivoInteligencia, deleteArquivoInteligencia,
+    addAcao, deleteAcao,
+  } = useClientIntelligenceExpanded(id);
 
   const [contractFormOpen, setContractFormOpen] = useState(false);
   const [accountFormOpen, setAccountFormOpen] = useState(false);
