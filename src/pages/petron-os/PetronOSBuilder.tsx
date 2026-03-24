@@ -83,13 +83,13 @@ export default function PetronOSBuilder() {
     // Build system prompt with client context
     let sysPrompt = ferramenta.system_prompt;
     if (clientContext) {
-      sysPrompt = sysPrompt.replaceAll('{{contexto_cliente}}', `CONTEXTO DO CLIENTE:\n${clientContext}`);
+      sysPrompt = sysPrompt.split('{{contexto_cliente}}').join(`CONTEXTO DO CLIENTE:\n${clientContext}`);
     } else {
-      sysPrompt = sysPrompt.replaceAll('{{contexto_cliente}}', '');
+      sysPrompt = sysPrompt.split('{{contexto_cliente}}').join('');
     }
     const client = clients.find(c => c.id === selectedClientId);
-    sysPrompt = sysPrompt.replaceAll('{{nome_cliente}}', client?.name || '');
-    sysPrompt = sysPrompt.replaceAll('{{nicho_cliente}}', client?.niche || '');
+    sysPrompt = sysPrompt.split('{{nome_cliente}}').join(client?.name || '');
+    sysPrompt = sysPrompt.split('{{nicho_cliente}}').join(client?.niche || '');
 
     // Send initial message
     setSending(true);
