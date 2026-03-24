@@ -198,6 +198,14 @@ export default function ContentProduction() {
               <LayoutGrid className="h-4 w-4 mr-2" />
               Quadro Resumo
             </Button>
+            <Button
+              variant="outline"
+              onClick={() => setSuggestOpen(true)}
+              className="border-[hsl(var(--accent-primary,24_95%_53%)/0.4)] text-[hsl(var(--accent-primary,24_95%_53%))] hover:bg-[hsl(var(--accent-primary,24_95%_53%)/0.08)]"
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              Sugerir Conteúdos
+            </Button>
             <Button onClick={() => setBatchFormOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Novo Planejamento
