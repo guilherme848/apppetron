@@ -463,7 +463,7 @@ export function useContentDashboardData() {
           if (!clientStats[clientName]) clientStats[clientName] = { name: clientName, delivered: 0, pending: 0 };
           if (p.status === 'done') {
             const ds = p.data_conclusao || p.completed_at;
-            if (ds) {
+            if (ds && typeof ds === 'string') {
               const cd = parseISO(ds);
               if (!isBefore(cd, from) && !isAfter(cd, to)) clientStats[clientName].delivered++;
             }
