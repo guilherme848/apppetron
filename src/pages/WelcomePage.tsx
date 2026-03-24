@@ -7,6 +7,7 @@ import { BirthdayCard } from '@/components/welcome/BirthdayCard';
 import { BirthdayModal, useBirthdayModal } from '@/components/welcome/BirthdayModal';
 import { BirthdayToast } from '@/components/welcome/BirthdayToast';
 import { UserNotesCard } from '@/components/notes/UserNotesCard';
+import { DailyQuoteCard } from '@/components/welcome/DailyQuoteCard';
 import { Sparkles, AlertCircle, Trophy, Activity, CheckCircle, Clock, Flame, TrendingUp, Calendar, ArrowRight, Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
