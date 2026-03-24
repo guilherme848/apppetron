@@ -111,8 +111,11 @@ function calcNovaPrevisao(
 function KpiCard({
   label,
   value,
+  fullValue,
   sub,
   icon: Icon,
+  iconColor,
+  borderColor,
   valueColor,
   children,
   delay = 0,
@@ -120,30 +123,55 @@ function KpiCard({
 }: {
   label: string;
   value: string;
+  fullValue?: string;
   sub?: string;
   icon: any;
+  iconColor?: string;
+  borderColor?: string;
   valueColor?: string;
   children?: React.ReactNode;
   delay?: number;
   loading?: boolean;
 }) {
+  const valueContent = (
+    <p className={cn(
+      'mt-2 text-2xl font-extrabold leading-none tracking-tight font-mono truncate',
+      valueColor || 'text-foreground'
+    )}>
+      {value}
+    </p>
+  );
+
   return (
     <div
-      className="relative rounded-2xl border border-border bg-card p-5 transition-all duration-150 hover:border-foreground/20 animate-fade-in"
-      style={{ animationDelay: `${delay}ms`, animationFillMode: 'both' }}
+      className="relative rounded-2xl border border-border bg-card p-5 transition-all duration-150 hover:border-foreground/20 animate-fade-in overflow-hidden"
+      style={{
+        animationDelay: `${delay}ms`,
+        animationFillMode: 'both',
+        borderLeftWidth: borderColor ? '3px' : undefined,
+        borderLeftColor: borderColor,
+      }}
     >
       <div className="flex items-start justify-between">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</p>
-        <Icon className="h-[18px] w-[18px] text-muted-foreground/60" />
+        <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</p>
+        <div
+          className="h-9 w-9 rounded-full flex items-center justify-center shrink-0"
+          style={{ backgroundColor: iconColor ? `${iconColor}1F` : 'hsl(var(--muted) / 0.5)' }}
+        >
+          <Icon className="h-[18px] w-[18px]" style={{ color: iconColor || 'hsl(var(--muted-foreground))' }} />
+        </div>
       </div>
       {loading ? (
-        <Skeleton className="h-9 w-32 mt-2" />
-      ) : (
-        <p className={cn('mt-2 text-[32px] font-extrabold leading-none tracking-tight font-mono', valueColor || 'text-foreground')}>
-          {value}
-        </p>
-      )}
-      {sub && <p className="mt-1.5 text-xs text-muted-foreground">{sub}</p>}
+        <Skeleton className="h-7 w-32 mt-2" />
+      ) : fullValue ? (
+        <TooltipProvider>
+          <UITooltip>
+            <TooltipTrigger asChild>{valueContent}</TooltipTrigger>
+            <TooltipContent><p className="font-mono text-sm">{fullValue}</p></TooltipContent>
+          </UITooltip>
+        </TooltipProvider>
+      ) : valueContent}
+      {sub && <p className="mt-1.5 text-[13px] text-muted-foreground">{sub}</p>}
       {children}
     </div>
   );
