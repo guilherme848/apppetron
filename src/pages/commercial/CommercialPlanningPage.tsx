@@ -623,11 +623,14 @@ export default function CommercialPlanningPage() {
 
           {/* ── Channel Breakdown ─────────────────────────── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {channelData.map((ch, ci) => (
+            {channelData.map((ch, ci) => {
+              const channelColors: Record<string, string> = { inbound: '#6366f1', indicacao: '#10b981', prospeccao: '#F97316' };
+              const borderCol = channelColors[ch.key] || '#F97316';
+              return (
               <div
                 key={ch.key}
                 className="rounded-2xl border border-border bg-card p-5 animate-fade-in"
-                style={{ animationDelay: `${280 + ci * 40}ms`, animationFillMode: 'both' }}
+                style={{ animationDelay: `${280 + ci * 40}ms`, animationFillMode: 'both', borderLeftWidth: '3px', borderLeftColor: borderCol }}
               >
                 <h4 className="text-sm font-semibold text-foreground">{ch.label}</h4>
                 <p className="text-xs text-muted-foreground mb-4">Meta anual · Realizado · Contribuição</p>
