@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useWelcomeCommandCenter, UserRole } from '@/hooks/useWelcomeCommandCenter';
+import { useWelcomeCommandCenter, UserRole, DirectorPillar } from '@/hooks/useWelcomeCommandCenter';
 import { useWelcomeData } from '@/hooks/useWelcomeData';
 import { BirthdayCard } from '@/components/welcome/BirthdayCard';
 import { BirthdayModal, useBirthdayModal } from '@/components/welcome/BirthdayModal';
@@ -7,9 +7,9 @@ import { BirthdayToast } from '@/components/welcome/BirthdayToast';
 import { UserNotesCard } from '@/components/notes/UserNotesCard';
 import { DailyQuoteCard } from '@/components/welcome/DailyQuoteCard';
 import {
-  AlertCircle, Trophy, Activity, CheckCircle, Clock, TrendingUp,
+  AlertCircle, Trophy, Activity, CheckCircle, Clock, TrendingUp, TrendingDown,
   Calendar, ArrowRight, Sparkles, Target, AlertTriangle, Zap,
-  FileText, BarChart2,
+  FileText, Palette, DollarSign, FileSignature,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 
-// ─── Shimmer Skeleton (CS pattern) ───
+// ─── Shimmer Skeleton ───
 function SectionSkeleton({ rows = 3 }: { rows?: number }) {
   return (
     <div className="space-y-3">
@@ -30,7 +30,7 @@ function SectionSkeleton({ rows = 3 }: { rows?: number }) {
   );
 }
 
-// ─── KPI Card (same pattern as CS Visão Geral) ───
+// ─── KPI Card (CS pattern) ───
 function KpiCard({
   label, value, subtitle, icon: Icon, danger, warning, accent, onClick,
 }: {
@@ -72,6 +72,61 @@ function KpiCard({
   );
 }
 
+// ─── Hero Pillar Card (Director 3 numbers) ───
+function PillarCard({
+  label, value, sublabel, variation, prevMonthName,
+  icon: Icon, iconBg, iconColor,
+  formatValue,
+}: {
+  label: string;
+  value: number;
+  sublabel: string;
+  variation: number;
+  prevMonthName: string;
+  icon: React.ElementType;
+  iconBg: string;
+  iconColor: string;
+  formatValue?: (v: number) => string;
+}) {
+  const displayValue = formatValue ? formatValue(value) : String(value);
+  const hasVariation = variation !== 0;
+  const isPositive = variation > 0;
+
+  return (
+    <Card className="transition-all duration-150 hover:border-primary/40">
+      <CardContent className="p-6">
+        <div className="flex items-start gap-4">
+          <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center shrink-0", iconBg)}>
+            <Icon className={cn("h-5 w-5", iconColor)} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              {label}
+            </span>
+            <div className="text-[32px] font-extrabold font-mono text-foreground leading-tight mt-1">
+              {displayValue}
+            </div>
+            <p className="text-[13px] text-muted-foreground mt-1">{sublabel}</p>
+            {hasVariation && (
+              <div className={cn(
+                "flex items-center gap-1 mt-2 text-xs font-mono",
+                isPositive ? "text-success" : "text-destructive"
+              )}>
+                {isPositive ? (
+                  <TrendingUp className="h-3 w-3" />
+                ) : (
+                  <TrendingDown className="h-3 w-3" />
+                )}
+                <span>{isPositive ? '+' : ''}{variation}% vs {prevMonthName}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Alert Item ───
 function AlertItem({ alert, onAction }: { alert: any; onAction?: () => void }) {
   return (
@@ -93,7 +148,7 @@ function AlertItem({ alert, onAction }: { alert: any; onAction?: () => void }) {
 }
 
 // ─── Activity Timeline Item ───
-function ActivityItem({ act, isLast }: { act: any; isLast: boolean }) {
+function TimelineItem({ act, isLast }: { act: any; isLast: boolean }) {
   const typeColor: Record<string, string> = {
     post_concluido: 'bg-success',
     cliente_cadastrado: 'bg-primary',
@@ -102,7 +157,7 @@ function ActivityItem({ act, isLast }: { act: any; isLast: boolean }) {
   };
 
   return (
-    <div className="flex items-start gap-3 py-2.5 px-2 hover:bg-muted/30 rounded-lg transition-colors cursor-pointer group">
+    <div className="flex items-start gap-3 py-2.5 px-2 hover:bg-muted/30 rounded-lg transition-colors cursor-pointer">
       <div className="relative flex flex-col items-center">
         <div className={cn("h-2 w-2 rounded-full shrink-0 mt-1.5", typeColor[act.tipo] || "bg-muted-foreground")} />
         {!isLast && <div className="w-px flex-1 bg-border absolute top-3" />}
@@ -122,13 +177,7 @@ function ActivityItem({ act, isLast }: { act: any; isLast: boolean }) {
 }
 
 // ─── Post List Item ───
-function PostItem({
-  post, onAction, onNavigate,
-}: {
-  post: any;
-  onAction: () => void;
-  onNavigate: () => void;
-}) {
+function PostItem({ post, onAction, onNavigate }: { post: any; onAction: () => void; onNavigate: () => void }) {
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   const isOverdue = post.daysOverdue && post.daysOverdue > 0;
   const isToday = post.dueDate === todayStr;
@@ -151,9 +200,7 @@ function PostItem({
         <Badge variant="outline" className="text-[9px] shrink-0">{post.format}</Badge>
       )}
       {isOverdue && (
-        <span className="text-[10px] text-destructive font-medium shrink-0">
-          {post.daysOverdue}d
-        </span>
+        <span className="text-[10px] text-destructive font-medium shrink-0">{post.daysOverdue}d</span>
       )}
       {actionLabel && (
         <Button
@@ -173,71 +220,58 @@ function PostItem({
 // DIRECTOR VIEW
 // ═══════════════════════════════════════════
 function DirectorView({
-  alerts, activities, monthDeliveries, monthGoal, workingDaysRemaining, currentMonth,
+  contentPillar, mediaPillar, contractsPillar, prevMonthName, currentMonth,
+  alerts, activities,
 }: {
+  contentPillar: DirectorPillar;
+  mediaPillar: DirectorPillar;
+  contractsPillar: DirectorPillar;
+  prevMonthName: string;
+  currentMonth: string;
   alerts: any[];
   activities: any[];
-  monthDeliveries: number;
-  monthGoal: number;
-  workingDaysRemaining: number;
-  currentMonth: string;
 }) {
   const navigate = useNavigate();
-  const progress = monthGoal > 0 ? Math.round((monthDeliveries / monthGoal) * 100) : 0;
-  const avgPerDay = workingDaysRemaining > 0 ? Math.round((monthDeliveries / (20 - workingDaysRemaining + 1)) * 10) / 10 : 0;
-  const projection = monthGoal > 0 ? Math.round(monthDeliveries + (avgPerDay * workingDaysRemaining)) : 0;
-  const progressColor = progress >= 80 ? 'text-success' : progress >= 60 ? 'text-warning' : 'text-destructive';
-  const barColor = progress >= 80 ? 'bg-success' : progress >= 60 ? 'bg-warning' : 'bg-destructive';
+
+  const formatCurrency = (v: number) =>
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v);
 
   return (
     <div className="space-y-6">
-      {/* KPI Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <KpiCard
-          label="Dias Úteis Restantes"
-          value={workingDaysRemaining}
-          subtitle={`para fechar ${currentMonth}`}
-          icon={Calendar}
+      {/* 3 Pillar Hero Cards */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <PillarCard
+          label="Conteúdos Criados"
+          value={contentPillar.value}
+          sublabel={`conteúdos entregues em ${currentMonth}`}
+          variation={contentPillar.variation}
+          prevMonthName={prevMonthName}
+          icon={Palette}
+          iconBg="bg-success/12"
+          iconColor="text-success"
         />
-        <KpiCard
-          label="Entregas no Mês"
-          value={monthDeliveries}
-          subtitle={`de ${monthGoal} planejadas`}
-          icon={Target}
-          accent={monthDeliveries > 0}
+        <PillarCard
+          label="Investimento em Mídia"
+          value={mediaPillar.value}
+          sublabel="verba total gerenciada no mês"
+          variation={mediaPillar.variation}
+          prevMonthName={prevMonthName}
+          icon={DollarSign}
+          iconBg="bg-info/12"
+          iconColor="text-info"
+          formatValue={formatCurrency}
         />
-        <KpiCard
-          label="Projeção"
-          value={projection}
-          subtitle={projection >= monthGoal ? 'no ritmo da meta' : 'abaixo da meta'}
-          icon={TrendingUp}
-          danger={projection < monthGoal}
-          accent={projection >= monthGoal}
+        <PillarCard
+          label="Contratos Fechados"
+          value={contractsPillar.value}
+          sublabel={`novos contratos em ${currentMonth}`}
+          variation={contractsPillar.variation}
+          prevMonthName={prevMonthName}
+          icon={FileSignature}
+          iconBg="bg-primary/12"
+          iconColor="text-primary"
         />
       </div>
-
-      {/* Progress Bar */}
-      <Card>
-        <CardContent className="p-5">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-              Progresso da Meta
-            </span>
-            <span className={cn("text-sm font-bold font-mono", progressColor)}>
-              {progress}%
-            </span>
-          </div>
-          <div className="w-full h-2.5 bg-muted rounded-full overflow-hidden">
-            <div
-              className={cn("h-full rounded-full transition-all duration-500", barColor)}
-              style={{ width: `${Math.min(progress, 100)}%` }}
-            />
-          </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            {monthDeliveries} entregas de {monthGoal} · média {avgPerDay}/dia
-          </p>
-        </CardContent>
-      </Card>
 
       {/* Alerts */}
       <Card>
@@ -290,7 +324,7 @@ function DirectorView({
           ) : (
             <div className="relative space-y-0">
               {activities.slice(0, 8).map((act, i) => (
-                <ActivityItem key={act.id} act={act} isLast={i === Math.min(activities.length, 8) - 1} />
+                <TimelineItem key={act.id} act={act} isLast={i === Math.min(activities.length, 8) - 1} />
               ))}
             </div>
           )}
@@ -301,7 +335,7 @@ function DirectorView({
 }
 
 // ═══════════════════════════════════════════
-// EXECUTION VIEW (Designer, Videomaker, Social, etc.)
+// EXECUTION VIEW
 // ═══════════════════════════════════════════
 function ExecutionView({
   userRole, myDayMetrics, myPosts, monthlyDeliveries, monthlyGoal, avgPerDay, userName, changePostStatus,
@@ -328,11 +362,8 @@ function ExecutionView({
   const sortedPosts = [...overduePosts, ...todayPosts, ...upcomingPosts];
 
   const handleAction = async (post: any) => {
-    if (post.status === 'doing') {
-      await changePostStatus(post.id, 'done');
-    } else if (post.status === 'todo') {
-      await changePostStatus(post.id, 'doing');
-    }
+    if (post.status === 'doing') await changePostStatus(post.id, 'done');
+    else if (post.status === 'todo') await changePostStatus(post.id, 'doing');
   };
 
   return (
@@ -410,12 +441,9 @@ function ExecutionView({
         </CardContent>
       </Card>
 
-      {/* Petron OS shortcut for Social Media */}
+      {/* Petron OS shortcut */}
       {userRole === 'social' && (
-        <Card
-          className="cursor-pointer hover:border-primary/40 transition-colors"
-          onClick={() => navigate('/petron-os')}
-        >
+        <Card className="cursor-pointer hover:border-primary/40 transition-colors" onClick={() => navigate('/petron-os')}>
           <CardContent className="p-5 flex items-center gap-4">
             <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
               <Sparkles className="h-5 w-5 text-primary" />
@@ -434,11 +462,7 @@ function ExecutionView({
 
 // ─── Sidebar: Upcoming Deadlines ───
 function UpcomingDeadlines({ posts }: { posts: any[] }) {
-  const upcoming = posts
-    .filter(p => p.dueDate)
-    .sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''))
-    .slice(0, 5);
-
+  const upcoming = posts.filter(p => p.dueDate).sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || '')).slice(0, 5);
   if (upcoming.length === 0) return null;
 
   return (
@@ -479,8 +503,9 @@ function UpcomingDeadlines({ posts }: { posts: any[] }) {
 // ═══════════════════════════════════════════
 export default function WelcomePage() {
   const {
-    loading, userRole, greeting, userName, capitalizedDate, currentMonth, workingDaysRemaining,
-    alerts, activities, monthDeliveries, monthGoal,
+    loading, userRole, greeting, userName, capitalizedDate, currentMonth, prevMonthName, workingDaysRemaining,
+    contentPillar, mediaPillar, contractsPillar,
+    alerts, activities,
     myDayMetrics, myPosts, monthlyDeliveries, monthlyGoal, avgPerDay,
     changePostStatus,
   } = useWelcomeCommandCenter();
@@ -498,9 +523,9 @@ export default function WelcomePage() {
           <Skeleton className="h-4 w-48" />
         </div>
         <Skeleton className="h-20 w-full rounded-2xl" />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-2xl" />
+            <Skeleton key={i} className="h-32 rounded-2xl" />
           ))}
         </div>
         <SectionSkeleton rows={3} />
@@ -511,7 +536,7 @@ export default function WelcomePage() {
   return (
     <>
       <div className="space-y-6 pb-12">
-        {/* HEADER — same pattern as CS */}
+        {/* HEADER */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold">
@@ -530,12 +555,13 @@ export default function WelcomePage() {
           <div>
             {isDirector ? (
               <DirectorView
+                contentPillar={contentPillar}
+                mediaPillar={mediaPillar}
+                contractsPillar={contractsPillar}
+                prevMonthName={prevMonthName}
+                currentMonth={currentMonth}
                 alerts={alerts}
                 activities={activities}
-                monthDeliveries={monthDeliveries}
-                monthGoal={monthGoal}
-                workingDaysRemaining={workingDaysRemaining}
-                currentMonth={currentMonth}
               />
             ) : (
               <ExecutionView

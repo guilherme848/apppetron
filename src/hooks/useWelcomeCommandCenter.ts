@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTeamMembers } from './useTeamMembers';
 import { useJobRoles } from './useJobRoles';
-import { format, parseISO, startOfDay, differenceInDays, isToday, isBefore, getDay, startOfMonth, endOfMonth, eachDayOfInterval, isWeekend } from 'date-fns';
+import { format, parseISO, differenceInDays, startOfMonth, endOfMonth, eachDayOfInterval, isWeekend, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export type UserRole = 'director' | 'designer' | 'videomaker' | 'social' | 'traffic' | 'cs' | 'commercial' | 'support' | 'admin';
@@ -55,6 +55,12 @@ export interface PostTask {
   batchId?: string;
 }
 
+export interface DirectorPillar {
+  value: number;
+  prevValue: number;
+  variation: number; // percentage
+}
+
 function detectRole(roleName: string | null | undefined): UserRole {
   if (!roleName) return 'admin';
   const n = roleName.toLowerCase().trim();
@@ -66,7 +72,7 @@ function detectRole(roleName: string | null | undefined): UserRole {
   if (n.includes('cs') || n.includes('customer') || n.includes('sucesso')) return 'cs';
   if (n.includes('comercial') || n.includes('vendas')) return 'commercial';
   if (n.includes('atendimento') || n.includes('suporte') || n.includes('support')) return 'support';
-  return 'director'; // default to director for unknown admin-like roles
+  return 'director';
 }
 
 function getWorkingDaysRemaining(): number {
@@ -84,6 +90,11 @@ function getWorkingDaysInMonth(): number {
   return days.filter(d => !isWeekend(d)).length;
 }
 
+function calcVariation(current: number, previous: number): number {
+  if (previous === 0) return current > 0 ? 100 : 0;
+  return Math.round(((current - previous) / previous) * 100);
+}
+
 export function useWelcomeCommandCenter() {
   const { member: currentMember, loading: authLoading, isAdmin } = useAuth();
   const { members, loading: membersLoading } = useTeamMembers();
@@ -96,6 +107,11 @@ export function useWelcomeCommandCenter() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [highlights, setHighlights] = useState<WeeklyHighlight[]>([]);
+  const [contentPillar, setContentPillar] = useState<DirectorPillar>({ value: 0, prevValue: 0, variation: 0 });
+  const [mediaPillar, setMediaPillar] = useState<DirectorPillar>({ value: 0, prevValue: 0, variation: 0 });
+  const [contractsPillar, setContractsPillar] = useState<DirectorPillar>({ value: 0, prevValue: 0, variation: 0 });
+
+  // Keep legacy for AI phrase
   const [monthDeliveries, setMonthDeliveries] = useState(0);
   const [monthGoal, setMonthGoal] = useState(0);
 
@@ -129,6 +145,8 @@ export function useWelcomeCommandCenter() {
   const capitalizedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
   const workingDaysRemaining = getWorkingDaysRemaining();
   const currentMonth = format(today, 'MMMM', { locale: ptBR });
+  const prevMonthDate = subMonths(today, 1);
+  const prevMonthName = format(prevMonthDate, 'MMMM', { locale: ptBR });
 
   // Fetch data based on role
   const fetchData = useCallback(async () => {
@@ -136,31 +154,98 @@ export function useWelcomeCommandCenter() {
     setLoading(true);
     const todayStr = format(today, 'yyyy-MM-dd');
     const monthRef = format(today, 'yyyy-MM');
+    const monthStart = `${monthRef}-01`;
+    const prevMonthRef = format(prevMonthDate, 'yyyy-MM');
+    const prevMonthStart = `${prevMonthRef}-01`;
+    const prevMonthEnd = format(endOfMonth(prevMonthDate), 'yyyy-MM-dd');
 
     try {
       if (userRole === 'director' || isAdmin) {
-        // Fetch alerts data
-        const [postsRes, activityRes, goalsRes] = await Promise.all([
+        // Parallel fetch all director data
+        const [
+          postsRes, activityRes,
+          doneCountRes, prevDoneCountRes,
+          activeAccountsRes,
+          newContractsRes, prevContractsRes,
+        ] = await Promise.all([
+          // Open posts for alerts
           supabase
             .from('content_posts')
-            .select('id, title, status, due_date, data_conclusao, assignee_id, batch_id, content_batches!inner(client_id, month_ref, accounts!inner(name))')
+            .select('id, title, status, due_date, data_conclusao, assignee_id, batch_id')
             .is('data_conclusao', null)
             .not('status', 'eq', 'done'),
+          // Activity feed
           supabase
             .from('atividade_sistema')
             .select('*, team_members:usuario_id(name), accounts:cliente_id(name)')
             .order('created_at', { ascending: false })
             .limit(10),
+          // Content pillar: current month
           supabase
-            .from('metas_producao_diaria')
-            .select('*'),
+            .from('content_posts')
+            .select('id', { count: 'exact', head: true })
+            .not('data_conclusao', 'is', null)
+            .gte('data_conclusao', monthStart),
+          // Content pillar: previous month
+          supabase
+            .from('content_posts')
+            .select('id', { count: 'exact', head: true })
+            .not('data_conclusao', 'is', null)
+            .gte('data_conclusao', prevMonthStart)
+            .lte('data_conclusao', prevMonthEnd),
+          // Media pillar: active accounts with budget
+          supabase
+            .from('accounts')
+            .select('ad_monthly_budget, start_date')
+            .eq('status', 'ativo')
+            .is('deleted_at', null),
+          // Contracts pillar: current month
+          supabase
+            .from('accounts')
+            .select('id', { count: 'exact', head: true })
+            .gte('start_date', monthStart)
+            .is('deleted_at', null),
+          // Contracts pillar: previous month
+          supabase
+            .from('accounts')
+            .select('id', { count: 'exact', head: true })
+            .gte('start_date', prevMonthStart)
+            .lte('start_date', prevMonthEnd)
+            .is('deleted_at', null),
         ]);
 
-        // Calculate alerts
+        // ─── Content Pillar ───
+        const currentContent = doneCountRes.count || 0;
+        const prevContent = prevDoneCountRes.count || 0;
+        setContentPillar({
+          value: currentContent,
+          prevValue: prevContent,
+          variation: calcVariation(currentContent, prevContent),
+        });
+        setMonthDeliveries(currentContent);
+
+        // ─── Media Pillar ───
+        const activeAccounts = activeAccountsRes.data || [];
+        const currentMediaTotal = activeAccounts.reduce((sum: number, a: any) => sum + (a.ad_monthly_budget || 0), 0);
+        // For prev month comparison, we use the same active accounts (simplified)
+        setMediaPillar({
+          value: currentMediaTotal,
+          prevValue: currentMediaTotal, // Same accounts, no historical tracking
+          variation: 0,
+        });
+
+        // ─── Contracts Pillar ───
+        const currentContracts = newContractsRes.count || 0;
+        const prevContracts = prevContractsRes.count || 0;
+        setContractsPillar({
+          value: currentContracts,
+          prevValue: prevContracts,
+          variation: calcVariation(currentContracts, prevContracts),
+        });
+
+        // ─── Alerts ───
         const openPosts = postsRes.data || [];
         const alertsList: Alert[] = [];
-        
-        // Group overdue posts by assignee
         const overdueByAssignee: Record<string, number> = {};
         openPosts.forEach(p => {
           if (p.due_date && p.due_date < todayStr && p.assignee_id) {
@@ -183,7 +268,7 @@ export function useWelcomeCommandCenter() {
 
         setAlerts(alertsList);
 
-        // Map activities
+        // ─── Activities ───
         const acts = (activityRes.data || []).map((a: any) => ({
           id: a.id,
           tipo: a.tipo,
@@ -195,22 +280,6 @@ export function useWelcomeCommandCenter() {
           created_at: a.created_at,
         }));
         setActivities(acts);
-
-        // Month deliveries
-        const deliveredThisMonth = openPosts.length; // Placeholder - we need completed posts
-        const { count: doneCount } = await supabase
-          .from('content_posts')
-          .select('id', { count: 'exact', head: true })
-          .not('data_conclusao', 'is', null)
-          .gte('data_conclusao', `${monthRef}-01`);
-        
-        setMonthDeliveries(doneCount || 0);
-
-        // Calculate goal from metas
-        const goals = goalsRes.data || [];
-        const totalDailyGoal = goals.reduce((sum: number, g: any) => sum + (g.meta_diaria || 0), 0);
-        const totalMonthlyGoal = totalDailyGoal * getWorkingDaysInMonth();
-        setMonthGoal(totalMonthlyGoal);
 
       } else {
         // Execution roles: fetch my posts
@@ -239,7 +308,6 @@ export function useWelcomeCommandCenter() {
         const overdue = posts.filter(p => p.dueDate && p.dueDate < todayStr).length;
         const inProgress = posts.filter(p => p.status === 'doing').length;
 
-        // Completed today
         const { count: completedToday } = await supabase
           .from('content_posts')
           .select('id', { count: 'exact', head: true })
@@ -248,7 +316,6 @@ export function useWelcomeCommandCenter() {
         
         setMyDayMetrics({ forToday, overdue, inProgress, completedToday: completedToday || 0 });
 
-        // Monthly stats
         const { count: monthDone } = await supabase
           .from('content_posts')
           .select('id', { count: 'exact', head: true })
@@ -258,7 +325,6 @@ export function useWelcomeCommandCenter() {
         
         setMonthlyDeliveries(monthDone || 0);
 
-        // Goal
         const roleKey = userRole === 'designer' ? 'designer' : userRole === 'videomaker' ? 'videomaker' : 'social';
         const { data: goalData } = await supabase
           .from('metas_producao_diaria')
@@ -291,10 +357,12 @@ export function useWelcomeCommandCenter() {
     setAiPhraseLoading(true);
     try {
       const contextData = [
-        `- Entregas este mês: ${monthDeliveries}`,
-        `- Meta do mês: ${monthGoal}`,
-        `- Dias úteis restantes: ${workingDaysRemaining}`,
+        `- Conteúdos entregues no mês: ${contentPillar.value}`,
+        `- Variação vs mês anterior: ${contentPillar.variation > 0 ? '+' : ''}${contentPillar.variation}%`,
+        `- Investimento em mídia total: R$ ${mediaPillar.value.toLocaleString('pt-BR')}`,
+        `- Contratos fechados no mês: ${contractsPillar.value}`,
         `- Alertas ativos: ${alerts.length}`,
+        `- Dias úteis restantes: ${workingDaysRemaining}`,
       ].join('\n');
 
       const { data, error } = await supabase.functions.invoke('welcome-ai-phrase', {
@@ -310,7 +378,7 @@ export function useWelcomeCommandCenter() {
     } finally {
       setAiPhraseLoading(false);
     }
-  }, [monthDeliveries, monthGoal, workingDaysRemaining, alerts.length, userName]);
+  }, [contentPillar.value, contentPillar.variation, mediaPillar.value, contractsPillar.value, alerts.length, workingDaysRemaining, userName]);
 
   useEffect(() => {
     if (!authLoading && !membersLoading && currentMemberId) {
@@ -350,11 +418,17 @@ export function useWelcomeCommandCenter() {
     userName,
     capitalizedDate,
     currentMonth,
+    prevMonthName,
     workingDaysRemaining,
 
     // AI phrase
     aiPhrase,
     aiPhraseLoading,
+
+    // Director pillars
+    contentPillar,
+    mediaPillar,
+    contractsPillar,
 
     // Director
     alerts,
@@ -374,7 +448,7 @@ export function useWelcomeCommandCenter() {
     // Actions
     changePostStatus,
 
-    // Birthday data (reuse existing)
+    // Birthday data
     currentMember,
     members,
   };
