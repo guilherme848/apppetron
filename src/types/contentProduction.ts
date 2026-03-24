@@ -67,6 +67,9 @@ export interface ContentPost {
   completed_at: string | null;
   sort_order: number;
   is_drawer: boolean;
+  sugerido_por_ia: boolean;
+  legenda_sugerida: string | null;
+  briefing_sugerido: string | null;
   created_at: string;
   updated_at: string;
 }

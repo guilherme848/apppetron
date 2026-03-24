@@ -115,6 +115,9 @@ export default function MarketingBatchDetail() {
       completed_at: p.completed_at,
       sort_order: p.sort_order,
       is_drawer: p.is_drawer ?? false,
+      sugerido_por_ia: p.sugerido_por_ia ?? false,
+      legenda_sugerida: p.legenda_sugerida ?? null,
+      briefing_sugerido: p.briefing_sugerido ?? null,
       created_at: p.created_at,
       updated_at: p.updated_at,
     })));

@@ -71,6 +71,9 @@ export function useAgencyContentProduction() {
           completed_at: p.completed_at,
           sort_order: p.sort_order,
           is_drawer: p.is_drawer ?? false,
+          sugerido_por_ia: p.sugerido_por_ia ?? false,
+          legenda_sugerida: p.legenda_sugerida ?? null,
+          briefing_sugerido: p.briefing_sugerido ?? null,
           created_at: p.created_at,
           updated_at: p.updated_at,
         }));
@@ -201,6 +204,9 @@ export function useAgencyContentProduction() {
         completed_at: data.completed_at,
         sort_order: data.sort_order,
         is_drawer: data.is_drawer ?? false,
+        sugerido_por_ia: data.sugerido_por_ia ?? false,
+        legenda_sugerida: data.legenda_sugerida ?? null,
+        briefing_sugerido: data.briefing_sugerido ?? null,
         created_at: data.created_at,
         updated_at: data.updated_at,
       };

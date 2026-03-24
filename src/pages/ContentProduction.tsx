@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Loader2, Archive, RotateCcw, LayoutGrid, Search } from 'lucide-react';
+import { Plus, Loader2, Archive, RotateCcw, LayoutGrid, Search, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useContentProduction } from '@/contexts/ContentProductionContext';
@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { useJobRoles } from '@/hooks/useJobRoles';
 import { useStageResponsibilities } from '@/hooks/useStageResponsibilities';
+import { SuggestContentModal } from '@/components/content/SuggestContentModal';
 
 export default function ContentProduction() {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ export default function ContentProduction() {
   const [activeTab, setActiveTab] = useState<BatchStatus>('planning');
   const [showArchived, setShowArchived] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [suggestOpen, setSuggestOpen] = useState(false);
   const [archivedBatches, setArchivedBatches] = useState<ContentBatch[]>([]);
   const [loadingArchived, setLoadingArchived] = useState(false);
 
@@ -196,6 +198,14 @@ export default function ContentProduction() {
               <LayoutGrid className="h-4 w-4 mr-2" />
               Quadro Resumo
             </Button>
+            <Button
+              variant="outline"
+              onClick={() => setSuggestOpen(true)}
+              className="border-[hsl(var(--accent-primary,24_95%_53%)/0.4)] text-[hsl(var(--accent-primary,24_95%_53%))] hover:bg-[hsl(var(--accent-primary,24_95%_53%)/0.08)]"
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              Sugerir Conteúdos
+            </Button>
             <Button onClick={() => setBatchFormOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Novo Planejamento
@@ -324,6 +334,13 @@ export default function ContentProduction() {
         onOpenChange={setPostFormOpen}
         batchId={selectedBatchId}
         onSubmit={handlePostSubmit}
+      />
+
+      <SuggestContentModal
+        open={suggestOpen}
+        onOpenChange={setSuggestOpen}
+        accounts={accounts}
+        onContentAdded={() => window.location.reload()}
       />
     </div>
   );

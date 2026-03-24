@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2, Loader2, FileText, Paperclip, AlertTriangle, Archive } from 'lucide-react';
+import { ArrowLeft, Trash2, Loader2, FileText, Paperclip, AlertTriangle, Archive, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -763,6 +763,32 @@ export default function PostDetail() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* AI Suggestion Original Section */}
+      {post?.sugerido_por_ia && (post.legenda_sugerida || post.briefing_sugerido) && (
+        <Card className="mt-6">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm flex items-center gap-2 text-muted-foreground">
+              <Sparkles className="h-4 w-4 text-[hsl(var(--accent-primary,24_95%_53%))]" />
+              <span className="text-[11px] font-semibold uppercase tracking-wider">Sugestão Original da IA</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {post.legenda_sugerida && (
+              <div>
+                <Label className="text-xs text-muted-foreground">Legenda Sugerida</Label>
+                <p className="text-sm mt-1 whitespace-pre-wrap text-muted-foreground bg-muted/40 rounded-lg p-3">{post.legenda_sugerida}</p>
+              </div>
+            )}
+            {post.briefing_sugerido && (
+              <div>
+                <Label className="text-xs text-muted-foreground">Briefing Sugerido</Label>
+                <p className="text-sm mt-1 whitespace-pre-wrap text-muted-foreground bg-muted/40 rounded-lg p-3">{post.briefing_sugerido}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
