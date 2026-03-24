@@ -13,7 +13,7 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `Com base nos dados abaixo, gere UMA frase curta e direta (máximo 2 linhas) para o gestor ${userName}. Não use clichês motivacionais. Fale sobre o que está acontecendo na operação hoje — algo útil, um destaque positivo ou um alerta sutil. Tom: direto, profissional, colega de trabalho. Responda APENAS com a frase, sem JSON, sem aspas.`;
+    const systemPrompt = `Com base nos dados abaixo, gere UMA frase curta e direta (máximo 2 linhas) para o gestor ${userName}. Não use clichês motivacionais. Fale sobre o que está acontecendo na operação — destaque algo concreto sobre produção, mídia ou novos contratos. Tom: direto, profissional, colega de trabalho. Responda APENAS com a frase, sem JSON, sem aspas.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
