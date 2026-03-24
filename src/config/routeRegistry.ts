@@ -731,6 +731,64 @@ export const routeRegistry: RouteDefinition[] = [
   },
 
   // ============================================
+  // PETRON OS MODULE
+  // ============================================
+  {
+    id: 'petronos.hub',
+    path: '/petron-os',
+    label: 'Ferramentas',
+    category: CATEGORIES.DASHBOARD,
+    module: MODULES.PETRON_OS,
+    permissions: ['view'],
+    icon: Zap,
+    order: 1,
+  },
+  {
+    id: 'petronos.tool',
+    path: '/petron-os/tool/:slug',
+    label: 'Ferramenta',
+    category: CATEGORIES.DASHBOARD,
+    module: MODULES.PETRON_OS,
+    permissions: ['view'],
+    hideInMenu: true,
+    parentId: 'petronos.hub',
+    order: 2,
+  },
+  {
+    id: 'petronos.builder',
+    path: '/petron-os/builder/:slug',
+    label: 'Construtor',
+    category: CATEGORIES.DASHBOARD,
+    module: MODULES.PETRON_OS,
+    permissions: ['view'],
+    hideInMenu: true,
+    parentId: 'petronos.hub',
+    order: 3,
+  },
+  {
+    id: 'petronos.builder_edit',
+    path: '/petron-os/builder/:slug/:id',
+    label: 'Editor de Documento',
+    category: CATEGORIES.DASHBOARD,
+    module: MODULES.PETRON_OS,
+    permissions: ['view'],
+    hideInMenu: true,
+    parentId: 'petronos.hub',
+    order: 4,
+  },
+  {
+    id: 'petronos.settings',
+    path: '/petron-os/settings',
+    label: 'Configurações Petron OS',
+    category: CATEGORIES.DASHBOARD,
+    module: MODULES.PETRON_OS,
+    permissions: ['view', 'manage'],
+    hideInMenu: true,
+    parentId: 'petronos.hub',
+    order: 5,
+  },
+
+  // ============================================
   // SETTINGS MODULE (Admin Only - Single Menu Entry)
   // All settings sub-pages are accessed through internal navigation
   // ============================================
