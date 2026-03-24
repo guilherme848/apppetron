@@ -311,10 +311,22 @@ export default function CrmDetail() {
       </div>
 
       {/* Inteligência do Cliente */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <LinksCard links={clienteLinks} loading={intelLoading} clienteId={id} onSaved={refetchIntel} />
-        <ConcorrentesCard concorrentes={concorrentes} loading={intelLoading} clienteId={id} onSaved={refetchIntel} />
-        <ArquivosCard anexos={anexos} loading={intelLoading} onDelete={deleteAnexo} />
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-[14px] font-semibold text-foreground">Inteligência do Cliente</h2>
+        </div>
+        <CompletudeBar percent={completude.percent} missing={completude.missing} />
+        <div className="grid gap-4 md:grid-cols-3">
+          <LinksCard links={clienteLinks} loading={intelLoading} clienteId={id} onSaved={refetchIntel} />
+          <ConcorrentesCard concorrentes={concorrentes} loading={intelLoading} clienteId={id} onSaved={refetchIntel} />
+          <ArquivosCard anexos={anexos} loading={intelLoading} onDelete={deleteAnexo} />
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          <ICPCard inteligencia={inteligencia} arquivos={arquivosIntel} loading={expandedLoading} onSave={upsertInteligencia} onUpload={uploadArquivoInteligencia} onDeleteFile={deleteArquivoInteligencia} />
+          <ProdutosCard inteligencia={inteligencia} arquivos={arquivosIntel} loading={expandedLoading} onSave={upsertInteligencia} onUpload={uploadArquivoInteligencia} onDeleteFile={deleteArquivoInteligencia} />
+          <InfoGeraisCard inteligencia={inteligencia} arquivos={arquivosIntel} loading={expandedLoading} onSave={upsertInteligencia} onUpload={uploadArquivoInteligencia} onDeleteFile={deleteArquivoInteligencia} />
+        </div>
+        <AcoesCard acoes={acoes} loading={expandedLoading} onAdd={addAcao} onDelete={deleteAcao} />
       </div>
 
 
