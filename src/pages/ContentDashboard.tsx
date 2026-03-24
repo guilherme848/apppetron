@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
 import { BarChart3, Filter, ChevronUp, ChevronDown, X } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -14,16 +14,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useContentDashboardData } from '@/hooks/useContentDashboardData';
 import { BATCH_STATUS_OPTIONS, POST_STATUS_OPTIONS } from '@/types/contentProduction';
 import { ROLE_LABELS } from '@/lib/dashboardColors';
-import { ResumoTab } from '@/components/dashboard/content/ResumoTab';
-import { ProdutividadeTab } from '@/components/dashboard/content/ProdutividadeTab';
-import { AlteracoesTab } from '@/components/dashboard/content/AlteracoesTab';
+import { NumerosGeraisTab } from '@/components/dashboard/content/NumerosGeraisTab';
+import { ProdutividadeTimeTab } from '@/components/dashboard/content/ProdutividadeTimeTab';
 
 export default function ContentDashboard() {
   const hookData = useContentDashboardData();
   const { loading, filters, updateFilter, accounts, teamMembers, monthRefs } = hookData;
   const [filtersOpen, setFiltersOpen] = useState(true);
 
-  // Count active filters
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (filters.monthRef) count++;
@@ -57,8 +55,8 @@ export default function ContentDashboard() {
         </div>
         <Skeleton className="h-40 w-full rounded-2xl" />
         <Skeleton className="h-10 w-96" />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28 rounded-2xl" />)}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-28 rounded-2xl" />)}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Skeleton className="h-80 rounded-2xl" />
@@ -67,6 +65,8 @@ export default function ContentDashboard() {
       </div>
     );
   }
+
+  const todayStr = format(new Date(), "dd 'de' MMMM 'de' yyyy");
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -77,7 +77,7 @@ export default function ContentDashboard() {
             <BarChart3 className="h-6 w-6 text-primary" />
             Dashboard de Produção
           </h1>
-          <p className="text-sm text-muted-foreground">Métricas de produtividade e operação de conteúdo</p>
+          <p className="text-sm text-muted-foreground">Criação · {todayStr}</p>
         </div>
       </div>
 
@@ -98,12 +98,12 @@ export default function ContentDashboard() {
                 </span>
                 <span className="flex items-center gap-2 text-xs text-muted-foreground">
                   {filtersOpen ? 'Ocultar filtros' : 'Mostrar filtros'}
-                  {filtersOpen ? <ChevronUp className="h-3.5 w-3.5 transition-transform duration-200" /> : <ChevronDown className="h-3.5 w-3.5 transition-transform duration-200" />}
+                  {filtersOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                 </span>
               </Button>
             </CollapsibleTrigger>
           </CardHeader>
-          <CollapsibleContent className="transition-all duration-250 ease-out data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0">
+          <CollapsibleContent>
             <CardContent className="pt-0 px-5 pb-5">
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-3 gap-y-4">
                 <div className="space-y-1.5">
@@ -213,27 +213,21 @@ export default function ContentDashboard() {
       </Collapsible>
 
       {/* Tabs */}
-      <Tabs defaultValue="resumo" className="space-y-5">
-        <TabsList className="bg-muted/50 border border-border/50 p-1 rounded-xl w-full max-w-lg">
-          <TabsTrigger value="resumo" className="rounded-lg data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm text-sm font-medium flex-1">
-            📊 Resumo
+      <Tabs defaultValue="numeros" className="space-y-5">
+        <TabsList className="bg-muted/40 border border-border/50 p-1 rounded-xl w-full max-w-md">
+          <TabsTrigger value="numeros" className="rounded-lg data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm text-sm font-medium flex-1">
+            📊 Números Gerais
           </TabsTrigger>
           <TabsTrigger value="produtividade" className="rounded-lg data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm text-sm font-medium flex-1">
-            👥 Produtividade
-          </TabsTrigger>
-          <TabsTrigger value="alteracoes" className="rounded-lg data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm text-sm font-medium flex-1">
-            ✏️ Alterações
+            👥 Produtividade do Time
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="resumo" className="animate-in fade-in slide-in-from-bottom-1 duration-200">
-          <ResumoTab data={hookData} />
+        <TabsContent value="numeros" className="animate-in fade-in slide-in-from-bottom-1 duration-200">
+          <NumerosGeraisTab data={hookData} />
         </TabsContent>
         <TabsContent value="produtividade" className="animate-in fade-in slide-in-from-bottom-1 duration-200">
-          <ProdutividadeTab data={hookData} />
-        </TabsContent>
-        <TabsContent value="alteracoes" className="animate-in fade-in slide-in-from-bottom-1 duration-200">
-          <AlteracoesTab data={hookData} />
+          <ProdutividadeTimeTab data={hookData} />
         </TabsContent>
       </Tabs>
     </div>
