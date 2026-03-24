@@ -9,8 +9,9 @@ import {
   ReferenceLine, Legend,
 } from 'recharts';
 import {
-  CheckCircle, Layers, AlertTriangle, RefreshCw, RotateCcw, TrendingUp,
+  CheckCircle, RefreshCw, TrendingUp,
   Clock, Users, AlertCircle, BarChart3,
+  CalendarDays, FileText, Palette, Hammer,
 } from 'lucide-react';
 import { DC, tooltipStyle, ROLE_LABELS, PRODUCTION_ROLES } from '@/lib/dashboardColors';
 import { ExtraRequestsMetrics } from '@/components/dashboard/ExtraRequestsMetrics';
