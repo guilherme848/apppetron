@@ -346,6 +346,63 @@ export type Database = {
         }
         Relationships: []
       }
+      arquivos_inteligencia_cliente: {
+        Row: {
+          arquivo_nome: string
+          arquivo_tamanho: number | null
+          arquivo_tipo: string | null
+          arquivo_url: string
+          categoria: string
+          cliente_id: string
+          created_at: string | null
+          descricao: string | null
+          enviado_por: string | null
+          id: string
+          titulo: string
+        }
+        Insert: {
+          arquivo_nome: string
+          arquivo_tamanho?: number | null
+          arquivo_tipo?: string | null
+          arquivo_url: string
+          categoria: string
+          cliente_id: string
+          created_at?: string | null
+          descricao?: string | null
+          enviado_por?: string | null
+          id?: string
+          titulo: string
+        }
+        Update: {
+          arquivo_nome?: string
+          arquivo_tamanho?: number | null
+          arquivo_tipo?: string | null
+          arquivo_url?: string
+          categoria?: string
+          cliente_id?: string
+          created_at?: string | null
+          descricao?: string | null
+          enviado_por?: string | null
+          id?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "arquivos_inteligencia_cliente_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arquivos_inteligencia_cliente_enviado_por_fkey"
+            columns: ["enviado_por"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       base_health_score_config: {
         Row: {
           components: Json
@@ -1128,6 +1185,7 @@ export type Database = {
           batch_id: string
           briefing: string | null
           briefing_rich: string | null
+          briefing_sugerido: string | null
           briefing_title: string | null
           caption: string | null
           changes_rich: string | null
@@ -1141,11 +1199,13 @@ export type Database = {
           id: string
           is_drawer: boolean
           item_type: string | null
+          legenda_sugerida: string | null
           responsible_role_id: string | null
           responsible_role_key: string
           sort_order: number
           started_at: string | null
           status: string
+          sugerido_por_ia: boolean | null
           title: string
           updated_at: string
         }
@@ -1154,6 +1214,7 @@ export type Database = {
           batch_id: string
           briefing?: string | null
           briefing_rich?: string | null
+          briefing_sugerido?: string | null
           briefing_title?: string | null
           caption?: string | null
           changes_rich?: string | null
@@ -1167,11 +1228,13 @@ export type Database = {
           id?: string
           is_drawer?: boolean
           item_type?: string | null
+          legenda_sugerida?: string | null
           responsible_role_id?: string | null
           responsible_role_key?: string
           sort_order?: number
           started_at?: string | null
           status?: string
+          sugerido_por_ia?: boolean | null
           title: string
           updated_at?: string
         }
@@ -1180,6 +1243,7 @@ export type Database = {
           batch_id?: string
           briefing?: string | null
           briefing_rich?: string | null
+          briefing_sugerido?: string | null
           briefing_title?: string | null
           caption?: string | null
           changes_rich?: string | null
@@ -1193,11 +1257,13 @@ export type Database = {
           id?: string
           is_drawer?: boolean
           item_type?: string | null
+          legenda_sugerida?: string | null
           responsible_role_id?: string | null
           responsible_role_key?: string
           sort_order?: number
           started_at?: string | null
           status?: string
+          sugerido_por_ia?: boolean | null
           title?: string
           updated_at?: string
         }
@@ -4256,6 +4322,201 @@ export type Database = {
           unit?: string | null
         }
         Relationships: []
+      }
+      historico_acoes_comerciais: {
+        Row: {
+          cliente_id: string
+          created_at: string | null
+          descricao: string | null
+          id: string
+          observacao: string | null
+          performou_bem: boolean | null
+          periodo: string | null
+          produto: string
+          registrado_por: string | null
+          tipo_acao: string | null
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          observacao?: string | null
+          performou_bem?: boolean | null
+          periodo?: string | null
+          produto: string
+          registrado_por?: string | null
+          tipo_acao?: string | null
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          observacao?: string | null
+          performou_bem?: boolean | null
+          periodo?: string | null
+          produto?: string
+          registrado_por?: string | null
+          tipo_acao?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_acoes_comerciais_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_acoes_comerciais_registrado_por_fkey"
+            columns: ["registrado_por"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      historico_sugestoes_ia: {
+        Row: {
+          cliente_id: string | null
+          contexto_enviado: string | null
+          created_at: string | null
+          formatos_solicitados: Json | null
+          id: string
+          mes_referencia: string | null
+          quantidade_aceita: number | null
+          quantidade_solicitada: number | null
+          solicitado_por: string | null
+        }
+        Insert: {
+          cliente_id?: string | null
+          contexto_enviado?: string | null
+          created_at?: string | null
+          formatos_solicitados?: Json | null
+          id?: string
+          mes_referencia?: string | null
+          quantidade_aceita?: number | null
+          quantidade_solicitada?: number | null
+          solicitado_por?: string | null
+        }
+        Update: {
+          cliente_id?: string | null
+          contexto_enviado?: string | null
+          created_at?: string | null
+          formatos_solicitados?: Json | null
+          id?: string
+          mes_referencia?: string | null
+          quantidade_aceita?: number | null
+          quantidade_solicitada?: number | null
+          solicitado_por?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_sugestoes_ia_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_sugestoes_ia_solicitado_por_fkey"
+            columns: ["solicitado_por"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inteligencia_cliente: {
+        Row: {
+          cliente_id: string
+          created_at: string | null
+          diferencial: string | null
+          icp_comportamento: string | null
+          icp_descricao: string | null
+          icp_observacoes: string | null
+          icp_perfil_comprador: string | null
+          icp_ticket_medio: string | null
+          id: string
+          o_que_funciona: string | null
+          o_que_nao_funciona: string | null
+          observacoes_gerais: string | null
+          posicionamento: string | null
+          preenchido_por: string | null
+          produtos_carro_chefe: string | null
+          produtos_especialidades: string[] | null
+          produtos_marcas: string | null
+          produtos_mix_resumo: string | null
+          produtos_observacoes: string | null
+          referencias_visuais: string | null
+          tom_de_voz: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string | null
+          diferencial?: string | null
+          icp_comportamento?: string | null
+          icp_descricao?: string | null
+          icp_observacoes?: string | null
+          icp_perfil_comprador?: string | null
+          icp_ticket_medio?: string | null
+          id?: string
+          o_que_funciona?: string | null
+          o_que_nao_funciona?: string | null
+          observacoes_gerais?: string | null
+          posicionamento?: string | null
+          preenchido_por?: string | null
+          produtos_carro_chefe?: string | null
+          produtos_especialidades?: string[] | null
+          produtos_marcas?: string | null
+          produtos_mix_resumo?: string | null
+          produtos_observacoes?: string | null
+          referencias_visuais?: string | null
+          tom_de_voz?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string | null
+          diferencial?: string | null
+          icp_comportamento?: string | null
+          icp_descricao?: string | null
+          icp_observacoes?: string | null
+          icp_perfil_comprador?: string | null
+          icp_ticket_medio?: string | null
+          id?: string
+          o_que_funciona?: string | null
+          o_que_nao_funciona?: string | null
+          observacoes_gerais?: string | null
+          posicionamento?: string | null
+          preenchido_por?: string | null
+          produtos_carro_chefe?: string | null
+          produtos_especialidades?: string[] | null
+          produtos_marcas?: string | null
+          produtos_mix_resumo?: string | null
+          produtos_observacoes?: string | null
+          referencias_visuais?: string | null
+          tom_de_voz?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inteligencia_cliente_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: true
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inteligencia_cliente_preenchido_por_fkey"
+            columns: ["preenchido_por"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       job_roles: {
         Row: {

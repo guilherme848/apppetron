@@ -15,6 +15,12 @@ import { AccountTeamCard } from '@/components/crm/AccountTeamCard';
 import { LinksCard } from '@/components/crm/intelligence/LinksCard';
 import { ConcorrentesCard } from '@/components/crm/intelligence/ConcorrentesCard';
 import { ArquivosCard } from '@/components/crm/intelligence/ArquivosCard';
+import { ICPCard } from '@/components/crm/intelligence/ICPCard';
+import { ProdutosCard } from '@/components/crm/intelligence/ProdutosCard';
+import { InfoGeraisCard } from '@/components/crm/intelligence/InfoGeraisCard';
+import { AcoesCard } from '@/components/crm/intelligence/AcoesCard';
+import { CompletudeBar } from '@/components/crm/intelligence/CompletudeBar';
+import { useClientIntelligenceExpanded } from '@/hooks/useClientIntelligenceExpanded';
 import { ClientTrafficSection } from '@/components/crm/ClientTrafficSection';
 import { useCrm } from '@/contexts/CrmContext';
 import { Contract, ContractStatus, Account } from '@/types/crm';
@@ -69,6 +75,11 @@ export default function CrmDetail() {
   const showFinancialValues = canViewFinancialValues();
   const { events: historyEvents, loading: historyLoading } = useAccountHistory(id);
   const { links: clienteLinks, concorrentes, anexos, loading: intelLoading, deleteAnexo, refetch: refetchIntel } = useClientIntelligence(id);
+  const {
+    inteligencia, arquivos: arquivosIntel, acoes, loading: expandedLoading, completude,
+    upsertInteligencia, uploadArquivoInteligencia, deleteArquivoInteligencia,
+    addAcao, deleteAcao,
+  } = useClientIntelligenceExpanded(id);
 
   const [contractFormOpen, setContractFormOpen] = useState(false);
   const [accountFormOpen, setAccountFormOpen] = useState(false);
@@ -300,10 +311,22 @@ export default function CrmDetail() {
       </div>
 
       {/* Inteligência do Cliente */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <LinksCard links={clienteLinks} loading={intelLoading} clienteId={id} onSaved={refetchIntel} />
-        <ConcorrentesCard concorrentes={concorrentes} loading={intelLoading} clienteId={id} onSaved={refetchIntel} />
-        <ArquivosCard anexos={anexos} loading={intelLoading} onDelete={deleteAnexo} />
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-[14px] font-semibold text-foreground">Inteligência do Cliente</h2>
+        </div>
+        <CompletudeBar percent={completude.percent} missing={completude.missing} />
+        <div className="grid gap-4 md:grid-cols-3">
+          <LinksCard links={clienteLinks} loading={intelLoading} clienteId={id} onSaved={refetchIntel} />
+          <ConcorrentesCard concorrentes={concorrentes} loading={intelLoading} clienteId={id} onSaved={refetchIntel} />
+          <ArquivosCard anexos={anexos} loading={intelLoading} onDelete={deleteAnexo} />
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          <ICPCard inteligencia={inteligencia} arquivos={arquivosIntel} loading={expandedLoading} onSave={upsertInteligencia} onUpload={uploadArquivoInteligencia} onDeleteFile={deleteArquivoInteligencia} />
+          <ProdutosCard inteligencia={inteligencia} arquivos={arquivosIntel} loading={expandedLoading} onSave={upsertInteligencia} onUpload={uploadArquivoInteligencia} onDeleteFile={deleteArquivoInteligencia} />
+          <InfoGeraisCard inteligencia={inteligencia} arquivos={arquivosIntel} loading={expandedLoading} onSave={upsertInteligencia} onUpload={uploadArquivoInteligencia} onDeleteFile={deleteArquivoInteligencia} />
+        </div>
+        <AcoesCard acoes={acoes} loading={expandedLoading} onAdd={addAcao} onDelete={deleteAcao} />
       </div>
 
 
