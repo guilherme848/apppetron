@@ -409,7 +409,7 @@ function ClientDistributionBlock({ prof }: { prof: any }) {
 }
 
 export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
-  const { productivityByProfessional, metasMap, refetch } = data;
+  const { currentMonthProductivity: productivityByProfessional, metasMap, refetch } = data;
   const [roleFilter, setRoleFilter] = useState('all');
   const [goalsOpen, setGoalsOpen] = useState(false);
 
