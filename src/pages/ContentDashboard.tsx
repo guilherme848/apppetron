@@ -186,7 +186,7 @@ export default function ContentDashboard() {
             >
               {monthLabel}
               {isCurrentMonth && (
-                <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-emerald-500/12 text-emerald-500">
+                <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-accent/10 text-accent-foreground">
                   Atual
                 </span>
               )}
