@@ -481,8 +481,8 @@ export default function WelcomePage() {
           <p className="text-sm text-muted-foreground">{capitalizedDate}</p>
         </header>
 
-        {/* AI Phrase */}
-        <AiPhraseCard phrase={aiPhrase} loading={aiPhraseLoading} />
+        {/* Daily Quote */}
+        <DailyQuoteCard />
 
         {/* Main Grid */}
         <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
