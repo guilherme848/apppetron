@@ -59,6 +59,12 @@ function loadBpLocked(): number[] | null {
 }
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 });
+const fmtShort = (v: number) => {
+  const abs = Math.abs(v);
+  if (abs >= 1_000_000) return `${v < 0 ? '-' : ''}R$ ${(abs / 1_000_000).toFixed(1).replace('.', ',')}M`;
+  if (abs >= 100_000) return `${v < 0 ? '-' : ''}R$ ${(abs / 1_000).toFixed(0)}k`;
+  return fmt(v);
+};
 const pct = (v: number, t: number) => t > 0 ? Math.round((v / t) * 100) : 0;
 
 function getProgressColor(p: number) {
