@@ -344,7 +344,7 @@ export function useContentDashboardData() {
 
       if (p.status === 'done') {
         const dateStr = p.data_conclusao || p.completed_at;
-        if (dateStr) {
+        if (dateStr && typeof dateStr === 'string') {
           const cd = parseISO(dateStr);
           if (isToday(cd)) s.completedToday++;
           if (!isBefore(cd, from) && !isAfter(cd, to)) {
@@ -354,19 +354,27 @@ export function useContentDashboardData() {
             s.dailyCounts[day] = (s.dailyCounts[day] || 0) + 1;
             if (p.due_date || p.batch?.planning_due_date) {
               s.totalWithDueDate++;
-              const dueDate = p.due_date ? parseISO(p.due_date) : parseISO(p.batch!.planning_due_date!);
-              if (!isAfter(cd, dueDate)) s.onTimeCount++;
+              const dueDateStr = p.due_date || p.batch!.planning_due_date!;
+              if (typeof dueDateStr === 'string') {
+                const dueDate = parseISO(dueDateStr);
+                if (!isAfter(cd, dueDate)) s.onTimeCount++;
+              }
             }
             // production time
-            const created = parseISO(p.created_at);
-            const prodTime = Math.max(differenceInDays(cd, created), 0);
-            s.productionTimes.push(prodTime);
+            if (typeof p.created_at === 'string') {
+              const created = parseISO(p.created_at);
+              const prodTime = Math.max(differenceInDays(cd, created), 0);
+              s.productionTimes.push(prodTime);
+            }
           }
         }
       } else {
         s.wip++;
-        const dueDate = p.due_date ? parseISO(p.due_date) : p.batch?.planning_due_date ? parseISO(p.batch.planning_due_date) : null;
-        if (dueDate && isBefore(parseISO(dueDate as any), today)) s.overdue++;
+        const dueDateStr = p.due_date || p.batch?.planning_due_date;
+        if (dueDateStr && typeof dueDateStr === 'string') {
+          const dueDate = parseISO(dueDateStr);
+          if (isBefore(dueDate, today)) s.overdue++;
+        }
       }
     });
 
@@ -400,7 +408,7 @@ export function useContentDashboardData() {
           if (p.assignee_id !== s.id || p.responsible_role_key !== s.role) return;
           if (p.status !== 'done') return;
           const ds = p.data_conclusao || p.completed_at;
-          if (!ds) return;
+          if (!ds || typeof ds !== 'string') return;
           const cd = parseISO(ds);
           if (!isBefore(cd, thisWeekStart) && !isAfter(cd, thisWeekEnd)) thisWeekCount++;
           if (!isBefore(cd, lastWeekStart) && !isAfter(cd, lastWeekEnd)) lastWeekCount++;
@@ -427,7 +435,7 @@ export function useContentDashboardData() {
             if (p.assignee_id !== s.id || p.responsible_role_key !== s.role) return;
             if (p.status !== 'done') return;
             const ds = p.data_conclusao || p.completed_at;
-            if (!ds) return;
+            if (!ds || typeof ds !== 'string') return;
             const cd = parseISO(ds);
             if (!isBefore(cd, mStart) && !isAfter(cd, mEnd)) mCount++;
           });
@@ -455,7 +463,7 @@ export function useContentDashboardData() {
           if (!clientStats[clientName]) clientStats[clientName] = { name: clientName, delivered: 0, pending: 0 };
           if (p.status === 'done') {
             const ds = p.data_conclusao || p.completed_at;
-            if (ds) {
+            if (ds && typeof ds === 'string') {
               const cd = parseISO(ds);
               if (!isBefore(cd, from) && !isAfter(cd, to)) clientStats[clientName].delivered++;
             }
@@ -480,7 +488,7 @@ export function useContentDashboardData() {
           if (p.assignee_id !== s.id || p.responsible_role_key !== s.role) return;
           if (p.status !== 'done') return;
           const ds = p.data_conclusao || p.completed_at;
-          if (!ds) return;
+          if (!ds || typeof ds !== 'string') return;
           const cd = parseISO(ds);
           if (!isBefore(cd, currentMonthStart) && !isAfter(cd, currentMonthEnd)) deliveriesThisMonth++;
         });
