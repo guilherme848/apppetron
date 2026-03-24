@@ -240,7 +240,7 @@ export default function ContentDashboard() {
                       >
                         {name}
                         {isCurrent && (
-                          <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                          <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-primary" />
                         )}
                       </button>
                     );
