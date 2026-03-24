@@ -97,6 +97,12 @@ import MarketingPostDetail from "./pages/commercial/MarketingPostDetail";
 import CommercialPlanningPage from "./pages/commercial/CommercialPlanningPage";
 import OutboundFunnelPage from "./pages/commercial/OutboundFunnelPage";
 
+// Petron OS pages
+import PetronOSHub from "./pages/petron-os/PetronOSHub";
+import PetronOSQuickTool from "./pages/petron-os/PetronOSQuickTool";
+import PetronOSBuilder from "./pages/petron-os/PetronOSBuilder";
+import PetronOSSettings from "./pages/petron-os/PetronOSSettings";
+
 // Sales CRM pages
 import SalesDashboard from "./pages/sales/SalesDashboard";
 import SalesFunnelsPage from "./pages/sales/SalesFunnelsPage";
