@@ -67,6 +67,7 @@ export const MODULES = {
   CONTENT: 'Conteúdo',
   TRAFFIC: 'Tráfego',
   CS: 'Customer Success',
+  PETRON_OS: 'Petron OS',
   SETTINGS: 'Configurações',
 } as const;
 
