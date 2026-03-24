@@ -488,7 +488,7 @@ export function useContentDashboardData() {
           if (p.assignee_id !== s.id || p.responsible_role_key !== s.role) return;
           if (p.status !== 'done') return;
           const ds = p.data_conclusao || p.completed_at;
-          if (!ds) return;
+          if (!ds || typeof ds !== 'string') return;
           const cd = parseISO(ds);
           if (!isBefore(cd, currentMonthStart) && !isAfter(cd, currentMonthEnd)) deliveriesThisMonth++;
         });
