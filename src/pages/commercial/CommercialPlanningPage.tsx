@@ -11,7 +11,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   Pencil, TrendingUp, Target, DollarSign, BarChart2,
   AlertTriangle, RefreshCw, Pin, AlertCircle, Calendar,
+  Calculator, CheckCircle, ArrowUpRight, ArrowDownRight,
 } from 'lucide-react';
+import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ComposedChart, ResponsiveContainer, Cell, Tooltip } from 'recharts';
 import MrrBaseConfig from '@/components/commercial/MrrBaseConfig';
@@ -57,6 +59,12 @@ function loadBpLocked(): number[] | null {
 }
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 });
+const fmtShort = (v: number) => {
+  const abs = Math.abs(v);
+  if (abs >= 1_000_000) return `${v < 0 ? '-' : ''}R$ ${(abs / 1_000_000).toFixed(1).replace('.', ',')}M`;
+  if (abs >= 100_000) return `${v < 0 ? '-' : ''}R$ ${(abs / 1_000).toFixed(0)}k`;
+  return fmt(v);
+};
 const pct = (v: number, t: number) => t > 0 ? Math.round((v / t) * 100) : 0;
 
 function getProgressColor(p: number) {
@@ -103,8 +111,11 @@ function calcNovaPrevisao(
 function KpiCard({
   label,
   value,
+  fullValue,
   sub,
   icon: Icon,
+  iconColor,
+  borderColor,
   valueColor,
   children,
   delay = 0,
@@ -112,30 +123,55 @@ function KpiCard({
 }: {
   label: string;
   value: string;
+  fullValue?: string;
   sub?: string;
   icon: any;
+  iconColor?: string;
+  borderColor?: string;
   valueColor?: string;
   children?: React.ReactNode;
   delay?: number;
   loading?: boolean;
 }) {
+  const valueContent = (
+    <p className={cn(
+      'mt-2 text-2xl font-extrabold leading-none tracking-tight font-mono truncate',
+      valueColor || 'text-foreground'
+    )}>
+      {value}
+    </p>
+  );
+
   return (
     <div
-      className="relative rounded-2xl border border-border bg-card p-5 transition-all duration-150 hover:border-foreground/20 animate-fade-in"
-      style={{ animationDelay: `${delay}ms`, animationFillMode: 'both' }}
+      className="relative rounded-2xl border border-border bg-card p-5 transition-all duration-150 hover:border-foreground/20 animate-fade-in overflow-hidden"
+      style={{
+        animationDelay: `${delay}ms`,
+        animationFillMode: 'both',
+        borderLeftWidth: borderColor ? '3px' : undefined,
+        borderLeftColor: borderColor,
+      }}
     >
       <div className="flex items-start justify-between">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</p>
-        <Icon className="h-[18px] w-[18px] text-muted-foreground/60" />
+        <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</p>
+        <div
+          className="h-9 w-9 rounded-full flex items-center justify-center shrink-0"
+          style={{ backgroundColor: iconColor ? `${iconColor}1F` : 'hsl(var(--muted) / 0.5)' }}
+        >
+          <Icon className="h-[18px] w-[18px]" style={{ color: iconColor || 'hsl(var(--muted-foreground))' }} />
+        </div>
       </div>
       {loading ? (
-        <Skeleton className="h-9 w-32 mt-2" />
-      ) : (
-        <p className={cn('mt-2 text-[32px] font-extrabold leading-none tracking-tight font-mono', valueColor || 'text-foreground')}>
-          {value}
-        </p>
-      )}
-      {sub && <p className="mt-1.5 text-xs text-muted-foreground">{sub}</p>}
+        <Skeleton className="h-7 w-32 mt-2" />
+      ) : fullValue ? (
+        <TooltipProvider>
+          <UITooltip>
+            <TooltipTrigger asChild>{valueContent}</TooltipTrigger>
+            <TooltipContent><p className="font-mono text-sm">{fullValue}</p></TooltipContent>
+          </UITooltip>
+        </TooltipProvider>
+      ) : valueContent}
+      {sub && <p className="mt-1.5 text-[13px] text-muted-foreground">{sub}</p>}
       {children}
     </div>
   );
@@ -345,7 +381,7 @@ export default function CommercialPlanningPage() {
 
       {/* ── Tabs ──────────────────────────────────────────── */}
       <Tabs defaultValue="planning" className="w-full">
-        <TabsList className="w-full sm:w-auto bg-transparent border-b border-border rounded-none p-0 h-auto gap-1">
+        <TabsList className="w-full sm:w-auto bg-muted/50 border border-border/50 rounded-[10px] p-1 h-auto gap-0.5">
           {[
             { value: 'planning', label: 'Planejamento Comercial' },
             { value: 'scenarios', label: 'Análise de Cenários' },
@@ -354,7 +390,7 @@ export default function CommercialPlanningPage() {
             <TabsTrigger
               key={tab.value}
               value={tab.value}
-              className="rounded-lg rounded-b-none border-b-2 border-transparent px-4 h-10 text-sm text-muted-foreground data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:border-b-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent hover:text-foreground hover:bg-muted/40 transition-all duration-150"
+              className="rounded-lg px-4 h-9 text-sm text-muted-foreground data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border hover:text-foreground transition-all duration-150"
             >
               {tab.label}
             </TabsTrigger>
@@ -393,9 +429,18 @@ export default function CommercialPlanningPage() {
             </div>
           )}
 
-          {/* BP KPI Cards — 5 cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            <KpiCard label="BP ANUAL" value={fmt(bpAnual)} icon={Target} delay={0} loading={loading}>
+          {/* BP KPI Cards — 3+2 layout */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <KpiCard
+              label="BP ANUAL"
+              value={fmtShort(bpAnual)}
+              fullValue={fmt(bpAnual)}
+              icon={Target}
+              iconColor="#6366f1"
+              borderColor="#6366f1"
+              delay={0}
+              loading={loading}
+            >
               {bpLocked && (
                 <Badge className="mt-2 text-[10px] bg-emerald-500/12 text-emerald-600 dark:text-emerald-400 border-0 rounded">
                   Congelado
@@ -403,25 +448,51 @@ export default function CommercialPlanningPage() {
               )}
             </KpiCard>
 
-            <KpiCard label="REALIZADO ATÉ AGORA" value={fmt(realizadoTotal)} icon={TrendingUp} delay={40} loading={loading} />
-
             <KpiCard
-              label="GAP ACUMULADO"
-              value={`${gapAcumulado >= 0 ? '+' : ''}${fmt(gapAcumulado)}`}
-              valueColor={getDiffColor(gapAcumulado)}
-              sub={`vs BP proporcional ao mês`}
-              icon={AlertCircle}
-              delay={80}
+              label="REALIZADO ATÉ AGORA"
+              value={fmtShort(realizadoTotal)}
+              fullValue={fmt(realizadoTotal)}
+              icon={TrendingUp}
+              iconColor="#10b981"
+              borderColor="#10b981"
+              delay={40}
               loading={loading}
             />
 
-            <KpiCard label="PROJEÇÃO DE FECHAMENTO" value={fmt(projecaoFechamento)} icon={TrendingUp} delay={120} loading={loading} />
+            <KpiCard
+              label="GAP ACUMULADO"
+              value={`${gapAcumulado >= 0 ? '+' : ''}${fmtShort(gapAcumulado)}`}
+              fullValue={`${gapAcumulado >= 0 ? '+' : ''}${fmt(gapAcumulado)}`}
+              valueColor={getDiffColor(gapAcumulado)}
+              sub="vs BP proporcional ao mês"
+              icon={gapAcumulado >= 0 ? ArrowUpRight : ArrowDownRight}
+              iconColor={gapAcumulado >= 0 ? '#10b981' : '#ef4444'}
+              borderColor={gapAcumulado >= 0 ? '#10b981' : '#ef4444'}
+              delay={80}
+              loading={loading}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <KpiCard
+              label="PROJEÇÃO DE FECHAMENTO"
+              value={fmtShort(projecaoFechamento)}
+              fullValue={fmt(projecaoFechamento)}
+              icon={Calculator}
+              iconColor="#F97316"
+              borderColor="#F97316"
+              delay={120}
+              loading={loading}
+            />
 
             <KpiCard
               label="GAP DE FECHAMENTO"
-              value={`${gapFechamento >= 0 ? '+' : ''}${fmt(gapFechamento)}`}
+              value={`${gapFechamento >= 0 ? '+' : ''}${fmtShort(gapFechamento)}`}
+              fullValue={`${gapFechamento >= 0 ? '+' : ''}${fmt(gapFechamento)}`}
               valueColor={getDiffColor(gapFechamento)}
-              icon={Target}
+              icon={gapFechamento >= 0 ? CheckCircle : AlertTriangle}
+              iconColor={gapFechamento >= 0 ? '#10b981' : '#ef4444'}
+              borderColor={gapFechamento >= 0 ? '#10b981' : '#ef4444'}
               delay={160}
               loading={loading}
             >
@@ -552,11 +623,14 @@ export default function CommercialPlanningPage() {
 
           {/* ── Channel Breakdown ─────────────────────────── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {channelData.map((ch, ci) => (
+            {channelData.map((ch, ci) => {
+              const channelColors: Record<string, string> = { inbound: '#6366f1', indicacao: '#10b981', prospeccao: '#F97316' };
+              const borderCol = channelColors[ch.key] || '#F97316';
+              return (
               <div
                 key={ch.key}
                 className="rounded-2xl border border-border bg-card p-5 animate-fade-in"
-                style={{ animationDelay: `${280 + ci * 40}ms`, animationFillMode: 'both' }}
+                style={{ animationDelay: `${280 + ci * 40}ms`, animationFillMode: 'both', borderLeftWidth: '3px', borderLeftColor: borderCol }}
               >
                 <h4 className="text-sm font-semibold text-foreground">{ch.label}</h4>
                 <p className="text-xs text-muted-foreground mb-4">Meta anual · Realizado · Contribuição</p>
@@ -621,7 +695,8 @@ export default function CommercialPlanningPage() {
                   </ResponsiveContainer>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </TabsContent>
 

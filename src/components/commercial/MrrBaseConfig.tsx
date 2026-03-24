@@ -24,6 +24,7 @@ export default function MrrBaseConfig({ ticketMedio, clientesAtuais, mrrAtual, l
       value: fmt(ticketMedio),
       sub: 'valor médio por contrato ativo',
       icon: BarChart2,
+      iconColor: '#6366f1',
       skeletonW: 'w-32',
     },
     {
@@ -31,6 +32,7 @@ export default function MrrBaseConfig({ ticketMedio, clientesAtuais, mrrAtual, l
       value: String(clientesAtuais),
       sub: 'contas ativas na base',
       icon: Users,
+      iconColor: '#10b981',
       skeletonW: 'w-20',
     },
     {
@@ -38,6 +40,7 @@ export default function MrrBaseConfig({ ticketMedio, clientesAtuais, mrrAtual, l
       value: fmt(mrrAtual),
       sub: 'receita acumulada mensal',
       icon: DollarSign,
+      iconColor: '#F97316',
       skeletonW: 'w-36',
     },
   ];
@@ -57,25 +60,29 @@ export default function MrrBaseConfig({ ticketMedio, clientesAtuais, mrrAtual, l
               style={{ animationDelay: `${i * 40}ms`, animationFillMode: 'both' }}
             >
               <div className="flex items-start justify-between">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                   {card.label}
                 </p>
-                <Icon className="h-[18px] w-[18px] text-muted-foreground/60" />
+                <div
+                  className="h-9 w-9 rounded-full flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: `${card.iconColor}1F` }}
+                >
+                  <Icon className="h-[18px] w-[18px]" style={{ color: card.iconColor }} />
+                </div>
               </div>
               {loading ? (
-                <Skeleton className={cn('h-9 mt-2', card.skeletonW)} />
+                <Skeleton className={cn('h-7 mt-2', card.skeletonW)} />
               ) : (
-                <p className="mt-2 text-[32px] font-extrabold leading-none tracking-tight text-foreground font-mono">
+                <p className="mt-2 text-[28px] font-extrabold leading-none tracking-tight text-foreground font-mono">
                   {card.value}
                 </p>
               )}
-              <p className="mt-1.5 text-xs text-muted-foreground">{card.sub}</p>
+              <p className="mt-1.5 text-[13px] text-muted-foreground">{card.sub}</p>
             </div>
           );
         })}
       </div>
 
-      {/* Sync line — only on Ticket Médio */}
       <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
         <RefreshCw className="h-3 w-3" />
         <span>Sincronizado</span>
