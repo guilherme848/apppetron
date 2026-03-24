@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Loader2, Archive, RotateCcw, LayoutGrid, Search } from 'lucide-react';
+import { Plus, Loader2, Archive, RotateCcw, LayoutGrid, Search, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useContentProduction } from '@/contexts/ContentProductionContext';
