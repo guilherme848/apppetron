@@ -346,7 +346,7 @@ export default function ContentDashboard() {
             </div>
             {useCustomDates && (
               <div className="space-y-3 animate-in fade-in slide-in-from-top-1 duration-150">
-                <p className="text-[11px] text-amber-500">O seletor de mês está sendo ignorado</p>
+                <p className="text-[11px] text-destructive">O seletor de mês está sendo ignorado</p>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Data Início</Label>
                   <Input
