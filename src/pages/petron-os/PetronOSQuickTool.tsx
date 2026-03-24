@@ -90,19 +90,19 @@ export default function PetronOSQuickTool() {
       campos.forEach((campo: PetronOSCampoFormulario) => {
         const val = formValues[campo.nome];
         const strVal = Array.isArray(val) ? val.join(', ') : String(val || '');
-        prompt = prompt.replaceAll(`{{${campo.nome}}}`, strVal);
+        prompt = prompt.split(`{{${campo.nome}}}`).join(strVal);
       });
 
       // Replace client context
       if (clientContext) {
-        prompt = prompt.replaceAll('{{contexto_cliente}}', `CONTEXTO DO CLIENTE:\n${clientContext}`);
+        prompt = prompt.split('{{contexto_cliente}}').join(`CONTEXTO DO CLIENTE:\n${clientContext}`);
       } else {
-        prompt = prompt.replaceAll('{{contexto_cliente}}', '');
+        prompt = prompt.split('{{contexto_cliente}}').join('');
       }
 
       const client = clients.find(c => c.id === selectedClientId);
-      prompt = prompt.replaceAll('{{nome_cliente}}', client?.name || '');
-      prompt = prompt.replaceAll('{{nicho_cliente}}', client?.niche || '');
+      prompt = prompt.split('{{nome_cliente}}').join(client?.name || '');
+      prompt = prompt.split('{{nicho_cliente}}').join(client?.niche || '');
 
       const { data, error } = await supabase.functions.invoke('petron-os-generate', {
         body: {
