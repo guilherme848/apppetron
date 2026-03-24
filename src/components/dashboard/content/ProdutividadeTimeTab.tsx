@@ -8,12 +8,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
-  Settings, TrendingUp, TrendingDown, Minus, CheckCircle, Trophy,
+  Settings, TrendingUp, TrendingDown, Minus, CheckCircle, Trophy, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { ROLE_LABELS } from '@/lib/dashboardColors';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import {
+  LineChart, Line, ResponsiveContainer, XAxis, YAxis, ReferenceLine,
+  Tooltip as RechartsTooltip,
+} from 'recharts';
 
 interface ProdutividadeTimeTabProps {
   data: any;
@@ -24,6 +29,8 @@ const ROLE_COLORS: Record<string, string> = {
   videomaker: '#8b5cf6',
   social: '#10b981',
 };
+
+const CLIENT_COLORS = ['#6366f1', '#8b5cf6', '#10b981', '#f59e0b', '#F97316', '#f43f5e', '#ef4444', '#64748b'];
 
 function RoleChip({ role }: { role: string }) {
   const color = ROLE_COLORS[role] || '#64748b';
@@ -113,6 +120,294 @@ function GoalsModal({ open, onOpenChange, metas, onSave }: {
   );
 }
 
+/* ═══ SPARKLINE BLOCK ═══ */
+function SparklineBlock({ prof }: { prof: any }) {
+  const color = ROLE_COLORS[prof.role] || '#6366f1';
+  const { monthlyHistory, sparklineTrend, monthsWithData, meta } = prof;
+
+  if (monthsWithData < 2) {
+    const firstMonth = monthlyHistory.find((m: any) => m.avgPerDay > 0);
+    return (
+      <div className="py-2">
+        <p className="text-[11px] text-muted-foreground italic text-center">
+          Histórico insuficiente{firstMonth ? ` — disponível a partir de ${firstMonth.label}` : ''}
+        </p>
+      </div>
+    );
+  }
+
+  const maxVal = Math.max(...monthlyHistory.map((m: any) => m.avgPerDay), meta || 1);
+
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex-1 h-[48px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={monthlyHistory} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
+            <defs>
+              <linearGradient id={`area-${prof.id}-${prof.role}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={color} stopOpacity={0.1} />
+                <stop offset="100%" stopColor={color} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <XAxis dataKey="label" hide />
+            <YAxis hide domain={[0, maxVal * 1.2]} />
+            {meta > 0 && (
+              <ReferenceLine y={meta} stroke="hsl(var(--primary))" strokeDasharray="3 3" strokeOpacity={0.4} />
+            )}
+            <RechartsTooltip
+              content={({ active, payload }) => {
+                if (!active || !payload?.[0]) return null;
+                const d = payload[0].payload;
+                return (
+                  <div className="bg-card border border-border rounded-md px-2 py-1 text-[11px] font-mono shadow-lg">
+                    {d.label}: {d.avgPerDay}/dia
+                  </div>
+                );
+              }}
+            />
+            <Line
+              type="monotone" dataKey="avgPerDay" stroke={color} strokeWidth={2}
+              dot={(props: any) => {
+                const { cx, cy, index } = props;
+                const isLast = index === monthlyHistory.length - 1;
+                return (
+                  <circle
+                    key={index} cx={cx} cy={cy}
+                    r={isLast ? 4 : 2.5}
+                    fill={color}
+                    stroke={isLast ? 'hsl(var(--card))' : 'none'}
+                    strokeWidth={isLast ? 2 : 0}
+                  />
+                );
+              }}
+              activeDot={{ r: 4, fill: color }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+        <div className="flex justify-between px-1">
+          <span className="text-[9px] font-mono text-muted-foreground">{monthlyHistory[0]?.label}</span>
+          <span className="text-[9px] font-mono text-muted-foreground">{monthlyHistory[monthlyHistory.length - 1]?.label}</span>
+        </div>
+      </div>
+      <div className="text-center shrink-0 w-14">
+        {Math.abs(sparklineTrend) < 5 ? (
+          <span className="text-[12px] font-mono text-muted-foreground">—</span>
+        ) : sparklineTrend > 0 ? (
+          <div className="flex flex-col items-center">
+            <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
+            <span className="text-[12px] font-bold font-mono text-emerald-500">{sparklineTrend}%</span>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center">
+            <TrendingDown className="h-3.5 w-3.5 text-red-500" />
+            <span className="text-[12px] font-bold font-mono text-red-500">{Math.abs(sparklineTrend)}%</span>
+          </div>
+        )}
+        <p className="text-[9px] uppercase text-muted-foreground">tendência</p>
+      </div>
+    </div>
+  );
+}
+
+/* ═══ PROJECTION BLOCK ═══ */
+function ProjectionBlock({ prof }: { prof: any }) {
+  const color = ROLE_COLORS[prof.role] || '#6366f1';
+  const {
+    deliveriesThisMonth, projectedTotal, monthlyGoal, projectionDiff,
+    projectionPct, alreadyMetGoal, remainingBizDays, elapsedBizDays,
+    totalBizDaysMonth, isCurrentMonth,
+  } = prof;
+
+  if (!isCurrentMonth) {
+    // Historical: show final result
+    return (
+      <div className="bg-muted/40 rounded-xl p-4">
+        <p className="text-[12px] font-semibold text-muted-foreground flex items-center gap-1.5 mb-2">
+          <TrendingUp className="h-3.5 w-3.5" /> Resultado do Mês
+        </p>
+        <p className="text-[13px] text-muted-foreground">
+          <span className="font-mono font-bold text-foreground">{prof.completedInPeriod}</span> entregas
+          (meta: <span className="font-mono">{monthlyGoal}</span>)
+          {' — '}
+          <span className={`font-mono font-bold ${prof.completedInPeriod >= monthlyGoal ? 'text-emerald-500' : 'text-red-500'}`}>
+            {prof.completedInPeriod >= monthlyGoal ? '+' : ''}{prof.completedInPeriod - monthlyGoal} {prof.completedInPeriod >= monthlyGoal ? 'acima' : 'abaixo'} da meta
+          </span>
+        </p>
+      </div>
+    );
+  }
+
+  if (elapsedBizDays <= 1 && deliveriesThisMonth === 0) {
+    return (
+      <div className="bg-muted/40 rounded-xl p-4">
+        <p className="text-[12px] font-semibold text-muted-foreground flex items-center gap-1.5">
+          <TrendingUp className="h-3.5 w-3.5" /> Projeção do Mês
+        </p>
+        <p className="text-[11px] text-muted-foreground mt-1">Dados insuficientes para projeção</p>
+      </div>
+    );
+  }
+
+  const donePct = monthlyGoal > 0 ? Math.min((deliveriesThisMonth / monthlyGoal) * 100, 100) : 0;
+  const projPct = monthlyGoal > 0 ? Math.min(((projectedTotal - deliveriesThisMonth) / monthlyGoal) * 100, 100 - donePct) : 0;
+
+  const statusBadge = alreadyMetGoal
+    ? { label: 'Meta atingida', className: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30' }
+    : projectionPct >= 100
+    ? { label: 'No ritmo', className: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30' }
+    : projectionPct >= 80
+    ? { label: 'Atenção', className: 'bg-amber-500/15 text-amber-600 border-amber-500/30' }
+    : { label: 'Risco', className: 'bg-red-500/15 text-red-500 border-red-500/30 animate-pulse' };
+
+  return (
+    <div className="bg-muted/40 rounded-xl p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
+        <p className="text-[12px] font-semibold text-muted-foreground">Projeção do Mês</p>
+        <Badge className={`text-[10px] font-semibold border ${statusBadge.className}`}>
+          {alreadyMetGoal && <CheckCircle className="h-3 w-3 mr-0.5" />}
+          {statusBadge.label}
+        </Badge>
+      </div>
+      <div className="flex items-center gap-4 flex-wrap">
+        {/* Bar */}
+        <div className="flex-1 min-w-[160px]">
+          <div className="relative h-4 rounded-full bg-border/50 overflow-hidden">
+            {/* Done segment */}
+            <div
+              className="absolute inset-y-0 left-0 rounded-l-full transition-all duration-500"
+              style={{ width: `${donePct}%`, backgroundColor: color }}
+            />
+            {/* Projected segment with stripes */}
+            <div
+              className="absolute inset-y-0 rounded-r-full transition-all duration-500"
+              style={{
+                left: `${donePct}%`,
+                width: `${Math.max(projPct, 0)}%`,
+                background: `repeating-linear-gradient(45deg, ${color}66, ${color}66 3px, ${color}26 3px, ${color}26 6px)`,
+              }}
+            />
+            {/* Meta marker */}
+            {monthlyGoal > 0 && (
+              <div
+                className="absolute top-[-4px] bottom-[-4px] w-0.5 bg-primary"
+                style={{ left: `${Math.min(100, 100)}%` }}
+                title="Meta"
+              />
+            )}
+          </div>
+          <div className="flex justify-between mt-1">
+            <span className="text-[9px] text-muted-foreground font-mono">{deliveriesThisMonth} feitos</span>
+            <span className="text-[9px] text-muted-foreground font-mono">Meta: {monthlyGoal}</span>
+          </div>
+        </div>
+        {/* Numbers */}
+        <div className="space-y-0.5 shrink-0">
+          <p className="text-[13px] text-muted-foreground">
+            Projeção: <span className="font-mono font-bold text-foreground">{projectedTotal}</span>
+          </p>
+          <p className="text-[12px] text-muted-foreground">
+            Meta: <span className="font-mono">{monthlyGoal}</span>
+          </p>
+          <p className={`text-[12px] font-bold font-mono ${projectionDiff >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+            {projectionDiff === 0 ? 'Na meta' : `${projectionDiff > 0 ? '+' : ''}${projectionDiff} ${projectionDiff > 0 ? 'acima' : 'abaixo'}`}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══ CLIENT DISTRIBUTION BLOCK ═══ */
+function ClientDistributionBlock({ prof }: { prof: any }) {
+  const { clientDistribution, totalClientDeliveries, topClientPct } = prof;
+  const [expanded, setExpanded] = useState(false);
+
+  if (clientDistribution.length === 0) {
+    return (
+      <div className="bg-muted/40 rounded-xl p-4">
+        <p className="text-[12px] font-semibold text-muted-foreground mb-2">Distribuição por Cliente</p>
+        <p className="text-[12px] text-muted-foreground text-center py-2">Nenhuma entrega registrada no período</p>
+      </div>
+    );
+  }
+
+  const visibleClients = expanded ? clientDistribution : clientDistribution.slice(0, 5);
+  const hasMore = clientDistribution.length > 5;
+
+  return (
+    <div className="bg-muted/40 rounded-xl p-4">
+      <p className="text-[12px] font-semibold text-muted-foreground mb-3">Distribuição por Cliente</p>
+
+      {/* Stacked bar */}
+      <div className="h-3 rounded-full overflow-hidden flex mb-3">
+        {clientDistribution.map((c: any, i: number) => {
+          const pct = totalClientDeliveries > 0 ? (c.delivered / totalClientDeliveries) * 100 : 0;
+          if (pct < 1) return null;
+          return (
+            <TooltipProvider key={c.name}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div
+                    className="h-full transition-all duration-300"
+                    style={{
+                      width: `${pct}%`,
+                      backgroundColor: CLIENT_COLORS[i % CLIENT_COLORS.length],
+                      marginRight: i < clientDistribution.length - 1 ? 1 : 0,
+                    }}
+                  />
+                </TooltipTrigger>
+                <TooltipContent className="text-[11px]">
+                  {c.name}: {c.delivered} entregas ({Math.round(pct)}%)
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          );
+        })}
+      </div>
+
+      {/* Client list */}
+      <div className="space-y-2">
+        {visibleClients.map((c: any, i: number) => {
+          const pct = totalClientDeliveries > 0 ? Math.round((c.delivered / totalClientDeliveries) * 100) : 0;
+          return (
+            <div key={c.name} className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: CLIENT_COLORS[i % CLIENT_COLORS.length] }} />
+              <span className="text-[13px] font-medium text-foreground truncate flex-1">{c.name}</span>
+              <span className="text-[12px] font-mono text-muted-foreground shrink-0">{c.delivered}</span>
+              <span className="text-[11px] text-muted-foreground shrink-0">({pct}%)</span>
+              {c.pending > 0 && (
+                <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30 text-[10px] px-1.5 py-0">
+                  +{c.pending} pendentes
+                </Badge>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {hasMore && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="flex items-center gap-1 mt-2 text-[12px] text-muted-foreground hover:text-primary transition-colors"
+        >
+          {expanded ? 'Recolher' : `Ver todos (${clientDistribution.length} clientes)`}
+          {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+        </button>
+      )}
+
+      {/* Concentration indicator */}
+      <div className="mt-2">
+        {topClientPct > 50 ? (
+          <p className="text-[11px] text-amber-500">⚠ Produção concentrada em {clientDistribution[0]?.name}</p>
+        ) : totalClientDeliveries > 0 ? (
+          <p className="text-[11px] text-emerald-500">Produção bem distribuída</p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
   const { productivityByProfessional, metasMap, refetch } = data;
   const [roleFilter, setRoleFilter] = useState('all');
@@ -144,7 +439,6 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
     { key: 'social', label: 'Social Media', color: '#10b981' },
   ];
 
-  // Avg production time across team for comparison
   const teamAvgProdTime = useMemo(() => {
     const times = productivityByProfessional.map((p: any) => p.avgProdTime).filter((t: number) => t > 0);
     return times.length > 0 ? Math.round((times.reduce((a: number, b: number) => a + b, 0) / times.length) * 10) / 10 : 0;
@@ -201,7 +495,6 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
             const isBelowThreshold = metaPct < 70 && prof.meta > 0;
             const progressColor = metaPct >= 100 ? 'bg-emerald-500' : metaPct >= 70 ? 'bg-amber-500' : 'bg-red-500';
             const borderColor = ROLE_COLORS[prof.role] || '#6366f1';
-
             const occupancyBarColor = prof.occupancyPct <= 50 ? '#10b981' : prof.occupancyPct <= 80 ? '#6366f1' : prof.occupancyPct <= 90 ? '#f59e0b' : '#ef4444';
             const punctualityColor = prof.punctuality >= 90 ? 'text-emerald-500' : prof.punctuality >= 70 ? 'text-amber-500' : 'text-red-500';
             const prodTimeColor = prof.avgProdTime <= 3 ? 'text-emerald-500' : prof.avgProdTime <= 5 ? 'text-amber-500' : 'text-red-500';
@@ -248,6 +541,9 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
                     </div>
                     <p className="text-[11px] text-muted-foreground font-mono">Meta: {prof.meta}/dia</p>
                   </div>
+
+                  {/* ★ NEW: SPARKLINE — Evolution */}
+                  <SparklineBlock prof={prof} />
 
                   {/* BLOCK 2: Volume metrics */}
                   <div className="flex items-center divide-x divide-border">
@@ -316,6 +612,9 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
                     )}
                   </div>
 
+                  {/* ★ NEW: PROJECTION — Monthly forecast */}
+                  <ProjectionBlock prof={prof} />
+
                   {/* BLOCK 5: Heatmap */}
                   <div>
                     <p className="text-[11px] font-mono text-muted-foreground mb-2">
@@ -366,6 +665,9 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
                       )}
                     </div>
                   </div>
+
+                  {/* ★ NEW: CLIENT DISTRIBUTION */}
+                  <ClientDistributionBlock prof={prof} />
                 </CardContent>
               </Card>
             );
@@ -396,7 +698,7 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
                 </TableHeader>
                 <TableBody>
                   {[...filtered].sort((a: any, b: any) => b.netDeliveries - a.netDeliveries).map((s: any, i: number) => {
-                    const metaPct = s.meta > 0 ? Math.round((s.avgPerDay / s.meta) * 100) : 0;
+                    const metaPctR = s.meta > 0 ? Math.round((s.avgPerDay / s.meta) * 100) : 0;
                     const isFirst = i === 0;
                     const isLast = i === filtered.length - 1 && filtered.length > 1;
                     return (
@@ -427,12 +729,12 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
                           <Badge
                             variant="outline"
                             className={`font-mono text-[10px] ${
-                              metaPct >= 100 ? 'border-emerald-500/30 text-emerald-500' :
-                              metaPct >= 70 ? 'border-amber-500/30 text-amber-500' :
+                              metaPctR >= 100 ? 'border-emerald-500/30 text-emerald-500' :
+                              metaPctR >= 70 ? 'border-amber-500/30 text-amber-500' :
                               'border-red-500/30 text-red-500'
                             }`}
                           >
-                            {metaPct}%
+                            {metaPctR}%
                           </Badge>
                         </TableCell>
                       </TableRow>
