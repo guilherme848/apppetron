@@ -7,6 +7,7 @@ import { BirthdayCard } from '@/components/welcome/BirthdayCard';
 import { BirthdayModal, useBirthdayModal } from '@/components/welcome/BirthdayModal';
 import { BirthdayToast } from '@/components/welcome/BirthdayToast';
 import { UserNotesCard } from '@/components/notes/UserNotesCard';
+import { DailyQuoteCard } from '@/components/welcome/DailyQuoteCard';
 import { Sparkles, AlertCircle, Trophy, Activity, CheckCircle, Clock, Flame, TrendingUp, Calendar, ArrowRight, Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -481,8 +482,8 @@ export default function WelcomePage() {
           <p className="text-sm text-muted-foreground">{capitalizedDate}</p>
         </header>
 
-        {/* AI Phrase */}
-        <AiPhraseCard phrase={aiPhrase} loading={aiPhraseLoading} />
+        {/* Daily Quote */}
+        <DailyQuoteCard />
 
         {/* Main Grid */}
         <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
