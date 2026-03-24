@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { useJobRoles } from '@/hooks/useJobRoles';
 import { useStageResponsibilities } from '@/hooks/useStageResponsibilities';
+import { SuggestContentModal } from '@/components/content/SuggestContentModal';
 
 export default function ContentProduction() {
   const navigate = useNavigate();
