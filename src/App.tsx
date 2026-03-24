@@ -229,6 +229,13 @@ const App = () => (
                         <Route path="/commercial/marketing/:id" element={<MarketingBatchDetail />} />
                         <Route path="/commercial/marketing/:batchId/posts/:postId" element={<MarketingPostDetail />} />
 
+                        {/* Petron OS routes */}
+                        <Route path="/petron-os" element={<PetronOSHub />} />
+                        <Route path="/petron-os/tool/:slug" element={<PetronOSQuickTool />} />
+                        <Route path="/petron-os/builder/:slug" element={<PetronOSBuilder />} />
+                        <Route path="/petron-os/builder/:slug/:id" element={<PetronOSBuilder />} />
+                        <Route path="/petron-os/settings" element={<PetronOSSettings />} />
+
                         {/* Sales CRM routes */}
                         <Route path="/sales" element={<SalesDashboard />} />
                         <Route path="/sales/funnels" element={<SalesFunnelsPage />} />

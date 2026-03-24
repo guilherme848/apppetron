@@ -142,9 +142,9 @@ export default function PetronOSBuilder() {
     try {
       let sysPrompt = ferramenta.system_prompt;
       if (clientContext) {
-        sysPrompt = sysPrompt.replaceAll('{{contexto_cliente}}', `CONTEXTO DO CLIENTE:\n${clientContext}`);
+        sysPrompt = sysPrompt.split('{{contexto_cliente}}').join(`CONTEXTO DO CLIENTE:\n${clientContext}`);
       } else {
-        sysPrompt = sysPrompt.replaceAll('{{contexto_cliente}}', '');
+        sysPrompt = sysPrompt.split('{{contexto_cliente}}').join('');
       }
 
       const { data, error } = await supabase.functions.invoke('petron-os-generate', {

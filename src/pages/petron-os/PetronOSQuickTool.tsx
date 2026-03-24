@@ -269,7 +269,7 @@ export default function PetronOSQuickTool() {
                     className="h-[42px] w-[42px]"
                     onClick={() => setFormValues(p => ({
                       ...p,
-                      [campo.nome]: Math.min(campo.max || 10, (Number(p[campo.nome]) || campo.padrao || 1) + 1),
+                      [campo.nome]: Math.min(campo.max || 10, (Number(p[campo.nome]) || Number(campo.padrao) || 1) + 1),
                     }))}
                   >+</Button>
                 </div>
