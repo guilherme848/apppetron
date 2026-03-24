@@ -415,6 +415,85 @@ export function useContentDashboardData() {
           if (c > bestDay.count) bestDay = { day: Number(d), count: c };
         });
 
+        // ── Sparkline: last 6 months avg/day ──
+        const monthlyHistory: { month: string; label: string; avgPerDay: number }[] = [];
+        for (let mi = 5; mi >= 0; mi--) {
+          const mDate = subMonths(new Date(), mi);
+          const mStart = startOfMonth(mDate);
+          const mEnd = endOfMonth(mDate);
+          const mBizDays = Math.max(differenceInBusinessDays(mEnd, mStart), 1);
+          let mCount = 0;
+          enrichedPosts.forEach(p => {
+            if (p.assignee_id !== s.id || p.responsible_role_key !== s.role) return;
+            if (p.status !== 'done') return;
+            const ds = p.data_conclusao || p.completed_at;
+            if (!ds) return;
+            const cd = parseISO(ds);
+            if (!isBefore(cd, mStart) && !isAfter(cd, mEnd)) mCount++;
+          });
+          monthlyHistory.push({
+            month: format(mDate, 'yyyy-MM'),
+            label: format(mDate, 'MMM', { locale: ptBR }).replace('.', ''),
+            avgPerDay: mCount > 0 ? Math.round((mCount / mBizDays) * 10) / 10 : 0,
+          });
+        }
+        // Sparkline trend: avg of last 2 months vs avg of 2 months before
+        const recent2 = monthlyHistory.slice(-2);
+        const prev2 = monthlyHistory.slice(-4, -2);
+        const recentAvg = recent2.length > 0 ? recent2.reduce((a, b) => a + b.avgPerDay, 0) / recent2.length : 0;
+        const prevAvg = prev2.length > 0 ? prev2.reduce((a, b) => a + b.avgPerDay, 0) / prev2.length : 0;
+        const sparklineTrend = prevAvg > 0
+          ? Math.round(((recentAvg - prevAvg) / prevAvg) * 100)
+          : recentAvg > 0 ? 100 : 0;
+        const monthsWithData = monthlyHistory.filter(m => m.avgPerDay > 0).length;
+
+        // ── Client distribution ──
+        const clientStats: Record<string, { name: string; delivered: number; pending: number }> = {};
+        filteredPosts.forEach(p => {
+          if (p.assignee_id !== s.id || p.responsible_role_key !== s.role) return;
+          const clientName = p.client?.name || 'Sem cliente';
+          if (!clientStats[clientName]) clientStats[clientName] = { name: clientName, delivered: 0, pending: 0 };
+          if (p.status === 'done') {
+            const ds = p.data_conclusao || p.completed_at;
+            if (ds) {
+              const cd = parseISO(ds);
+              if (!isBefore(cd, from) && !isAfter(cd, to)) clientStats[clientName].delivered++;
+            }
+          } else {
+            clientStats[clientName].pending++;
+          }
+        });
+        const clientDistribution = Object.values(clientStats)
+          .filter(c => c.delivered > 0 || c.pending > 0)
+          .sort((a, b) => b.delivered - a.delivered);
+        const totalClientDeliveries = clientDistribution.reduce((sum, c) => sum + c.delivered, 0);
+        const topClientPct = totalClientDeliveries > 0 && clientDistribution.length > 0
+          ? Math.round((clientDistribution[0].delivered / totalClientDeliveries) * 100) : 0;
+
+        // ── Monthly projection ──
+        const currentMonthStart = startOfMonth(today);
+        const currentMonthEnd = endOfMonth(today);
+        const totalBizDaysMonth = Math.max(differenceInBusinessDays(currentMonthEnd, currentMonthStart), 1);
+        const elapsedBizDays = Math.max(differenceInBusinessDays(today, currentMonthStart), 1);
+        let deliveriesThisMonth = 0;
+        enrichedPosts.forEach(p => {
+          if (p.assignee_id !== s.id || p.responsible_role_key !== s.role) return;
+          if (p.status !== 'done') return;
+          const ds = p.data_conclusao || p.completed_at;
+          if (!ds) return;
+          const cd = parseISO(ds);
+          if (!isBefore(cd, currentMonthStart) && !isAfter(cd, currentMonthEnd)) deliveriesThisMonth++;
+        });
+        const currentVelocity = deliveriesThisMonth / elapsedBizDays;
+        const remainingBizDays = Math.max(totalBizDaysMonth - elapsedBizDays, 0);
+        const projectedTotal = Math.round(deliveriesThisMonth + currentVelocity * remainingBizDays);
+        const monthlyGoal = meta * totalBizDaysMonth;
+        const projectionDiff = projectedTotal - monthlyGoal;
+        const projectionPct = monthlyGoal > 0 ? Math.round((projectedTotal / monthlyGoal) * 100) : 0;
+        const alreadyMetGoal = deliveriesThisMonth >= monthlyGoal;
+        const isCurrentMonth = format(filters.dateRange.from, 'yyyy-MM') === format(today, 'yyyy-MM')
+          || format(filters.dateRange.to, 'yyyy-MM') === format(today, 'yyyy-MM');
+
         return {
           id: s.id, name: s.name, role: s.role,
           completedInPeriod: s.completedInPeriod,
@@ -428,6 +507,14 @@ export function useContentDashboardData() {
           capacityMonthly, committed, availableCapacity, occupancyPct,
           bestDay, dailyCounts: s.dailyCounts,
           businessDays,
+          // New: sparkline
+          monthlyHistory, sparklineTrend, monthsWithData,
+          // New: client distribution
+          clientDistribution, totalClientDeliveries, topClientPct,
+          // New: projection
+          deliveriesThisMonth, projectedTotal, monthlyGoal,
+          projectionDiff, projectionPct, alreadyMetGoal,
+          remainingBizDays, elapsedBizDays, totalBizDaysMonth, isCurrentMonth,
         };
       })
       .sort((a, b) => {
