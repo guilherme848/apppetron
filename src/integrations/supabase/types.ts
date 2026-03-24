@@ -1135,6 +1135,7 @@ export type Database = {
           channel: string | null
           completed_at: string | null
           created_at: string
+          data_conclusao: string | null
           due_date: string | null
           format: string | null
           id: string
@@ -1160,6 +1161,7 @@ export type Database = {
           channel?: string | null
           completed_at?: string | null
           created_at?: string
+          data_conclusao?: string | null
           due_date?: string | null
           format?: string | null
           id?: string
@@ -1185,6 +1187,7 @@ export type Database = {
           channel?: string | null
           completed_at?: string | null
           created_at?: string
+          data_conclusao?: string | null
           due_date?: string | null
           format?: string | null
           id?: string
@@ -4392,6 +4395,36 @@ export type Database = {
           id?: string
           token_expires_at?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      metas_producao_diaria: {
+        Row: {
+          ativo: boolean | null
+          atualizado_por: string | null
+          cargo: string
+          created_at: string | null
+          id: string
+          meta_diaria: number
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          atualizado_por?: string | null
+          cargo: string
+          created_at?: string | null
+          id?: string
+          meta_diaria?: number
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          atualizado_por?: string | null
+          cargo?: string
+          created_at?: string | null
+          id?: string
+          meta_diaria?: number
+          updated_at?: string | null
         }
         Relationships: []
       }
