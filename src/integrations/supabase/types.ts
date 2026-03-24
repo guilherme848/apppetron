@@ -403,6 +403,54 @@ export type Database = {
           },
         ]
       }
+      atividade_sistema: {
+        Row: {
+          cliente_id: string | null
+          created_at: string | null
+          descricao: string
+          id: string
+          referencia_id: string | null
+          referencia_tipo: string | null
+          tipo: string
+          usuario_id: string | null
+        }
+        Insert: {
+          cliente_id?: string | null
+          created_at?: string | null
+          descricao: string
+          id?: string
+          referencia_id?: string | null
+          referencia_tipo?: string | null
+          tipo: string
+          usuario_id?: string | null
+        }
+        Update: {
+          cliente_id?: string | null
+          created_at?: string | null
+          descricao?: string
+          id?: string
+          referencia_id?: string | null
+          referencia_tipo?: string | null
+          tipo?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atividade_sistema_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atividade_sistema_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       base_health_score_config: {
         Row: {
           components: Json
@@ -4322,6 +4370,47 @@ export type Database = {
           unit?: string | null
         }
         Relationships: []
+      }
+      destaques_semanais: {
+        Row: {
+          cargo: string | null
+          created_at: string | null
+          descricao: string | null
+          id: string
+          metrica: string | null
+          semana_referencia: string
+          usuario_id: string | null
+          valor: number | null
+        }
+        Insert: {
+          cargo?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          metrica?: string | null
+          semana_referencia: string
+          usuario_id?: string | null
+          valor?: number | null
+        }
+        Update: {
+          cargo?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          metrica?: string | null
+          semana_referencia?: string
+          usuario_id?: string | null
+          valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "destaques_semanais_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       historico_acoes_comerciais: {
         Row: {
