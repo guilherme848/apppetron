@@ -216,6 +216,21 @@ function SortableRow({
               </Tooltip>
             </TooltipProvider>
           )}
+          {post.sugerido_por_ia && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="flex items-center gap-0.5 text-[10px] h-5 bg-[hsl(var(--accent-primary,24_95%_53%)/0.1)] text-[hsl(var(--accent-primary,24_95%_53%))] border-[hsl(var(--accent-primary,24_95%_53%)/0.3)]">
+                    <Sparkles className="h-2.5 w-2.5" />
+                    IA
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Sugerido por IA</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </div>
       </TableCell>
       <TableCell>

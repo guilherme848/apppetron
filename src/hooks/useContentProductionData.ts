@@ -49,6 +49,9 @@ const mapPost = (data: any): ContentPost => ({
   completed_at: data.completed_at,
   sort_order: data.sort_order ?? 0,
   is_drawer: data.is_drawer ?? false,
+  sugerido_por_ia: data.sugerido_por_ia ?? false,
+  legenda_sugerida: data.legenda_sugerida ?? null,
+  briefing_sugerido: data.briefing_sugerido ?? null,
   created_at: data.created_at,
   updated_at: data.updated_at,
 });
