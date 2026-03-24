@@ -27,6 +27,7 @@ export default function ContentProduction() {
   const [activeTab, setActiveTab] = useState<BatchStatus>('planning');
   const [showArchived, setShowArchived] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [suggestOpen, setSuggestOpen] = useState(false);
   const [archivedBatches, setArchivedBatches] = useState<ContentBatch[]>([]);
   const [loadingArchived, setLoadingArchived] = useState(false);
 
