@@ -245,14 +245,14 @@ export default function PetronOSQuickTool() {
               )}
 
               {campo.tipo === 'number' && (
-                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
                     size="icon"
                     className="h-[42px] w-[42px]"
                     onClick={() => setFormValues(p => ({
                       ...p,
-                      [campo.nome]: Math.max(campo.min || 1, (Number(p[campo.nome]) || campo.padrao || 1) - 1),
+                      [campo.nome]: Math.max(campo.min || 1, (Number(p[campo.nome]) || Number(campo.padrao) || 1) - 1),
                     }))}
                   >−</Button>
                   <Input
