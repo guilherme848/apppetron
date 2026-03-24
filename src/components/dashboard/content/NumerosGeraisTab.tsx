@@ -9,8 +9,9 @@ import {
   ReferenceLine, Legend,
 } from 'recharts';
 import {
-  CheckCircle, Layers, AlertTriangle, RefreshCw, RotateCcw, TrendingUp,
+  CheckCircle, RefreshCw, TrendingUp,
   Clock, Users, AlertCircle, BarChart3,
+  CalendarDays, FileText, Palette, Hammer,
 } from 'lucide-react';
 import { DC, tooltipStyle, ROLE_LABELS, PRODUCTION_ROLES } from '@/lib/dashboardColors';
 import { ExtraRequestsMetrics } from '@/components/dashboard/ExtraRequestsMetrics';
@@ -90,6 +91,15 @@ export function NumerosGeraisTab({ data }: NumerosGeraisTabProps) {
 
   const [profFilter, setProfFilter] = useState('all');
   const [clientFilter, setClientFilter] = useState('all');
+
+  const statusCounts = useMemo(() => {
+    const posts = filteredPosts || [];
+    const total = posts.length;
+    const todo = posts.filter((p: any) => p.status === 'todo').length;
+    const doing = posts.filter((p: any) => p.status === 'doing').length;
+    const done = posts.filter((p: any) => p.status === 'done').length;
+    return { total, todo, doing, done };
+  }, [filteredPosts]);
 
   // Enriched change requests for retrabalho section
   const enrichedCRs = useMemo(() => {
@@ -203,71 +213,102 @@ export function NumerosGeraisTab({ data }: NumerosGeraisTabProps) {
 
   return (
     <div className="space-y-6">
-      {/* ═══ KPI CARDS — 3×2 GRID ═══ */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-        <KpiCard
-          label="Total de Entregas"
-          value={metrics.completedInPeriod}
-          sublabel="conteúdos concluídos no período"
-          icon={CheckCircle}
-          iconColor="#10b981"
-        />
-        <KpiCard
-          label="Em Andamento"
-          value={metrics.inProgress + (metrics.openPosts - metrics.inProgress - metrics.overduePosts)}
-          sublabel={`${metrics.inProgress} em produção · ${metrics.openPosts - metrics.inProgress - metrics.overduePosts} planejados`}
-          icon={Layers}
-          iconColor="#6366f1"
-        />
-        <KpiCard
-          label="Atrasados"
-          value={metrics.overduePosts}
-          sublabel="requerem atenção imediata"
-          icon={AlertTriangle}
-          iconColor="#ef4444"
-        />
-        <KpiCard
-          label="Taxa de Retrabalho"
-          value={`${metrics.reworkRate}%`}
-          sublabel="no período selecionado"
-          icon={RefreshCw}
-          iconColor="#f59e0b"
-          badge={metrics.reworkRate > 10 ? { text: metrics.reworkRate > 25 ? 'Crítico' : 'Atenção', color: metrics.reworkRate > 25 ? '#ef4444' : '#f59e0b' } : null}
-        />
-        <KpiCard
-          label="Retrabalhos no Período"
-          value={metrics.reworkCount}
-          sublabel="posts com solicitações de alteração"
-          icon={RotateCcw}
-          iconColor="#ef4444"
-        />
-        <KpiCard
-          label="Entregas Líquidas"
-          value={metrics.netDeliveries}
-          sublabel="entregas sem retrabalho no período"
-          icon={TrendingUp}
-          iconColor="#F97316"
-        />
+      {/* ═══ SEÇÃO: PLANEJAMENTO ═══ */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Planejamento</span>
+        </div>
+        <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+        <p className="text-[13px] text-muted-foreground">Conteúdos planejados para o mês selecionado</p>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <KpiCard label="Total Planejados" value={statusCounts.total} sublabel="conteúdos no mês" icon={FileText} iconColor="#6366f1" />
+          <KpiCard label="A Fazer" value={statusCounts.todo} sublabel="aguardando início" icon={Clock} iconColor="#64748b" />
+          <KpiCard label="Em Produção" value={statusCounts.doing} sublabel="em processo" icon={Palette} iconColor="#F97316" />
+          <KpiCard label="Concluídos" value={statusCounts.done} sublabel="finalizados no período" icon={CheckCircle} iconColor="#10b981" />
+        </div>
+
+        {/* Funnel progress bar */}
+        {statusCounts.total > 0 && (
+          <div className="space-y-2">
+            <div className="h-4 rounded-lg overflow-hidden flex bg-muted/30">
+              {statusCounts.todo > 0 && (
+                <div
+                  className="h-full transition-all duration-300"
+                  style={{ width: `${(statusCounts.todo / statusCounts.total) * 100}%`, backgroundColor: 'hsl(var(--muted-foreground) / 0.3)' }}
+                  title={`A Fazer: ${statusCounts.todo} (${Math.round((statusCounts.todo / statusCounts.total) * 100)}%)`}
+                />
+              )}
+              {statusCounts.doing > 0 && (
+                <div
+                  className="h-full transition-all duration-300 bg-primary"
+                  style={{ width: `${(statusCounts.doing / statusCounts.total) * 100}%` }}
+                  title={`Em Produção: ${statusCounts.doing} (${Math.round((statusCounts.doing / statusCounts.total) * 100)}%)`}
+                />
+              )}
+              {statusCounts.done > 0 && (
+                <div
+                  className="h-full transition-all duration-300"
+                  style={{ width: `${(statusCounts.done / statusCounts.total) * 100}%`, backgroundColor: '#10b981' }}
+                  title={`Concluídos: ${statusCounts.done} (${Math.round((statusCounts.done / statusCounts.total) * 100)}%)`}
+                />
+              )}
+            </div>
+            <p className="text-[12px] font-mono text-muted-foreground">
+              {statusCounts.done} de {statusCounts.total} concluídos ({Math.round((statusCounts.done / statusCounts.total) * 100)}%)
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* ═══ HERO CARDS — 2 em linha ═══ */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <HeroCard
-          label="Tempo Médio de Produção"
-          value={`${metrics.avgProductionTime} dias`}
-          sublabel="entre criação e aprovação do conteúdo"
-          auxLine={`Mais rápido: ${metrics.minProductionTime} dia(s) · Mais lento: ${metrics.maxProductionTime} dias`}
-          icon={Clock}
-          iconColor="#f59e0b"
-        />
-        <HeroCard
-          label="Capacidade da Equipe"
-          value={`${metrics.occupancyPct}%`}
-          sublabel="de ocupação média da equipe"
-          auxLine={`Capacidade total: ${metrics.totalCapacity}/mês · Comprometido: ${metrics.committed} · Disponível: ${metrics.available}`}
-          icon={Users}
-          iconColor="#6366f1"
-        />
+      {/* ═══ SEPARADOR ═══ */}
+      <div className="py-2">
+        <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      </div>
+
+      {/* ═══ SEÇÃO: PRODUÇÃO ═══ */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Hammer className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Produção</span>
+        </div>
+        <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+        <p className="text-[13px] text-muted-foreground">Métricas de execução e qualidade no período</p>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <KpiCard label="Entregas no Período" value={metrics.completedInPeriod} sublabel="conteúdos concluídos" icon={CheckCircle} iconColor="#10b981" />
+          <KpiCard label="Entregas Líquidas" value={metrics.netDeliveries} sublabel="entregas sem retrabalho" icon={TrendingUp} iconColor="#F97316" />
+          <KpiCard
+            label="Taxa de Retrabalho"
+            value={`${metrics.reworkRate}%`}
+            sublabel="no período selecionado"
+            icon={RefreshCw}
+            iconColor={metrics.reworkRate > 10 ? '#ef4444' : '#f59e0b'}
+            badge={metrics.reworkRate > 10 ? { text: metrics.reworkRate > 25 ? 'Crítico' : 'Atenção', color: metrics.reworkRate > 25 ? '#ef4444' : '#f59e0b' } : null}
+          />
+          <KpiCard label="Tempo Médio" value={`${metrics.avgProductionTime}d`} sublabel="criação → aprovação" icon={Clock} iconColor="#f59e0b" />
+        </div>
+
+        {/* Hero cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <HeroCard
+            label="Tempo Médio de Produção"
+            value={`${metrics.avgProductionTime} dias`}
+            sublabel="entre criação e aprovação do conteúdo"
+            auxLine={`Mais rápido: ${metrics.minProductionTime} dia(s) · Mais lento: ${metrics.maxProductionTime} dias`}
+            icon={Clock}
+            iconColor="#f59e0b"
+          />
+          <HeroCard
+            label="Capacidade da Equipe"
+            value={`${metrics.occupancyPct}%`}
+            sublabel="de ocupação média da equipe"
+            auxLine={`Capacidade total: ${metrics.totalCapacity}/mês · Comprometido: ${metrics.committed} · Disponível: ${metrics.available}`}
+            icon={Users}
+            iconColor="#6366f1"
+          />
+        </div>
       </div>
 
       {/* ═══ WEEKLY CHART ═══ */}

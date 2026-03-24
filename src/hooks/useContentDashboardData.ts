@@ -81,6 +81,216 @@ export interface ChangeRequestData {
 
 const ROLE_KEYS = ['designer', 'videomaker', 'social', 'traffic', 'support', 'cs'];
 
+function computeProfessionalProductivity(
+  postsSource: any[],
+  allEnrichedPosts: any[],
+  changeRequests: ChangeRequestData[],
+  from: Date,
+  to: Date,
+  metasMap: Record<string, number>,
+) {
+  const today = startOfDay(new Date());
+  const changePostIds = new Set(changeRequests.map(cr => cr.post_id));
+  const stats: Record<string, {
+    id: string; name: string; role: string;
+    completedInPeriod: number; completedToday: number; wip: number; overdue: number;
+    onTimeCount: number; totalWithDueDate: number;
+    postsWithChanges: number; dailyCounts: Record<number, number>;
+    productionTimes: number[];
+  }> = {};
+
+  postsSource.forEach((p: any) => {
+    if (!p.assignee_id || !p.responsible_role_key) return;
+    if (!['designer', 'videomaker', 'social'].includes(p.responsible_role_key)) return;
+    const key = `${p.assignee_id}-${p.responsible_role_key}`;
+    if (!stats[key]) {
+      stats[key] = {
+        id: p.assignee_id, name: p.assignee?.name || 'Desconhecido', role: p.responsible_role_key,
+        completedInPeriod: 0, completedToday: 0, wip: 0, overdue: 0,
+        onTimeCount: 0, totalWithDueDate: 0, postsWithChanges: 0,
+        dailyCounts: {}, productionTimes: [],
+      };
+    }
+    const s = stats[key];
+    if (p.status === 'done') {
+      const dateStr = p.data_conclusao || p.completed_at;
+      if (dateStr && typeof dateStr === 'string') {
+        const cd = parseISO(dateStr);
+        if (isToday(cd)) s.completedToday++;
+        if (!isBefore(cd, from) && !isAfter(cd, to)) {
+          s.completedInPeriod++;
+          if (changePostIds.has(p.id)) s.postsWithChanges++;
+          const day = getDate(cd);
+          s.dailyCounts[day] = (s.dailyCounts[day] || 0) + 1;
+          if (p.due_date || p.batch?.planning_due_date) {
+            s.totalWithDueDate++;
+            const dueDateStr = p.due_date || p.batch!.planning_due_date!;
+            if (typeof dueDateStr === 'string') {
+              const dueDate = parseISO(dueDateStr);
+              if (!isAfter(cd, dueDate)) s.onTimeCount++;
+            }
+          }
+          if (typeof p.created_at === 'string') {
+            const created = parseISO(p.created_at);
+            const prodTime = Math.max(differenceInDays(cd, created), 0);
+            s.productionTimes.push(prodTime);
+          }
+        }
+      }
+    } else {
+      s.wip++;
+      const dueDateStr = p.due_date || p.batch?.planning_due_date;
+      if (dueDateStr && typeof dueDateStr === 'string') {
+        const dueDate = parseISO(dueDateStr);
+        if (isBefore(dueDate, today)) s.overdue++;
+      }
+    }
+  });
+
+  const businessDays = Math.max(differenceInBusinessDays(to, from), 1);
+  const businessDaysInMonth = Math.max(differenceInBusinessDays(endOfMonth(new Date()), startOfMonth(new Date())), 1);
+  const thisWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+  const thisWeekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
+  const lastWeekStart = subWeeks(thisWeekStart, 1);
+  const lastWeekEnd = subWeeks(thisWeekEnd, 1);
+
+  return Object.values(stats)
+    .filter(s => s.completedInPeriod > 0 || s.wip > 0)
+    .map(s => {
+      const meta = metasMap[s.role] || 0;
+      const avgPerDay = Math.round((s.completedInPeriod / businessDays) * 10) / 10;
+      const avgProdTime = s.productionTimes.length > 0
+        ? Math.round((s.productionTimes.reduce((a, b) => a + b, 0) / s.productionTimes.length) * 10) / 10 : 0;
+      const punctuality = s.totalWithDueDate > 0 ? Math.round((s.onTimeCount / s.totalWithDueDate) * 100) : 0;
+      const changeRate = s.completedInPeriod > 0 ? Math.round((s.postsWithChanges / s.completedInPeriod) * 100) : 0;
+      const netDeliveries = s.completedInPeriod - s.postsWithChanges;
+      const capacityMonthly = meta * businessDaysInMonth;
+      const committed = s.wip;
+      const availableCapacity = Math.max(capacityMonthly - committed, 0);
+      const occupancyPct = capacityMonthly > 0 ? Math.round((committed / capacityMonthly) * 100) : 0;
+
+      let thisWeekCount = 0;
+      let lastWeekCount = 0;
+      postsSource.forEach((p: any) => {
+        if (p.assignee_id !== s.id || p.responsible_role_key !== s.role) return;
+        if (p.status !== 'done') return;
+        const ds = p.data_conclusao || p.completed_at;
+        if (!ds || typeof ds !== 'string') return;
+        const cd = parseISO(ds);
+        if (!isBefore(cd, thisWeekStart) && !isAfter(cd, thisWeekEnd)) thisWeekCount++;
+        if (!isBefore(cd, lastWeekStart) && !isAfter(cd, lastWeekEnd)) lastWeekCount++;
+      });
+      const trendPct = lastWeekCount > 0
+        ? Math.round(((thisWeekCount / 5 - lastWeekCount / 5) / (lastWeekCount / 5)) * 100)
+        : thisWeekCount > 0 ? 100 : 0;
+
+      let bestDay = { day: 0, count: 0 };
+      Object.entries(s.dailyCounts).forEach(([d, c]) => {
+        if (c > bestDay.count) bestDay = { day: Number(d), count: c };
+      });
+
+      const monthlyHistory: { month: string; label: string; avgPerDay: number }[] = [];
+      for (let mi = 5; mi >= 0; mi--) {
+        const mDate = subMonths(new Date(), mi);
+        const mStart = startOfMonth(mDate);
+        const mEnd = endOfMonth(mDate);
+        const mBizDays = Math.max(differenceInBusinessDays(mEnd, mStart), 1);
+        let mCount = 0;
+        allEnrichedPosts.forEach((p: any) => {
+          if (p.assignee_id !== s.id || p.responsible_role_key !== s.role) return;
+          if (p.status !== 'done') return;
+          const ds = p.data_conclusao || p.completed_at;
+          if (!ds || typeof ds !== 'string') return;
+          const cd = parseISO(ds);
+          if (!isBefore(cd, mStart) && !isAfter(cd, mEnd)) mCount++;
+        });
+        monthlyHistory.push({
+          month: format(mDate, 'yyyy-MM'),
+          label: format(mDate, 'MMM', { locale: ptBR }).replace('.', ''),
+          avgPerDay: mCount > 0 ? Math.round((mCount / mBizDays) * 10) / 10 : 0,
+        });
+      }
+      const recent2 = monthlyHistory.slice(-2);
+      const prev2 = monthlyHistory.slice(-4, -2);
+      const recentAvg = recent2.length > 0 ? recent2.reduce((a, b) => a + b.avgPerDay, 0) / recent2.length : 0;
+      const prevAvg = prev2.length > 0 ? prev2.reduce((a, b) => a + b.avgPerDay, 0) / prev2.length : 0;
+      const sparklineTrend = prevAvg > 0
+        ? Math.round(((recentAvg - prevAvg) / prevAvg) * 100)
+        : recentAvg > 0 ? 100 : 0;
+      const monthsWithData = monthlyHistory.filter(m => m.avgPerDay > 0).length;
+
+      const clientStats: Record<string, { name: string; delivered: number; pending: number }> = {};
+      postsSource.forEach((p: any) => {
+        if (p.assignee_id !== s.id || p.responsible_role_key !== s.role) return;
+        const clientName = p.client?.name || 'Sem cliente';
+        if (!clientStats[clientName]) clientStats[clientName] = { name: clientName, delivered: 0, pending: 0 };
+        if (p.status === 'done') {
+          const ds = p.data_conclusao || p.completed_at;
+          if (ds && typeof ds === 'string') {
+            const cd = parseISO(ds);
+            if (!isBefore(cd, from) && !isAfter(cd, to)) clientStats[clientName].delivered++;
+          }
+        } else {
+          clientStats[clientName].pending++;
+        }
+      });
+      const clientDistribution = Object.values(clientStats)
+        .filter(c => c.delivered > 0 || c.pending > 0)
+        .sort((a, b) => b.delivered - a.delivered);
+      const totalClientDeliveries = clientDistribution.reduce((sum, c) => sum + c.delivered, 0);
+      const topClientPct = totalClientDeliveries > 0 && clientDistribution.length > 0
+        ? Math.round((clientDistribution[0].delivered / totalClientDeliveries) * 100) : 0;
+
+      const currentMonthStart = startOfMonth(today);
+      const currentMonthEnd = endOfMonth(today);
+      const totalBizDaysMonth = Math.max(differenceInBusinessDays(currentMonthEnd, currentMonthStart), 1);
+      const elapsedBizDays = Math.max(differenceInBusinessDays(today, currentMonthStart), 1);
+      let deliveriesThisMonth = 0;
+      allEnrichedPosts.forEach((p: any) => {
+        if (p.assignee_id !== s.id || p.responsible_role_key !== s.role) return;
+        if (p.status !== 'done') return;
+        const ds = p.data_conclusao || p.completed_at;
+        if (!ds || typeof ds !== 'string') return;
+        const cd = parseISO(ds);
+        if (!isBefore(cd, currentMonthStart) && !isAfter(cd, currentMonthEnd)) deliveriesThisMonth++;
+      });
+      const currentVelocity = deliveriesThisMonth / elapsedBizDays;
+      const remainingBizDays = Math.max(totalBizDaysMonth - elapsedBizDays, 0);
+      const projectedTotal = Math.round(deliveriesThisMonth + currentVelocity * remainingBizDays);
+      const monthlyGoal = meta * totalBizDaysMonth;
+      const projectionDiff = projectedTotal - monthlyGoal;
+      const projectionPct = monthlyGoal > 0 ? Math.round((projectedTotal / monthlyGoal) * 100) : 0;
+      const alreadyMetGoal = deliveriesThisMonth >= monthlyGoal;
+      const isCurrentMonth = format(from, 'yyyy-MM') === format(today, 'yyyy-MM')
+        || format(to, 'yyyy-MM') === format(today, 'yyyy-MM');
+
+      return {
+        id: s.id, name: s.name, role: s.role,
+        completedInPeriod: s.completedInPeriod, completedToday: s.completedToday,
+        thisWeekCount, thisMonthCount: s.completedInPeriod,
+        wip: s.wip, overdue: s.overdue,
+        avgPerDay, meta, trendPct,
+        avgProdTime, punctuality, changeRate,
+        netDeliveries, postsWithChanges: s.postsWithChanges,
+        capacityMonthly, committed, availableCapacity, occupancyPct,
+        bestDay, dailyCounts: s.dailyCounts, businessDays,
+        monthlyHistory, sparklineTrend, monthsWithData,
+        clientDistribution, totalClientDeliveries, topClientPct,
+        deliveriesThisMonth, projectedTotal, monthlyGoal,
+        projectionDiff, projectionPct, alreadyMetGoal,
+        remainingBizDays, elapsedBizDays, totalBizDaysMonth, isCurrentMonth,
+      };
+    })
+    .sort((a, b) => {
+      const roleOrder = ['designer', 'videomaker', 'social'];
+      const ra = roleOrder.indexOf(a.role);
+      const rb = roleOrder.indexOf(b.role);
+      if (ra !== rb) return ra - rb;
+      return b.netDeliveries - a.netDeliveries;
+    });
+}
+
+
 export function useContentDashboardData() {
   const [posts, setPosts] = useState<DashboardPost[]>([]);
   const [batches, setBatches] = useState<DashboardBatch[]>([]);
@@ -314,225 +524,17 @@ export function useContentDashboardData() {
     return BATCH_STATUS_OPTIONS.map(s => ({ stage: s.label, count: stageCounts[s.value] || 0 }));
   }, [batches]);
 
-  // ── Productivity by professional ──
-  const productivityByProfessional = useMemo(() => {
-    const today = startOfDay(new Date());
-    const { from, to } = filters.dateRange;
-    const changePostIds = new Set(changeRequests.map(cr => cr.post_id));
-    const stats: Record<string, {
-      id: string; name: string; role: string;
-      completedInPeriod: number; completedToday: number; wip: number; overdue: number;
-      onTimeCount: number; totalWithDueDate: number;
-      postsWithChanges: number; dailyCounts: Record<number, number>;
-      productionTimes: number[];
-    }> = {};
+  // ── Productivity by professional (filtered by selected month) ──
+  const productivityByProfessional = useMemo(() =>
+    computeProfessionalProductivity(filteredPosts, enrichedPosts, changeRequests, filters.dateRange.from, filters.dateRange.to, metasMap),
+    [filteredPosts, enrichedPosts, changeRequests, filters.dateRange, metasMap]
+  );
 
-    filteredPosts.forEach(p => {
-      if (!p.assignee_id || !p.responsible_role_key) return;
-      if (!['designer', 'videomaker', 'social'].includes(p.responsible_role_key)) return;
-
-      const key = `${p.assignee_id}-${p.responsible_role_key}`;
-      if (!stats[key]) {
-        stats[key] = {
-          id: p.assignee_id, name: p.assignee?.name || 'Desconhecido', role: p.responsible_role_key,
-          completedInPeriod: 0, completedToday: 0, wip: 0, overdue: 0,
-          onTimeCount: 0, totalWithDueDate: 0, postsWithChanges: 0,
-          dailyCounts: {}, productionTimes: [],
-        };
-      }
-      const s = stats[key];
-
-      if (p.status === 'done') {
-        const dateStr = p.data_conclusao || p.completed_at;
-        if (dateStr && typeof dateStr === 'string') {
-          const cd = parseISO(dateStr);
-          if (isToday(cd)) s.completedToday++;
-          if (!isBefore(cd, from) && !isAfter(cd, to)) {
-            s.completedInPeriod++;
-            if (changePostIds.has(p.id)) s.postsWithChanges++;
-            const day = getDate(cd);
-            s.dailyCounts[day] = (s.dailyCounts[day] || 0) + 1;
-            if (p.due_date || p.batch?.planning_due_date) {
-              s.totalWithDueDate++;
-              const dueDateStr = p.due_date || p.batch!.planning_due_date!;
-              if (typeof dueDateStr === 'string') {
-                const dueDate = parseISO(dueDateStr);
-                if (!isAfter(cd, dueDate)) s.onTimeCount++;
-              }
-            }
-            // production time
-            if (typeof p.created_at === 'string') {
-              const created = parseISO(p.created_at);
-              const prodTime = Math.max(differenceInDays(cd, created), 0);
-              s.productionTimes.push(prodTime);
-            }
-          }
-        }
-      } else {
-        s.wip++;
-        const dueDateStr = p.due_date || p.batch?.planning_due_date;
-        if (dueDateStr && typeof dueDateStr === 'string') {
-          const dueDate = parseISO(dueDateStr);
-          if (isBefore(dueDate, today)) s.overdue++;
-        }
-      }
-    });
-
-    const businessDays = Math.max(differenceInBusinessDays(filters.dateRange.to, filters.dateRange.from), 1);
-    const businessDaysInMonth = Math.max(differenceInBusinessDays(endOfMonth(new Date()), startOfMonth(new Date())), 1);
-
-    const thisWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
-    const thisWeekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
-    const lastWeekStart = subWeeks(thisWeekStart, 1);
-    const lastWeekEnd = subWeeks(thisWeekEnd, 1);
-
-    return Object.values(stats)
-      .filter(s => s.completedInPeriod > 0 || s.wip > 0)
-      .map(s => {
-        const meta = metasMap[s.role] || 0;
-        const avgPerDay = Math.round((s.completedInPeriod / businessDays) * 10) / 10;
-        const avgProdTime = s.productionTimes.length > 0
-          ? Math.round((s.productionTimes.reduce((a, b) => a + b, 0) / s.productionTimes.length) * 10) / 10 : 0;
-        const punctuality = s.totalWithDueDate > 0 ? Math.round((s.onTimeCount / s.totalWithDueDate) * 100) : 0;
-        const changeRate = s.completedInPeriod > 0 ? Math.round((s.postsWithChanges / s.completedInPeriod) * 100) : 0;
-        const netDeliveries = s.completedInPeriod - s.postsWithChanges;
-        const capacityMonthly = meta * businessDaysInMonth;
-        const committed = s.wip;
-        const availableCapacity = Math.max(capacityMonthly - committed, 0);
-        const occupancyPct = capacityMonthly > 0 ? Math.round((committed / capacityMonthly) * 100) : 0;
-
-        // Weekly trend
-        let thisWeekCount = 0;
-        let lastWeekCount = 0;
-        filteredPosts.forEach(p => {
-          if (p.assignee_id !== s.id || p.responsible_role_key !== s.role) return;
-          if (p.status !== 'done') return;
-          const ds = p.data_conclusao || p.completed_at;
-          if (!ds || typeof ds !== 'string') return;
-          const cd = parseISO(ds);
-          if (!isBefore(cd, thisWeekStart) && !isAfter(cd, thisWeekEnd)) thisWeekCount++;
-          if (!isBefore(cd, lastWeekStart) && !isAfter(cd, lastWeekEnd)) lastWeekCount++;
-        });
-        const trendPct = lastWeekCount > 0
-          ? Math.round(((thisWeekCount / 5 - lastWeekCount / 5) / (lastWeekCount / 5)) * 100)
-          : thisWeekCount > 0 ? 100 : 0;
-
-        // Best day
-        let bestDay = { day: 0, count: 0 };
-        Object.entries(s.dailyCounts).forEach(([d, c]) => {
-          if (c > bestDay.count) bestDay = { day: Number(d), count: c };
-        });
-
-        // ── Sparkline: last 6 months avg/day ──
-        const monthlyHistory: { month: string; label: string; avgPerDay: number }[] = [];
-        for (let mi = 5; mi >= 0; mi--) {
-          const mDate = subMonths(new Date(), mi);
-          const mStart = startOfMonth(mDate);
-          const mEnd = endOfMonth(mDate);
-          const mBizDays = Math.max(differenceInBusinessDays(mEnd, mStart), 1);
-          let mCount = 0;
-          enrichedPosts.forEach(p => {
-            if (p.assignee_id !== s.id || p.responsible_role_key !== s.role) return;
-            if (p.status !== 'done') return;
-            const ds = p.data_conclusao || p.completed_at;
-            if (!ds || typeof ds !== 'string') return;
-            const cd = parseISO(ds);
-            if (!isBefore(cd, mStart) && !isAfter(cd, mEnd)) mCount++;
-          });
-          monthlyHistory.push({
-            month: format(mDate, 'yyyy-MM'),
-            label: format(mDate, 'MMM', { locale: ptBR }).replace('.', ''),
-            avgPerDay: mCount > 0 ? Math.round((mCount / mBizDays) * 10) / 10 : 0,
-          });
-        }
-        // Sparkline trend: avg of last 2 months vs avg of 2 months before
-        const recent2 = monthlyHistory.slice(-2);
-        const prev2 = monthlyHistory.slice(-4, -2);
-        const recentAvg = recent2.length > 0 ? recent2.reduce((a, b) => a + b.avgPerDay, 0) / recent2.length : 0;
-        const prevAvg = prev2.length > 0 ? prev2.reduce((a, b) => a + b.avgPerDay, 0) / prev2.length : 0;
-        const sparklineTrend = prevAvg > 0
-          ? Math.round(((recentAvg - prevAvg) / prevAvg) * 100)
-          : recentAvg > 0 ? 100 : 0;
-        const monthsWithData = monthlyHistory.filter(m => m.avgPerDay > 0).length;
-
-        // ── Client distribution ──
-        const clientStats: Record<string, { name: string; delivered: number; pending: number }> = {};
-        filteredPosts.forEach(p => {
-          if (p.assignee_id !== s.id || p.responsible_role_key !== s.role) return;
-          const clientName = p.client?.name || 'Sem cliente';
-          if (!clientStats[clientName]) clientStats[clientName] = { name: clientName, delivered: 0, pending: 0 };
-          if (p.status === 'done') {
-            const ds = p.data_conclusao || p.completed_at;
-            if (ds && typeof ds === 'string') {
-              const cd = parseISO(ds);
-              if (!isBefore(cd, from) && !isAfter(cd, to)) clientStats[clientName].delivered++;
-            }
-          } else {
-            clientStats[clientName].pending++;
-          }
-        });
-        const clientDistribution = Object.values(clientStats)
-          .filter(c => c.delivered > 0 || c.pending > 0)
-          .sort((a, b) => b.delivered - a.delivered);
-        const totalClientDeliveries = clientDistribution.reduce((sum, c) => sum + c.delivered, 0);
-        const topClientPct = totalClientDeliveries > 0 && clientDistribution.length > 0
-          ? Math.round((clientDistribution[0].delivered / totalClientDeliveries) * 100) : 0;
-
-        // ── Monthly projection ──
-        const currentMonthStart = startOfMonth(today);
-        const currentMonthEnd = endOfMonth(today);
-        const totalBizDaysMonth = Math.max(differenceInBusinessDays(currentMonthEnd, currentMonthStart), 1);
-        const elapsedBizDays = Math.max(differenceInBusinessDays(today, currentMonthStart), 1);
-        let deliveriesThisMonth = 0;
-        enrichedPosts.forEach(p => {
-          if (p.assignee_id !== s.id || p.responsible_role_key !== s.role) return;
-          if (p.status !== 'done') return;
-          const ds = p.data_conclusao || p.completed_at;
-          if (!ds || typeof ds !== 'string') return;
-          const cd = parseISO(ds);
-          if (!isBefore(cd, currentMonthStart) && !isAfter(cd, currentMonthEnd)) deliveriesThisMonth++;
-        });
-        const currentVelocity = deliveriesThisMonth / elapsedBizDays;
-        const remainingBizDays = Math.max(totalBizDaysMonth - elapsedBizDays, 0);
-        const projectedTotal = Math.round(deliveriesThisMonth + currentVelocity * remainingBizDays);
-        const monthlyGoal = meta * totalBizDaysMonth;
-        const projectionDiff = projectedTotal - monthlyGoal;
-        const projectionPct = monthlyGoal > 0 ? Math.round((projectedTotal / monthlyGoal) * 100) : 0;
-        const alreadyMetGoal = deliveriesThisMonth >= monthlyGoal;
-        const isCurrentMonth = format(filters.dateRange.from, 'yyyy-MM') === format(today, 'yyyy-MM')
-          || format(filters.dateRange.to, 'yyyy-MM') === format(today, 'yyyy-MM');
-
-        return {
-          id: s.id, name: s.name, role: s.role,
-          completedInPeriod: s.completedInPeriod,
-          completedToday: s.completedToday,
-          thisWeekCount,
-          thisMonthCount: s.completedInPeriod,
-          wip: s.wip, overdue: s.overdue,
-          avgPerDay, meta, trendPct,
-          avgProdTime, punctuality, changeRate,
-          netDeliveries, postsWithChanges: s.postsWithChanges,
-          capacityMonthly, committed, availableCapacity, occupancyPct,
-          bestDay, dailyCounts: s.dailyCounts,
-          businessDays,
-          // New: sparkline
-          monthlyHistory, sparklineTrend, monthsWithData,
-          // New: client distribution
-          clientDistribution, totalClientDeliveries, topClientPct,
-          // New: projection
-          deliveriesThisMonth, projectedTotal, monthlyGoal,
-          projectionDiff, projectionPct, alreadyMetGoal,
-          remainingBizDays, elapsedBizDays, totalBizDaysMonth, isCurrentMonth,
-        };
-      })
-      .sort((a, b) => {
-        const roleOrder = ['designer', 'videomaker', 'social'];
-        const ra = roleOrder.indexOf(a.role);
-        const rb = roleOrder.indexOf(b.role);
-        if (ra !== rb) return ra - rb;
-        return b.netDeliveries - a.netDeliveries;
-      });
-  }, [filteredPosts, enrichedPosts, changeRequests, filters.dateRange, metasMap]);
+  // ── Current month productivity (always current month, ignores header filter) ──
+  const currentMonthProductivity = useMemo(() => {
+    const now = new Date();
+    return computeProfessionalProductivity(enrichedPosts, enrichedPosts, changeRequests, startOfMonth(now), endOfMonth(now), metasMap);
+  }, [enrichedPosts, changeRequests, metasMap]);
 
   // ── Alerts ──
   const productionAlerts = useMemo(() => {
@@ -657,6 +659,7 @@ export function useContentDashboardData() {
       setFilters(prev => ({ ...prev, [key]: value }));
     },
     posts: filteredPosts,
+    enrichedPosts,
     batches,
     accounts,
     teamMembers,
@@ -669,6 +672,7 @@ export function useContentDashboardData() {
     postsByStatus,
     batchesByStage,
     productivityByProfessional,
+    currentMonthProductivity,
     productionAlerts,
     weeklyChartData,
     accountsByProfessionalByRole,
