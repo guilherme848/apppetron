@@ -97,6 +97,12 @@ import MarketingPostDetail from "./pages/commercial/MarketingPostDetail";
 import CommercialPlanningPage from "./pages/commercial/CommercialPlanningPage";
 import OutboundFunnelPage from "./pages/commercial/OutboundFunnelPage";
 
+// Petron OS pages
+import PetronOSHub from "./pages/petron-os/PetronOSHub";
+import PetronOSQuickTool from "./pages/petron-os/PetronOSQuickTool";
+import PetronOSBuilder from "./pages/petron-os/PetronOSBuilder";
+import PetronOSSettings from "./pages/petron-os/PetronOSSettings";
+
 // Sales CRM pages
 import SalesDashboard from "./pages/sales/SalesDashboard";
 import SalesFunnelsPage from "./pages/sales/SalesFunnelsPage";
@@ -222,6 +228,13 @@ const App = () => (
                         <Route path="/commercial/marketing" element={<MarketingProduction />} />
                         <Route path="/commercial/marketing/:id" element={<MarketingBatchDetail />} />
                         <Route path="/commercial/marketing/:batchId/posts/:postId" element={<MarketingPostDetail />} />
+
+                        {/* Petron OS routes */}
+                        <Route path="/petron-os" element={<PetronOSHub />} />
+                        <Route path="/petron-os/tool/:slug" element={<PetronOSQuickTool />} />
+                        <Route path="/petron-os/builder/:slug" element={<PetronOSBuilder />} />
+                        <Route path="/petron-os/builder/:slug/:id" element={<PetronOSBuilder />} />
+                        <Route path="/petron-os/settings" element={<PetronOSSettings />} />
 
                         {/* Sales CRM routes */}
                         <Route path="/sales" element={<SalesDashboard />} />

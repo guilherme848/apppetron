@@ -5403,6 +5403,177 @@ export type Database = {
           },
         ]
       }
+      petron_os_categorias: {
+        Row: {
+          ativo: boolean | null
+          cor: string | null
+          created_at: string | null
+          icone: string | null
+          id: string
+          nome: string
+          ordem: number | null
+          slug: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          cor?: string | null
+          created_at?: string | null
+          icone?: string | null
+          id?: string
+          nome: string
+          ordem?: number | null
+          slug: string
+        }
+        Update: {
+          ativo?: boolean | null
+          cor?: string | null
+          created_at?: string | null
+          icone?: string | null
+          id?: string
+          nome?: string
+          ordem?: number | null
+          slug?: string
+        }
+        Relationships: []
+      }
+      petron_os_ferramentas: {
+        Row: {
+          ativo: boolean | null
+          campos_formulario: Json | null
+          categoria_id: string | null
+          cor: string | null
+          created_at: string | null
+          descricao: string | null
+          estrutura_documento: Json | null
+          icone: string | null
+          id: string
+          max_tokens: number | null
+          modelo_ia: string | null
+          nome: string
+          ordem: number | null
+          perguntas_guiadas: Json | null
+          slug: string
+          system_prompt: string
+          tipo: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          campos_formulario?: Json | null
+          categoria_id?: string | null
+          cor?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          estrutura_documento?: Json | null
+          icone?: string | null
+          id?: string
+          max_tokens?: number | null
+          modelo_ia?: string | null
+          nome: string
+          ordem?: number | null
+          perguntas_guiadas?: Json | null
+          slug: string
+          system_prompt?: string
+          tipo?: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          campos_formulario?: Json | null
+          categoria_id?: string | null
+          cor?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          estrutura_documento?: Json | null
+          icone?: string | null
+          id?: string
+          max_tokens?: number | null
+          modelo_ia?: string | null
+          nome?: string
+          ordem?: number | null
+          perguntas_guiadas?: Json | null
+          slug?: string
+          system_prompt?: string
+          tipo?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "petron_os_ferramentas_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "petron_os_categorias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      petron_os_geracoes: {
+        Row: {
+          cliente_id: string | null
+          conteudo_documento: string | null
+          created_at: string | null
+          ferramenta_id: string | null
+          historico_chat: Json | null
+          id: string
+          inputs: Json | null
+          resultado: string | null
+          status: string | null
+          titulo: string | null
+          updated_at: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          cliente_id?: string | null
+          conteudo_documento?: string | null
+          created_at?: string | null
+          ferramenta_id?: string | null
+          historico_chat?: Json | null
+          id?: string
+          inputs?: Json | null
+          resultado?: string | null
+          status?: string | null
+          titulo?: string | null
+          updated_at?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          cliente_id?: string | null
+          conteudo_documento?: string | null
+          created_at?: string | null
+          ferramenta_id?: string | null
+          historico_chat?: Json | null
+          id?: string
+          inputs?: Json | null
+          resultado?: string | null
+          status?: string | null
+          titulo?: string | null
+          updated_at?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "petron_os_geracoes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petron_os_geracoes_ferramenta_id_fkey"
+            columns: ["ferramenta_id"]
+            isOneToOne: false
+            referencedRelation: "petron_os_ferramentas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petron_os_geracoes_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       petron_sales_funnel_actuals: {
         Row: {
           appointments_actual: number | null
