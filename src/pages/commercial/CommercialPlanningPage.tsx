@@ -429,9 +429,18 @@ export default function CommercialPlanningPage() {
             </div>
           )}
 
-          {/* BP KPI Cards — 5 cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            <KpiCard label="BP ANUAL" value={fmt(bpAnual)} icon={Target} delay={0} loading={loading}>
+          {/* BP KPI Cards — 3+2 layout */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <KpiCard
+              label="BP ANUAL"
+              value={fmtShort(bpAnual)}
+              fullValue={fmt(bpAnual)}
+              icon={Target}
+              iconColor="#6366f1"
+              borderColor="#6366f1"
+              delay={0}
+              loading={loading}
+            >
               {bpLocked && (
                 <Badge className="mt-2 text-[10px] bg-emerald-500/12 text-emerald-600 dark:text-emerald-400 border-0 rounded">
                   Congelado
@@ -439,25 +448,51 @@ export default function CommercialPlanningPage() {
               )}
             </KpiCard>
 
-            <KpiCard label="REALIZADO ATÉ AGORA" value={fmt(realizadoTotal)} icon={TrendingUp} delay={40} loading={loading} />
-
             <KpiCard
-              label="GAP ACUMULADO"
-              value={`${gapAcumulado >= 0 ? '+' : ''}${fmt(gapAcumulado)}`}
-              valueColor={getDiffColor(gapAcumulado)}
-              sub={`vs BP proporcional ao mês`}
-              icon={AlertCircle}
-              delay={80}
+              label="REALIZADO ATÉ AGORA"
+              value={fmtShort(realizadoTotal)}
+              fullValue={fmt(realizadoTotal)}
+              icon={TrendingUp}
+              iconColor="#10b981"
+              borderColor="#10b981"
+              delay={40}
               loading={loading}
             />
 
-            <KpiCard label="PROJEÇÃO DE FECHAMENTO" value={fmt(projecaoFechamento)} icon={TrendingUp} delay={120} loading={loading} />
+            <KpiCard
+              label="GAP ACUMULADO"
+              value={`${gapAcumulado >= 0 ? '+' : ''}${fmtShort(gapAcumulado)}`}
+              fullValue={`${gapAcumulado >= 0 ? '+' : ''}${fmt(gapAcumulado)}`}
+              valueColor={getDiffColor(gapAcumulado)}
+              sub="vs BP proporcional ao mês"
+              icon={gapAcumulado >= 0 ? ArrowUpRight : ArrowDownRight}
+              iconColor={gapAcumulado >= 0 ? '#10b981' : '#ef4444'}
+              borderColor={gapAcumulado >= 0 ? '#10b981' : '#ef4444'}
+              delay={80}
+              loading={loading}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <KpiCard
+              label="PROJEÇÃO DE FECHAMENTO"
+              value={fmtShort(projecaoFechamento)}
+              fullValue={fmt(projecaoFechamento)}
+              icon={Calculator}
+              iconColor="#F97316"
+              borderColor="#F97316"
+              delay={120}
+              loading={loading}
+            />
 
             <KpiCard
               label="GAP DE FECHAMENTO"
-              value={`${gapFechamento >= 0 ? '+' : ''}${fmt(gapFechamento)}`}
+              value={`${gapFechamento >= 0 ? '+' : ''}${fmtShort(gapFechamento)}`}
+              fullValue={`${gapFechamento >= 0 ? '+' : ''}${fmt(gapFechamento)}`}
               valueColor={getDiffColor(gapFechamento)}
-              icon={Target}
+              icon={gapFechamento >= 0 ? CheckCircle : AlertTriangle}
+              iconColor={gapFechamento >= 0 ? '#10b981' : '#ef4444'}
+              borderColor={gapFechamento >= 0 ? '#10b981' : '#ef4444'}
               delay={160}
               loading={loading}
             >
