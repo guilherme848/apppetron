@@ -11,7 +11,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   Pencil, TrendingUp, Target, DollarSign, BarChart2,
   AlertTriangle, RefreshCw, Pin, AlertCircle, Calendar,
+  Calculator, CheckCircle, ArrowUpRight, ArrowDownRight,
 } from 'lucide-react';
+import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ComposedChart, ResponsiveContainer, Cell, Tooltip } from 'recharts';
 import MrrBaseConfig from '@/components/commercial/MrrBaseConfig';
