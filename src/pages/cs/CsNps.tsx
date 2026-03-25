@@ -1,4 +1,5 @@
-import { Loader2, Star } from 'lucide-react';
+import { Star } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useCsNps } from '@/hooks/useCsData';
