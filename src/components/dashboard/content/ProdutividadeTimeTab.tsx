@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
-  Settings, TrendingUp, TrendingDown, Minus, CheckCircle, Trophy, ChevronDown, ChevronUp,
+  Settings, TrendingUp, TrendingDown, Minus, CheckCircle, Trophy, ChevronDown, ChevronUp, AlertTriangle,
 } from 'lucide-react';
 import { ROLE_LABELS } from '@/lib/dashboardColors';
 import { supabase } from '@/integrations/supabase/client';
