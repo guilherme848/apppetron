@@ -127,8 +127,8 @@ export default function TaskList() {
               filteredTasks.map((task) => {
                 const account = task.account_id ? getAccountById(task.account_id) : null;
                 return (
-                  <TableRow key={task.id}>
-                    <TableCell className="font-medium">{task.title}</TableCell>
+                  <TableRow key={task.id} className="h-[52px] hover:bg-gradient-to-r hover:from-primary/[0.04] hover:to-transparent transition-colors">
+                    <TableCell className="font-semibold text-foreground">{task.title}</TableCell>
                     <TableCell>{account?.name || '-'}</TableCell>
                     <TableCell>
                       <TaskStatusBadge status={task.status} />
