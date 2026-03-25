@@ -108,6 +108,7 @@ export type Database = {
           checkup_updated_at: string | null
           churned_at: string | null
           city: string | null
+          cliente_interno: boolean | null
           contact_email: string | null
           contact_name: string | null
           contact_phone: string | null
@@ -158,6 +159,7 @@ export type Database = {
           checkup_updated_at?: string | null
           churned_at?: string | null
           city?: string | null
+          cliente_interno?: boolean | null
           contact_email?: string | null
           contact_name?: string | null
           contact_phone?: string | null
@@ -208,6 +210,7 @@ export type Database = {
           checkup_updated_at?: string | null
           churned_at?: string | null
           city?: string | null
+          cliente_interno?: boolean | null
           contact_email?: string | null
           contact_name?: string | null
           contact_phone?: string | null
