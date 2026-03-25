@@ -1,4 +1,5 @@
-import { Loader2, Calendar } from 'lucide-react';
+import { Calendar } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useCsMeetings } from '@/hooks/useCsData';
