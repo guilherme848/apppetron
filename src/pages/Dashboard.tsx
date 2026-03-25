@@ -1,4 +1,5 @@
-import { Users, DollarSign, TrendingDown, Loader2, Receipt, Lock } from 'lucide-react';
+import { Users, DollarSign, TrendingDown, Receipt, Lock } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { ClientEvolutionChart } from '@/components/dashboard/ClientEvolutionChart';
 import { ChurnMrrCharts } from '@/components/dashboard/ChurnMrrCharts';
