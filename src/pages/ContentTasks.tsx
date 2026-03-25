@@ -318,7 +318,7 @@ export default function ContentTasks() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <ListTodo className="h-6 w-6" />
