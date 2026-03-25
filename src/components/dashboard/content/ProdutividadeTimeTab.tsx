@@ -224,12 +224,7 @@ function ProjectionBlock({ prof }: { prof: any }) {
           <TrendingUp className="h-3.5 w-3.5" /> Resultado do Mês
         </p>
         <p className="text-[13px] text-muted-foreground">
-          <span className="font-mono font-bold text-foreground">{prof.completedInPeriod}</span> entregas
-          (meta: <span className="font-mono">{monthlyGoal}</span>)
-          {' — '}
-          <span className={`font-mono font-bold ${prof.completedInPeriod >= monthlyGoal ? 'text-emerald-500' : 'text-red-500'}`}>
-            {prof.completedInPeriod >= monthlyGoal ? '+' : ''}{prof.completedInPeriod - monthlyGoal} {prof.completedInPeriod >= monthlyGoal ? 'acima' : 'abaixo'} da meta
-          </span>
+          <span className="font-mono font-bold text-foreground">{prof.completedInPeriod}</span> entregas no período
         </p>
       </div>
     );
