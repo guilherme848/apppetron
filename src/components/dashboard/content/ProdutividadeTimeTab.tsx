@@ -423,12 +423,10 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
   }, [productivityByProfessional, roleFilter]);
 
   const heatStyle = (count: number, role: string) => {
-    const meta = metasMap[role] || 3;
     const color = ROLE_COLORS[role] || '#6366f1';
     if (count === 0) return {};
-    const pct = count / meta;
-    if (pct >= 1) return { backgroundColor: color, color: 'white', boxShadow: `0 0 8px ${color}30` };
-    if (pct >= 0.5) return { backgroundColor: `${color}80`, color: 'white' };
+    if (count >= 5) return { backgroundColor: color, color: 'white', boxShadow: `0 0 8px ${color}30` };
+    if (count >= 3) return { backgroundColor: `${color}80`, color: 'white' };
     return { backgroundColor: `${color}33`, color };
   };
 
