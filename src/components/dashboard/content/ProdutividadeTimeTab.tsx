@@ -399,9 +399,9 @@ function ClientDistributionBlock({ prof }: { prof: any }) {
       {/* Concentration indicator */}
       <div className="mt-2">
         {topClientPct > 50 ? (
-          <p className="text-[11px] text-amber-500">⚠ Produção concentrada em {clientDistribution[0]?.name}</p>
+          <p className="text-[11px] text-amber-500 flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> Produção concentrada em {clientDistribution[0]?.name}</p>
         ) : totalClientDeliveries > 0 ? (
-          <p className="text-[11px] text-emerald-500">Produção bem distribuída</p>
+          <p className="text-[11px] text-emerald-500 flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Produção bem distribuída</p>
         ) : null}
       </div>
     </div>
