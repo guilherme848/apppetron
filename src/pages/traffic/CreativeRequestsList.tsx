@@ -101,11 +101,11 @@ export default function CreativeRequestsList() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Solicitações de Criativo</h1>
+          <h1 className="text-2xl font-bold text-foreground">Solicitações de Criativo</h1>
           <p className="text-sm text-muted-foreground">Gerencie peças criativas para campanhas de tráfego</p>
         </div>
         <Button onClick={() => navigate('/traffic/creative-requests/new')}>
