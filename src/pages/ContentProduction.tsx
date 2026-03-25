@@ -296,8 +296,8 @@ export default function ContentProduction() {
             Pacotes Arquivados
           </h2>
           {loadingArchived ? (
-            <div className="flex items-center justify-center h-32">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-32 rounded-xl" />)}
             </div>
           ) : archivedBatches.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
