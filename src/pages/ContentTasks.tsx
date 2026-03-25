@@ -570,8 +570,8 @@ export default function ContentTasks() {
               </Table>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
