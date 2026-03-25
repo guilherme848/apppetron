@@ -480,12 +480,9 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {filtered.map((prof: any) => {
-            const metaPct = prof.meta > 0 ? (prof.avgPerDay / prof.meta) * 100 : 0;
-            const isAboveMeta = metaPct >= 100;
-            const isBelowThreshold = metaPct < 70 && prof.meta > 0;
-            const progressColor = metaPct >= 100 ? 'bg-emerald-500' : metaPct >= 70 ? 'bg-amber-500' : 'bg-red-500';
             const borderColor = ROLE_COLORS[prof.role] || '#6366f1';
-            const occupancyBarColor = prof.occupancyPct <= 50 ? '#10b981' : prof.occupancyPct <= 80 ? '#6366f1' : prof.occupancyPct <= 90 ? '#f59e0b' : '#ef4444';
+            const punctualityColor = prof.punctuality >= 90 ? 'text-emerald-500' : prof.punctuality >= 70 ? 'text-amber-500' : 'text-red-500';
+            const prodTimeColor = prof.avgProdTime <= 3 ? 'text-emerald-500' : prof.avgProdTime <= 5 ? 'text-amber-500' : 'text-red-500';
             const punctualityColor = prof.punctuality >= 90 ? 'text-emerald-500' : prof.punctuality >= 70 ? 'text-amber-500' : 'text-red-500';
             const prodTimeColor = prof.avgProdTime <= 3 ? 'text-emerald-500' : prof.avgProdTime <= 5 ? 'text-amber-500' : 'text-red-500';
 
