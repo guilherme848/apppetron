@@ -399,7 +399,7 @@ export default function CommercialPlanningPage() {
 
         {/* ══ Tab 1 — Planejamento Comercial ══════════════════ */}
         <TabsContent value="planning" className="space-y-6 mt-6">
-          {/* Top KPI Cards */}
+          {/* ── Section 1: Top KPI Cards (3 cols) ──────── */}
           <MrrBaseConfig
             ticketMedio={avgTicket}
             clientesAtuais={activeClients}
@@ -409,13 +409,13 @@ export default function CommercialPlanningPage() {
             onRefresh={refetch}
           />
 
-          {/* Alert banner */}
+          {/* ── Section 2: Alert Banner ────────────────── */}
           {gapFechamento < 0 && (
             <div
-              className="flex items-start gap-3 rounded-xl border px-5 py-3.5 animate-fade-in"
-              style={{ backgroundColor: 'hsl(45 93% 47% / 0.08)', borderColor: 'hsl(45 93% 47% / 0.25)' }}
+              className="flex items-start gap-3 rounded-xl border px-5 py-4 animate-fade-in"
+              style={{ backgroundColor: 'hsl(45 93% 47% / 0.06)', borderColor: 'hsl(45 93% 47% / 0.20)' }}
             >
-              <AlertTriangle className="h-[18px] w-[18px] text-amber-500 mt-0.5 shrink-0" />
+              <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
               <div>
                 <p className="text-sm font-semibold text-foreground">
                   Com o ritmo atual, você fechará o ano {fmt(Math.abs(gapFechamento))} abaixo do BP.
@@ -429,59 +429,109 @@ export default function CommercialPlanningPage() {
             </div>
           )}
 
-          {/* BP KPI Cards — 3+2 layout */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <KpiCard
-              label="BP ANUAL"
-              value={fmtShort(bpAnual)}
-              fullValue={fmt(bpAnual)}
-              icon={Target}
-              iconColor="#6366f1"
-              borderColor="#6366f1"
-              delay={0}
-              loading={loading}
+          {/* ── Section 3: Cards Hero (2 cols) ─────────── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* BP Anual */}
+            <div
+              className="rounded-2xl border border-border bg-card p-6 transition-all duration-150 hover:border-foreground/20 animate-fade-in"
+              style={{ animationDelay: '80ms', animationFillMode: 'both' }}
             >
-              {bpLocked && (
-                <Badge className="mt-2 text-[10px] bg-emerald-500/12 text-emerald-600 dark:text-emerald-400 border-0 rounded">
-                  Congelado
-                </Badge>
-              )}
-            </KpiCard>
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">BP ANUAL</p>
+                    {bpLocked && (
+                      <Badge className="text-[10px] bg-emerald-500/12 text-emerald-600 dark:text-emerald-400 border-0 rounded px-1.5 py-0">
+                        Congelado
+                      </Badge>
+                    )}
+                  </div>
+                  {loading ? (
+                    <Skeleton className="h-9 w-40 mt-2" />
+                  ) : (
+                    <TooltipProvider>
+                      <UITooltip>
+                        <TooltipTrigger asChild>
+                          <p className="mt-2 text-[32px] font-extrabold leading-none tracking-tight text-foreground font-mono truncate">
+                            {fmtShort(bpAnual)}
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent><p className="font-mono text-sm">{fmt(bpAnual)}</p></TooltipContent>
+                      </UITooltip>
+                    </TooltipProvider>
+                  )}
+                  <p className="mt-1.5 text-[13px] text-muted-foreground">meta anual de receita definida</p>
+                </div>
+                <div
+                  className="h-10 w-10 rounded-full flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: '#6366f11F' }}
+                >
+                  <Target className="h-5 w-5" style={{ color: '#6366f1' }} />
+                </div>
+              </div>
+            </div>
 
-            <KpiCard
-              label="REALIZADO ATÉ AGORA"
-              value={fmtShort(realizadoTotal)}
-              fullValue={fmt(realizadoTotal)}
-              icon={TrendingUp}
-              iconColor="#10b981"
-              borderColor="#10b981"
-              delay={40}
-              loading={loading}
-            />
+            {/* Realizado até Agora */}
+            <div
+              className="rounded-2xl border border-border bg-card p-6 transition-all duration-150 hover:border-foreground/20 animate-fade-in"
+              style={{ animationDelay: '120ms', animationFillMode: 'both' }}
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">REALIZADO ATÉ AGORA</p>
+                  {loading ? (
+                    <Skeleton className="h-9 w-40 mt-2" />
+                  ) : (
+                    <TooltipProvider>
+                      <UITooltip>
+                        <TooltipTrigger asChild>
+                          <p className="mt-2 text-[32px] font-extrabold leading-none tracking-tight text-foreground font-mono truncate">
+                            {fmtShort(realizadoTotal)}
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent><p className="font-mono text-sm">{fmt(realizadoTotal)}</p></TooltipContent>
+                      </UITooltip>
+                    </TooltipProvider>
+                  )}
+                  <p className="mt-1.5 text-[13px] text-muted-foreground">vs BP proporcional ao mês</p>
+                  <p className="mt-1 text-[12px] font-mono text-muted-foreground/70">
+                    {bpAnual > 0 ? `${pct(realizadoTotal, bpAnual)}% do BP anual` : '—'}
+                  </p>
+                </div>
+                <div
+                  className="h-10 w-10 rounded-full flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: '#10b9811F' }}
+                >
+                  <TrendingUp className="h-5 w-5" style={{ color: '#10b981' }} />
+                </div>
+              </div>
+            </div>
+          </div>
 
+          {/* ── Section 4: KPI Cards Line 2 (3 cols) ───── */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <KpiCard
               label="GAP ACUMULADO"
               value={`${gapAcumulado >= 0 ? '+' : ''}${fmtShort(gapAcumulado)}`}
               fullValue={`${gapAcumulado >= 0 ? '+' : ''}${fmt(gapAcumulado)}`}
               valueColor={getDiffColor(gapAcumulado)}
-              sub="vs BP proporcional ao mês"
+              sub="diferença entre realizado e BP proporcional"
               icon={gapAcumulado >= 0 ? ArrowUpRight : ArrowDownRight}
               iconColor={gapAcumulado >= 0 ? '#10b981' : '#ef4444'}
               borderColor={gapAcumulado >= 0 ? '#10b981' : '#ef4444'}
-              delay={80}
+              delay={160}
               loading={loading}
             />
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <KpiCard
               label="PROJEÇÃO DE FECHAMENTO"
               value={fmtShort(projecaoFechamento)}
               fullValue={fmt(projecaoFechamento)}
+              sub="estimativa de receita no fechamento do ano"
               icon={Calculator}
               iconColor="#F97316"
               borderColor="#F97316"
-              delay={120}
+              delay={200}
               loading={loading}
             />
 
@@ -493,7 +543,7 @@ export default function CommercialPlanningPage() {
               icon={gapFechamento >= 0 ? CheckCircle : AlertTriangle}
               iconColor={gapFechamento >= 0 ? '#10b981' : '#ef4444'}
               borderColor={gapFechamento >= 0 ? '#10b981' : '#ef4444'}
-              delay={160}
+              delay={240}
               loading={loading}
             >
               <div className="mt-2">
@@ -503,53 +553,58 @@ export default function CommercialPlanningPage() {
                     style={{ width: `${Math.min(pctFechamento, 100)}%` }}
                   />
                 </div>
-                <p className={cn('text-[11px] mt-1 font-medium', getProgressTextColor(pctFechamento))}>
+                <p className={cn('text-[11px] mt-1 font-medium font-mono', getProgressTextColor(pctFechamento))}>
                   {pctFechamento}% do BP
                 </p>
               </div>
             </KpiCard>
           </div>
 
-          {/* ── Chart: BP x Realizado x Nova Previsão ──────── */}
-          <div className="rounded-2xl border border-border bg-card p-6 animate-fade-in" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
-            <div className="flex items-center gap-2 mb-1">
-              <BarChart2 className="h-4 w-4 text-muted-foreground" />
-              <h3 className="text-sm font-semibold text-foreground">BP x Realizado x Nova Previsão</h3>
-            </div>
-            <div className="flex items-center gap-4 mb-4">
-              {[
-                { label: 'BP Original', color: '#F97316' },
-                { label: 'Realizado', color: '#f43f5e' },
-                { label: 'Nova Previsão', color: '#6366f1' },
-              ].map(item => (
-                <div key={item.label} className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
-                  <span className="text-xs text-muted-foreground">{item.label}</span>
+          {/* ── Section 5: Chart ────────────────────────── */}
+          <div className="rounded-2xl border border-border bg-card p-6 animate-fade-in" style={{ animationDelay: '280ms', animationFillMode: 'both' }}>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <BarChart2 className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="text-sm font-semibold text-foreground">BP x Realizado x Nova Previsão</h3>
                 </div>
-              ))}
+                <p className="text-[13px] text-muted-foreground mt-0.5 ml-6">Comparativo mensal do planejamento vs execução</p>
+              </div>
+              <div className="flex items-center gap-4">
+                {[
+                  { label: 'BP Original', color: '#F97316' },
+                  { label: 'Realizado', color: '#f43f5e' },
+                  { label: 'Nova Previsão', color: '#6366f1' },
+                ].map(item => (
+                  <div key={item.label} className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
+                    <span className="text-[11px] font-medium text-muted-foreground">{item.label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
             <ChartContainer config={chartConfig} className="h-[350px] w-full">
               <ComposedChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="none" strokeOpacity={0.5} />
-                <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" strokeOpacity={0.5} />
+                <XAxis dataKey="name" tick={{ fontSize: 11, fontFamily: 'JetBrains Mono, monospace', fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <YAxis tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fontFamily: 'JetBrains Mono, monospace', fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
                 <ChartTooltip
                   content={<ChartTooltipContent
                     formatter={(value, name) => {
                       const label = chartConfig[name as keyof typeof chartConfig]?.label || name;
-                      return <span>{label}: {fmt(Number(value))}</span>;
+                      return <span className="font-mono">{label}: {fmt(Number(value))}</span>;
                     }}
                   />}
                 />
-                <Bar dataKey="bp" name="BP Original" fill="#F97316" fillOpacity={0.7} radius={[4, 4, 0, 0]} barSize={20} />
-                <Bar dataKey="realizado" name="Realizado" fill="#f43f5e" radius={[4, 4, 0, 0]} barSize={20} />
-                <Bar dataKey="novaPrevisao" name="Nova Previsão" fill="#6366f1" fillOpacity={0.7} radius={[4, 4, 0, 0]} barSize={20} />
+                <Bar dataKey="bp" name="BP Original" fill="#F97316" fillOpacity={0.7} radius={[4, 4, 0, 0]} barSize={20} animationDuration={400} />
+                <Bar dataKey="realizado" name="Realizado" fill="#f43f5e" radius={[4, 4, 0, 0]} barSize={20} animationDuration={400} />
+                <Bar dataKey="novaPrevisao" name="Nova Previsão" fill="#6366f1" fillOpacity={0.7} radius={[4, 4, 0, 0]} barSize={20} animationDuration={400} />
               </ComposedChart>
             </ChartContainer>
           </div>
 
-          {/* ── Table: Detalhamento Mensal ─────────────────── */}
-          <div className="rounded-2xl border border-border bg-card p-6 animate-fade-in" style={{ animationDelay: '240ms', animationFillMode: 'both' }}>
+          {/* ── Section 6: Table ────────────────────────── */}
+          <div className="rounded-2xl border border-border bg-card p-6 animate-fade-in" style={{ animationDelay: '320ms', animationFillMode: 'both' }}>
             <div className="flex items-center gap-2 mb-4">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <h3 className="text-sm font-semibold text-foreground">Detalhamento Mensal</h3>
@@ -578,25 +633,31 @@ export default function CommercialPlanningPage() {
                         key={m}
                         className={cn(
                           'h-12 border-border/50 transition-all duration-150',
-                          i < currentMonth && 'bg-muted/10',
                           'hover:bg-gradient-to-r hover:from-[#F9731608] hover:to-transparent',
                         )}
                       >
-                        <TableCell className="text-sm font-medium">
+                        <TableCell className="text-[13px] font-semibold text-foreground">
                           {m}
                           {i === currentMonth && (
-                            <Badge className="ml-2 text-[10px] font-semibold bg-primary/12 text-primary border-0 rounded px-1.5 py-0">
+                            <Badge className="ml-2 text-[9px] font-semibold bg-primary/12 text-primary border-0 rounded px-1.5 py-0">
                               Atual
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell className="text-right text-sm font-mono">{fmt(bp)}</TableCell>
-                        <TableCell className="text-right text-sm font-mono">{real !== null ? fmt(real) : <span className="text-muted-foreground">—</span>}</TableCell>
-                        <TableCell className={cn('text-right text-sm font-mono font-medium', gapBp !== null ? getDiffColor(gapBp) : '')}>
+                        <TableCell className="text-right text-[13px] font-mono text-muted-foreground">{fmt(bp)}</TableCell>
+                        <TableCell className="text-right text-[13px] font-mono">
+                          {real !== null ? <span className="text-foreground">{fmt(real)}</span> : <span className="text-muted-foreground">—</span>}
+                        </TableCell>
+                        <TableCell className={cn('text-right text-[13px] font-mono font-medium', gapBp !== null ? getDiffColor(gapBp) : '')}>
                           {gapBp !== null ? `${gapBp >= 0 ? '+' : ''}${fmt(gapBp)}` : <span className="text-muted-foreground">—</span>}
                         </TableCell>
-                        <TableCell className="text-right text-sm font-mono font-medium text-indigo-600 dark:text-indigo-400">{fmt(np)}</TableCell>
-                        <TableCell className={cn('text-right text-sm font-mono font-medium', getDiffColor(tableGapAnual))}>
+                        <TableCell className={cn(
+                          'text-right text-[13px] font-mono font-medium',
+                          !isPastOrCurrent ? 'text-indigo-600 dark:text-indigo-400' : 'text-muted-foreground'
+                        )}>
+                          {fmt(np)}
+                        </TableCell>
+                        <TableCell className={cn('text-right text-[13px] font-mono font-medium', getDiffColor(tableGapAnual))}>
                           {i === 11 ? `${tableGapAnual >= 0 ? '+' : ''}${fmt(tableGapAnual)}` : ''}
                         </TableCell>
                       </TableRow>
@@ -605,14 +666,14 @@ export default function CommercialPlanningPage() {
                 </TableBody>
                 <TableFooter>
                   <TableRow className="font-bold border-t-2 border-border bg-muted/30">
-                    <TableCell className="text-sm font-semibold">Total</TableCell>
-                    <TableCell className="text-right font-mono font-semibold text-sm">{fmt(bpAnual)}</TableCell>
-                    <TableCell className="text-right font-mono font-semibold text-sm">{fmt(realizadoTotal)}</TableCell>
-                    <TableCell className={cn('text-right font-mono font-semibold text-sm', getDiffColor(gapAcumulado))}>
+                    <TableCell className="text-[13px] font-bold">Total</TableCell>
+                    <TableCell className="text-right font-mono font-bold text-[13px]">{fmt(bpAnual)}</TableCell>
+                    <TableCell className="text-right font-mono font-bold text-[13px]">{fmt(realizadoTotal)}</TableCell>
+                    <TableCell className={cn('text-right font-mono font-bold text-[13px]', getDiffColor(gapAcumulado))}>
                       {gapAcumulado >= 0 ? '+' : ''}{fmt(gapAcumulado)}
                     </TableCell>
-                    <TableCell className="text-right font-mono font-semibold text-sm text-indigo-600 dark:text-indigo-400">{fmt(projecaoFechamento)}</TableCell>
-                    <TableCell className={cn('text-right font-mono font-semibold text-sm', getDiffColor(gapFechamento))}>
+                    <TableCell className="text-right font-mono font-bold text-[13px] text-indigo-600 dark:text-indigo-400">{fmt(projecaoFechamento)}</TableCell>
+                    <TableCell className={cn('text-right font-mono font-extrabold text-[13px]', getDiffColor(gapFechamento))}>
                       {gapFechamento >= 0 ? '+' : ''}{fmt(gapFechamento)}
                     </TableCell>
                   </TableRow>
@@ -621,80 +682,60 @@ export default function CommercialPlanningPage() {
             </div>
           </div>
 
-          {/* ── Channel Breakdown ─────────────────────────── */}
+          {/* ── Section 7: Channel Breakdown ────────────── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {channelData.map((ch, ci) => {
               const channelColors: Record<string, string> = { inbound: '#6366f1', indicacao: '#10b981', prospeccao: '#F97316' };
               const borderCol = channelColors[ch.key] || '#F97316';
               return (
-              <div
-                key={ch.key}
-                className="rounded-2xl border border-border bg-card p-5 animate-fade-in"
-                style={{ animationDelay: `${280 + ci * 40}ms`, animationFillMode: 'both', borderLeftWidth: '3px', borderLeftColor: borderCol }}
-              >
-                <h4 className="text-sm font-semibold text-foreground">{ch.label}</h4>
-                <p className="text-xs text-muted-foreground mb-4">Meta anual · Realizado · Contribuição</p>
+                <div
+                  key={ch.key}
+                  className="rounded-2xl border border-border bg-card p-5 animate-fade-in transition-all duration-150 hover:border-foreground/20"
+                  style={{ animationDelay: `${360 + ci * 40}ms`, animationFillMode: 'both', borderLeftWidth: '3px', borderLeftColor: borderCol }}
+                >
+                  <h4 className="text-sm font-semibold text-foreground">{ch.label}</h4>
+                  <p className="text-[12px] text-muted-foreground mb-4">Meta anual · Realizado · Contribuição</p>
 
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Meta anual</p>
-                    <p className="text-base font-semibold font-mono text-foreground">{fmt(ch.metaAno)}</p>
+                  <div className="flex items-center gap-0 mb-4">
+                    {[
+                      { label: 'META ANUAL', value: fmt(ch.metaAno), color: 'text-foreground' },
+                      { label: 'REALIZADO', value: fmt(ch.realizadoAno), color: 'text-emerald-600 dark:text-emerald-400' },
+                      { label: 'CONTRIBUIÇÃO', value: `${ch.contribuicao}%`, color: 'text-primary' },
+                    ].map((metric, mi) => (
+                      <div key={metric.label} className={cn('flex-1 px-3', mi > 0 && 'border-l border-border/50')}>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{metric.label}</p>
+                        <p className={cn('text-sm font-bold font-mono mt-0.5', metric.color)}>{metric.value}</p>
+                      </div>
+                    ))}
                   </div>
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Realizado</p>
-                    <p className="text-base font-semibold font-mono text-foreground">{fmt(ch.realizadoAno)}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Contribuição</p>
-                    <p className={cn(
-                      'text-base font-semibold font-mono',
-                      ch.progressPct >= 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400',
-                    )}>
-                      {ch.contribuicao}%
-                    </p>
+
+                  {/* Mini bar chart */}
+                  <div className="h-[50px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={ch.monthlyData} margin={{ left: 0, right: 0, top: 0, bottom: 0 }}>
+                        <Tooltip
+                          cursor={false}
+                          contentStyle={{
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px',
+                            fontSize: '12px',
+                          }}
+                          formatter={(value: number) => [fmt(value), '']}
+                          labelFormatter={(label) => label}
+                        />
+                        <Bar dataKey="value" radius={[2, 2, 0, 0]}>
+                          {ch.monthlyData.map((entry, idx) => (
+                            <Cell
+                              key={`cell-${idx}`}
+                              fill={entry.isCurrent ? borderCol : `${borderCol}50`}
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
                 </div>
-
-                {/* Progress bar */}
-                <div className="h-1.5 rounded-full bg-border overflow-hidden mb-4">
-                  <div
-                    className={cn(
-                      'h-full rounded-full transition-all duration-500',
-                      ch.progressPct >= 100
-                        ? 'bg-emerald-500'
-                        : 'bg-gradient-to-r from-[#F97316] to-[#f43f5e]',
-                    )}
-                    style={{ width: `${Math.min(ch.progressPct, 100)}%` }}
-                  />
-                </div>
-
-                {/* Mini bar chart */}
-                <div className="h-[60px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={ch.monthlyData} margin={{ left: 0, right: 0, top: 0, bottom: 0 }}>
-                      <Tooltip
-                        cursor={false}
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px',
-                          fontSize: '12px',
-                        }}
-                        formatter={(value: number) => [fmt(value), '']}
-                        labelFormatter={(label) => label}
-                      />
-                      <Bar dataKey="value" radius={[2, 2, 0, 0]}>
-                        {ch.monthlyData.map((entry, idx) => (
-                          <Cell
-                            key={`cell-${idx}`}
-                            fill={entry.isCurrent ? '#F97316' : '#F9731650'}
-                          />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
               );
             })}
           </div>
