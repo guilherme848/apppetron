@@ -354,7 +354,13 @@ export function useContentDashboardData() {
         client: batch?.client_id ? accountMap.get(batch.client_id) : null,
         assignee: p.assignee_id ? memberMap.get(p.assignee_id) : null,
       };
-    }).filter(p => p.batch && !p.batch.archived);
+    }).filter(p => {
+      if (!p.batch || p.batch.archived) return false;
+      // Exclude internal clients (e.g. Petron)
+      const client = p.client;
+      if (client && client.cliente_interno) return false;
+      return true;
+    });
   }, [posts, batchMap, accountMap, memberMap]);
 
   const monthRefs = useMemo(() => [...new Set(batches.map(b => b.month_ref))].sort().reverse(), [batches]);
