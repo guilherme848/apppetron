@@ -473,7 +473,7 @@ export default function ContentTasks() {
                   {filteredTasks.map((task) => {
                     const overdue = isOverdue(task.due_date, task.status);
                     return (
-                      <TableRow key={`${task.type}-${task.id}`} className={overdue ? 'bg-destructive/5' : ''}>
+                      <TableRow key={`${task.type}-${task.id}`} className={`h-[52px] hover:bg-gradient-to-r hover:from-primary/[0.06] hover:to-transparent ${overdue ? 'bg-destructive/5' : ''}`}>
                         <TableCell>
                           <Badge variant={task.type === 'extra' ? 'default' : 'outline'} className="text-xs">
                             {task.type === 'extra' ? 'Extra' : 'Post'}
