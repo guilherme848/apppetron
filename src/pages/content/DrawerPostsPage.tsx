@@ -100,7 +100,7 @@ export default function DrawerPostsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div>
         <div className="flex items-center gap-2">
           <Archive className="h-6 w-6" />

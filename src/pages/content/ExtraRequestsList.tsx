@@ -258,7 +258,7 @@ export default function ExtraRequestsList() {
                 </TableRow>
               ) : (
                 filteredRequests.map(r => (
-                  <TableRow key={r.id} className="cursor-pointer hover:bg-muted/50">
+                  <TableRow key={r.id} className="cursor-pointer hover:bg-gradient-to-r hover:from-primary/[0.06] hover:to-transparent h-[52px]">
                     <TableCell>
                       <Link to={`/content/extra-requests/${r.id}`} className="font-medium hover:underline">
                         {r.title}

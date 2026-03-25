@@ -289,7 +289,7 @@ export default function BatchDetail() {
   const canArchive = batch.status === 'scheduling';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate('/content/production')}>
