@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Loader2, Archive, RotateCcw, LayoutGrid, Megaphone, Users } from 'lucide-react';
+import { Plus, Archive, RotateCcw, LayoutGrid, Megaphone, Users } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BatchCard } from '@/components/content/BatchCard';
