@@ -105,15 +105,15 @@ export default function TaskList() {
         </Select>
       </div>
 
-      <div className="border rounded-lg bg-background">
+      <div className="rounded-2xl border border-border bg-card overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Título</TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Vencimento</TableHead>
-              <TableHead className="w-[100px]">Ações</TableHead>
+            <TableRow className="bg-muted/50 hover:bg-muted/50">
+              <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Título</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Cliente</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Status</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Vencimento</TableHead>
+              <TableHead className="w-[100px] text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
