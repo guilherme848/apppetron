@@ -301,7 +301,7 @@ export default function ContentDashboard() {
       <Tabs defaultValue="numeros" className="space-y-5">
         <TabsList className="bg-muted/40 border border-border/50 p-1 rounded-xl w-full max-w-md">
           <TabsTrigger value="numeros" className="rounded-lg data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm text-sm font-medium flex-1">
-            📊 Números Gerais
+            📊 Visão Geral
           </TabsTrigger>
           <TabsTrigger value="produtividade" className="rounded-lg data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm text-sm font-medium flex-1">
             👥 Produtividade do Time
