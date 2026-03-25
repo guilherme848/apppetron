@@ -148,8 +148,8 @@ export default function ContractsList() {
               </TableHeader>
               <TableBody>
                 {filteredContracts.map((contract) => (
-                  <TableRow key={contract.id}>
-                    <TableCell className="font-medium">
+                  <TableRow key={contract.id} className="h-[52px] hover:bg-gradient-to-r hover:from-primary/[0.04] hover:to-transparent transition-colors">
+                    <TableCell className="font-semibold text-foreground">
                       {contract.contract_number}
                     </TableCell>
                     <TableCell>{contract.account?.name || "-"}</TableCell>

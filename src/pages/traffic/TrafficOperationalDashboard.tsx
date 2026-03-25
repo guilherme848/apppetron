@@ -52,10 +52,10 @@
    }
  
    return (
-     <div className="space-y-6">
+     <div className="space-y-6 animate-fade-in">
        {/* Header */}
        <div>
-         <h1 className="text-2xl font-bold">Dashboard Operacional de Tráfego</h1>
+         <h1 className="text-2xl font-bold text-foreground">Dashboard Operacional de Tráfego</h1>
          <p className="text-muted-foreground">
            Gestão de execução: tarefas, demandas e carga de trabalho
          </p>

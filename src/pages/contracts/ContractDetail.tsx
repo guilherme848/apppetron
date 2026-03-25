@@ -82,7 +82,7 @@ export default function ContractDetail() {
 
   if (!contract) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="space-y-6">
         <div className="text-center py-12">
           <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
           <h3 className="mt-4 text-lg font-semibold">Contrato não encontrado</h3>
