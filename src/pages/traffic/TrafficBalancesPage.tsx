@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { DollarSign, RefreshCw, Loader2, AlertTriangle, TrendingDown, Clock, RotateCw } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
