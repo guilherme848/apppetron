@@ -157,7 +157,6 @@ export default function MarketingProduction() {
         </div>
       </div>
     );
-    );
   }
 
   const VARIABLE_STAGES = ['production', 'changes'];
