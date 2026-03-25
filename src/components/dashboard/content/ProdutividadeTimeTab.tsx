@@ -483,8 +483,6 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
             const borderColor = ROLE_COLORS[prof.role] || '#6366f1';
             const punctualityColor = prof.punctuality >= 90 ? 'text-emerald-500' : prof.punctuality >= 70 ? 'text-amber-500' : 'text-red-500';
             const prodTimeColor = prof.avgProdTime <= 3 ? 'text-emerald-500' : prof.avgProdTime <= 5 ? 'text-amber-500' : 'text-red-500';
-            const punctualityColor = prof.punctuality >= 90 ? 'text-emerald-500' : prof.punctuality >= 70 ? 'text-amber-500' : 'text-red-500';
-            const prodTimeColor = prof.avgProdTime <= 3 ? 'text-emerald-500' : prof.avgProdTime <= 5 ? 'text-amber-500' : 'text-red-500';
 
             return (
               <Card
