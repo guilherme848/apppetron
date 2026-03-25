@@ -251,8 +251,8 @@ export default function MarketingProduction() {
             Pacotes Arquivados
           </h2>
           {loadingArchived ? (
-            <div className="flex items-center justify-center h-32">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-2xl" />)}
             </div>
           ) : archivedBatches.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
