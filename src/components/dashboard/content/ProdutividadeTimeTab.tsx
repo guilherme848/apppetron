@@ -635,12 +635,10 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
                     <TableHead className="text-right text-[11px] uppercase font-semibold">Líquidas</TableHead>
                     <TableHead className="text-right text-[11px] uppercase font-semibold">Tempo Médio</TableHead>
                     <TableHead className="text-right text-[11px] uppercase font-semibold">Pontualidade</TableHead>
-                    <TableHead className="text-right text-[11px] uppercase font-semibold">% Meta</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {[...filtered].sort((a: any, b: any) => b.netDeliveries - a.netDeliveries).map((s: any, i: number) => {
-                    const metaPctR = s.meta > 0 ? Math.round((s.avgPerDay / s.meta) * 100) : 0;
                     const isFirst = i === 0;
                     const isLast = i === filtered.length - 1 && filtered.length > 1;
                     return (
@@ -667,18 +665,6 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
                         <TableCell className="text-right font-mono font-bold text-foreground">{s.netDeliveries}</TableCell>
                         <TableCell className="text-right font-mono text-sm">{s.avgProdTime}d</TableCell>
                         <TableCell className="text-right font-mono text-sm">{s.punctuality}%</TableCell>
-                        <TableCell className="text-right">
-                          <Badge
-                            variant="outline"
-                            className={`font-mono text-[10px] ${
-                              metaPctR >= 100 ? 'border-emerald-500/30 text-emerald-500' :
-                              metaPctR >= 70 ? 'border-amber-500/30 text-amber-500' :
-                              'border-red-500/30 text-red-500'
-                            }`}
-                          >
-                            {metaPctR}%
-                          </Badge>
-                        </TableCell>
                       </TableRow>
                     );
                   })}
