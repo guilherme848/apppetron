@@ -200,7 +200,7 @@ export default function ContentProduction() {
   const VARIABLE_STAGES = ['production', 'changes'];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Produção de Conteúdo</h1>
