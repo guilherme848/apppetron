@@ -465,14 +465,6 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
           </button>
         ))}
         <div className="flex-1" />
-        <Button
-          variant="ghost" size="icon"
-          className="h-8 w-8 text-muted-foreground hover:text-foreground"
-          onClick={() => setGoalsOpen(true)}
-          title="Configurar metas diárias"
-        >
-          <Settings className="h-4 w-4" />
-        </Button>
       </div>
 
       <GoalsModal open={goalsOpen} onOpenChange={setGoalsOpen} metas={metasMap} onSave={refetch} />
