@@ -541,15 +541,6 @@ export function NumerosGeraisTab({ data }: NumerosGeraisTabProps) {
                     <YAxis tick={{ fontSize: 11, fontFamily: 'JetBrains Mono', fill: 'hsl(var(--muted-foreground))' }} />
                     <Tooltip contentStyle={tooltipStyle} />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
-                    {weeklyMeta > 0 && (
-                      <ReferenceLine
-                        y={weeklyMeta}
-                        stroke="hsl(var(--primary))"
-                        strokeDasharray="5 5"
-                        strokeOpacity={0.6}
-                        label={{ value: 'Meta semanal', position: 'right', fill: 'hsl(var(--primary))', fontSize: 10 }}
-                      />
-                    )}
                     {productivityByProfessional.slice(0, 8).map((s: any, i: number) => {
                       const colors = ['#6366f1', '#10b981', '#8b5cf6', '#F97316', '#f43f5e', '#94a3b8', '#06b6d4', '#eab308'];
                       return (
