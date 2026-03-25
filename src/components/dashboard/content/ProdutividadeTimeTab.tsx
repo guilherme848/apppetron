@@ -151,9 +151,7 @@ function SparklineBlock({ prof }: { prof: any }) {
             </defs>
             <XAxis dataKey="label" hide />
             <YAxis hide domain={[0, maxVal * 1.2]} />
-            {meta > 0 && (
-              <ReferenceLine y={meta} stroke="hsl(var(--primary))" strokeDasharray="3 3" strokeOpacity={0.4} />
-            )}
+            
             <RechartsTooltip
               content={({ active, payload }) => {
                 if (!active || !payload?.[0]) return null;
