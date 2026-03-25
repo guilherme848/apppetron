@@ -81,8 +81,8 @@ export default function ContractsList() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Contratos</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold text-foreground">Contratos</h1>
+          <p className="text-sm text-muted-foreground">
             Gerenciamento de contratos gerados e assinaturas
           </p>
         </div>
