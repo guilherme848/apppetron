@@ -19,10 +19,10 @@ import { ptBR } from 'date-fns/locale';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 function PodiumCard({ rank, name, valueDone, valuePct, avatarUrl }: { rank: number; name: string; valueDone: number; valuePct: number; avatarUrl?: string | null }) {
-  const configs: Record<number, { bg: string; border: string; emoji: string; size: string }> = {
-    1: { bg: 'linear-gradient(135deg, #F59E0B, #D97706)', border: '#F59E0B', emoji: '🥇', size: 'h-32' },
-    2: { bg: 'linear-gradient(135deg, #9CA3AF, #6B7280)', border: '#9CA3AF', emoji: '🥈', size: 'h-28' },
-    3: { bg: 'linear-gradient(135deg, #B45309, #92400E)', border: '#B45309', emoji: '🥉', size: 'h-24' },
+  const configs: Record<number, { bg: string; border: string; icon: string; size: string }> = {
+    1: { bg: 'linear-gradient(135deg, #F59E0B, #D97706)', border: '#F59E0B', icon: '1º', size: 'h-32' },
+    2: { bg: 'linear-gradient(135deg, #9CA3AF, #6B7280)', border: '#9CA3AF', icon: '2º', size: 'h-28' },
+    3: { bg: 'linear-gradient(135deg, #B45309, #92400E)', border: '#B45309', icon: '3º', size: 'h-24' },
   };
   const c = configs[rank] || configs[3];
 
