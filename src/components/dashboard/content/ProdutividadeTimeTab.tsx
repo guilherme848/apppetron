@@ -251,23 +251,11 @@ function ProjectionBlock({ prof }: { prof: any }) {
   const donePct = monthlyGoal > 0 ? Math.min((deliveriesThisMonth / monthlyGoal) * 100, 100) : 0;
   const projPct = monthlyGoal > 0 ? Math.min(((projectedTotal - deliveriesThisMonth) / monthlyGoal) * 100, 100 - donePct) : 0;
 
-  const statusBadge = alreadyMetGoal
-    ? { label: 'Meta atingida', className: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30' }
-    : projectionPct >= 100
-    ? { label: 'No ritmo', className: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30' }
-    : projectionPct >= 80
-    ? { label: 'Atenção', className: 'bg-amber-500/15 text-amber-600 border-amber-500/30' }
-    : { label: 'Risco', className: 'bg-red-500/15 text-red-500 border-red-500/30 animate-pulse' };
-
   return (
     <div className="bg-muted/40 rounded-xl p-4">
       <div className="flex items-center gap-2 mb-3">
         <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
         <p className="text-[12px] font-semibold text-muted-foreground">Projeção do Mês</p>
-        <Badge className={`text-[10px] font-semibold border ${statusBadge.className}`}>
-          {alreadyMetGoal && <CheckCircle className="h-3 w-3 mr-0.5" />}
-          {statusBadge.label}
-        </Badge>
       </div>
       <div className="flex items-center gap-4 flex-wrap">
         {/* Bar */}
