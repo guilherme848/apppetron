@@ -1,3 +1,4 @@
+ import { Skeleton } from '@/components/ui/skeleton';
  import { useTrafficOperationalDashboard } from '@/hooks/useTrafficOperationalDashboard';
  import DashboardFilters from '@/components/traffic-dashboard/DashboardFilters';
  import WorkQueueBlock from '@/components/traffic-dashboard/WorkQueueBlock';
