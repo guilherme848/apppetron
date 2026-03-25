@@ -1,4 +1,5 @@
-import { Loader2, Users, AlertTriangle, XCircle, TrendingUp, Clock, Star, HeartHandshake } from 'lucide-react';
+import { Users, AlertTriangle, XCircle, TrendingUp, Clock, Star, HeartHandshake } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useCsDashboardMetrics } from '@/hooks/useCsData';
