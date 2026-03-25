@@ -87,7 +87,7 @@ export default function SalesContacts() {
   ) : [];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Contatos</h1>
         <Button onClick={() => setShowNewDialog(true)}>

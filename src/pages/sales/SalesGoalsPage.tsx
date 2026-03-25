@@ -111,10 +111,10 @@ export default function SalesGoalsPage() {
       </div>
 
       <Tabs defaultValue="ranking">
-        <TabsList>
-          <TabsTrigger value="ranking">🏆 Ranking</TabsTrigger>
-          <TabsTrigger value="my">📊 Minha Performance</TabsTrigger>
-          <TabsTrigger value="config">⚙️ Configurar Metas</TabsTrigger>
+        <TabsList className="bg-muted/50 border border-border/50 rounded-xl p-1">
+          <TabsTrigger value="ranking" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border">Ranking</TabsTrigger>
+          <TabsTrigger value="my" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border">Minha Performance</TabsTrigger>
+          <TabsTrigger value="config" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border">Configurar Metas</TabsTrigger>
         </TabsList>
 
         {/* Ranking */}
