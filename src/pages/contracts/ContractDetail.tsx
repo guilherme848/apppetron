@@ -65,7 +65,7 @@ export default function ContractDetail() {
 
   if (contractLoading || permLoading) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
+      <div className="space-y-6">
         <Skeleton className="h-8 w-64" />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
@@ -82,7 +82,7 @@ export default function ContractDetail() {
 
   if (!contract) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="space-y-6">
         <div className="text-center py-12">
           <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
           <h3 className="mt-4 text-lg font-semibold">Contrato não encontrado</h3>
@@ -98,7 +98,7 @@ export default function ContractDetail() {
   const canUploadSignedPdf = ["sent", "signing", "generated"].includes(contract.status);
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">

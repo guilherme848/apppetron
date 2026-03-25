@@ -1,4 +1,5 @@
-import { Users, DollarSign, TrendingDown, Loader2, Receipt, Lock } from 'lucide-react';
+import { Users, DollarSign, TrendingDown, Receipt, Lock } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { ClientEvolutionChart } from '@/components/dashboard/ClientEvolutionChart';
 import { ChurnMrrCharts } from '@/components/dashboard/ChurnMrrCharts';
@@ -39,8 +40,12 @@ export default function Dashboard() {
 
   if (loading || permissionLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="space-y-6">
+        <div><Skeleton className="h-8 w-64" /><Skeleton className="h-4 w-96 mt-2" /></div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-2xl" />)}
+        </div>
+        <Skeleton className="h-64 rounded-2xl" />
       </div>
     );
   }

@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Loader2, Archive, RotateCcw, LayoutGrid, Megaphone, Users } from 'lucide-react';
+import { Plus, Archive, RotateCcw, LayoutGrid, Megaphone, Users } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BatchCard } from '@/components/content/BatchCard';
@@ -145,8 +146,15 @@ export default function MarketingProduction() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div><Skeleton className="h-8 w-64" /><Skeleton className="h-4 w-80 mt-2" /></div>
+          <Skeleton className="h-10 w-40" />
+        </div>
+        <Skeleton className="h-12 w-full rounded-xl" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-48 rounded-2xl" />)}
+        </div>
       </div>
     );
   }
@@ -243,8 +251,8 @@ export default function MarketingProduction() {
             Pacotes Arquivados
           </h2>
           {loadingArchived ? (
-            <div className="flex items-center justify-center h-32">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-2xl" />)}
             </div>
           ) : archivedBatches.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">

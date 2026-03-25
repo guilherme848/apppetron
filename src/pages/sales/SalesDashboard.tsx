@@ -356,13 +356,13 @@ export default function SalesDashboard() {
   const clearFilters = () => { setFilterFunnels([]); setFilterResponsible([]); };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-2xl font-bold" style={{ color: DC.textPrimary }}>Dashboard Comercial</h1>
+        <h1 className="text-2xl font-bold text-foreground">Dashboard Comercial</h1>
       </div>
 
       {/* Global Filters */}
-      <div className="flex flex-wrap items-center gap-3 p-3 rounded-lg border" style={{ backgroundColor: 'rgba(0,0,0,0.02)' }}>
+      <div className="flex flex-wrap items-center gap-3 p-3 rounded-xl border bg-muted/30">
         <span className="text-sm font-medium" style={{ color: DC.textSecondary }}>Filtros:</span>
         <Select value={period} onValueChange={(v) => setPeriod(v as PeriodKey)}>
           <SelectTrigger className="w-[150px] h-8 text-sm"><SelectValue /></SelectTrigger>

@@ -19,10 +19,10 @@ import { ptBR } from 'date-fns/locale';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 function PodiumCard({ rank, name, valueDone, valuePct, avatarUrl }: { rank: number; name: string; valueDone: number; valuePct: number; avatarUrl?: string | null }) {
-  const configs: Record<number, { bg: string; border: string; emoji: string; size: string }> = {
-    1: { bg: 'linear-gradient(135deg, #F59E0B, #D97706)', border: '#F59E0B', emoji: '🥇', size: 'h-32' },
-    2: { bg: 'linear-gradient(135deg, #9CA3AF, #6B7280)', border: '#9CA3AF', emoji: '🥈', size: 'h-28' },
-    3: { bg: 'linear-gradient(135deg, #B45309, #92400E)', border: '#B45309', emoji: '🥉', size: 'h-24' },
+  const configs: Record<number, { bg: string; border: string; icon: string; size: string }> = {
+    1: { bg: 'linear-gradient(135deg, #F59E0B, #D97706)', border: '#F59E0B', icon: '1º', size: 'h-32' },
+    2: { bg: 'linear-gradient(135deg, #9CA3AF, #6B7280)', border: '#9CA3AF', icon: '2º', size: 'h-28' },
+    3: { bg: 'linear-gradient(135deg, #B45309, #92400E)', border: '#B45309', icon: '3º', size: 'h-24' },
   };
   const c = configs[rank] || configs[3];
 
@@ -30,7 +30,7 @@ function PodiumCard({ rank, name, valueDone, valuePct, avatarUrl }: { rank: numb
     <Card className={`${c.size} flex flex-col items-center justify-center text-center relative overflow-hidden`}
       style={{ borderColor: c.border, borderWidth: 2 }}>
       <div className="absolute inset-0 opacity-10" style={{ background: c.bg }} />
-      <span className="text-3xl mb-1">{c.emoji}</span>
+      <span className="text-2xl font-bold mb-1">{c.icon}</span>
       <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-foreground font-bold text-sm mb-1">
         {name?.charAt(0) || '?'}
       </div>
@@ -97,7 +97,7 @@ export default function SalesGoalsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <Trophy className="h-6 w-6 text-primary" />
@@ -111,10 +111,10 @@ export default function SalesGoalsPage() {
       </div>
 
       <Tabs defaultValue="ranking">
-        <TabsList>
-          <TabsTrigger value="ranking">🏆 Ranking</TabsTrigger>
-          <TabsTrigger value="my">📊 Minha Performance</TabsTrigger>
-          <TabsTrigger value="config">⚙️ Configurar Metas</TabsTrigger>
+        <TabsList className="bg-muted/50 border border-border/50 rounded-xl p-1">
+          <TabsTrigger value="ranking" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border">Ranking</TabsTrigger>
+          <TabsTrigger value="my" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border">Minha Performance</TabsTrigger>
+          <TabsTrigger value="config" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border">Configurar Metas</TabsTrigger>
         </TabsList>
 
         {/* Ranking */}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, ListTodo } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -50,18 +51,23 @@ export default function TaskList() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div><Skeleton className="h-8 w-32" /><Skeleton className="h-4 w-48 mt-2" /></div>
+          <Skeleton className="h-10 w-36" />
+        </div>
+        <div className="flex gap-2"><Skeleton className="h-10 w-44" /><Skeleton className="h-10 w-48" /></div>
+        <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}</div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Tarefas</h1>
-          <p className="text-muted-foreground">Gerencie suas tarefas</p>
+          <h1 className="text-2xl font-bold text-foreground">Tarefas</h1>
+          <p className="text-sm text-muted-foreground">Gerencie suas tarefas</p>
         </div>
         <Button onClick={() => setFormOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
@@ -99,15 +105,15 @@ export default function TaskList() {
         </Select>
       </div>
 
-      <div className="border rounded-lg bg-background">
+      <div className="rounded-2xl border border-border bg-card overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Título</TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Vencimento</TableHead>
-              <TableHead className="w-[100px]">Ações</TableHead>
+            <TableRow className="bg-muted/50 hover:bg-muted/50">
+              <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Título</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Cliente</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Status</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Vencimento</TableHead>
+              <TableHead className="w-[100px] text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -121,8 +127,8 @@ export default function TaskList() {
               filteredTasks.map((task) => {
                 const account = task.account_id ? getAccountById(task.account_id) : null;
                 return (
-                  <TableRow key={task.id}>
-                    <TableCell className="font-medium">{task.title}</TableCell>
+                  <TableRow key={task.id} className="h-[52px] hover:bg-gradient-to-r hover:from-primary/[0.04] hover:to-transparent transition-colors">
+                    <TableCell className="font-semibold text-foreground">{task.title}</TableCell>
                     <TableCell>{account?.name || '-'}</TableCell>
                     <TableCell>
                       <TaskStatusBadge status={task.status} />

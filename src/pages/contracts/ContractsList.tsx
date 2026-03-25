@@ -78,11 +78,11 @@ export default function ContractsList() {
   );
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Contratos</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold text-foreground">Contratos</h1>
+          <p className="text-sm text-muted-foreground">
             Gerenciamento de contratos gerados e assinaturas
           </p>
         </div>
@@ -136,20 +136,20 @@ export default function ContractsList() {
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Número</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Valor MRR</TableHead>
-                  <TableHead>Origem</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Criado em</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                <TableRow className="bg-muted/50 hover:bg-muted/50">
+                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Número</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Cliente</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Valor MRR</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Origem</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Status</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Criado em</TableHead>
+                  <TableHead className="text-right text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredContracts.map((contract) => (
-                  <TableRow key={contract.id}>
-                    <TableCell className="font-medium">
+                  <TableRow key={contract.id} className="h-[52px] hover:bg-gradient-to-r hover:from-primary/[0.04] hover:to-transparent transition-colors">
+                    <TableCell className="font-semibold text-foreground">
                       {contract.contract_number}
                     </TableCell>
                     <TableCell>{contract.account?.name || "-"}</TableCell>

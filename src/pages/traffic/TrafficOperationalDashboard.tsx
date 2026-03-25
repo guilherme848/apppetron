@@ -1,3 +1,4 @@
+ import { Skeleton } from '@/components/ui/skeleton';
  import { useTrafficOperationalDashboard } from '@/hooks/useTrafficOperationalDashboard';
  import DashboardFilters from '@/components/traffic-dashboard/DashboardFilters';
  import WorkQueueBlock from '@/components/traffic-dashboard/WorkQueueBlock';
@@ -35,17 +36,26 @@
  
    if (loading) {
      return (
-       <div className="flex items-center justify-center h-96">
-         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+       <div className="space-y-6">
+         <div className="flex items-center justify-between">
+           <div><Skeleton className="h-8 w-64" /><Skeleton className="h-4 w-96 mt-2" /></div>
+         </div>
+         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+           {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-2xl" />)}
+         </div>
+         <div className="grid lg:grid-cols-2 gap-6">
+           <Skeleton className="h-64 rounded-2xl" />
+           <Skeleton className="h-64 rounded-2xl" />
+         </div>
        </div>
      );
    }
  
    return (
-     <div className="space-y-6">
+     <div className="space-y-6 animate-fade-in">
        {/* Header */}
        <div>
-         <h1 className="text-2xl font-bold">Dashboard Operacional de Tráfego</h1>
+         <h1 className="text-2xl font-bold text-foreground">Dashboard Operacional de Tráfego</h1>
          <p className="text-muted-foreground">
            Gestão de execução: tarefas, demandas e carga de trabalho
          </p>

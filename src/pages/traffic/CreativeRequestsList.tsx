@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Loader2, AlertTriangle, Clock, User } from 'lucide-react';
+import { Plus, Search, AlertTriangle, Clock, User } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -86,18 +87,25 @@ export default function CreativeRequestsList() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div><Skeleton className="h-8 w-56" /><Skeleton className="h-4 w-72 mt-2" /></div>
+          <Skeleton className="h-10 w-40" />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-2xl" />)}
+        </div>
+        <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-2xl" />)}</div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Solicitações de Criativo</h1>
+          <h1 className="text-2xl font-bold text-foreground">Solicitações de Criativo</h1>
           <p className="text-sm text-muted-foreground">Gerencie peças criativas para campanhas de tráfego</p>
         </div>
         <Button onClick={() => navigate('/traffic/creative-requests/new')}>

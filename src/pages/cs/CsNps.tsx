@@ -1,4 +1,5 @@
-import { Loader2, Star } from 'lucide-react';
+import { Star } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useCsNps } from '@/hooks/useCsData';
@@ -12,8 +13,15 @@ export default function CsNps() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-8 w-8 rounded-lg" />
+          <div><Skeleton className="h-7 w-24" /><Skeleton className="h-4 w-48 mt-2" /></div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Skeleton className="h-32 rounded-2xl" />
+          <Skeleton className="h-32 rounded-2xl" />
+        </div>
       </div>
     );
   }
