@@ -30,7 +30,7 @@ function PodiumCard({ rank, name, valueDone, valuePct, avatarUrl }: { rank: numb
     <Card className={`${c.size} flex flex-col items-center justify-center text-center relative overflow-hidden`}
       style={{ borderColor: c.border, borderWidth: 2 }}>
       <div className="absolute inset-0 opacity-10" style={{ background: c.bg }} />
-      <span className="text-3xl mb-1">{c.emoji}</span>
+      <span className="text-2xl font-bold mb-1">{c.icon}</span>
       <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-foreground font-bold text-sm mb-1">
         {name?.charAt(0) || '?'}
       </div>
