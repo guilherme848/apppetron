@@ -234,19 +234,19 @@ export default function ExtraRequestsList() {
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Título</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Formato</TableHead>
-                <TableHead>Mês</TableHead>
-                <TableHead>Solicitante</TableHead>
-                <TableHead>Cargo Resp.</TableHead>
-                <TableHead>Responsável</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Prioridade</TableHead>
-                <TableHead>Vencimento</TableHead>
-                <TableHead>Criado em</TableHead>
-                <TableHead className="w-[60px]">Ações</TableHead>
+              <TableRow className="border-b border-border/50 hover:bg-transparent">
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Título</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Cliente</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Formato</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Mês</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Solicitante</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Cargo Resp.</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Responsável</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Status</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Prioridade</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Vencimento</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Criado em</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50 w-[60px]">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
