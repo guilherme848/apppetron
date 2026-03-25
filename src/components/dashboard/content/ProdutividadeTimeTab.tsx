@@ -490,12 +490,8 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
               <Card
                 key={`${prof.id}-${prof.role}`}
                 className="border border-border rounded-2xl transition-all duration-150 hover:border-primary/40 relative overflow-hidden border-l-[3px]"
-                style={{
-                  borderLeftColor: borderColor,
-                  boxShadow: isBelowThreshold ? '0 0 24px rgba(239,68,68,0.07)' : isAboveMeta ? '0 0 24px rgba(16,185,129,0.07)' : undefined,
-                }}
+                style={{ borderLeftColor: borderColor }}
               >
-                {isBelowThreshold && <div className="absolute top-3 right-3 w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />}
 
                 <CardContent className="p-5 space-y-5">
                   {/* BLOCK 1: Identity + Hero */}
