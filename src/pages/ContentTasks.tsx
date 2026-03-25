@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ListTodo, Search, AlertCircle, ExternalLink, Filter, Trash2, MoreHorizontal } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -305,14 +306,19 @@ export default function ContentTasks() {
 
   if (loading || loadingMembers) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="space-y-6 animate-fade-in">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-56" />
+          <Skeleton className="h-4 w-40" />
+        </div>
+        <Skeleton className="h-40 w-full rounded-xl" />
+        <Skeleton className="h-[400px] w-full rounded-xl" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <ListTodo className="h-6 w-6" />
@@ -438,8 +444,8 @@ export default function ContentTasks() {
       </Card>
 
       {/* Tasks Table */}
-      <Card>
-        <CardContent className="pt-6">
+      <div className="bg-card border border-border rounded-2xl overflow-hidden">
+        <div className="p-6">
           {filteredTasks.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               {tasks.length === 0 
@@ -450,24 +456,24 @@ export default function ContentTasks() {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Título</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Mês</TableHead>
-                    <TableHead>Etapa</TableHead>
-                    <TableHead>Vencimento</TableHead>
-                    <TableHead>Cargo</TableHead>
-                    <TableHead>Responsável</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-[80px]">Ações</TableHead>
+                  <TableRow className="border-b border-border/50 hover:bg-transparent">
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Tipo</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Título</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Cliente</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Mês</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Etapa</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Vencimento</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Cargo</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Responsável</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Status</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50 w-[80px]">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredTasks.map((task) => {
                     const overdue = isOverdue(task.due_date, task.status);
                     return (
-                      <TableRow key={`${task.type}-${task.id}`} className={overdue ? 'bg-destructive/5' : ''}>
+                      <TableRow key={`${task.type}-${task.id}`} className={`h-[52px] hover:bg-gradient-to-r hover:from-primary/[0.06] hover:to-transparent ${overdue ? 'bg-destructive/5' : ''}`}>
                         <TableCell>
                           <Badge variant={task.type === 'extra' ? 'default' : 'outline'} className="text-xs">
                             {task.type === 'extra' ? 'Extra' : 'Post'}
@@ -564,8 +570,8 @@ export default function ContentTasks() {
               </Table>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

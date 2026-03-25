@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Loader2, Archive, RotateCcw, LayoutGrid, Search, Sparkles } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useContentProduction } from '@/contexts/ContentProductionContext';
@@ -177,8 +178,21 @@ export default function ContentProduction() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-4 w-96" />
+          </div>
+          <Skeleton className="h-10 w-40" />
+        </div>
+        <Skeleton className="h-10 w-72" />
+        <Skeleton className="h-10 w-full" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {[...Array(8)].map((_, i) => (
+            <Skeleton key={i} className="h-40 rounded-xl" />
+          ))}
+        </div>
       </div>
     );
   }
@@ -186,7 +200,7 @@ export default function ContentProduction() {
   const VARIABLE_STAGES = ['production', 'changes'];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Produção de Conteúdo</h1>
@@ -234,9 +248,9 @@ export default function ContentProduction() {
       </div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as BatchStatus)}>
-        <TabsList className="flex flex-wrap h-auto gap-1">
+        <TabsList className="flex flex-wrap h-auto gap-1 bg-muted/50 p-1 rounded-xl border border-border/50">
           {BATCH_STATUS_OPTIONS.map((status) => (
-            <TabsTrigger key={status.value} value={status.value} className="text-xs px-3">
+            <TabsTrigger key={status.value} value={status.value} className="text-xs px-3 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border">
               {status.label}
               {groupedBatches[status.value].length > 0 && (
                 <span className="ml-1 text-muted-foreground">({groupedBatches[status.value].length})</span>
@@ -282,8 +296,8 @@ export default function ContentProduction() {
             Pacotes Arquivados
           </h2>
           {loadingArchived ? (
-            <div className="flex items-center justify-center h-32">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-32 rounded-xl" />)}
             </div>
           ) : archivedBatches.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">

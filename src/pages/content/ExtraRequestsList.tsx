@@ -121,7 +121,7 @@ export default function ExtraRequestsList() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -234,19 +234,19 @@ export default function ExtraRequestsList() {
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Título</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Formato</TableHead>
-                <TableHead>Mês</TableHead>
-                <TableHead>Solicitante</TableHead>
-                <TableHead>Cargo Resp.</TableHead>
-                <TableHead>Responsável</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Prioridade</TableHead>
-                <TableHead>Vencimento</TableHead>
-                <TableHead>Criado em</TableHead>
-                <TableHead className="w-[60px]">Ações</TableHead>
+              <TableRow className="border-b border-border/50 hover:bg-transparent">
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Título</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Cliente</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Formato</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Mês</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Solicitante</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Cargo Resp.</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Responsável</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Status</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Prioridade</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Vencimento</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50">Criado em</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-muted/50 w-[60px]">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -258,7 +258,7 @@ export default function ExtraRequestsList() {
                 </TableRow>
               ) : (
                 filteredRequests.map(r => (
-                  <TableRow key={r.id} className="cursor-pointer hover:bg-muted/50">
+                  <TableRow key={r.id} className="cursor-pointer hover:bg-gradient-to-r hover:from-primary/[0.06] hover:to-transparent h-[52px]">
                     <TableCell>
                       <Link to={`/content/extra-requests/${r.id}`} className="font-medium hover:underline">
                         {r.title}
