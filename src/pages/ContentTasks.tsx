@@ -444,8 +444,8 @@ export default function ContentTasks() {
       </Card>
 
       {/* Tasks Table */}
-      <Card>
-        <CardContent className="pt-6">
+      <div className="bg-card border border-border rounded-2xl overflow-hidden">
+        <div className="p-6">
           {filteredTasks.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               {tasks.length === 0 
