@@ -136,14 +136,14 @@ export default function ContractsList() {
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Número</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Valor MRR</TableHead>
-                  <TableHead>Origem</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Criado em</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                <TableRow className="bg-muted/50 hover:bg-muted/50">
+                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Número</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Cliente</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Valor MRR</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Origem</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Status</TableHead>
+                  <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Criado em</TableHead>
+                  <TableHead className="text-right text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
