@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { format, startOfDay, getDate, getDaysInMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,13 +10,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
-  Settings, TrendingUp, TrendingDown, Minus, CheckCircle, Trophy, ChevronDown, ChevronUp, AlertTriangle,
+  TrendingUp, TrendingDown, Minus, CheckCircle, Trophy, ChevronDown, ChevronUp, AlertTriangle,
 } from 'lucide-react';
 import { ROLE_LABELS } from '@/lib/dashboardColors';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import {
-  LineChart, Line, ResponsiveContainer, XAxis, YAxis, ReferenceLine,
+  LineChart, Line, ResponsiveContainer, XAxis, YAxis,
   Tooltip as RechartsTooltip,
 } from 'recharts';
 
@@ -88,9 +89,9 @@ function GoalsModal({ open, onOpenChange, metas, onSave }: {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md rounded-2xl border border-border bg-card">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-lg font-bold text-foreground">Configurar Metas Diárias</DialogTitle>
+          <DialogTitle>Configurar Metas Diárias</DialogTitle>
         </DialogHeader>
         <div className="space-y-5 py-2">
           {fields.map(f => (
@@ -103,7 +104,7 @@ function GoalsModal({ open, onOpenChange, metas, onSave }: {
                 type="number" min={0} max={20}
                 value={values[f.key]}
                 onChange={e => setValues(v => ({ ...v, [f.key]: parseInt(e.target.value) || 0 }))}
-                className="h-[42px] font-mono" placeholder="Ex: 3"
+                className="h-10 font-mono" placeholder="Ex: 3"
               />
               <p className="text-[11px] text-muted-foreground">Quantidade de conteúdos esperados por profissional por dia útil</p>
             </div>
@@ -111,7 +112,7 @@ function GoalsModal({ open, onOpenChange, metas, onSave }: {
         </div>
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSave} disabled={saving} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+          <Button onClick={handleSave} disabled={saving}>
             {saving ? 'Salvando...' : 'Salvar Metas'}
           </Button>
         </DialogFooter>
@@ -143,15 +144,8 @@ function SparklineBlock({ prof }: { prof: any }) {
       <div className="flex-1 h-[48px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={monthlyHistory} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
-            <defs>
-              <linearGradient id={`area-${prof.id}-${prof.role}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={color} stopOpacity={0.1} />
-                <stop offset="100%" stopColor={color} stopOpacity={0} />
-              </linearGradient>
-            </defs>
             <XAxis dataKey="label" hide />
             <YAxis hide domain={[0, maxVal * 1.2]} />
-            
             <RechartsTooltip
               content={({ active, payload }) => {
                 if (!active || !payload?.[0]) return null;
@@ -197,8 +191,8 @@ function SparklineBlock({ prof }: { prof: any }) {
           </div>
         ) : (
           <div className="flex flex-col items-center">
-            <TrendingDown className="h-3.5 w-3.5 text-red-500" />
-            <span className="text-[12px] font-bold font-mono text-red-500">{Math.abs(sparklineTrend)}%</span>
+            <TrendingDown className="h-3.5 w-3.5 text-destructive" />
+            <span className="text-[12px] font-bold font-mono text-destructive">{Math.abs(sparklineTrend)}%</span>
           </div>
         )}
         <p className="text-[9px] uppercase text-muted-foreground">tendência</p>
@@ -211,13 +205,11 @@ function SparklineBlock({ prof }: { prof: any }) {
 function ProjectionBlock({ prof }: { prof: any }) {
   const color = ROLE_COLORS[prof.role] || '#6366f1';
   const {
-    deliveriesThisMonth, projectedTotal, monthlyGoal, projectionDiff,
-    projectionPct, alreadyMetGoal, remainingBizDays, elapsedBizDays,
-    totalBizDaysMonth, isCurrentMonth,
+    deliveriesThisMonth, projectedTotal, monthlyGoal,
+    elapsedBizDays, isCurrentMonth,
   } = prof;
 
   if (!isCurrentMonth) {
-    // Historical: show final result
     return (
       <div className="bg-muted/40 rounded-xl p-4">
         <p className="text-[12px] font-semibold text-muted-foreground flex items-center gap-1.5 mb-2">
@@ -251,15 +243,12 @@ function ProjectionBlock({ prof }: { prof: any }) {
         <p className="text-[12px] font-semibold text-muted-foreground">Projeção do Mês</p>
       </div>
       <div className="flex items-center gap-4 flex-wrap">
-        {/* Bar */}
         <div className="flex-1 min-w-[160px]">
-          <div className="relative h-4 rounded-full bg-border/50 overflow-hidden">
-            {/* Done segment */}
+          <div className="relative h-3 rounded-full bg-border/50 overflow-hidden">
             <div
               className="absolute inset-y-0 left-0 rounded-l-full transition-all duration-500"
               style={{ width: `${donePct}%`, backgroundColor: color }}
             />
-            {/* Projected segment with stripes */}
             <div
               className="absolute inset-y-0 rounded-r-full transition-all duration-500"
               style={{
@@ -274,7 +263,6 @@ function ProjectionBlock({ prof }: { prof: any }) {
             <span className="text-[9px] text-muted-foreground font-mono">Projeção: {projectedTotal}</span>
           </div>
         </div>
-        {/* Numbers */}
         <div className="space-y-0.5 shrink-0">
           <p className="text-[13px] text-muted-foreground">
             Projeção: <span className="font-mono font-bold text-foreground">{projectedTotal}</span>
@@ -306,7 +294,6 @@ function ClientDistributionBlock({ prof }: { prof: any }) {
     <div className="bg-muted/40 rounded-xl p-4">
       <p className="text-[12px] font-semibold text-muted-foreground mb-3">Distribuição por Cliente</p>
 
-      {/* Stacked bar */}
       <div className="h-3 rounded-full overflow-hidden flex mb-3">
         {clientDistribution.map((c: any, i: number) => {
           const pct = totalClientDeliveries > 0 ? (c.delivered / totalClientDeliveries) * 100 : 0;
@@ -333,7 +320,6 @@ function ClientDistributionBlock({ prof }: { prof: any }) {
         })}
       </div>
 
-      {/* Client list */}
       <div className="space-y-2">
         {visibleClients.map((c: any, i: number) => {
           const pct = totalClientDeliveries > 0 ? Math.round((c.delivered / totalClientDeliveries) * 100) : 0;
@@ -344,9 +330,9 @@ function ClientDistributionBlock({ prof }: { prof: any }) {
               <span className="text-[12px] font-mono text-muted-foreground shrink-0">{c.delivered}</span>
               <span className="text-[11px] text-muted-foreground shrink-0">({pct}%)</span>
               {c.pending > 0 && (
-                <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30 text-[10px] px-1.5 py-0">
+                <span className="text-[10px] font-medium text-warning bg-warning/10 px-1.5 py-0.5 rounded">
                   +{c.pending} pendentes
-                </Badge>
+                </span>
               )}
             </div>
           );
@@ -363,10 +349,9 @@ function ClientDistributionBlock({ prof }: { prof: any }) {
         </button>
       )}
 
-      {/* Concentration indicator */}
       <div className="mt-2">
         {topClientPct > 50 ? (
-          <p className="text-[11px] text-amber-500 flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> Produção concentrada em {clientDistribution[0]?.name}</p>
+          <p className="text-[11px] text-warning flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> Produção concentrada em {clientDistribution[0]?.name}</p>
         ) : totalClientDeliveries > 0 ? (
           <p className="text-[11px] text-emerald-500 flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Produção bem distribuída</p>
         ) : null}
@@ -398,7 +383,7 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
   };
 
   const roleButtons = [
-    { key: 'all', label: 'Todos', color: '#F97316' },
+    { key: 'all', label: 'Todos', color: 'hsl(var(--primary))' },
     { key: 'designer', label: 'Designers', color: '#6366f1' },
     { key: 'videomaker', label: 'Videomakers', color: '#8b5cf6' },
     { key: 'social', label: 'Social Media', color: '#10b981' },
@@ -417,11 +402,12 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
           <button
             key={rb.key}
             onClick={() => setRoleFilter(rb.key)}
-            className={`px-3.5 py-1.5 rounded-md text-[13px] font-medium border transition-all duration-150 ${
+            className={cn(
+              'px-3.5 py-1.5 rounded-lg text-[13px] font-medium border transition-all duration-150',
               roleFilter === rb.key
                 ? 'font-semibold'
                 : 'text-muted-foreground border-border hover:text-foreground hover:border-muted-foreground/40 bg-transparent'
-            }`}
+            )}
             style={roleFilter === rb.key ? {
               backgroundColor: `${rb.color}1f`,
               borderColor: `${rb.color}4d`,
@@ -431,14 +417,11 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
             {rb.label}
           </button>
         ))}
-        <div className="flex-1" />
       </div>
-
-      
 
       {/* Performance cards */}
       {filtered.length === 0 ? (
-        <Card className="border border-border rounded-2xl">
+        <Card>
           <CardContent className="py-16 text-center">
             <p className="text-base font-semibold text-foreground">Sem dados de produtividade</p>
             <p className="text-sm text-muted-foreground mt-1 max-w-[360px] mx-auto">Ajuste os filtros ou aguarde entregas no período selecionado</p>
@@ -448,16 +431,14 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {filtered.map((prof: any) => {
             const borderColor = ROLE_COLORS[prof.role] || '#6366f1';
-            const punctualityColor = prof.punctuality >= 90 ? 'text-emerald-500' : prof.punctuality >= 70 ? 'text-amber-500' : 'text-red-500';
-            const prodTimeColor = prof.avgProdTime <= 3 ? 'text-emerald-500' : prof.avgProdTime <= 5 ? 'text-amber-500' : 'text-red-500';
+            const punctualityColor = prof.punctuality >= 90 ? 'text-emerald-500' : prof.punctuality >= 70 ? 'text-warning' : 'text-destructive';
+            const prodTimeColor = prof.avgProdTime <= 3 ? 'text-emerald-500' : prof.avgProdTime <= 5 ? 'text-warning' : 'text-destructive';
 
             return (
               <Card
                 key={`${prof.id}-${prof.role}`}
-                className="border border-border rounded-2xl transition-all duration-150 hover:border-primary/40 relative overflow-hidden border-l-[3px]"
-                style={{ borderLeftColor: borderColor }}
+                className="transition-all duration-150 hover:border-border/80 overflow-hidden"
               >
-
                 <CardContent className="p-5 space-y-5">
                   {/* BLOCK 1: Identity + Hero */}
                   <div className="flex items-start justify-between">
@@ -486,15 +467,15 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
                       <p className="text-[10px] uppercase text-muted-foreground">Entregas</p>
                     </div>
                     <div className="flex-1 text-center px-2">
-                      <p className="text-lg font-bold font-mono text-blue-500">{prof.wip}</p>
+                      <p className="text-lg font-bold font-mono text-primary">{prof.wip}</p>
                       <p className="text-[10px] uppercase text-muted-foreground">Em Andamento</p>
                     </div>
                     <div className="flex-1 text-center px-2">
-                      <p className={`text-lg font-bold font-mono ${prof.overdue > 0 ? 'text-red-500 animate-pulse' : 'text-muted-foreground'}`}>{prof.overdue}</p>
+                      <p className={cn("text-lg font-bold font-mono", prof.overdue > 0 ? "text-destructive animate-pulse" : "text-muted-foreground")}>{prof.overdue}</p>
                       <p className="text-[10px] uppercase text-muted-foreground">Atrasados</p>
                     </div>
                     <div className="flex-1 text-center pl-2">
-                      <p className={`text-lg font-bold font-mono ${prof.completedToday > 0 ? 'text-primary' : 'text-muted-foreground'}`}>{prof.completedToday}</p>
+                      <p className={cn("text-lg font-bold font-mono", prof.completedToday > 0 ? "text-primary" : "text-muted-foreground")}>{prof.completedToday}</p>
                       <p className="text-[10px] uppercase text-muted-foreground">Hoje</p>
                     </div>
                   </div>
@@ -508,18 +489,17 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
                         <p className="text-[10px] text-muted-foreground/70">{prof.completedInPeriod} - {prof.postsWithChanges}</p>
                       </div>
                       <div className="flex-1 text-center px-3">
-                        <p className={`text-lg font-bold font-mono ${prodTimeColor}`}>{prof.avgProdTime}d</p>
+                        <p className={cn("text-lg font-bold font-mono", prodTimeColor)}>{prof.avgProdTime}d</p>
                         <p className="text-[10px] uppercase text-muted-foreground">Tempo Médio</p>
                         <p className="text-[10px] text-muted-foreground/70">equipe: {teamAvgProdTime}d</p>
                       </div>
                       <div className="flex-1 text-center pl-3">
-                        <p className={`text-lg font-bold font-mono ${punctualityColor}`}>{prof.punctuality}%</p>
+                        <p className={cn("text-lg font-bold font-mono", punctualityColor)}>{prof.punctuality}%</p>
                         <p className="text-[10px] uppercase text-muted-foreground">Pontualidade</p>
                         <p className="text-[10px] text-muted-foreground/70">no prazo</p>
                       </div>
                     </div>
                   </div>
-
 
                   {/* Projection */}
                   <ProjectionBlock prof={prof} />
@@ -541,9 +521,12 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
                           return (
                             <div
                               key={day}
-                              className={`w-[26px] h-[26px] rounded flex items-center justify-center text-[8px] font-mono font-medium transition-all shrink-0 ${
-                                count === 0 && !isFuture ? 'bg-muted' : ''
-                              } ${isCurrentDay && count === 0 ? 'ring-2 ring-primary' : ''} ${isCurrentDay ? 'font-bold' : ''}`}
+                              className={cn(
+                                'w-[26px] h-[26px] rounded flex items-center justify-center text-[8px] font-mono font-medium transition-all shrink-0',
+                                count === 0 && !isFuture && 'bg-muted',
+                                isCurrentDay && count === 0 && 'ring-2 ring-primary',
+                                isCurrentDay && 'font-bold',
+                              )}
                               style={style}
                               title={`${prof.name} — dia ${day}: ${count} entregas`}
                             >
@@ -554,7 +537,6 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
                       </div>
                     </div>
 
-                    {/* Trend */}
                     <div className="flex items-center gap-1.5 mt-2">
                       {prof.trendPct > 0 ? (
                         <>
@@ -563,8 +545,8 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
                         </>
                       ) : prof.trendPct < 0 ? (
                         <>
-                          <TrendingDown className="h-3.5 w-3.5 text-red-500" />
-                          <span className="text-[11px] text-red-500">{Math.abs(prof.trendPct)}% vs semana anterior</span>
+                          <TrendingDown className="h-3.5 w-3.5 text-destructive" />
+                          <span className="text-[11px] text-destructive">{Math.abs(prof.trendPct)}% vs semana anterior</span>
                         </>
                       ) : (
                         <>
@@ -575,7 +557,7 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
                     </div>
                   </div>
 
-                  {/* ★ NEW: CLIENT DISTRIBUTION */}
+                  {/* Client Distribution */}
                   <ClientDistributionBlock prof={prof} />
                 </CardContent>
               </Card>
@@ -586,12 +568,16 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
 
       {/* ═══ RANKING TABLE ═══ */}
       {filtered.length > 0 && (
-        <Card className="border border-border rounded-2xl">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Ranking de Performance</CardTitle>
+            <div className="flex items-center gap-2">
+              <Trophy className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-semibold">Ranking de Performance</CardTitle>
+            </div>
+            <CardDescription>Classificação por entregas líquidas no período</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="max-h-[600px] overflow-auto rounded-lg border border-border">
+            <div className="max-h-[600px] overflow-auto">
               <Table>
                 <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
                   <TableRow>
@@ -611,9 +597,11 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
                     return (
                       <TableRow
                         key={`${s.id}-${s.role}`}
-                        className={`h-14 transition-colors ${
-                          isFirst ? 'bg-emerald-500/5' : isLast ? 'bg-destructive/5' : ''
-                        } hover:bg-gradient-to-r hover:from-primary/5 hover:to-transparent`}
+                        className={cn(
+                          "h-14 transition-colors hover:bg-gradient-to-r hover:from-primary/5 hover:to-transparent",
+                          isFirst && "bg-emerald-500/5",
+                          isLast && "bg-destructive/5",
+                        )}
                       >
                         <TableCell className="font-mono text-muted-foreground">
                           {isFirst ? <Trophy className="h-4 w-4 text-amber-500" /> : i + 1}
@@ -628,10 +616,10 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
                           </div>
                         </TableCell>
                         <TableCell className="text-right font-mono font-semibold text-emerald-500">{s.completedInPeriod}</TableCell>
-                        <TableCell className="text-right font-mono font-semibold text-red-500">{s.postsWithChanges}</TableCell>
+                        <TableCell className="text-right font-mono font-semibold text-destructive">{s.postsWithChanges}</TableCell>
                         <TableCell className="text-right font-mono font-bold text-foreground">{s.netDeliveries}</TableCell>
-                        <TableCell className="text-right font-mono text-sm">{s.avgProdTime}d</TableCell>
-                        <TableCell className="text-right font-mono text-sm">{s.punctuality}%</TableCell>
+                        <TableCell className="text-right font-mono text-sm text-muted-foreground">{s.avgProdTime}d</TableCell>
+                        <TableCell className="text-right font-mono text-sm text-muted-foreground">{s.punctuality}%</TableCell>
                       </TableRow>
                     );
                   })}
