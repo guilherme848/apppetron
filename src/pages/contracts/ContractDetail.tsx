@@ -98,7 +98,7 @@ export default function ContractDetail() {
   const canUploadSignedPdf = ["sent", "signing", "generated"].includes(contract.status);
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
