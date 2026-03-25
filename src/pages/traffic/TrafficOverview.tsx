@@ -194,12 +194,12 @@ export default function TrafficOverview() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Painel Multi-Contas</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold text-foreground">Painel Multi-Contas</h1>
+          <p className="text-sm text-muted-foreground">
             Análise de performance de {performanceRows.length} contas de anúncio
           </p>
         </div>
