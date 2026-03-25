@@ -434,7 +434,7 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
         <div className="flex-1" />
       </div>
 
-      <GoalsModal open={goalsOpen} onOpenChange={setGoalsOpen} metas={metasMap} onSave={refetch} />
+      
 
       {/* Performance cards */}
       {filtered.length === 0 ? (
