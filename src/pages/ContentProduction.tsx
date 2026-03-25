@@ -248,9 +248,9 @@ export default function ContentProduction() {
       </div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as BatchStatus)}>
-        <TabsList className="flex flex-wrap h-auto gap-1">
+        <TabsList className="flex flex-wrap h-auto gap-1 bg-muted/50 p-1 rounded-xl border border-border/50">
           {BATCH_STATUS_OPTIONS.map((status) => (
-            <TabsTrigger key={status.value} value={status.value} className="text-xs px-3">
+            <TabsTrigger key={status.value} value={status.value} className="text-xs px-3 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-border">
               {status.label}
               {groupedBatches[status.value].length > 0 && (
                 <span className="ml-1 text-muted-foreground">({groupedBatches[status.value].length})</span>
