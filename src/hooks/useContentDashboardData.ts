@@ -43,6 +43,7 @@ export interface DashboardAccount {
   traffic_member_id: string | null;
   support_member_id: string | null;
   cs_member_id: string | null;
+  cliente_interno: boolean;
 }
 
 export interface DashboardTeamMember {
