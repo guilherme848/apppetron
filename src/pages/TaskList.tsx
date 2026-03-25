@@ -63,11 +63,11 @@ export default function TaskList() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Tarefas</h1>
-          <p className="text-muted-foreground">Gerencie suas tarefas</p>
+          <h1 className="text-2xl font-bold text-foreground">Tarefas</h1>
+          <p className="text-sm text-muted-foreground">Gerencie suas tarefas</p>
         </div>
         <Button onClick={() => setFormOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
