@@ -555,33 +555,8 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
                     </div>
                   </div>
 
-                  {/* BLOCK 4: Capacity */}
-                  <div className="bg-muted/40 rounded-xl p-4">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex-1">
-                        <p className="text-[11px] font-semibold font-mono text-muted-foreground mb-1.5">Ocupação: {prof.occupancyPct}%</p>
-                        <div className="h-3 rounded-full bg-border/50 overflow-hidden w-full">
-                          <div
-                            className={`h-full rounded-full transition-all ${prof.occupancyPct > 90 ? 'animate-pulse' : ''}`}
-                            style={{ width: `${Math.min(prof.occupancyPct, 100)}%`, backgroundColor: occupancyBarColor }}
-                          />
-                        </div>
-                      </div>
-                      <div className="text-right text-[12px] space-y-0.5 shrink-0">
-                        <p className="text-muted-foreground">Capacidade: <span className="font-mono">{prof.capacityMonthly}</span>/mês</p>
-                        <p className="text-muted-foreground">Comprometido: <span className="font-mono">{prof.committed}</span></p>
-                        <p className="text-foreground font-bold">Disponível: <span className="font-mono">{prof.availableCapacity}</span></p>
-                      </div>
-                    </div>
-                    {prof.occupancyPct > 90 && (
-                      <Badge className="mt-2 bg-destructive/15 text-destructive border-destructive/30 text-[10px]">Capacidade Esgotada</Badge>
-                    )}
-                    {prof.occupancyPct < 40 && (
-                      <Badge className="mt-2 bg-amber-500/15 text-amber-600 border-amber-500/30 text-[10px]">Capacidade Ociosa</Badge>
-                    )}
-                  </div>
 
-                  {/* ★ NEW: PROJECTION — Monthly forecast */}
+                  {/* Projection */}
                   <ProjectionBlock prof={prof} />
 
                   {/* BLOCK 5: Heatmap */}
