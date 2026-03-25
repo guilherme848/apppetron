@@ -580,7 +580,7 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
                                 count === 0 && !isFuture ? 'bg-muted' : ''
                               } ${isCurrentDay && count === 0 ? 'ring-2 ring-primary' : ''} ${isCurrentDay ? 'font-bold' : ''}`}
                               style={style}
-                              title={`${prof.name} — dia ${day}: ${count} entregas (meta: ${prof.meta})`}
+                              title={`${prof.name} — dia ${day}: ${count} entregas`}
                             >
                               {count > 0 ? count : ''}
                             </div>
