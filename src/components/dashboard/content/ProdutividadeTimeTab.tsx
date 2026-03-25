@@ -511,21 +511,7 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
                     </div>
                   </div>
 
-                  {/* Progress bar */}
-                  <div className="space-y-1">
-                    <div className="h-2 rounded-full bg-border/50 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${progressColor}`}
-                        style={{
-                          width: `${Math.min(metaPct, 100)}%`,
-                          boxShadow: isAboveMeta ? '0 0 12px rgba(16,185,129,0.3)' : undefined,
-                        }}
-                      />
-                    </div>
-                    <p className="text-[11px] text-muted-foreground font-mono">Meta: {prof.meta}/dia</p>
-                  </div>
-
-                  {/* ★ NEW: SPARKLINE — Evolution */}
+                  {/* Sparkline */}
                   <SparklineBlock prof={prof} />
 
                   {/* BLOCK 2: Volume metrics */}
