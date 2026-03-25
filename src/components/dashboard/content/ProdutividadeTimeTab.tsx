@@ -268,30 +268,16 @@ function ProjectionBlock({ prof }: { prof: any }) {
                 background: `repeating-linear-gradient(45deg, ${color}66, ${color}66 3px, ${color}26 3px, ${color}26 6px)`,
               }}
             />
-            {/* Meta marker */}
-            {monthlyGoal > 0 && (
-              <div
-                className="absolute top-[-4px] bottom-[-4px] w-0.5 bg-primary"
-                style={{ left: `${Math.min(100, 100)}%` }}
-                title="Meta"
-              />
-            )}
           </div>
           <div className="flex justify-between mt-1">
             <span className="text-[9px] text-muted-foreground font-mono">{deliveriesThisMonth} feitos</span>
-            <span className="text-[9px] text-muted-foreground font-mono">Meta: {monthlyGoal}</span>
+            <span className="text-[9px] text-muted-foreground font-mono">Projeção: {projectedTotal}</span>
           </div>
         </div>
         {/* Numbers */}
         <div className="space-y-0.5 shrink-0">
           <p className="text-[13px] text-muted-foreground">
             Projeção: <span className="font-mono font-bold text-foreground">{projectedTotal}</span>
-          </p>
-          <p className="text-[12px] text-muted-foreground">
-            Meta: <span className="font-mono">{monthlyGoal}</span>
-          </p>
-          <p className={`text-[12px] font-bold font-mono ${projectionDiff >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-            {projectionDiff === 0 ? 'Na meta' : `${projectionDiff > 0 ? '+' : ''}${projectionDiff} ${projectionDiff > 0 ? 'acima' : 'abaixo'}`}
           </p>
         </div>
       </div>
