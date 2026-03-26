@@ -329,7 +329,7 @@ function CadencesTab() {
                     {steps.map(step => (
                       <div key={step.id} className="flex items-center gap-3 text-sm p-2 rounded bg-muted/30">
                         <Badge variant="outline" className="text-[10px] min-w-[40px] justify-center">D+{step.day_offset}</Badge>
-                        <Badge style={{ backgroundColor: (ACTIVITY_TYPE_LABELS as any)[step.type] ? DC.teal : DC.textSecondary, color: '#fff' }} className="text-[10px]">
+                        <Badge style={{ backgroundColor: (ACTIVITY_TYPE_LABELS as any)[step.type] ? DC.teal : DC.textSecondary, color: 'hsl(var(--primary-foreground))' }} className="text-[10px]">
                           {(ACTIVITY_TYPE_LABELS as any)[step.type] || step.type}
                         </Badge>
                         <span className="text-foreground">{step.title}</span>

@@ -19,7 +19,7 @@ function ScoreBadge({ score }: { score: number }) {
     : score >= 70
     ? { label: 'Quente', color: 'hsl(var(--success))', pulse: false }
     : score >= 40
-    ? { label: '🟡 Morno', color: 'hsl(var(--primary))', pulse: false }
+    ? { label: 'Morno', color: 'hsl(var(--primary))', pulse: false }
     : { label: 'Frio', color: 'hsl(var(--muted-foreground))', pulse: false };
 
   return (

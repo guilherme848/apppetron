@@ -318,7 +318,7 @@ export default function SalesContacts() {
                           }}>
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                <Badge style={{ backgroundColor: ACTIVITY_TYPE_COLORS[act.type] || DC.textSecondary, color: '#fff' }} className="text-[10px]">
+                                <Badge style={{ backgroundColor: ACTIVITY_TYPE_COLORS[act.type] || DC.textSecondary, color: 'hsl(var(--primary-foreground))' }} className="text-[10px]">
                                   {ACTIVITY_TYPE_LABELS[act.type] || act.type}
                                 </Badge>
                                 <span className="text-sm font-medium text-foreground">{act.title}</span>

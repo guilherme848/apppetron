@@ -189,14 +189,14 @@ export default function SalesActivities() {
                       </TableCell>
                       <TableCell className="font-medium">{act.title}</TableCell>
                       <TableCell>
-                        <Badge style={{ backgroundColor: ACTIVITY_TYPE_COLORS[act.type] || DC.textSecondary, color: '#fff' }}>
+                        <Badge style={{ backgroundColor: ACTIVITY_TYPE_COLORS[act.type] || DC.textSecondary, color: 'hsl(var(--primary-foreground))' }}>
                           {ACTIVITY_TYPE_LABELS[act.type] || act.type}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge style={{
                           backgroundColor: act.status === 'completed' ? DC.teal : isOverdue ? DC.red : DC.textSecondary,
-                          color: '#fff',
+                          color: 'hsl(var(--primary-foreground))',
                         }}>
                           {act.status === 'completed' ? 'Concluída' : isOverdue ? 'Atrasada' : 'No prazo'}
                         </Badge>
@@ -222,7 +222,7 @@ export default function SalesActivities() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {selectedActivity && (
-                <Badge style={{ backgroundColor: ACTIVITY_TYPE_COLORS[selectedActivity.type] || DC.textSecondary, color: '#fff' }}>
+                <Badge style={{ backgroundColor: ACTIVITY_TYPE_COLORS[selectedActivity.type] || DC.textSecondary, color: 'hsl(var(--primary-foreground))' }}>
                   {ACTIVITY_TYPE_LABELS[selectedActivity.type] || selectedActivity.type}
                 </Badge>
               )}
@@ -292,7 +292,7 @@ export default function SalesActivities() {
                       <span className="text-foreground">{selectedActivity.notes}</span>
                     </div>
                   )}
-                  <Badge style={{ backgroundColor: DC.teal, color: '#fff' }}>
+                  <Badge style={{ backgroundColor: DC.teal, color: 'hsl(var(--primary-foreground))' }}>
                     Concluída {selectedActivity.completed_at && `em ${format(new Date(selectedActivity.completed_at), 'dd/MM/yyyy HH:mm')}`}
                   </Badge>
                 </div>

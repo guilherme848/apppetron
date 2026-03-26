@@ -564,7 +564,7 @@ export default function SalesDashboard() {
               <p className="text-xs" style={{ color: DC.textSecondary }}>Taxa Comparecimento</p>
               <Badge style={{
                 backgroundColor: attendanceRate >= 70 ? DC.teal : attendanceRate >= 50 ? DC.orange : DC.red,
-                color: '#fff', fontSize: 16, marginTop: 4,
+                color: 'hsl(var(--primary-foreground))', fontSize: 16, marginTop: 4,
               }}>
                 {attendanceRate.toFixed(0)}%
               </Badge>
@@ -636,7 +636,7 @@ export default function SalesDashboard() {
                         <TableCell className="text-center">
                           <Badge style={{
                             backgroundColor: rate >= 70 ? DC.teal : rate >= 50 ? DC.orange : DC.red,
-                            color: '#fff', fontSize: 11,
+                            color: 'hsl(var(--primary-foreground))', fontSize: 11,
                           }}>
                             {rate.toFixed(0)}%
                           </Badge>
@@ -680,7 +680,7 @@ export default function SalesDashboard() {
                       <TableCell>{m.funnelName}</TableCell>
                       <TableCell>{m.responsibleName}</TableCell>
                       <TableCell>
-                        <Badge style={{ backgroundColor: m.statusColor, color: '#fff' }}>{m.statusLabel}</Badge>
+                        <Badge style={{ backgroundColor: m.statusColor, color: 'hsl(var(--primary-foreground))' }}>{m.statusLabel}</Badge>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -722,7 +722,7 @@ export default function SalesDashboard() {
                         <p className="font-medium">{d.title}</p>
                         <p className="text-xs" style={{ color: DC.textSecondary }}>{d.funnelName} › {d.stageName}</p>
                       </div>
-                      <Badge style={{ backgroundColor: d.daysSinceActivity > 7 ? DC.red : DC.orange, color: '#fff' }}>
+                      <Badge style={{ backgroundColor: d.daysSinceActivity > 7 ? DC.red : DC.orange, color: 'hsl(var(--primary-foreground))' }}>
                         {d.daysSinceActivity}d parado
                       </Badge>
                     </div>

@@ -290,7 +290,7 @@ export default function SalesFunnelsPage() {
                         <TableCell className="font-medium">{deal.title}</TableCell>
                         <TableCell>{deal.contact?.company || '—'}</TableCell>
                         <TableCell>
-                          <Badge style={{ backgroundColor: stage?.color || DC.border, color: '#fff' }}>
+                          <Badge style={{ backgroundColor: stage?.color || DC.border, color: 'hsl(var(--primary-foreground))' }}>
                             {stage?.name}
                           </Badge>
                         </TableCell>

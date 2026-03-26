@@ -464,7 +464,7 @@ export default function CommercialPlanningPage() {
                 </div>
                 <div
                   className="h-10 w-10 rounded-full flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: '#6366f11F' }}
+                  style={{ backgroundColor: 'hsl(var(--info) / 0.12)' }}
                 >
                   <Target className="h-5 w-5" style={{ color: 'hsl(var(--info))' }} />
                 </div>
@@ -500,7 +500,7 @@ export default function CommercialPlanningPage() {
                 </div>
                 <div
                   className="h-10 w-10 rounded-full flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: '#10b9811F' }}
+                  style={{ backgroundColor: 'hsl(var(--success) / 0.12)' }}
                 >
                   <TrendingUp className="h-5 w-5" style={{ color: 'hsl(var(--success))' }} />
                 </div>
