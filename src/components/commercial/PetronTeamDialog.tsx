@@ -3,12 +3,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Users, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Users, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { PETRON_INTERNAL_ACCOUNT_ID } from '@/hooks/useAgencyContentProduction';
 import { ROLE_OPTIONS, ROLE_KEY_TO_ACCOUNT_FIELD, ROLE_KEY_LABELS, RoleKey, getVisibleRoles, PlanFlags, DEFAULT_PLAN_FLAGS } from '@/lib/accountTeam';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface PetronTeamDialogProps {
   open: boolean;
@@ -155,7 +156,7 @@ export function PetronTeamDialog({ open, onOpenChange }: PetronTeamDialogProps) 
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <Skeleton className="h-24 w-full rounded-2xl" />
           </div>
         ) : (
           <div className="space-y-4 mt-4">
@@ -178,7 +179,7 @@ export function PetronTeamDialog({ open, onOpenChange }: PetronTeamDialogProps) 
                     >
                       <SelectTrigger className={`h-9 text-sm ${isMissing ? 'border-amber-400' : ''}`}>
                         {isSaving ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <Skeleton className="h-4 w-16 rounded" />
                         ) : (
                           <SelectValue placeholder="Não definido" />
                         )}

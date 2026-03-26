@@ -1,8 +1,9 @@
 import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useRouteAccess } from '@/hooks/useRouteAccess';
-import { Loader2, ShieldX } from 'lucide-react';
+import { ShieldX } from 'lucide-react';
 import { PermissionAction } from '@/config/routeRegistry';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface RouteGuardProps {
   children: ReactNode;
@@ -35,7 +36,7 @@ export function RouteGuard({
     return (
       <div className="min-h-[400px] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <Skeleton className="h-24 w-full rounded-2xl" />
           <p className="text-muted-foreground">Verificando permissões...</p>
         </div>
       </div>

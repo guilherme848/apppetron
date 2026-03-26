@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Plus, Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -18,6 +18,7 @@ import { useCrmData } from '@/hooks/useCrmData';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useCreateOnboardingMeeting } from '@/hooks/useOnboardingMeeting';
 import { useAuth } from '@/contexts/AuthContext';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface CreateOnboardingMeetingDialogProps {
   trigger?: React.ReactNode;
@@ -107,7 +108,7 @@ export function CreateOnboardingMeetingDialog({ trigger }: CreateOnboardingMeeti
 
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <Skeleton className="h-24 w-full rounded-2xl" />
           </div>
         ) : (
           <div className="space-y-4 py-4">
@@ -182,7 +183,7 @@ export function CreateOnboardingMeetingDialog({ trigger }: CreateOnboardingMeeti
             onClick={handleSubmit}
             disabled={!selectedClientId || createMeeting.isPending}
           >
-            {createMeeting.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            
             Criar Reunião
           </Button>
         </DialogFooter>

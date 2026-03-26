@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, X, Trash2, Upload, Instagram, Globe, MapPin, Loader2 } from 'lucide-react';
+import { Plus, X, Trash2, Upload, Instagram, Globe, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useClientIntelligence, ClienteLink, ClienteConcorrente, AnexoCategoria, LinkTipo } from '@/hooks/useClientIntelligence';
 import { toast } from 'sonner';
@@ -364,7 +364,7 @@ function ArquivosSubsection({ clienteId }: { clienteId: string }) {
           </div>
           <div className="flex gap-2">
             <Button type="button" size="sm" onClick={() => handleUpload(i)} disabled={uploading}>
-              {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
+              {uploading ? <Skeleton className="h-4 w-16 rounded" /> : null}
               Enviar
             </Button>
             <Button type="button" variant="ghost" size="sm" onClick={() => setPendingFiles(prev => prev.filter((_, idx) => idx !== i))}>

@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Loader2, Link as LinkIcon, Unlink, RefreshCw, DollarSign, CheckCircle2 } from 'lucide-react';
+import { Link as LinkIcon, Unlink, RefreshCw, DollarSign, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import { useMetaAds } from '@/hooks/useMetaAds';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function MetaIntegrationTab() {
   const { 
@@ -46,7 +47,7 @@ export function MetaIntegrationTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-32">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }
@@ -67,7 +68,7 @@ export function MetaIntegrationTab() {
                   Conectado
                 </Badge>
                 <Button size="sm" variant="outline" onClick={handleSync} disabled={syncing}>
-                  {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                  {syncing ? <Skeleton className="h-4 w-16 rounded" /> : <RefreshCw className="h-4 w-4" />}
                   <span className="ml-1">Sincronizar</span>
                 </Button>
               </>
@@ -89,7 +90,7 @@ export function MetaIntegrationTab() {
               <CardDescription>{adAccounts.length} contas sincronizadas</CardDescription>
             </div>
             <Button size="sm" variant="outline" onClick={handleFetchFinance} disabled={fetchingFinance}>
-              {fetchingFinance ? <Loader2 className="h-4 w-4 animate-spin" /> : <DollarSign className="h-4 w-4" />}
+              {fetchingFinance ? <Skeleton className="h-4 w-16 rounded" /> : <DollarSign className="h-4 w-4" />}
               <span className="ml-1">Atualizar Saldos</span>
             </Button>
           </CardHeader>

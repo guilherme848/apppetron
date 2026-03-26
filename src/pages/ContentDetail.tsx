@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Copy, Trash2, Plus, Loader2 } from 'lucide-react';
+import { ArrowLeft, Copy, Trash2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,6 +8,7 @@ import { useContent } from '@/contexts/ContentContext';
 import { ContentForm } from '@/components/content/ContentForm';
 import { ContentStatusBadge, ContentPriorityBadge, OverdueBadge } from '@/components/content/ContentBadges';
 import { CHANNEL_OPTIONS, FORMAT_OPTIONS } from '@/types/content';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ContentDetail() {
   const { id } = useParams<{ id: string }>();
@@ -42,7 +43,7 @@ export default function ContentDetail() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }

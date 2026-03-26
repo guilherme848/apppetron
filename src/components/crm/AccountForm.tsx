@@ -10,13 +10,14 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { useTraffic } from '@/contexts/TrafficContext';
 import { useSensitivePermission } from '@/hooks/useSensitivePermission';
 import { Link } from 'react-router-dom';
-import { ExternalLink, RotateCcw, Undo2, Lock, Loader2, Facebook, Chrome } from 'lucide-react';
+import { ExternalLink, RotateCcw, Undo2, Lock, Facebook, Chrome } from 'lucide-react';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { SaveStatus } from '@/components/ui/save-status';
 import { cn } from '@/lib/utils';
 import { IntelligenceSection } from '@/components/crm/intelligence/IntelligenceSection';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Tooltip,
   TooltipContent,
@@ -691,7 +692,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                   />
                   {cnpjLookupLoading && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      <Skeleton className="h-4 w-16 rounded" />
                     </div>
                   )}
                 </div>
@@ -922,7 +923,7 @@ export function AccountForm({ open, onClose, onSubmit, account }: AccountFormPro
                   />
                   {cepLoading && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      <Skeleton className="h-4 w-16 rounded" />
                     </div>
                   )}
                 </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Loader2, Sparkles, AlertTriangle, CheckCircle, FileText, Edit3, ArrowRight, Info } from 'lucide-react';
+import { Sparkles, AlertTriangle, CheckCircle, FileText, Edit3, ArrowRight, Info } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { useSalesBriefing } from '@/hooks/useSalesBriefing';
 import { BRIEFING_RISK_LABELS, type BriefingContent } from '@/types/salesBriefing';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface SalesBriefingSectionProps {
   clientId: string;
@@ -93,7 +94,7 @@ export function SalesBriefingSection({ clientId, onCompleteStep, stepCompleted, 
       <Card>
         <CardContent className="py-8">
           <div className="flex items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <Skeleton className="h-24 w-full rounded-2xl" />
           </div>
         </CardContent>
       </Card>
@@ -152,7 +153,7 @@ export function SalesBriefingSection({ clientId, onCompleteStep, stepCompleted, 
             >
               {generating ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Skeleton className="h-4 w-16 rounded" />
                   Gerando...
                 </>
               ) : (
@@ -373,7 +374,7 @@ export function SalesBriefingSection({ clientId, onCompleteStep, stepCompleted, 
                 >
                   {completeLoading ? (
                     <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      <Skeleton className="h-4 w-16 rounded" />
                       Concluindo...
                     </>
                   ) : (

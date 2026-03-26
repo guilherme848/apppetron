@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { Loader2, ArrowLeft, TrendingUp, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, TrendingUp, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { useCrm } from '@/contexts/CrmContext';
 import { useMetaAds } from '@/hooks/useMetaAds';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 function formatMetricValue(value: number | null, unit: string): string {
   if (value === null || value === undefined) return '—';
@@ -38,7 +39,7 @@ export default function TrafficAccountDetail() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }

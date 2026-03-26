@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Plus, Clock, CheckCircle, XCircle, PlayCircle, Eye, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Clock, CheckCircle, XCircle, PlayCircle, Eye, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +14,7 @@ import { RichTextEditor, RichTextViewer } from '@/components/content/RichTextEdi
 import { ContentChangeRequest, ChangeRequestStatus, CHANGE_REQUEST_STATUS_OPTIONS } from '@/types/changeRequest';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ChangeRequestsTabProps {
   requests: ContentChangeRequest[];
@@ -135,7 +136,7 @@ export function ChangeRequestsTab({
           <TabsContent value="list">
             {loading ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <Skeleton className="h-24 w-full rounded-2xl" />
               </div>
             ) : requests.length === 0 ? (
               <div className="text-center py-8 border border-dashed rounded-lg">
@@ -247,7 +248,7 @@ export function ChangeRequestsTab({
             <div className="flex justify-end">
               <Button onClick={handleSubmitRequest} disabled={submitting}>
                 {submitting ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Skeleton className="h-4 w-16 rounded" />
                 ) : (
                   <Plus className="h-4 w-4 mr-2" />
                 )}

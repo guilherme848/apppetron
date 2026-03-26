@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { DollarSign, RefreshCw, Loader2, X, Plus } from 'lucide-react';
+import { DollarSign, RefreshCw, X, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMetaAds } from '@/hooks/useMetaAds';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ClientMetaAdsCardProps {
   clientId: string;
@@ -88,7 +89,7 @@ export function ClientMetaAdsCard({ clientId }: ClientMetaAdsCardProps) {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-4">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <Skeleton className="h-24 w-full rounded-2xl" />
           </div>
         </CardContent>
       </Card>
@@ -111,7 +112,7 @@ export function ClientMetaAdsCard({ clientId }: ClientMetaAdsCardProps) {
               disabled={fetchingFinance}
             >
               {fetchingFinance ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Skeleton className="h-4 w-16 rounded" />
               ) : (
                 <RefreshCw className="h-4 w-4 mr-2" />
               )}

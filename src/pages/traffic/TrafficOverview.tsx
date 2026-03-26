@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
 import { 
-  Loader2, 
   TrendingUp, 
   TrendingDown, 
   AlertTriangle, 
@@ -212,7 +211,7 @@ export default function TrafficOverview() {
               disabled={fetchingMetrics}
             >
               {fetchingMetrics ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Skeleton className="h-4 w-16 rounded" />
               ) : (
                 <Activity className="h-4 w-4 mr-2" />
               )}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Loader2, Target } from 'lucide-react';
+import { Plus, Pencil, Trash2, Target } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useSettings } from '@/contexts/SettingsContext';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function NichesPage() {
   const { niches, loading, addNiche, updateNiche, deleteNiche, toggleNicheActive } = useSettings();
@@ -61,7 +62,7 @@ export default function NichesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }

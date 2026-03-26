@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2, Loader2, Paperclip, AlertTriangle, Megaphone } from 'lucide-react';
+import { ArrowLeft, Trash2, Paperclip, AlertTriangle, Megaphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,7 @@ import { RESPONSIBLE_ROLE_OPTIONS, ResponsibleRoleKey } from '@/types/crm';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useChangeRequests } from '@/hooks/useChangeRequests';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function MarketingPostDetail() {
   const { batchId, postId } = useParams<{ batchId: string; postId: string }>();
@@ -262,7 +263,7 @@ export default function MarketingPostDetail() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }
@@ -699,7 +700,7 @@ export default function MarketingPostDetail() {
             <CardContent>
               {loadingAttachments ? (
                 <div className="flex items-center justify-center py-4">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  <Skeleton className="h-4 w-16 rounded" />
                 </div>
               ) : (
                 <FileUpload

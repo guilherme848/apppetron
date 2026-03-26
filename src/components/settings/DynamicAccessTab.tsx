@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Loader2, Shield, ShieldCheck, ShieldX, RefreshCw, Sparkles, Users, User, ToggleLeft } from 'lucide-react';
+import { Shield, ShieldCheck, ShieldX, RefreshCw, Sparkles, Users, User, ToggleLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -19,7 +19,8 @@ import {
   useUserPermissionOverrides,
   RoutePermission 
 } from '@/hooks/usePermissionSync';
-import { 
+import { Skeleton } from '@/components/ui/skeleton';
+import {
   getRoutesForAccessControl, 
   MODULE_ORDER, 
   PermissionAction 
@@ -180,7 +181,7 @@ export function DynamicAccessTab() {
   if (loadingRoles || loadingMembers || loadingPermissions) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }
@@ -209,7 +210,7 @@ export function DynamicAccessTab() {
           disabled={syncing}
         >
           {syncing ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            <Skeleton className="h-4 w-16 rounded" />
           ) : (
             <RefreshCw className="h-4 w-4 mr-2" />
           )}
@@ -265,7 +266,7 @@ export function DynamicAccessTab() {
               {selectedRoleKey && (
                 loadingRolePerms ? (
                   <div className="flex items-center justify-center h-32">
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    <Skeleton className="h-24 w-full rounded-2xl" />
                   </div>
                 ) : (
                   <PermissionMatrix
@@ -335,7 +336,7 @@ export function DynamicAccessTab() {
               {selectedUserId && (
                 loadingOverrides ? (
                   <div className="flex items-center justify-center h-32">
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    <Skeleton className="h-24 w-full rounded-2xl" />
                   </div>
                 ) : (
                   <PermissionMatrixWithOverrides
@@ -426,7 +427,7 @@ function PermissionMatrix({
                   onClick={(e) => e.stopPropagation()}
                 >
                   {isToggling ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    <Skeleton className="h-4 w-16 rounded" />
                   ) : (
                     <Checkbox 
                       checked={isFullyEnabled}

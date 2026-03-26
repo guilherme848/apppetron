@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { Upload, X, FileIcon, Loader2, Eye, Download, AlertCircle, RotateCcw, FolderArchive } from 'lucide-react';
+import { Upload, X, FileIcon, Eye, Download, AlertCircle, RotateCcw, FolderArchive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/tooltip';
 import { downloadFile, downloadFilesAsZip, formatDateForFileName } from '@/lib/fileDownload';
 import { FilePreviewDialog } from '@/components/content/FilePreviewDialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ContentFile {
   id: string;
@@ -343,7 +344,7 @@ export function MultiFileUpload({
               )}
             >
               {uf.status === 'uploading' || uf.status === 'pending' ? (
-                <Loader2 className="h-5 w-5 text-muted-foreground animate-spin flex-shrink-0" />
+                <Skeleton className="h-4 w-16 rounded" />
               ) : uf.status === 'success' ? (
                 <FileIcon className="h-5 w-5 text-primary flex-shrink-0" />
               ) : (
@@ -413,7 +414,7 @@ export function MultiFileUpload({
                       disabled={downloadingAll}
                     >
                       {downloadingAll ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        <Skeleton className="h-4 w-16 rounded" />
                       ) : (
                         <FolderArchive className="h-4 w-4 mr-2" />
                       )}
@@ -475,7 +476,7 @@ export function MultiFileUpload({
                           disabled={downloadingId === file.id}
                         >
                           {downloadingId === file.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <Skeleton className="h-4 w-16 rounded" />
                           ) : (
                             <Download className="h-4 w-4" />
                           )}
@@ -498,7 +499,7 @@ export function MultiFileUpload({
                       disabled={deleting === file.id}
                     >
                       {deleting === file.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Skeleton className="h-4 w-16 rounded" />
                       ) : (
                         <X className="h-4 w-4" />
                       )}

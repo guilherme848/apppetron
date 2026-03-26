@@ -1,9 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, FileText, Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { FileText, Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useExtraRequestsMetrics } from '@/hooks/useExtraRequests';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function ExtraRequestsMetrics() {
   const { metrics, loading } = useExtraRequestsMetrics();
@@ -12,7 +13,7 @@ export function ExtraRequestsMetrics() {
     return (
       <Card>
         <CardContent className="flex items-center justify-center h-48">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <Skeleton className="h-24 w-full rounded-2xl" />
         </CardContent>
       </Card>
     );

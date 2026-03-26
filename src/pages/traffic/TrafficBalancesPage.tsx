@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { DollarSign, RefreshCw, Loader2, AlertTriangle, TrendingDown, Clock, RotateCw } from 'lucide-react';
+import { DollarSign, RefreshCw, AlertTriangle, TrendingDown, Clock, RotateCw } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -231,7 +231,7 @@ export default function TrafficBalancesPage() {
         <div className="flex flex-col items-end gap-2">
           <Button onClick={handleRefreshAll} disabled={fetchingFinance || balanceRows.length === 0}>
             {fetchingFinance ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <Skeleton className="h-4 w-16 rounded" />
             ) : (
               <RefreshCw className="h-4 w-4 mr-2" />
             )}
@@ -461,7 +461,7 @@ export default function TrafficBalancesPage() {
                             title="Atualizar saldo"
                           >
                             {isRefreshing ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <Skeleton className="h-4 w-16 rounded" />
                             ) : (
                               <RotateCw className="h-4 w-4" />
                             )}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Loader2, Upload, Trash2, FileIcon, ExternalLink, Download } from 'lucide-react';
+import { ArrowLeft, Upload, Trash2, FileIcon, ExternalLink, Download } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -190,7 +190,7 @@ export default function ExtraRequestDetail() {
             onConfirm={handleDeleteRequest}
           >
             <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" disabled={deleting}>
-              {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
+              {deleting ? <Skeleton className="h-4 w-16 rounded" /> : <Trash2 className="h-4 w-4 mr-2" />}
               {deleting ? 'Excluindo...' : 'Excluir'}
             </Button>
           </ConfirmDeleteDialog>
@@ -371,7 +371,7 @@ export default function ExtraRequestDetail() {
                       setDownloadingAll(false);
                     }}
                   >
-                    {downloadingAll ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Download className="h-4 w-4 mr-2" />}
+                    {downloadingAll ? <Skeleton className="h-4 w-16 rounded" /> : <Download className="h-4 w-4 mr-2" />}
                     Baixar todos
                   </Button>
                 )}
@@ -382,7 +382,7 @@ export default function ExtraRequestDetail() {
                 <Label htmlFor="file-upload" className="cursor-pointer">
                   <div className="border-2 border-dashed rounded-lg p-6 text-center hover:bg-muted/50 transition-colors">
                     {uploading ? (
-                      <Loader2 className="h-8 w-8 mx-auto animate-spin text-muted-foreground" />
+                      <Skeleton className="h-4 w-16 rounded" />
                     ) : (
                       <>
                         <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />

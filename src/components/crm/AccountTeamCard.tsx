@@ -2,13 +2,14 @@ import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Users, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Users, CheckCircle, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { Account, RESPONSIBLE_ROLE_OPTIONS, ResponsibleRoleKey } from '@/types/crm';
 import { getAccountTeamStatus, getVisibleRoles, PlanFlags, DEFAULT_PLAN_FLAGS, ROLE_KEY_LABELS } from '@/lib/accountTeam';
 import { useSettings } from '@/contexts/SettingsContext';
 import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface AccountTeamCardProps {
   account: Account;
@@ -101,7 +102,7 @@ export function AccountTeamCard({ account, onUpdate }: AccountTeamCardProps) {
                 >
                   <SelectTrigger className={`h-8 text-sm ${isMissing ? 'border-amber-400' : ''}`}>
                     {isSaving ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Skeleton className="h-4 w-16 rounded" />
                     ) : (
                       <SelectValue placeholder="Não definido" />
                     )}

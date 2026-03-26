@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, FileText, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { FileText, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { BATCH_STATUS_OPTIONS, BatchStatus } from '@/types/contentProduction';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface StageCount {
   status: string;
@@ -118,7 +119,7 @@ export function ContentActivitySummary() {
     return (
       <Card>
         <CardContent className="flex items-center justify-center h-48">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <Skeleton className="h-24 w-full rounded-2xl" />
         </CardContent>
       </Card>
     );

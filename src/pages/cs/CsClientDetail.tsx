@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
-import { Loader2, ArrowLeft, User, Calendar, Star, AlertTriangle, FileText, Clock, CheckCircle, XCircle, Briefcase } from 'lucide-react';
+import { ArrowLeft, User, Calendar, Star, AlertTriangle, FileText, Clock, CheckCircle, XCircle, Briefcase } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -28,6 +28,7 @@ import {
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { SalesBriefingSection } from '@/components/cs/SalesBriefingSection';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Account {
   id: string;
@@ -81,7 +82,7 @@ export default function CsClientDetail() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }

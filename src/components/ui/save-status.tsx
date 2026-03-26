@@ -1,7 +1,8 @@
-import { Check, Cloud, CloudOff, Loader2, RefreshCcw, Edit3 } from 'lucide-react';
+import { Check, Cloud, CloudOff, RefreshCcw, Edit3, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { AutoSaveStatus } from '@/hooks/useAutoSave';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface SaveStatusProps {
   status: AutoSaveStatus;
@@ -104,7 +105,7 @@ export function SaveStatusInline({ status, className }: SaveStatusInlineProps) {
       )}
     >
       {status === 'pending' && <Edit3 className="h-3 w-3" />}
-      {status === 'saving' && <Loader2 className="h-3 w-3 animate-spin" />}
+      {status === 'saving' && <Skeleton className="h-4 w-16 rounded" />}
       {status === 'saved' && <Check className="h-3 w-3" />}
       {status === 'error' && <CloudOff className="h-3 w-3" />}
     </span>

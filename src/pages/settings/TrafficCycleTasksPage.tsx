@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Loader2, ListChecks, GripVertical } from 'lucide-react';
+import { Plus, Pencil, Trash2, ListChecks, GripVertical } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { useTraffic } from '@/contexts/TrafficContext';
 import { useSearchParams } from 'react-router-dom';
 import { TrafficCycleTask, TrafficPriority, TRAFFIC_PRIORITY_OPTIONS } from '@/types/traffic';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function TrafficCycleTasksPage() {
   const { cycles, cycleTasks, loading, addCycleTask, updateCycleTask, deleteCycleTask, getCycleTasksByCycle } = useTraffic();
@@ -118,7 +119,7 @@ export default function TrafficCycleTasksPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }

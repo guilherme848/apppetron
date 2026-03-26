@@ -7,7 +7,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { SalesFunnelTarget, MONTH_NAMES } from '@/types/salesFunnel';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Loader2 } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -273,7 +272,7 @@ export function FunnelTargetModal({ open, onOpenChange, month, target, onSave }:
             Cancelar
           </Button>
           <Button onClick={handleSubmit} disabled={saving}>
-            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            
             Salvar
           </Button>
         </DialogFooter>

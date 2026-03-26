@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2, Loader2, FileText, Paperclip, AlertTriangle, Archive, Sparkles } from 'lucide-react';
+import { ArrowLeft, Trash2, FileText, Paperclip, AlertTriangle, Archive, Sparkles } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -758,7 +758,7 @@ export default function PostDetail() {
             <CardContent>
               {loadingAttachments ? (
                 <div className="flex items-center justify-center py-4">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  <Skeleton className="h-24 w-full rounded-2xl" />
                 </div>
               ) : (
                 <FileUpload

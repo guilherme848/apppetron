@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { Loader2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,6 +12,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export interface ConfirmDeleteDialogProps {
   /** The trigger element (usually a button) */
@@ -147,7 +147,7 @@ export function ConfirmDeleteDialog({
           >
             {loading ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Skeleton className="h-4 w-16 rounded" />
                 Apagando...
               </>
             ) : (

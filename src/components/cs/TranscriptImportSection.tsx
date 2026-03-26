@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FileText, Upload, Save, Loader2, Sparkles } from 'lucide-react';
+import { FileText, Upload, Save, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,6 +9,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useLatestTranscript, useSaveTranscript, useUpdateTranscript } from '@/hooks/useCsTranscripts';
 import { useAuth } from '@/contexts/AuthContext';
 import type { TranscriptType } from '@/types/onboardingMeeting';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface TranscriptImportSectionProps {
   clientId: string;
@@ -115,7 +116,7 @@ export function TranscriptImportSection({
           <CardContent className="space-y-4 pt-0">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <Skeleton className="h-24 w-full rounded-2xl" />
               </div>
             ) : (
               <>
@@ -141,7 +142,7 @@ export function TranscriptImportSection({
                       >
                         {aiButtonLoading ? (
                           <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            <Skeleton className="h-4 w-16 rounded" />
                             Preenchendo...
                           </>
                         ) : (
@@ -159,7 +160,7 @@ export function TranscriptImportSection({
                     >
                       {isSaving ? (
                         <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          <Skeleton className="h-4 w-16 rounded" />
                           Salvando...
                         </>
                       ) : (

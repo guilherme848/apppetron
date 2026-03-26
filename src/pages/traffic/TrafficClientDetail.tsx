@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, RefreshCw, CheckCircle, Circle, PlayCircle, Users } from 'lucide-react';
+import { ArrowLeft, RefreshCw, CheckCircle, Circle, PlayCircle, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -12,6 +12,7 @@ import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useSettings } from '@/contexts/SettingsContext';
 import { TrafficTaskStatus, TRAFFIC_TASK_STATUS_OPTIONS } from '@/types/traffic';
 import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function TrafficClientDetail() {
   const { id } = useParams<{ id: string }>();
@@ -101,7 +102,7 @@ export default function TrafficClientDetail() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }
@@ -141,7 +142,7 @@ export default function TrafficClientDetail() {
           </div>
         </div>
         <Button onClick={handleGenerateTasks} disabled={generating || !effectiveCycleId}>
-          {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+          {generating ? <Skeleton className="h-4 w-16 rounded" /> : <RefreshCw className="h-4 w-4 mr-2" />}
           Gerar Tarefas do Ciclo
         </Button>
       </div>

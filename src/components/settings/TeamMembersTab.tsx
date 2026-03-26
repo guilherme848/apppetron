@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Plus, Pencil, Trash2, Loader2, Camera, UserPlus, Link, Unlink, KeyRound, Shield, ShieldCheck } from 'lucide-react';
+import { Plus, Pencil, Trash2, Camera, UserPlus, Link, Unlink, KeyRound, Shield, ShieldCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,7 @@ import { MemberAvatar } from '@/components/common/MemberAvatar';
 import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO } from 'date-fns';
 import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function TeamMembersTab() {
   const { members, loading, addMember, updateMember, deleteMember, refetch } = useTeamMembers();
@@ -279,7 +280,7 @@ export function TeamMembersTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }
@@ -493,7 +494,7 @@ export function TeamMembersTab() {
                     disabled={uploading}
                   >
                     {uploading ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <Skeleton className="h-4 w-16 rounded" />
                     ) : (
                       <Camera className="h-3 w-3" />
                     )}
@@ -587,7 +588,7 @@ export function TeamMembersTab() {
               Cancelar
             </Button>
             <Button onClick={handleSave} disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {saving ? <Skeleton className="h-4 w-16 rounded" /> : null}
               Salvar
             </Button>
           </DialogFooter>
@@ -637,7 +638,7 @@ export function TeamMembersTab() {
               Cancelar
             </Button>
             <Button onClick={handleCreateAuthUser} disabled={authLoading}>
-              {authLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}
+              {authLoading ? <Skeleton className="h-4 w-16 rounded" /> : <UserPlus className="h-4 w-4 mr-2" />}
               Criar Conta
             </Button>
           </DialogFooter>
