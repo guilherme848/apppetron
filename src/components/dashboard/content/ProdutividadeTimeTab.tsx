@@ -44,7 +44,7 @@ function Avatar({ name, role }: { name: string; role: string }) {
   return (
     <div
       className="w-10 h-10 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0"
-      style={{ background: `linear-gradient(135deg, ${ROLE_COLORS[role] || 'hsl(var(--info))'}, ${ROLE_COLORS[role] || 'hsl(var(--info))'}cc)` }}
+      style={{ background: `linear-gradient(135deg, ${ROLE_COLORS[role] || 'hsl(var(--info))'}, color-mix(in srgb, ${ROLE_COLORS[role] || 'hsl(var(--info))'} 80%, transparent))` }}
     >
       {initials}
     </div>
