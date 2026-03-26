@@ -171,6 +171,11 @@ function SortableRow({
       <TableCell className="font-medium">
         <div className="flex items-center gap-2">
           {post.title || <span className="text-muted-foreground italic">Sem título</span>}
+          {!post.assignee_id && (
+            <Badge className="bg-warning/12 text-warning border-0 text-[10px] font-semibold h-5">
+              Sem responsável
+            </Badge>
+          )}
           {showPendingIndicator && (
             <TooltipProvider>
               <Tooltip>

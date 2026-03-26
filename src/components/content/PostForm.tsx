@@ -45,6 +45,11 @@ export function PostForm({ open, onOpenChange, batchId, post, onSubmit, onUpdate
       toast.error('Título é obrigatório');
       return;
     }
+    // Block saving with 'doing' status without assignee (post being edited)
+    if (status === 'doing' && post && !post.assignee_id) {
+      toast.error('Atribua um responsável antes de iniciar a produção');
+      return;
+    }
 
     setLoading(true);
     const data = {
