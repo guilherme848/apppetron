@@ -19,8 +19,8 @@ import {
   useUserPermissionOverrides,
   RoutePermission 
 } from '@/hooks/usePermissionSync';
-import { 
 import { Skeleton } from '@/components/ui/skeleton';
+import {
   getRoutesForAccessControl, 
   MODULE_ORDER, 
   PermissionAction 
