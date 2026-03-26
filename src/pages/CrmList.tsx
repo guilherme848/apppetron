@@ -101,6 +101,7 @@ export default function CrmList() {
   const [filterTrafficManager, setFilterTrafficManager] = useState('all');
   const [filterCs, setFilterCs] = useState('all');
   const [filterNiche, setFilterNiche] = useState('all');
+  const [filterEntryMonth, setFilterEntryMonth] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
 
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
@@ -131,7 +132,7 @@ export default function CrmList() {
     }));
   };
 
-  const hasActiveFilters = search || filterPlan !== 'all' || filterTrafficManager !== 'all' || filterCs !== 'all' || filterNiche !== 'all' || showChurned;
+  const hasActiveFilters = search || filterPlan !== 'all' || filterTrafficManager !== 'all' || filterCs !== 'all' || filterNiche !== 'all' || filterEntryMonth !== 'all' || showChurned;
 
   const clearFilters = () => {
     setSearch('');
@@ -139,6 +140,7 @@ export default function CrmList() {
     setFilterTrafficManager('all');
     setFilterCs('all');
     setFilterNiche('all');
+    setFilterEntryMonth('all');
     setShowChurned(false);
     setCurrentPage(1);
   };
@@ -152,6 +154,24 @@ export default function CrmList() {
 
   // Unique active plans from services
   const activePlans = useMemo(() => services.filter((s: any) => s.active), [services]);
+
+  // Unique entry months (YYYY-MM) from accounts with start_date
+  const entryMonthOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    accounts.forEach(a => {
+      if (a.start_date) {
+        const ym = a.start_date.slice(0, 7); // "YYYY-MM"
+        if (!map.has(ym)) {
+          const [y, m] = ym.split('-');
+          const label = new Date(Number(y), Number(m) - 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+          map.set(ym, label.charAt(0).toUpperCase() + label.slice(1));
+        }
+      }
+    });
+    return Array.from(map.entries())
+      .sort((a, b) => b[0].localeCompare(a[0])) // newest first
+      .map(([value, label]) => ({ value, label }));
+  }, [accounts]);
 
   // CS team members (those assigned as CS on any account)
   const csMembersList = useMemo(() => {
@@ -170,6 +190,7 @@ export default function CrmList() {
       if (filterTrafficManager !== 'all' && account.traffic_member_id !== filterTrafficManager) return false;
       if (filterCs !== 'all' && account.cs_member_id !== filterCs) return false;
       if (filterNiche !== 'all' && account.niche !== filterNiche) return false;
+      if (filterEntryMonth !== 'all' && (!account.start_date || !account.start_date.startsWith(filterEntryMonth))) return false;
       return true;
     });
 
@@ -197,12 +218,12 @@ export default function CrmList() {
         default: return 0;
       }
     });
-  }, [accounts, search, sortConfig, showChurned, filterPlan, filterTrafficManager, filterCs, filterNiche]);
+  }, [accounts, search, sortConfig, showChurned, filterPlan, filterTrafficManager, filterCs, filterNiche, filterEntryMonth]);
 
   const totalPages = Math.max(1, Math.ceil(sortedAndFilteredAccounts.length / ITEMS_PER_PAGE));
   const paginatedAccounts = sortedAndFilteredAccounts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
-  useEffect(() => { setCurrentPage(1); }, [search, showChurned, filterPlan, filterTrafficManager, filterCs, filterNiche]);
+  useEffect(() => { setCurrentPage(1); }, [search, showChurned, filterPlan, filterTrafficManager, filterCs, filterNiche, filterEntryMonth]);
 
   const handleSubmit = async (data: Partial<Account>) => {
     if (editingAccount) {
@@ -331,6 +352,14 @@ export default function CrmList() {
           <SelectContent>
             <SelectItem value="all">Todos os nichos</SelectItem>
             {uniqueNiches.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+          </SelectContent>
+        </Select>
+
+        <Select value={filterEntryMonth} onValueChange={setFilterEntryMonth}>
+          <SelectTrigger className="w-[180px] h-10"><SelectValue placeholder="Mês de entrada" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os meses</SelectItem>
+            {entryMonthOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
           </SelectContent>
         </Select>
 
