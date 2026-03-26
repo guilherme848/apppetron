@@ -14,7 +14,7 @@ import {
   Clock, Users, AlertCircle, BarChart3,
   Radio, Palette, Eye, AlertTriangle,
 } from 'lucide-react';
-import { DC, tooltipStyle, ROLE_LABELS, PRODUCTION_ROLES } from '@/lib/dashboardColors';
+import { DC, tooltipStyle, ROLE_LABELS, PRODUCTION_ROLES, ROLE_COLORS } from '@/lib/dashboardColors';
 import { ExtraRequestsMetrics } from '@/components/dashboard/ExtraRequestsMetrics';
 import { cn } from '@/lib/utils';
 
@@ -22,18 +22,12 @@ interface NumerosGeraisTabProps {
   data: any;
 }
 
-const ROLE_COLORS: Record<string, string> = {
-  designer: 'hsl(var(--info))',
-  videomaker: 'hsl(var(--purple))',
-  social: 'hsl(var(--success))',
-};
-
 function RoleChip({ role }: { role: string }) {
   const color = ROLE_COLORS[role] || 'hsl(var(--muted-foreground))';
   return (
     <span
       className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold border"
-      style={{ backgroundColor: `${color}1f`, color, borderColor: `${color}40` }}
+      style={{ backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)`, color, borderColor: `color-mix(in srgb, ${color} 25%, transparent)` }}
     >
       {ROLE_LABELS[role] || role}
     </span>

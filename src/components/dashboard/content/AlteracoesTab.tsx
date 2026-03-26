@@ -6,25 +6,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { AlertTriangle, AlertCircle, Users, UserCheck } from 'lucide-react';
-import { DC, tooltipStyle, ROLE_LABELS, PRODUCTION_ROLES } from '@/lib/dashboardColors';
+import { DC, tooltipStyle, ROLE_LABELS, PRODUCTION_ROLES, ROLE_COLORS } from '@/lib/dashboardColors';
 import { ExtraRequestsMetrics } from '@/components/dashboard/ExtraRequestsMetrics';
 
 interface AlteracoesTabProps {
   data: any;
 }
 
-const ROLE_COLORS: Record<string, string> = {
-  designer: 'hsl(var(--info))',
-  videomaker: 'hsl(var(--purple))',
-  social: 'hsl(var(--success))',
-};
-
 function RoleChip({ role }: { role: string }) {
   const color = ROLE_COLORS[role] || 'hsl(var(--muted-foreground))';
   return (
     <span
       className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold border"
-      style={{ backgroundColor: `${color}1f`, color, borderColor: `${color}40` }}
+      style={{ backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)`, color, borderColor: `color-mix(in srgb, ${color} 25%, transparent)` }}
     >
       {ROLE_LABELS[role] || role}
     </span>

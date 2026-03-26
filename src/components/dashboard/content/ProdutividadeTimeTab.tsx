@@ -12,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import {
   TrendingUp, TrendingDown, Minus, CheckCircle, Trophy, ChevronDown, ChevronUp, AlertTriangle,
 } from 'lucide-react';
-import { ROLE_LABELS } from '@/lib/dashboardColors';
+import { ROLE_LABELS, ROLE_COLORS } from '@/lib/dashboardColors';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -25,12 +25,6 @@ interface ProdutividadeTimeTabProps {
   data: any;
 }
 
-const ROLE_COLORS: Record<string, string> = {
-  designer: 'hsl(var(--info))',
-  videomaker: 'hsl(var(--purple))',
-  social: 'hsl(var(--success))',
-};
-
 const CLIENT_COLORS = ['hsl(var(--info))', 'hsl(var(--purple))', 'hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--primary))', 'hsl(var(--destructive))', 'hsl(var(--destructive))', 'hsl(var(--muted-foreground))'];
 
 function RoleChip({ role }: { role: string }) {
@@ -38,7 +32,7 @@ function RoleChip({ role }: { role: string }) {
   return (
     <span
       className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold border"
-      style={{ backgroundColor: `${color}1f`, color, borderColor: `${color}40` }}
+      style={{ backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)`, color, borderColor: `color-mix(in srgb, ${color} 25%, transparent)` }}
     >
       {ROLE_LABELS[role] || role}
     </span>
