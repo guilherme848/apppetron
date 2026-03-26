@@ -173,7 +173,8 @@ export function useWelcomeCommandCenter() {
             .from('content_posts')
             .select('id, title, status, due_date, data_conclusao, assignee_id, batch_id')
             .is('data_conclusao', null)
-            .not('status', 'eq', 'done'),
+            .not('status', 'eq', 'done')
+            .or('archived.is.null,archived.eq.false'),
           // Activity feed
           supabase
             .from('atividade_sistema')
@@ -185,14 +186,16 @@ export function useWelcomeCommandCenter() {
             .from('content_posts')
             .select('id', { count: 'exact', head: true })
             .not('data_conclusao', 'is', null)
-            .gte('data_conclusao', monthStart),
+            .gte('data_conclusao', monthStart)
+            .or('archived.is.null,archived.eq.false'),
           // Content pillar: previous month
           supabase
             .from('content_posts')
             .select('id', { count: 'exact', head: true })
             .not('data_conclusao', 'is', null)
             .gte('data_conclusao', prevMonthStart)
-            .lte('data_conclusao', prevMonthEnd),
+            .lte('data_conclusao', prevMonthEnd)
+            .or('archived.is.null,archived.eq.false'),
           // Media pillar: active accounts with budget
           supabase
             .from('accounts')
@@ -292,6 +295,7 @@ export function useWelcomeCommandCenter() {
           .eq('assignee_id', currentMemberId)
           .is('data_conclusao', null)
           .not('status', 'eq', 'done')
+          .or('archived.is.null,archived.eq.false')
           .order('due_date', { ascending: true });
 
         const posts = (myPostsData || []).map((p: any) => ({

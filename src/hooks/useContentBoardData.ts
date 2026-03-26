@@ -86,7 +86,8 @@ export function useContentBoardData() {
           .from('content_posts')
           .select('*', { count: 'exact', head: true })
           .eq('batch_id', job.id)
-          .neq('status', 'done');
+          .neq('status', 'done')
+          .or('archived.is.null,archived.eq.false');
 
         // Also count from content_batches related to the client for this month
         const { count: batchPendingCount } = await supabase
@@ -94,7 +95,8 @@ export function useContentBoardData() {
           .select('*, batch:content_batches!inner(client_id, month_ref)', { count: 'exact', head: true })
           .eq('batch.client_id', job.client_id)
           .eq('batch.month_ref', job.month_ref)
-          .neq('status', 'done');
+          .neq('status', 'done')
+          .or('archived.is.null,archived.eq.false');
 
         return {
           ...job,
