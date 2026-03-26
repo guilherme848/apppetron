@@ -62,7 +62,8 @@ export function ContentActivitySummary() {
         .from('content_posts')
         .select('*', { count: 'exact', head: true })
         .in('batch_id', batchIds)
-        .neq('status', 'done');
+        .neq('status', 'done')
+        .or('archived.is.null,archived.eq.false');
       
       setOpenPostsCount(count || 0);
     }

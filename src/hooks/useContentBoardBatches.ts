@@ -138,7 +138,8 @@ export function useContentBoardBatches() {
       .from('content_posts')
       .select('batch_id')
       .in('batch_id', batchIds)
-      .neq('status', 'done');
+      .neq('status', 'done')
+      .or('archived.is.null,archived.eq.false');
 
     // Count pending posts per batch
     const pendingCountMap: Record<string, number> = {};

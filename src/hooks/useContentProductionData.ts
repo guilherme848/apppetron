@@ -129,6 +129,7 @@ export function useContentProductionData() {
     let query = supabase
       .from('content_posts')
       .select('*')
+      .or('archived.is.null,archived.eq.false')
       .order('sort_order', { ascending: true })
       .order('created_at', { ascending: true });
 

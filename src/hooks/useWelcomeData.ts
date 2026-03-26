@@ -121,7 +121,8 @@ export function useWelcomeData() {
           .from('content_posts')
           .select('id, status, assignee_id')
           .eq('assignee_id', currentMemberId)
-          .neq('status', 'done'),
+          .neq('status', 'done')
+          .or('archived.is.null,archived.eq.false'),
         
         // Active onboardings
         supabase

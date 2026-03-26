@@ -1232,6 +1232,7 @@ export type Database = {
       }
       content_posts: {
         Row: {
+          archived: boolean | null
           assignee_id: string | null
           batch_id: string
           briefing: string | null
@@ -1261,6 +1262,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          archived?: boolean | null
           assignee_id?: string | null
           batch_id: string
           briefing?: string | null
@@ -1290,6 +1292,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          archived?: boolean | null
           assignee_id?: string | null
           batch_id?: string
           briefing?: string | null

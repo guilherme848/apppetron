@@ -99,7 +99,8 @@ export function useMyTasks() {
           const { data } = await supabase
             .from('content_posts')
             .select('id, title, status, due_date, batch_id')
-            .eq('assignee_id', currentMemberId);
+            .eq('assignee_id', currentMemberId)
+            .or('archived.is.null,archived.eq.false');
           data?.forEach(post => {
             if (isOpenStatus(post.status)) {
               allTasks.push({

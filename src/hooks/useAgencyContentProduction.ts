@@ -45,6 +45,7 @@ export function useAgencyContentProduction() {
           .from('content_posts')
           .select('*')
           .in('batch_id', batchIds)
+          .or('archived.is.null,archived.eq.false')
           .order('sort_order', { ascending: true });
 
         if (postError) throw postError;

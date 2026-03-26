@@ -90,6 +90,7 @@ export default function ContentTasks() {
           )
         )
       `)
+      .or('archived.is.null,archived.eq.false')
       .order('created_at', { ascending: false });
 
     // Fetch extra requests
