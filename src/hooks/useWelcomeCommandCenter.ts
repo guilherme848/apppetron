@@ -401,6 +401,13 @@ export function useWelcomeCommandCenter() {
 
   // Quick action: change post status
   const changePostStatus = useCallback(async (postId: string, newStatus: string) => {
+    // Block transition to 'doing' without assignee
+    if (newStatus === 'doing') {
+      const post = myPosts.find(p => p.id === postId);
+      if (post && !post.assigneeId) {
+        return;
+      }
+    }
     const { error } = await supabase
       .from('content_posts')
       .update({ status: newStatus })
