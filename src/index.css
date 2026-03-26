@@ -80,6 +80,8 @@
     --warning-foreground: 0 0% 0%;
     --info: 239 84% 67%;
     --info-foreground: 0 0% 100%;
+    --purple: 258 90% 66%;
+    --purple-foreground: 0 0% 100%;
 
     /* Badge Tokens — Light */
     --badge-neutral-bg: rgba(15, 23, 42, 0.06);
@@ -166,6 +168,8 @@
     --warning-foreground: 0 0% 0%;
     --info: 239 84% 67%;
     --info-foreground: 0 0% 100%;
+    --purple: 258 90% 66%;
+    --purple-foreground: 0 0% 100%;
 
     /* Badge Tokens — Dark */
     --badge-neutral-bg: rgba(255, 255, 255, 0.05);
