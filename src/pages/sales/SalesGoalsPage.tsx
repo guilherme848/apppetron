@@ -20,9 +20,9 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 function PodiumCard({ rank, name, valueDone, valuePct, avatarUrl }: { rank: number; name: string; valueDone: number; valuePct: number; avatarUrl?: string | null }) {
   const configs: Record<number, { bg: string; border: string; icon: string; size: string }> = {
-    1: { bg: 'linear-gradient(135deg, #F59E0B, #D97706)', border: '#F59E0B', icon: '1º', size: 'h-32' },
-    2: { bg: 'linear-gradient(135deg, #9CA3AF, #6B7280)', border: '#9CA3AF', icon: '2º', size: 'h-28' },
-    3: { bg: 'linear-gradient(135deg, #B45309, #92400E)', border: '#B45309', icon: '3º', size: 'h-24' },
+    1: { bg: 'linear-gradient(135deg, hsl(var(--warning)), hsl(var(--warning)))', border: 'hsl(var(--warning))', icon: '1º', size: 'h-32' },
+    2: { bg: 'linear-gradient(135deg, hsl(var(--muted-foreground)), hsl(var(--muted-foreground)))', border: 'hsl(var(--muted-foreground))', icon: '2º', size: 'h-28' },
+    3: { bg: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary)))', border: 'hsl(var(--primary))', icon: '3º', size: 'h-24' },
   };
   const c = configs[rank] || configs[3];
 
@@ -45,7 +45,7 @@ function PodiumCard({ rank, name, valueDone, valuePct, avatarUrl }: { rank: numb
 
 function ProgressBar({ value, max, color }: { value: number; max: number; color: string }) {
   const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0;
-  const barColor = pct >= 100 ? DC.teal : pct >= 70 ? DC.orange : '#EF4444';
+  const barColor = pct >= 100 ? DC.teal : pct >= 70 ? DC.orange : 'hsl(var(--destructive))';
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">

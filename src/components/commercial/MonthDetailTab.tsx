@@ -177,7 +177,7 @@ export default function MonthDetailTab({ data, onDataChange, readOnly, bpAdicaoM
                 <tbody>
                   {/* ═══ GROUP 1: BP ═══ */}
                   <tr className="bg-muted/40">
-                    <td colSpan={14} className={groupHeaderCls}>📌 BP (Cenário Bom)</td>
+                    <td colSpan={14} className={groupHeaderCls}>BP (Cenário Bom)</td>
                   </tr>
                   {/* BP Adições totais — read-only from meta */}
                   <GroupRow label="Adições totais" months={MONTHS.map(() => bpAdicaoMensal)} total={totals.bpTotal} colBg={colBg} currentMonth={currentMonth} bold />
@@ -227,7 +227,7 @@ export default function MonthDetailTab({ data, onDataChange, readOnly, bpAdicaoM
 
                   {/* ═══ GROUP 3: REALIZADO ═══ */}
                   <tr className="bg-orange-50/40 dark:bg-orange-950/10">
-                    <td colSpan={14} className={`${groupHeaderCls} bg-orange-50/40 dark:bg-orange-950/10`}>✅ Realizado</td>
+                    <td colSpan={14} className={`${groupHeaderCls} bg-orange-50/40 dark:bg-orange-950/10`}>Realizado</td>
                   </tr>
                   <RealRow label="Inbound" data={data} field="qtyInbound" currentMonth={currentMonth} colBg={colBg} />
                   <RealRow label="Indicação" data={data} field="qtyIndicacao" currentMonth={currentMonth} colBg={colBg} />
@@ -237,7 +237,7 @@ export default function MonthDetailTab({ data, onDataChange, readOnly, bpAdicaoM
 
                   {/* ═══ GROUP 4: GAP vs BP ═══ */}
                   <tr className="bg-muted/20">
-                    <td colSpan={14} className={`${groupHeaderCls} bg-muted/20`}>📊 Gap vs BP</td>
+                    <td colSpan={14} className={`${groupHeaderCls} bg-muted/20`}>Gap vs BP</td>
                   </tr>
                   <GapRow
                     label="Gap Adições"

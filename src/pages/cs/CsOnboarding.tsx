@@ -87,7 +87,7 @@ function DayCounter({ dataInicio }: { dataInicio: string }) {
     <span
       className={cn(
         'inline-flex items-center gap-1 text-[11px] font-medium font-mono',
-        isDanger ? 'text-[#ef4444]' : isWarning ? 'text-[#f59e0b]' : 'text-muted-foreground'
+        isDanger ? 'text-destructive' : isWarning ? 'text-[#f59e0b]' : 'text-muted-foreground'
       )}
     >
       {isDanger && <AlertCircle className="h-3 w-3 animate-pulse" />}

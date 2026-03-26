@@ -88,10 +88,10 @@ const DIMENSIONS: DimensionConfig[] = [
 ];
 
 const CLASS_COLORS: Record<string, string> = {
-  A: '#10b981',
-  B: '#6366f1',
-  C: '#f59e0b',
-  D: '#ef4444',
+  A: 'hsl(var(--success))',
+  B: 'hsl(var(--info))',
+  C: 'hsl(var(--warning))',
+  D: 'hsl(var(--destructive))',
 };
 
 const CLASS_RANGES = [

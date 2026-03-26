@@ -27,7 +27,7 @@ export interface ScenarioMonth {
 
 interface MrrScenarioCardProps {
   label: string;
-  emoji: string;
+  emoji?: string;
   colorClass: string;
   config: ScenarioConfig;
   clientesIniciais: number;
@@ -144,7 +144,7 @@ export default function MrrScenarioCard({ label, emoji, colorClass, config, clie
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-base flex items-center gap-2">
-            <span>{emoji}</span> {label}
+            <span className={`w-3 h-3 rounded-full ${colorClass === 'red' ? 'bg-destructive' : colorClass === 'yellow' ? 'bg-warning' : 'bg-success'}`} /> {label}
             {isBP && (
               <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border-none text-[10px] gap-1">
                 <Pin className="h-3 w-3" /> BP Oficial

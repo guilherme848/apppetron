@@ -29,7 +29,7 @@ import { BlockedBreakdown } from '@/hooks/useTrafficOperationalDashboard';
        </CardHeader>
        <CardContent>
          {breakdown.length === 0 ? (
-           <p className="text-center text-muted-foreground py-4">Nenhuma tarefa bloqueada 🎉</p>
+           <p className="text-center text-muted-foreground py-4">Nenhuma tarefa bloqueada</p>
          ) : (
            <div className="grid md:grid-cols-2 gap-4">
              {/* Breakdown by reason */}

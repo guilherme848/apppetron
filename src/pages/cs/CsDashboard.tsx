@@ -129,7 +129,7 @@ export default function CsDashboard() {
         </CardHeader>
         <CardContent>
           {alerts.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">Nenhum alerta no momento 🎉</p>
+            <p className="text-muted-foreground text-center py-8">Nenhum alerta no momento</p>
           ) : (
             <div className="space-y-3">
               {alerts.slice(0, 10).map((alert, idx) => (

@@ -31,9 +31,27 @@ export const DC = {
 } as const;
 
 export const ROLE_CHIP_COLORS: Record<string, string> = {
-  designer: 'hsl(var(--primary))',
+  designer: 'hsl(var(--info))',
   social: 'hsl(var(--success))',
-  videomaker: 'hsl(var(--foreground))',
+  videomaker: 'hsl(var(--purple))',
+};
+
+export const ROLE_COLORS: Record<string, string> = {
+  designer: 'hsl(var(--info))',
+  videomaker: 'hsl(var(--purple))',
+  social: 'hsl(var(--success))',
+  traffic: 'hsl(var(--primary))',
+  support: 'hsl(var(--muted-foreground))',
+  cs: 'hsl(var(--warning))',
+  admin: 'hsl(var(--foreground))',
+};
+
+export const ROLE_BORDER_COLORS: Record<string, string> = {
+  designer: 'border-l-[hsl(var(--info))]',
+  videomaker: 'border-l-[hsl(var(--purple))]',
+  social: 'border-l-[hsl(var(--success))]',
+  traffic: 'border-l-[hsl(var(--primary))]',
+  support: 'border-l-[hsl(var(--muted-foreground))]',
 };
 
 export const ROLE_LABELS: Record<string, string> = {

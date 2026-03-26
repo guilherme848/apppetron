@@ -254,8 +254,8 @@ export default function SalesDashboard() {
       if (a.status === 'completed') {
         if (a.result === 'answered' || a.result === 'Atendeu') { statusLabel = 'Realizada'; statusColor = DC.teal; }
         else if (a.result === 'not_answered' || a.result === 'Não Atendeu' || a.result === 'no_show') { statusLabel = 'No-show'; statusColor = DC.red; }
-        else { statusLabel = 'Cancelada'; statusColor = '#64748B'; }
-      } else if (a.status === 'canceled') { statusLabel = 'Cancelada'; statusColor = '#64748B'; }
+        else { statusLabel = 'Cancelada'; statusColor = 'hsl(var(--muted-foreground))'; }
+      } else if (a.status === 'canceled') { statusLabel = 'Cancelada'; statusColor = 'hsl(var(--muted-foreground))'; }
       return {
         id: a.id,
         date: a.scheduled_at ? format(new Date(a.scheduled_at), 'dd/MM/yyyy HH:mm') : '—',
@@ -564,7 +564,7 @@ export default function SalesDashboard() {
               <p className="text-xs" style={{ color: DC.textSecondary }}>Taxa Comparecimento</p>
               <Badge style={{
                 backgroundColor: attendanceRate >= 70 ? DC.teal : attendanceRate >= 50 ? DC.orange : DC.red,
-                color: '#fff', fontSize: 16, marginTop: 4,
+                color: 'hsl(var(--primary-foreground))', fontSize: 16, marginTop: 4,
               }}>
                 {attendanceRate.toFixed(0)}%
               </Badge>
@@ -636,7 +636,7 @@ export default function SalesDashboard() {
                         <TableCell className="text-center">
                           <Badge style={{
                             backgroundColor: rate >= 70 ? DC.teal : rate >= 50 ? DC.orange : DC.red,
-                            color: '#fff', fontSize: 11,
+                            color: 'hsl(var(--primary-foreground))', fontSize: 11,
                           }}>
                             {rate.toFixed(0)}%
                           </Badge>
@@ -680,7 +680,7 @@ export default function SalesDashboard() {
                       <TableCell>{m.funnelName}</TableCell>
                       <TableCell>{m.responsibleName}</TableCell>
                       <TableCell>
-                        <Badge style={{ backgroundColor: m.statusColor, color: '#fff' }}>{m.statusLabel}</Badge>
+                        <Badge style={{ backgroundColor: m.statusColor, color: 'hsl(var(--primary-foreground))' }}>{m.statusLabel}</Badge>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -722,7 +722,7 @@ export default function SalesDashboard() {
                         <p className="font-medium">{d.title}</p>
                         <p className="text-xs" style={{ color: DC.textSecondary }}>{d.funnelName} › {d.stageName}</p>
                       </div>
-                      <Badge style={{ backgroundColor: d.daysSinceActivity > 7 ? DC.red : DC.orange, color: '#fff' }}>
+                      <Badge style={{ backgroundColor: d.daysSinceActivity > 7 ? DC.red : DC.orange, color: 'hsl(var(--primary-foreground))' }}>
                         {d.daysSinceActivity}d parado
                       </Badge>
                     </div>
@@ -808,7 +808,7 @@ export default function SalesDashboard() {
                     <Pie data={lossReasonData} dataKey="count" nameKey="name" cx="50%" cy="50%"
                       outerRadius={70} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
                       {lossReasonData.map((_, i) => (
-                        <Cell key={i} fill={[DC.red, DC.orange, DC.teal, DC.dark, '#64748B', '#94A3B8', '#CBD5E1'][i % 7]} />
+                        <Cell key={i} fill={[DC.red, DC.orange, DC.teal, DC.dark, 'hsl(var(--muted-foreground))', 'hsl(var(--muted-foreground))', 'hsl(var(--border))'][i % 7]} />
                       ))}
                     </Pie>
                     <Tooltip contentStyle={tooltipStyle} />

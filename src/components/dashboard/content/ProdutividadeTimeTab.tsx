@@ -12,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import {
   TrendingUp, TrendingDown, Minus, CheckCircle, Trophy, ChevronDown, ChevronUp, AlertTriangle,
 } from 'lucide-react';
-import { ROLE_LABELS } from '@/lib/dashboardColors';
+import { ROLE_LABELS, ROLE_COLORS } from '@/lib/dashboardColors';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -25,20 +25,14 @@ interface ProdutividadeTimeTabProps {
   data: any;
 }
 
-const ROLE_COLORS: Record<string, string> = {
-  designer: '#6366f1',
-  videomaker: '#8b5cf6',
-  social: '#10b981',
-};
-
-const CLIENT_COLORS = ['#6366f1', '#8b5cf6', '#10b981', '#f59e0b', '#F97316', '#f43f5e', '#ef4444', '#64748b'];
+const CLIENT_COLORS = ['hsl(var(--info))', 'hsl(var(--purple))', 'hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--primary))', 'hsl(var(--destructive))', 'hsl(var(--destructive))', 'hsl(var(--muted-foreground))'];
 
 function RoleChip({ role }: { role: string }) {
-  const color = ROLE_COLORS[role] || '#64748b';
+  const color = ROLE_COLORS[role] || 'hsl(var(--muted-foreground))';
   return (
     <span
       className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold border"
-      style={{ backgroundColor: `${color}1f`, color, borderColor: `${color}40` }}
+      style={{ backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)`, color, borderColor: `color-mix(in srgb, ${color} 25%, transparent)` }}
     >
       {ROLE_LABELS[role] || role}
     </span>
@@ -50,7 +44,7 @@ function Avatar({ name, role }: { name: string; role: string }) {
   return (
     <div
       className="w-10 h-10 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0"
-      style={{ background: `linear-gradient(135deg, ${ROLE_COLORS[role] || '#6366f1'}, ${ROLE_COLORS[role] || '#6366f1'}cc)` }}
+      style={{ background: `linear-gradient(135deg, ${ROLE_COLORS[role] || 'hsl(var(--info))'}, color-mix(in srgb, ${ROLE_COLORS[role] || 'hsl(var(--info))'} 80%, transparent))` }}
     >
       {initials}
     </div>
@@ -123,7 +117,7 @@ function GoalsModal({ open, onOpenChange, metas, onSave }: {
 
 /* ═══ SPARKLINE BLOCK ═══ */
 function SparklineBlock({ prof }: { prof: any }) {
-  const color = ROLE_COLORS[prof.role] || '#6366f1';
+  const color = ROLE_COLORS[prof.role] || 'hsl(var(--info))';
   const { monthlyHistory, sparklineTrend, monthsWithData, meta } = prof;
 
   if (monthsWithData < 2) {
@@ -203,7 +197,7 @@ function SparklineBlock({ prof }: { prof: any }) {
 
 /* ═══ PROJECTION BLOCK ═══ */
 function ProjectionBlock({ prof }: { prof: any }) {
-  const color = ROLE_COLORS[prof.role] || '#6366f1';
+  const color = ROLE_COLORS[prof.role] || 'hsl(var(--info))';
   const {
     deliveriesThisMonth, projectedTotal, monthlyGoal,
     elapsedBizDays, isCurrentMonth,
@@ -375,7 +369,7 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
   }, [productivityByProfessional, roleFilter]);
 
   const heatStyle = (count: number, role: string) => {
-    const color = ROLE_COLORS[role] || '#6366f1';
+    const color = ROLE_COLORS[role] || 'hsl(var(--info))';
     if (count === 0) return {};
     if (count >= 5) return { backgroundColor: color, color: 'white', boxShadow: `0 0 8px ${color}30` };
     if (count >= 3) return { backgroundColor: `${color}80`, color: 'white' };
@@ -384,9 +378,9 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
 
   const roleButtons = [
     { key: 'all', label: 'Todos', color: 'hsl(var(--primary))' },
-    { key: 'designer', label: 'Designers', color: '#6366f1' },
-    { key: 'videomaker', label: 'Videomakers', color: '#8b5cf6' },
-    { key: 'social', label: 'Social Media', color: '#10b981' },
+    { key: 'designer', label: 'Designers', color: 'hsl(var(--info))' },
+    { key: 'videomaker', label: 'Videomakers', color: 'hsl(var(--purple))' },
+    { key: 'social', label: 'Social Media', color: 'hsl(var(--success))' },
   ];
 
   const teamAvgProdTime = useMemo(() => {
@@ -430,7 +424,7 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {filtered.map((prof: any) => {
-            const borderColor = ROLE_COLORS[prof.role] || '#6366f1';
+            const borderColor = ROLE_COLORS[prof.role] || 'hsl(var(--info))';
             const punctualityColor = prof.punctuality >= 90 ? 'text-emerald-500' : prof.punctuality >= 70 ? 'text-warning' : 'text-destructive';
             const prodTimeColor = prof.avgProdTime <= 3 ? 'text-emerald-500' : prof.avgProdTime <= 5 ? 'text-warning' : 'text-destructive';
 

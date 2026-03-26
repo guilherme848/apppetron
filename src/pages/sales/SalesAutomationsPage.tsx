@@ -236,7 +236,7 @@ export default function SalesAutomationsPage() {
                         <TableCell className="text-center">
                           <Badge
                             className="text-white"
-                            style={{ backgroundColor: log.status === 'success' ? DC.teal : '#EF4444' }}
+                            style={{ backgroundColor: log.status === 'success' ? DC.teal : 'hsl(var(--destructive))' }}
                           >
                             {log.status === 'success' ? 'Sucesso' : 'Erro'}
                           </Badge>

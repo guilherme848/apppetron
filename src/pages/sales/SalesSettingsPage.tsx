@@ -21,15 +21,15 @@ function FunnelsStagesTab() {
   const { funnels, stages, deals, loading, refetchFunnels, refetchStages } = useSalesCrmData();
   const [showFunnelDialog, setShowFunnelDialog] = useState(false);
   const [editingFunnel, setEditingFunnel] = useState<any>(null);
-  const [funnelForm, setFunnelForm] = useState({ name: '', description: '', color: '#F97316' });
+  const [funnelForm, setFunnelForm] = useState({ name: '', description: '', color: 'hsl(var(--primary))' });
   const [showStageDialog, setShowStageDialog] = useState(false);
   const [editingStage, setEditingStage] = useState<any>(null);
-  const [stageForm, setStageForm] = useState({ name: '', color: '#64748B', probability: '50', funnel_id: '' });
+  const [stageForm, setStageForm] = useState({ name: '', color: 'hsl(var(--muted-foreground))', probability: '50', funnel_id: '' });
   const [deleteTarget, setDeleteTarget] = useState<{ type: 'funnel' | 'stage'; id: string; name: string } | null>(null);
 
   const openNewFunnel = () => {
     setEditingFunnel(null);
-    setFunnelForm({ name: '', description: '', color: '#F97316' });
+    setFunnelForm({ name: '', description: '', color: 'hsl(var(--primary))' });
     setShowFunnelDialog(true);
   };
 
@@ -56,7 +56,7 @@ function FunnelsStagesTab() {
   const openNewStage = (funnelId: string) => {
     const funnelStages = stages.filter(s => s.funnel_id === funnelId);
     setEditingStage(null);
-    setStageForm({ name: '', color: '#64748B', probability: '50', funnel_id: funnelId });
+    setStageForm({ name: '', color: 'hsl(var(--muted-foreground))', probability: '50', funnel_id: funnelId });
     setShowStageDialog(true);
   };
 
@@ -329,7 +329,7 @@ function CadencesTab() {
                     {steps.map(step => (
                       <div key={step.id} className="flex items-center gap-3 text-sm p-2 rounded bg-muted/30">
                         <Badge variant="outline" className="text-[10px] min-w-[40px] justify-center">D+{step.day_offset}</Badge>
-                        <Badge style={{ backgroundColor: (ACTIVITY_TYPE_LABELS as any)[step.type] ? DC.teal : DC.textSecondary, color: '#fff' }} className="text-[10px]">
+                        <Badge style={{ backgroundColor: (ACTIVITY_TYPE_LABELS as any)[step.type] ? DC.teal : DC.textSecondary, color: 'hsl(var(--primary-foreground))' }} className="text-[10px]">
                           {(ACTIVITY_TYPE_LABELS as any)[step.type] || step.type}
                         </Badge>
                         <span className="text-foreground">{step.title}</span>
