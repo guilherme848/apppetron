@@ -293,9 +293,9 @@ export default function CommercialPlanningPage() {
   })), [bpMonthly, data, novaPrevisao, currentMonth]);
 
   const chartConfig = {
-    bp: { label: 'BP Original', color: '#F97316' },
-    realizado: { label: 'Realizado', color: '#f43f5e' },
-    novaPrevisao: { label: 'Nova Previsão', color: '#6366f1' },
+    bp: { label: 'BP Original', color: 'hsl(var(--primary))' },
+    realizado: { label: 'Realizado', color: 'hsl(var(--destructive))' },
+    novaPrevisao: { label: 'Nova Previsão', color: 'hsl(var(--info))' },
   };
 
   const channelData = useMemo(() => {
@@ -466,7 +466,7 @@ export default function CommercialPlanningPage() {
                   className="h-10 w-10 rounded-full flex items-center justify-center shrink-0"
                   style={{ backgroundColor: '#6366f11F' }}
                 >
-                  <Target className="h-5 w-5" style={{ color: '#6366f1' }} />
+                  <Target className="h-5 w-5" style={{ color: 'hsl(var(--info))' }} />
                 </div>
               </div>
             </div>
@@ -502,7 +502,7 @@ export default function CommercialPlanningPage() {
                   className="h-10 w-10 rounded-full flex items-center justify-center shrink-0"
                   style={{ backgroundColor: '#10b9811F' }}
                 >
-                  <TrendingUp className="h-5 w-5" style={{ color: '#10b981' }} />
+                  <TrendingUp className="h-5 w-5" style={{ color: 'hsl(var(--success))' }} />
                 </div>
               </div>
             </div>
@@ -517,8 +517,8 @@ export default function CommercialPlanningPage() {
               valueColor={getDiffColor(gapAcumulado)}
               sub="diferença entre realizado e BP proporcional"
               icon={gapAcumulado >= 0 ? ArrowUpRight : ArrowDownRight}
-              iconColor={gapAcumulado >= 0 ? '#10b981' : '#ef4444'}
-              borderColor={gapAcumulado >= 0 ? '#10b981' : '#ef4444'}
+              iconColor={gapAcumulado >= 0 ? 'hsl(var(--success))' : 'hsl(var(--destructive))'}
+              borderColor={gapAcumulado >= 0 ? 'hsl(var(--success))' : 'hsl(var(--destructive))'}
               delay={160}
               loading={loading}
             />
@@ -529,8 +529,8 @@ export default function CommercialPlanningPage() {
               fullValue={fmt(projecaoFechamento)}
               sub="estimativa de receita no fechamento do ano"
               icon={Calculator}
-              iconColor="#F97316"
-              borderColor="#F97316"
+              iconColor="hsl(var(--primary))"
+              borderColor="hsl(var(--primary))"
               delay={200}
               loading={loading}
             />
@@ -541,8 +541,8 @@ export default function CommercialPlanningPage() {
               fullValue={`${gapFechamento >= 0 ? '+' : ''}${fmt(gapFechamento)}`}
               valueColor={getDiffColor(gapFechamento)}
               icon={gapFechamento >= 0 ? CheckCircle : AlertTriangle}
-              iconColor={gapFechamento >= 0 ? '#10b981' : '#ef4444'}
-              borderColor={gapFechamento >= 0 ? '#10b981' : '#ef4444'}
+              iconColor={gapFechamento >= 0 ? 'hsl(var(--success))' : 'hsl(var(--destructive))'}
+              borderColor={gapFechamento >= 0 ? 'hsl(var(--success))' : 'hsl(var(--destructive))'}
               delay={240}
               loading={loading}
             >
@@ -572,9 +572,9 @@ export default function CommercialPlanningPage() {
               </div>
               <div className="flex items-center gap-4">
                 {[
-                  { label: 'BP Original', color: '#F97316' },
-                  { label: 'Realizado', color: '#f43f5e' },
-                  { label: 'Nova Previsão', color: '#6366f1' },
+                  { label: 'BP Original', color: 'hsl(var(--primary))' },
+                  { label: 'Realizado', color: 'hsl(var(--destructive))' },
+                  { label: 'Nova Previsão', color: 'hsl(var(--info))' },
                 ].map(item => (
                   <div key={item.label} className="flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
@@ -596,9 +596,9 @@ export default function CommercialPlanningPage() {
                     }}
                   />}
                 />
-                <Bar dataKey="bp" name="BP Original" fill="#F97316" fillOpacity={0.7} radius={[4, 4, 0, 0]} barSize={20} animationDuration={400} />
-                <Bar dataKey="realizado" name="Realizado" fill="#f43f5e" radius={[4, 4, 0, 0]} barSize={20} animationDuration={400} />
-                <Bar dataKey="novaPrevisao" name="Nova Previsão" fill="#6366f1" fillOpacity={0.7} radius={[4, 4, 0, 0]} barSize={20} animationDuration={400} />
+                <Bar dataKey="bp" name="BP Original" fill="hsl(var(--primary))" fillOpacity={0.7} radius={[4, 4, 0, 0]} barSize={20} animationDuration={400} />
+                <Bar dataKey="realizado" name="Realizado" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} barSize={20} animationDuration={400} />
+                <Bar dataKey="novaPrevisao" name="Nova Previsão" fill="hsl(var(--info))" fillOpacity={0.7} radius={[4, 4, 0, 0]} barSize={20} animationDuration={400} />
               </ComposedChart>
             </ChartContainer>
           </div>
@@ -685,8 +685,8 @@ export default function CommercialPlanningPage() {
           {/* ── Section 7: Channel Breakdown ────────────── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {channelData.map((ch, ci) => {
-              const channelColors: Record<string, string> = { inbound: '#6366f1', indicacao: '#10b981', prospeccao: '#F97316' };
-              const borderCol = channelColors[ch.key] || '#F97316';
+              const channelColors: Record<string, string> = { inbound: 'hsl(var(--info))', indicacao: 'hsl(var(--success))', prospeccao: 'hsl(var(--primary))' };
+              const borderCol = channelColors[ch.key] || 'hsl(var(--primary))';
               return (
                 <div
                   key={ch.key}

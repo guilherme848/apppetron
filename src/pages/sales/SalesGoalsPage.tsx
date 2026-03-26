@@ -45,7 +45,7 @@ function PodiumCard({ rank, name, valueDone, valuePct, avatarUrl }: { rank: numb
 
 function ProgressBar({ value, max, color }: { value: number; max: number; color: string }) {
   const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0;
-  const barColor = pct >= 100 ? DC.teal : pct >= 70 ? DC.orange : '#EF4444';
+  const barColor = pct >= 100 ? DC.teal : pct >= 70 ? DC.orange : 'hsl(var(--destructive))';
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">

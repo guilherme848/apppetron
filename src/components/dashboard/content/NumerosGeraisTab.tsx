@@ -23,13 +23,13 @@ interface NumerosGeraisTabProps {
 }
 
 const ROLE_COLORS: Record<string, string> = {
-  designer: '#6366f1',
-  videomaker: '#8b5cf6',
-  social: '#10b981',
+  designer: 'hsl(var(--info))',
+  videomaker: 'hsl(var(--purple))',
+  social: 'hsl(var(--success))',
 };
 
 function RoleChip({ role }: { role: string }) {
-  const color = ROLE_COLORS[role] || '#64748b';
+  const color = ROLE_COLORS[role] || 'hsl(var(--muted-foreground))';
   return (
     <span
       className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold border"
@@ -499,7 +499,7 @@ export function NumerosGeraisTab({ data }: NumerosGeraisTabProps) {
                     <Tooltip contentStyle={tooltipStyle} />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
                     {productivityByProfessional.slice(0, 8).map((s: any, i: number) => {
-                      const colors = ['#6366f1', '#10b981', '#8b5cf6', '#F97316', '#f43f5e', '#94a3b8', '#06b6d4', '#eab308'];
+                      const colors = ['hsl(var(--info))', 'hsl(var(--success))', 'hsl(var(--purple))', 'hsl(var(--primary))', 'hsl(var(--destructive))', '#94a3b8', '#06b6d4', '#eab308'];
                       return (
                         <Bar key={`${s.id}-${s.role}`} dataKey={`${s.name}_${s.role}`} name={s.name} fill={colors[i % colors.length]} radius={[4, 4, 0, 0]} />
                       );

@@ -21,7 +21,7 @@ function FunnelsStagesTab() {
   const { funnels, stages, deals, loading, refetchFunnels, refetchStages } = useSalesCrmData();
   const [showFunnelDialog, setShowFunnelDialog] = useState(false);
   const [editingFunnel, setEditingFunnel] = useState<any>(null);
-  const [funnelForm, setFunnelForm] = useState({ name: '', description: '', color: '#F97316' });
+  const [funnelForm, setFunnelForm] = useState({ name: '', description: '', color: 'hsl(var(--primary))' });
   const [showStageDialog, setShowStageDialog] = useState(false);
   const [editingStage, setEditingStage] = useState<any>(null);
   const [stageForm, setStageForm] = useState({ name: '', color: '#64748B', probability: '50', funnel_id: '' });
@@ -29,7 +29,7 @@ function FunnelsStagesTab() {
 
   const openNewFunnel = () => {
     setEditingFunnel(null);
-    setFunnelForm({ name: '', description: '', color: '#F97316' });
+    setFunnelForm({ name: '', description: '', color: 'hsl(var(--primary))' });
     setShowFunnelDialog(true);
   };
 

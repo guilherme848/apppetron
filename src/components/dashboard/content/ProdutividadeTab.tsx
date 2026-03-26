@@ -19,19 +19,19 @@ interface ProdutividadeTabProps {
 }
 
 const ROLE_COLORS: Record<string, string> = {
-  designer: '#6366f1',
-  videomaker: '#8b5cf6',
-  social: '#10b981',
+  designer: 'hsl(var(--info))',
+  videomaker: 'hsl(var(--purple))',
+  social: 'hsl(var(--success))',
 };
 
 const ROLE_BORDER_COLORS: Record<string, string> = {
-  designer: 'border-l-[#6366f1]',
-  videomaker: 'border-l-[#8b5cf6]',
-  social: 'border-l-[#10b981]',
+  designer: 'border-l-info',
+  videomaker: 'border-l-purple',
+  social: 'border-l-success',
 };
 
 function RoleChip({ role }: { role: string }) {
-  const color = ROLE_COLORS[role] || '#64748b';
+  const color = ROLE_COLORS[role] || 'hsl(var(--muted-foreground))';
   return (
     <span
       className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold border"
@@ -47,7 +47,7 @@ function Avatar({ name, role }: { name: string; role: string }) {
   return (
     <div
       className="w-9 h-9 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0"
-      style={{ background: `linear-gradient(135deg, ${ROLE_COLORS[role] || '#6366f1'}, ${ROLE_COLORS[role] || '#6366f1'}cc)` }}
+      style={{ background: `linear-gradient(135deg, ${ROLE_COLORS[role] || 'hsl(var(--info))'}, ${ROLE_COLORS[role] || 'hsl(var(--info))'}cc)` }}
     >
       {initials}
     </div>
@@ -247,7 +247,7 @@ export function ProdutividadeTab({ data }: ProdutividadeTabProps) {
     const meta = metasMap[role] || 3;
     if (count === 0) return 'bg-muted border border-border/50';
     const pct = count / meta;
-    const color = ROLE_COLORS[role] || '#6366f1';
+    const color = ROLE_COLORS[role] || 'hsl(var(--info))';
     if (pct >= 1) return '';
     if (pct >= 0.5) return '';
     return '';
@@ -255,7 +255,7 @@ export function ProdutividadeTab({ data }: ProdutividadeTabProps) {
 
   const heatStyle = (count: number, role: string) => {
     const meta = metasMap[role] || 3;
-    const color = ROLE_COLORS[role] || '#6366f1';
+    const color = ROLE_COLORS[role] || 'hsl(var(--info))';
     if (count === 0) return {};
     const pct = count / meta;
     if (pct >= 1) return { backgroundColor: color, color: 'white', boxShadow: `0 0 8px ${color}30` };
@@ -331,7 +331,7 @@ export function ProdutividadeTab({ data }: ProdutividadeTabProps) {
               const isAboveMeta = metaPct >= 100;
               const isBelowThreshold = metaPct < 70 && prof.meta > 0;
               const progressColor = metaPct >= 100 ? 'bg-emerald-500' : metaPct >= 70 ? 'bg-amber-500' : 'bg-red-500';
-              const borderColor = ROLE_COLORS[prof.role] || '#6366f1';
+              const borderColor = ROLE_COLORS[prof.role] || 'hsl(var(--info))';
 
               return (
                 <Card
@@ -581,7 +581,7 @@ export function ProdutividadeTab({ data }: ProdutividadeTabProps) {
                         />
                       )}
                       {allStats.slice(0, 8).map((s, i) => {
-                        const colors = [ROLE_COLORS.designer, ROLE_COLORS.social, ROLE_COLORS.videomaker, '#F97316', '#f43f5e', '#94a3b8', '#6366f1', '#8b5cf6'];
+                        const colors = [ROLE_COLORS.designer, ROLE_COLORS.social, ROLE_COLORS.videomaker, 'hsl(var(--primary))', 'hsl(var(--destructive))', '#94a3b8', 'hsl(var(--info))', 'hsl(var(--purple))'];
                         return (
                           <Bar key={`${s.id}-${s.role}`} dataKey={`${s.name}_${s.role}`} name={s.name} fill={colors[i % colors.length]} radius={[4, 4, 0, 0]} />
                         );

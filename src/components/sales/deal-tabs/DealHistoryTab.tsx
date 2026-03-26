@@ -17,8 +17,8 @@ const EVENT_ICONS: Record<string, { icon: React.ElementType; color: string }> = 
   call_made: { icon: Phone, color: DC.orange },
   field_changed: { icon: Edit3, color: '#64748B' },
   responsible_changed: { icon: UserCheck, color: DC.teal },
-  score_changed: { icon: Target, color: '#F97316' },
-  automation_executed: { icon: Zap, color: '#EF4444' },
+  score_changed: { icon: Target, color: 'hsl(var(--primary))' },
+  automation_executed: { icon: Zap, color: 'hsl(var(--destructive))' },
   cadence_started: { icon: History, color: DC.teal },
   note_added: { icon: Edit3, color: '#64748B' },
 };

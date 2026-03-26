@@ -14,13 +14,13 @@ interface AlteracoesTabProps {
 }
 
 const ROLE_COLORS: Record<string, string> = {
-  designer: '#6366f1',
-  videomaker: '#8b5cf6',
-  social: '#10b981',
+  designer: 'hsl(var(--info))',
+  videomaker: 'hsl(var(--purple))',
+  social: 'hsl(var(--success))',
 };
 
 function RoleChip({ role }: { role: string }) {
-  const color = ROLE_COLORS[role] || '#64748b';
+  const color = ROLE_COLORS[role] || 'hsl(var(--muted-foreground))';
   return (
     <span
       className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold border"
@@ -211,7 +211,7 @@ export function AlteracoesTab({ data }: AlteracoesTabProps) {
                   <YAxis dataKey="name" type="category" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} width={100} />
                   <Tooltip contentStyle={tooltipStyle} />
                   <Bar dataKey="completed" name="Concluídos" fill="hsl(var(--border))" radius={[0, 4, 4, 0]} />
-                  <Bar dataKey="changes" name="Alterações" fill="#F97316" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="changes" name="Alterações" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -228,8 +228,8 @@ export function AlteracoesTab({ data }: AlteracoesTabProps) {
                   <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
                   <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
                   <Tooltip contentStyle={tooltipStyle} />
-                  <ReferenceLine y={avgMonthly} stroke="#ef4444" strokeDasharray="5 5" label={{ value: `Limite: ${avgMonthly}`, position: 'right', fill: '#ef4444', fontSize: 10 }} />
-                  <Bar dataKey="count" name="Alterações" fill="#F97316" radius={[4, 4, 0, 0]} />
+                  <ReferenceLine y={avgMonthly} stroke="hsl(var(--destructive))" strokeDasharray="5 5" label={{ value: `Limite: ${avgMonthly}`, position: 'right', fill: 'hsl(var(--destructive))', fontSize: 10 }} />
+                  <Bar dataKey="count" name="Alterações" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
