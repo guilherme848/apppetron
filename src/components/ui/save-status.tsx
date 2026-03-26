@@ -1,4 +1,4 @@
-import { Check, Cloud, CloudOff, RefreshCcw, Edit3 } from 'lucide-react';
+import { Check, Cloud, CloudOff, RefreshCcw, Edit3, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { AutoSaveStatus } from '@/hooks/useAutoSave';
