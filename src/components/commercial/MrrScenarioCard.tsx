@@ -27,7 +27,7 @@ export interface ScenarioMonth {
 
 interface MrrScenarioCardProps {
   label: string;
-  emoji: string;
+  emoji?: string;
   colorClass: string;
   config: ScenarioConfig;
   clientesIniciais: number;
