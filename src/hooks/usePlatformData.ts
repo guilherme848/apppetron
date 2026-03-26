@@ -50,7 +50,8 @@ export function usePlatformData(year: number) {
     const { data, error: err } = await supabase
       .from('accounts')
       .select('id, status, start_date, churned_at, monthly_value, origin')
-      .is('deleted_at', null);
+      .is('deleted_at', null)
+      .or('cliente_interno.is.null,cliente_interno.eq.false');
 
     if (err) {
       setError(err.message);

@@ -108,7 +108,7 @@ export function useCommandCenter() {
       nichesRes,
       alertConfigsRes,
     ] = await Promise.all([
-      supabase.from('accounts').select('*').is('deleted_at', null),
+      supabase.from('accounts').select('*').is('deleted_at', null).or('cliente_interno.is.null,cliente_interno.eq.false'),
       supabase.from('cs_client_onboarding').select('*, accounts:client_id(name)'),
       supabase.from('cs_meetings').select('*, accounts:client_id(name), team_members:responsible_member_id(name)'),
       supabase.from('cs_nps_responses').select('*, accounts:client_id(name)'),

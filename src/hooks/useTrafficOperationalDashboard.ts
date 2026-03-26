@@ -81,7 +81,7 @@
      try {
        const [tasksRes, accountsRes, membersRes, servicesRes, statusesRes] = await Promise.all([
          supabase.from('traffic_playbook_tasks').select('*').order('due_date'),
-         supabase.from('accounts').select('id, name, service_id, traffic_member_id').is('deleted_at', null),
+         supabase.from('accounts').select('id, name, service_id, traffic_member_id').is('deleted_at', null).or('cliente_interno.is.null,cliente_interno.eq.false'),
          supabase.from('team_members').select('id, name'),
          supabase.from('services').select('id, name'),
          supabase.from('traffic_client_status').select('*'),

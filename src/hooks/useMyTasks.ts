@@ -82,7 +82,7 @@ export function useMyTasks() {
     const allTasks: MyTask[] = [];
 
     // Fetch accounts for client names
-    const { data: accounts } = await supabase.from('accounts').select('id, name');
+    const { data: accounts } = await supabase.from('accounts').select('id, name').or('cliente_interno.is.null,cliente_interno.eq.false');
     const accountMap = new Map(accounts?.map(a => [a.id, a.name]) || []);
 
     // Helper to create proper promises

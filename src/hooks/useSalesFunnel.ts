@@ -137,7 +137,8 @@ export function useSalesFunnel() {
       .select('start_date, monthly_value')
       .gte('start_date', startDate)
       .lte('start_date', endDate)
-      .is('deleted_at', null);
+      .is('deleted_at', null)
+      .or('cliente_interno.is.null,cliente_interno.eq.false');
 
     if (error) {
       console.error('Error fetching client metrics:', error);
@@ -175,6 +176,7 @@ export function useSalesFunnel() {
       .select('start_date')
       .eq('status', 'active')
       .is('deleted_at', null)
+      .or('cliente_interno.is.null,cliente_interno.eq.false')
       .not('start_date', 'is', null);
 
     if (error) {

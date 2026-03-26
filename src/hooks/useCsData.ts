@@ -971,7 +971,7 @@ export function useCsDashboardMetrics() {
       settingsRes,
       meetingsRes,
     ] = await Promise.all([
-      supabase.from('accounts').select('id', { count: 'exact' }).eq('status', 'active'),
+      supabase.from('accounts').select('id', { count: 'exact' }).eq('status', 'active').or('cliente_interno.is.null,cliente_interno.eq.false'),
       supabase.from('cs_client_onboarding').select('*').eq('status', 'in_progress'),
       supabase.from('cs_risk_cases').select('id', { count: 'exact' }).in('status', ['open', 'in_progress']),
       supabase.from('cs_cancellations').select('id', { count: 'exact' }).gte('effective_cancel_date', startOfMonth.toISOString().split('T')[0]),

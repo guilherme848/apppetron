@@ -71,8 +71,9 @@ export function useBaseHealthScore() {
         // Fetch accounts
         const { data: accountsData } = await supabase
           .from('accounts')
-          .select('id, status, start_date, churned_at, service_id, niche_id, deleted_at')
-          .is('deleted_at', null);
+          .select('id, status, start_date, churned_at, service_id, niche_id, deleted_at, cliente_interno')
+          .is('deleted_at', null)
+          .or('cliente_interno.is.null,cliente_interno.eq.false');
 
         setAccounts(accountsData || []);
 

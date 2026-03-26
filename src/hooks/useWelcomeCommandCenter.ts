@@ -198,20 +198,23 @@ export function useWelcomeCommandCenter() {
             .from('accounts')
             .select('ad_monthly_budget, start_date')
             .eq('status', 'ativo')
-            .is('deleted_at', null),
+            .is('deleted_at', null)
+            .or('cliente_interno.is.null,cliente_interno.eq.false'),
           // Contracts pillar: current month
           supabase
             .from('accounts')
             .select('id', { count: 'exact', head: true })
             .gte('start_date', monthStart)
-            .is('deleted_at', null),
+            .is('deleted_at', null)
+            .or('cliente_interno.is.null,cliente_interno.eq.false'),
           // Contracts pillar: previous month
           supabase
             .from('accounts')
             .select('id', { count: 'exact', head: true })
             .gte('start_date', prevMonthStart)
             .lte('start_date', prevMonthEnd)
-            .is('deleted_at', null),
+            .is('deleted_at', null)
+            .or('cliente_interno.is.null,cliente_interno.eq.false'),
         ]);
 
         // ─── Content Pillar ───

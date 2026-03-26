@@ -55,6 +55,7 @@ export function useContentData() {
     const { data, error } = await supabase
       .from('accounts')
       .select('id, name')
+      .or('cliente_interno.is.null,cliente_interno.eq.false')
       .order('name', { ascending: true });
     if (error) {
       console.error('Error fetching accounts:', error);

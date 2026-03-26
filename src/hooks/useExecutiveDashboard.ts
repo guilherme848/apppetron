@@ -72,7 +72,8 @@ export function useExecutiveDashboard() {
       supabase
         .from('accounts')
         .select('id, name, status, start_date, churned_at, monthly_value, service_id, niche_id')
-        .is('deleted_at', null),
+        .is('deleted_at', null)
+        .or('cliente_interno.is.null,cliente_interno.eq.false'),
       supabase.from('services').select('id, name').order('name'),
       supabase.from('niches').select('id, name').order('name'),
     ]);
