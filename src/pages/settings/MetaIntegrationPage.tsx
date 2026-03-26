@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Link2, RefreshCw, Loader2, CheckCircle, AlertCircle, DollarSign } from 'lucide-react';
+import { Link2, RefreshCw, CheckCircle, AlertCircle, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useMetaAds } from '@/hooks/useMetaAds';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function MetaIntegrationPage() {
   const {
@@ -52,7 +53,7 @@ export default function MetaIntegrationPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }
@@ -135,7 +136,7 @@ export default function MetaIntegrationPage() {
               <div className="flex gap-2">
                 <Button variant="outline" onClick={handleSync} disabled={syncing}>
                   {syncing ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Skeleton className="h-4 w-16 rounded" />
                   ) : (
                     <RefreshCw className="h-4 w-4 mr-2" />
                   )}
@@ -143,7 +144,7 @@ export default function MetaIntegrationPage() {
                 </Button>
                 <Button onClick={handleFetchFinance} disabled={fetchingFinance || adAccounts.length === 0}>
                   {fetchingFinance ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Skeleton className="h-4 w-16 rounded" />
                   ) : (
                     <DollarSign className="h-4 w-4 mr-2" />
                   )}

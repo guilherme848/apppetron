@@ -3,9 +3,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Loader2 } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Account {
   id: string;
@@ -77,7 +78,7 @@ export function SelectClientDialog({
           <div className="max-h-[300px] overflow-y-auto space-y-1">
             {loading ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <Skeleton className="h-24 w-full rounded-2xl" />
               </div>
             ) : filteredAccounts.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">

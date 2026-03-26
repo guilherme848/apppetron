@@ -1,4 +1,4 @@
-import { Loader2, GitBranch, Info } from 'lucide-react';
+import { GitBranch, Info } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useStageResponsibilities } from '@/hooks/useStageResponsibilities';
 import { BATCH_STATUS_OPTIONS } from '@/types/contentProduction';
 import { ROLE_OPTIONS, RoleKey } from '@/lib/accountTeam';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const VARIABLE_STAGES = ['production', 'changes'];
 
@@ -25,7 +26,7 @@ export default function PipelinePage() {
   if (loadingResp) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }

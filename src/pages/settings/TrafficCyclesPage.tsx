@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Loader2, RefreshCw, Layers } from 'lucide-react';
+import { Plus, Pencil, Trash2, RefreshCw, Layers } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useTraffic } from '@/contexts/TrafficContext';
 import { Link } from 'react-router-dom';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function TrafficCyclesPage() {
   const { cycles, loading, addCycle, updateCycle, deleteCycle, toggleCycleActive, getRoutinesByCycle } = useTraffic();
@@ -70,7 +71,7 @@ export default function TrafficCyclesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }

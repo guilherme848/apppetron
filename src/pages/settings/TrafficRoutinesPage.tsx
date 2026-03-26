@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Loader2, RotateCcw, RefreshCw, Layers } from 'lucide-react';
+import { Plus, Pencil, Trash2, RotateCcw, RefreshCw, Layers } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { useTraffic } from '@/contexts/TrafficContext';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ROUTINE_FREQUENCY_OPTIONS, ANCHOR_RULE_OPTIONS, RoutineFrequency } from '@/types/traffic';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function TrafficRoutinesPage() {
   const { 
@@ -127,7 +128,7 @@ export default function TrafficRoutinesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }

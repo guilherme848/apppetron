@@ -21,7 +21,6 @@ import {
   User,
   Star,
   Download,
-  Loader2,
   FolderArchive,
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -550,7 +549,7 @@ export default function CsOnboardingMeeting() {
                           disabled={downloadingAll}
                         >
                           {downloadingAll ? (
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            <Skeleton className="h-4 w-16 rounded" />
                           ) : (
                             <FolderArchive className="h-4 w-4 mr-2" />
                           )}
@@ -598,7 +597,7 @@ export default function CsOnboardingMeeting() {
                               disabled={downloadingFileId === file.id}
                             >
                               {downloadingFileId === file.id ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <Skeleton className="h-4 w-16 rounded" />
                               ) : (
                                 <Download className="h-4 w-4" />
                               )}

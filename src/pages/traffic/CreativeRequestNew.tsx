@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Save, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ import { useCurrentMember } from '@/hooks/usePermissions';
 import { RichTextEditor } from '@/components/content/RichTextEditor';
 import { resolveAssigneeFromAccountTeam, ROLE_OPTIONS, ROLE_KEY_LABELS, RoleKey } from '@/lib/accountTeam';
 import {
+import { Skeleton } from '@/components/ui/skeleton';
   CREATIVE_REQUEST_PRIORITY_OPTIONS,
   CREATIVE_REQUEST_FORMAT_OPTIONS,
   CREATIVE_REQUEST_OBJECTIVE_OPTIONS,
@@ -236,7 +237,7 @@ export default function CreativeRequestNew() {
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => navigate('/traffic/creative-requests')}>Cancelar</Button>
               <Button type="submit" disabled={saving || !!isRoleMissing}>
-                {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                {saving ? <Skeleton className="h-4 w-16 rounded" /> : <Save className="h-4 w-4 mr-2" />}
                 Criar Solicitação
               </Button>
             </div>

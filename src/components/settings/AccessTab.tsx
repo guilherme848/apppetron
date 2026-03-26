@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, Shield, ShieldCheck, ShieldX, User } from 'lucide-react';
+import { Shield, ShieldCheck, ShieldX, User } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { usePermissions, useMemberPermissions } from '@/hooks/usePermissions';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Group permissions by category
 const PERMISSION_GROUPS: { label: string; keys: string[] }[] = [
@@ -53,7 +54,7 @@ export function AccessTab() {
   if (loadingMembers || loadingPermissions) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }
@@ -96,7 +97,7 @@ export function AccessTab() {
         {selectedMemberId && (
           loadingMemberPerms ? (
             <div className="flex items-center justify-center h-32">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <Skeleton className="h-24 w-full rounded-2xl" />
             </div>
           ) : (
             <div className="space-y-6">

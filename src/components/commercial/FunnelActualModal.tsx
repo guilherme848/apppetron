@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { SalesFunnelActual, MONTH_NAMES } from '@/types/salesFunnel';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Loader2, Calculator } from 'lucide-react';
+import { Calculator } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface Props {
@@ -278,7 +278,7 @@ export function FunnelActualModal({ open, onOpenChange, month, actual, onSave }:
             Cancelar
           </Button>
           <Button onClick={handleSubmit} disabled={saving}>
-            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            
             Salvar
           </Button>
         </DialogFooter>

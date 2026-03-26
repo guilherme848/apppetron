@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Loader2, Package, ClipboardList } from 'lucide-react';
+import { Plus, Pencil, Trash2, Package, ClipboardList } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import { useDeliverablesData, useServiceDeliverables } from '@/hooks/useDelivera
 import { useSettings } from '@/contexts/SettingsContext';
 import { Deliverable } from '@/types/deliverables';
 import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function DeliverablesTab() {
   return (
@@ -96,7 +97,7 @@ function CatalogSubTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }
@@ -290,7 +291,7 @@ function ByPlanSubTab() {
   if (loadingServices || loadingDeliverables) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }
@@ -337,7 +338,7 @@ function ByPlanSubTab() {
           {selectedServiceId && (
             loadingItems ? (
               <div className="flex items-center justify-center h-32">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <Skeleton className="h-24 w-full rounded-2xl" />
               </div>
             ) : items.length === 0 ? (
               <div className="text-center py-8 border rounded-lg">

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Plus, Loader2, AlertTriangle, Archive, AlertCircle, Trash2, Lock, MessageSquareWarning, Filter, Megaphone } from 'lucide-react';
+import { ArrowLeft, Plus, AlertTriangle, Archive, AlertCircle, Trash2, Lock, MessageSquareWarning, Filter, Megaphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,6 +22,7 @@ import { BATCH_STATUS_OPTIONS, BatchStatus, BatchAttachment, ContentPost, Conten
 import { ROLE_KEY_LABELS } from '@/lib/accountTeam';
 import { useBatchChangeRequests } from '@/hooks/useBatchChangeRequests';
 import { Toggle } from '@/components/ui/toggle';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function MarketingBatchDetail() {
   const { id } = useParams<{ id: string }>();
@@ -192,7 +193,7 @@ export default function MarketingBatchDetail() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }
@@ -463,7 +464,7 @@ export default function MarketingBatchDetail() {
         <CardContent>
           {loadingAttachments ? (
             <div className="flex items-center justify-center py-4">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              <Skeleton className="h-4 w-16 rounded" />
             </div>
           ) : (
             <FileUpload

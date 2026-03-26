@@ -1,4 +1,4 @@
-import { Loader2, BarChart3 } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -6,6 +6,7 @@ import { useTrafficAnalytics } from '@/hooks/useTrafficAnalytics';
 import { useSettings } from '@/contexts/SettingsContext';
 import { PERIOD_OPTIONS } from '@/types/trafficAnalytics';
 import { useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 function formatMetricValue(value: number | null, unit: string): string {
   if (value === null || value === undefined) return '—';
@@ -28,7 +29,7 @@ export default function TrafficBenchmarks() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }

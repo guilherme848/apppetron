@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { User, Camera, Calendar, Briefcase, Loader2 } from 'lucide-react';
+import { User, Camera, Calendar, Briefcase } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,7 @@ import { useCurrentMember } from '@/hooks/usePermissions';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ProfilePage() {
   const { members, loading, updateMember, refetch } = useTeamMembers();
@@ -35,7 +36,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }
@@ -130,7 +131,7 @@ export default function ProfilePage() {
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
             >
-              {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+              {uploading ? <Skeleton className="h-4 w-16 rounded" /> : <Camera className="h-4 w-4" />}
             </Button>
             <input
               ref={fileInputRef}
@@ -166,7 +167,7 @@ export default function ProfilePage() {
                 }}
                 placeholder="Seu nome completo"
               />
-              {saving === 'full_name' && <Loader2 className="h-5 w-5 animate-spin self-center text-muted-foreground" />}
+              {saving === 'full_name' && <Skeleton className="h-4 w-16 rounded" />}
             </div>
           </div>
 
@@ -187,7 +188,7 @@ export default function ProfilePage() {
                   }
                 }}
               />
-              {saving === 'birth_date' && <Loader2 className="h-5 w-5 animate-spin self-center text-muted-foreground" />}
+              {saving === 'birth_date' && <Skeleton className="h-4 w-16 rounded" />}
             </div>
           </div>
 

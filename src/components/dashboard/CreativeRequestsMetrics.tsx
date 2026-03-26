@@ -1,9 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Palette, Clock, CheckCircle2, AlertTriangle, Timer, Users, Building2 } from 'lucide-react';
+import { Palette, Clock, CheckCircle2, AlertTriangle, Timer, Users, Building2 } from 'lucide-react';
 import { useCreativeRequestsMetrics } from '@/hooks/useCreativeRequests';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const CHART_COLORS = [
   'hsl(var(--chart-1))',
@@ -20,7 +21,7 @@ export function CreativeRequestsMetrics() {
     return (
       <Card>
         <CardContent className="flex items-center justify-center h-48">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <Skeleton className="h-24 w-full rounded-2xl" />
         </CardContent>
       </Card>
     );

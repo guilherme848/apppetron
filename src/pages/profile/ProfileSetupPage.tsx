@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Camera, Loader2 } from 'lucide-react';
+import { User, Camera } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { isProfileComplete } from '@/types/team';
 import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ProfileSetupPage() {
   const navigate = useNavigate();
@@ -41,7 +42,7 @@ export default function ProfileSetupPage() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }
@@ -146,7 +147,7 @@ export default function ProfileSetupPage() {
                 disabled={uploading}
               >
                 {uploading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Skeleton className="h-4 w-16 rounded" />
                 ) : (
                   <Camera className="h-4 w-4" />
                 )}
@@ -190,7 +191,7 @@ export default function ProfileSetupPage() {
             disabled={!isValid || saving}
           >
             {saving ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              <Skeleton className="h-4 w-16 rounded" />
             ) : null}
             Continuar
           </Button>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Save, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,7 @@ import {
   ExtraResponsibleRole,
 } from '@/types/extraRequests';
 import { FORMAT_OPTIONS } from '@/types/contentProduction';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ExtraRequestNew() {
   const navigate = useNavigate();
@@ -289,7 +290,7 @@ export default function ExtraRequestNew() {
                 Cancelar
               </Button>
               <Button type="submit" disabled={saving || isRoleMissing}>
-                {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                {saving ? <Skeleton className="h-4 w-16 rounded" /> : <Save className="h-4 w-4 mr-2" />}
                 Criar Solicitação
               </Button>
             </div>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Trash2, UserX, Loader2 } from 'lucide-react';
+import { CalendarIcon, Trash2, UserX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
 import { Account } from '@/types/crm';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export type RemovalType = 'delete' | 'churn';
 
@@ -248,7 +249,7 @@ export function AccountRemoveDialog({ open, onOpenChange, account, onConfirm }: 
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Skeleton className="h-4 w-16 rounded" />
                   Processando...
                 </>
               ) : (

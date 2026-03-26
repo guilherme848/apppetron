@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, TrendingUp } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface MonthData {
   month: string;
@@ -71,7 +72,7 @@ export function ClientEvolutionChart() {
     return (
       <Card>
         <CardContent className="flex items-center justify-center h-64">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <Skeleton className="h-24 w-full rounded-2xl" />
         </CardContent>
       </Card>
     );

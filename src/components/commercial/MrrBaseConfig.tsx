@@ -1,4 +1,4 @@
-import { BarChart2, Users, DollarSign, RefreshCw, Loader2 } from 'lucide-react';
+import { BarChart2, Users, DollarSign, RefreshCw } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
@@ -93,7 +93,7 @@ export default function MrrBaseConfig({ ticketMedio, clientesAtuais, mrrAtual, l
             className="ml-1 text-xs text-primary hover:text-primary/80 transition-colors font-medium"
             disabled={loading}
           >
-            {loading ? <Loader2 className="h-3 w-3 animate-spin inline" /> : 'Atualizar'}
+            {loading ? <Skeleton className="h-4 w-16 rounded" /> : 'Atualizar'}
           </button>
         )}
       </div>

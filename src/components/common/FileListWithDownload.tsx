@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, FileIcon, Loader2, ExternalLink, FolderArchive } from 'lucide-react';
+import { Download, FileIcon, ExternalLink, FolderArchive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
+import { Skeleton } from '@/components/ui/skeleton';
   downloadFile,
   downloadFilesAsZip,
   formatDateForFileName,
@@ -129,7 +130,7 @@ export function FileListWithDownload({
                   disabled={downloadingAll}
                 >
                   {downloadingAll ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Skeleton className="h-4 w-16 rounded" />
                   ) : (
                     <FolderArchive className="h-4 w-4 mr-2" />
                   )}
@@ -210,7 +211,7 @@ export function FileListWithDownload({
                       disabled={downloadingId === file.id}
                     >
                       {downloadingId === file.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Skeleton className="h-4 w-16 rounded" />
                       ) : (
                         <Download className="h-4 w-4" />
                       )}

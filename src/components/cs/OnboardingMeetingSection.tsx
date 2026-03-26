@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Loader2, AlertTriangle, Users, CheckCircle, Plus, Calendar } from 'lucide-react';
+import { AlertTriangle, Users, CheckCircle, Plus, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { CS_MEETING_STATUS_LABELS, CS_RISK_LEVEL_LABELS, CS_RISK_LEVEL_COLORS } 
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 interface OnboardingMeetingSectionProps {
@@ -55,7 +56,7 @@ export function OnboardingMeetingSection({ clientId, isLocked = false }: Onboard
       <Card>
         <CardContent className="py-8">
           <div className="flex items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <Skeleton className="h-24 w-full rounded-2xl" />
           </div>
         </CardContent>
       </Card>
@@ -83,7 +84,7 @@ export function OnboardingMeetingSection({ clientId, isLocked = false }: Onboard
             </p>
             <Button onClick={handleCreateMeeting} disabled={createMeeting.isPending}>
               {createMeeting.isPending ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Skeleton className="h-4 w-16 rounded" />
               ) : (
                 <Plus className="h-4 w-4 mr-2" />
               )}

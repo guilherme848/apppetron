@@ -7,7 +7,7 @@
  import { Input } from '@/components/ui/input';
  import { Slider } from '@/components/ui/slider';
  import { ScrollArea } from '@/components/ui/scroll-area';
- import { BarChart3, Scale, Clock, ArrowRight, History, Loader2 } from 'lucide-react';
+ import { BarChart3, Scale, Clock, ArrowRight, History } from 'lucide-react';
  import { format, parseISO } from 'date-fns';
  import { ptBR } from 'date-fns/locale';
  import { WeeklyLoadByDay, RebalanceLogEntry, RebalanceParams, RebalanceResult, WORKDAY_OPTIONS } from '@/types/trafficPlaybook';
@@ -214,14 +214,14 @@
                onClick={() => handleRebalance(true)}
                disabled={rebalancing}
              >
-               {rebalancing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+               
                Simular
              </Button>
              <Button
                onClick={() => handleRebalance(false)}
                disabled={rebalancing}
              >
-               {rebalancing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+               
                Executar
              </Button>
            </DialogFooter>

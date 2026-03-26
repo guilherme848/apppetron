@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, CheckCircle, Circle, PlayCircle, Search } from 'lucide-react';
+import { CheckCircle, Circle, PlayCircle, Search } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -12,6 +12,7 @@ import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { Link, useSearchParams } from 'react-router-dom';
 import { TrafficTask, TrafficTaskStatus, TRAFFIC_TASK_STATUS_OPTIONS, TRAFFIC_PRIORITY_OPTIONS } from '@/types/traffic';
 import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function TrafficTasks() {
   const { tasks, updateTrafficTask, getCycleById, periods, loading } = useTraffic();
@@ -104,7 +105,7 @@ export default function TrafficTasks() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }

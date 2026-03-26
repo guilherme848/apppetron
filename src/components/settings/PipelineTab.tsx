@@ -1,4 +1,4 @@
-import { Loader2, Info } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useStageResponsibilities } from '@/hooks/useStageResponsibilities';
 import { BATCH_STATUS_OPTIONS } from '@/types/contentProduction';
 import { ROLE_OPTIONS, RoleKey } from '@/lib/accountTeam';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Stages where assignment is by format (designer/videomaker), not configurable
 const VARIABLE_STAGES = ['production', 'changes'];
@@ -26,7 +27,7 @@ export function PipelineTab() {
   if (loadingResp) {
     return (
       <div className="flex items-center justify-center h-32">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }

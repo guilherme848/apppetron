@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, Trash2, Upload, FileIcon, Download, Plus, X, Clock, CheckCircle, XCircle, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Trash2, Upload, FileIcon, Download, Plus, X, Clock, CheckCircle, XCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,7 @@ import {
   CreativeResponsibleRole,
 } from '@/types/creativeRequests';
 import { format } from 'date-fns';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function CreativeRequestDetail() {
   const { id } = useParams<{ id: string }>();
@@ -224,7 +225,7 @@ export default function CreativeRequestDetail() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
     );
   }
@@ -459,7 +460,7 @@ export default function CreativeRequestDetail() {
                       <input type="file" className="hidden" onChange={(e) => handleItemFileUpload(item.id, e)} disabled={uploadingItemId === item.id} />
                       <Button variant="outline" size="sm" asChild disabled={uploadingItemId === item.id}>
                         <span>
-                          {uploadingItemId === item.id ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Upload className="h-3 w-3 mr-1" />}
+                          {uploadingItemId === item.id ? <Skeleton className="h-4 w-16 rounded" /> : <Upload className="h-3 w-3 mr-1" />}
                           Anexar arquivo
                         </span>
                       </Button>
@@ -484,7 +485,7 @@ export default function CreativeRequestDetail() {
                   <Input placeholder="Observação (opcional)" value={newItemNotes} onChange={(e) => setNewItemNotes(e.target.value)} />
                 </div>
                 <Button size="sm" onClick={handleAddItem} disabled={addingItem || !newItemTitle.trim()}>
-                  {addingItem ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
+                  {addingItem ? <Skeleton className="h-4 w-16 rounded" /> : <Plus className="h-4 w-4 mr-1" />}
                   Adicionar Criativo
                 </Button>
               </div>
@@ -502,7 +503,7 @@ export default function CreativeRequestDetail() {
                 <label className="cursor-pointer">
                   <input type="file" className="hidden" onChange={handleFileUpload} disabled={uploading} />
                   <Button variant="outline" size="sm" asChild disabled={uploading}>
-                    <span>{uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}</span>
+                    <span>{uploading ? <Skeleton className="h-4 w-16 rounded" /> : <Upload className="h-4 w-4" />}</span>
                   </Button>
                 </label>
               </CardTitle>

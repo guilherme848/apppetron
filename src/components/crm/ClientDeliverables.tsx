@@ -1,7 +1,8 @@
-import { Loader2, Package } from 'lucide-react';
+import { Package } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useClientDeliverables } from '@/hooks/useDeliverablesData';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ClientDeliverablesProps {
   serviceId: string | null;
@@ -37,7 +38,7 @@ export function ClientDeliverables({ serviceId }: ClientDeliverablesProps) {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-4">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            <Skeleton className="h-4 w-16 rounded" />
           </div>
         </CardContent>
       </Card>

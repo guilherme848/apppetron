@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, CheckCircle, Clock, AlertTriangle, ListChecks, User, Play, Calendar } from 'lucide-react';
+import { CheckCircle, Clock, AlertTriangle, ListChecks, User, Play, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import { PETRON_TASK_STATUS_LABELS, OWNER_ROLE_LABELS, type PetronTaskStatus } f
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface PetronActivitiesSectionProps {
   clientId: string;
@@ -105,7 +106,7 @@ export function PetronActivitiesSection({
       <Card>
         <CardContent className="py-8">
           <div className="flex items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <Skeleton className="h-24 w-full rounded-2xl" />
           </div>
         </CardContent>
       </Card>
@@ -137,7 +138,7 @@ export function PetronActivitiesSection({
                 </div>
                 <Button onClick={handleStartOnboarding} disabled={createOnboarding.isPending}>
                   {createOnboarding.isPending ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Skeleton className="h-4 w-16 rounded" />
                   ) : (
                     <Play className="h-4 w-4 mr-2" />
                   )}
@@ -220,7 +221,7 @@ export function PetronActivitiesSection({
             {canComplete && petronOnboarding?.status !== 'completed' && (
               <Button onClick={handleCompleteOnboarding} disabled={completeOnboarding.isPending}>
                 {completeOnboarding.isPending ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Skeleton className="h-4 w-16 rounded" />
                 ) : (
                   <CheckCircle className="h-4 w-4 mr-2" />
                 )}

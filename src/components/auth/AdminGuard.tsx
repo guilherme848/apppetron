@@ -1,8 +1,9 @@
 import { ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, ShieldX } from 'lucide-react';
+import { ShieldX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface AdminGuardProps {
   children: ReactNode;
@@ -24,7 +25,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
     return (
       <div className="min-h-[400px] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <Skeleton className="h-24 w-full rounded-2xl" />
           <p className="text-muted-foreground">Verificando permissões...</p>
         </div>
       </div>
@@ -36,7 +37,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
     return (
       <div className="min-h-[400px] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <Skeleton className="h-24 w-full rounded-2xl" />
           <p className="text-muted-foreground">Carregando...</p>
         </div>
       </div>
