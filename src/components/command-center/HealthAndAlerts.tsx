@@ -116,7 +116,7 @@ export function AlertsCard({ alerts, onAlertClick, onViewAll }: AlertsCardProps)
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground text-center py-8">Nenhum alerta no momento 🎉</p>
+          <p className="text-muted-foreground text-center py-8">Nenhum alerta no momento</p>
         </CardContent>
       </Card>
     );

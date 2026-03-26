@@ -493,7 +493,7 @@ export function NumerosGeraisTab({ data }: NumerosGeraisTabProps) {
                     <Tooltip contentStyle={tooltipStyle} />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
                     {productivityByProfessional.slice(0, 8).map((s: any, i: number) => {
-                      const colors = ['hsl(var(--info))', 'hsl(var(--success))', 'hsl(var(--purple))', 'hsl(var(--primary))', 'hsl(var(--destructive))', '#94a3b8', '#06b6d4', '#eab308'];
+                      const colors = ['hsl(var(--info))', 'hsl(var(--success))', 'hsl(var(--purple))', 'hsl(var(--primary))', 'hsl(var(--destructive))', 'hsl(var(--muted-foreground))', 'hsl(var(--info))', 'hsl(var(--warning))'];
                       return (
                         <Bar key={`${s.id}-${s.role}`} dataKey={`${s.name}_${s.role}`} name={s.name} fill={colors[i % colors.length]} radius={[4, 4, 0, 0]} />
                       );

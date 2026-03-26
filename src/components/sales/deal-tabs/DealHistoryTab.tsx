@@ -13,14 +13,14 @@ import type { DealEvent } from '@/hooks/useDealDetail';
 const EVENT_ICONS: Record<string, { icon: React.ElementType; color: string }> = {
   stage_changed: { icon: ArrowRightLeft, color: DC.orange },
   activity_completed: { icon: CheckCircle2, color: DC.teal },
-  activity_created: { icon: PlusCircle, color: '#64748B' },
+  activity_created: { icon: PlusCircle, color: 'hsl(var(--muted-foreground))' },
   call_made: { icon: Phone, color: DC.orange },
-  field_changed: { icon: Edit3, color: '#64748B' },
+  field_changed: { icon: Edit3, color: 'hsl(var(--muted-foreground))' },
   responsible_changed: { icon: UserCheck, color: DC.teal },
   score_changed: { icon: Target, color: 'hsl(var(--primary))' },
   automation_executed: { icon: Zap, color: 'hsl(var(--destructive))' },
   cadence_started: { icon: History, color: DC.teal },
-  note_added: { icon: Edit3, color: '#64748B' },
+  note_added: { icon: Edit3, color: 'hsl(var(--muted-foreground))' },
 };
 
 const FILTER_OPTIONS = [
@@ -66,7 +66,7 @@ export function DealHistoryTab({ events, stages }: Props) {
 
           <div className="space-y-4">
             {filtered.map(event => {
-              const config = EVENT_ICONS[event.event_type] || { icon: History, color: '#64748B' };
+              const config = EVENT_ICONS[event.event_type] || { icon: History, color: 'hsl(var(--muted-foreground))' };
               const Icon = config.icon;
               const meta = event.metadata || {};
               const fromStage = meta.from_stage_id ? stages.find(s => s.id === meta.from_stage_id) : null;

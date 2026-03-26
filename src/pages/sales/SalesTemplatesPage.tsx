@@ -19,8 +19,8 @@ const TEMPLATE_TYPES = [
   { value: 'call', label: 'Roteiro de Ligação', color: DC.orange },
   { value: 'whatsapp', label: 'Mensagem WhatsApp', color: DC.teal },
   { value: 'email', label: 'E-mail', color: DC.dark },
-  { value: 'meeting', label: 'Reunião', color: '#92400E' },
-  { value: 'task', label: 'Tarefa', color: '#64748B' },
+  { value: 'meeting', label: 'Reunião', color: 'hsl(var(--primary))' },
+  { value: 'task', label: 'Tarefa', color: 'hsl(var(--muted-foreground))' },
 ];
 
 const DEFAULT_VARIABLES = [

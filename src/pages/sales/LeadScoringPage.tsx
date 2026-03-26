@@ -15,12 +15,12 @@ import { toast } from 'sonner';
 
 function ScoreBadge({ score }: { score: number }) {
   const badge = score >= 90
-    ? { label: '🔥 Hot', color: 'hsl(var(--destructive))', pulse: true }
+    ? { label: 'Hot', color: 'hsl(var(--destructive))', pulse: true }
     : score >= 70
-    ? { label: '🟢 Quente', color: '#0F766E', pulse: false }
+    ? { label: 'Quente', color: 'hsl(var(--success))', pulse: false }
     : score >= 40
     ? { label: '🟡 Morno', color: 'hsl(var(--primary))', pulse: false }
-    : { label: '🔴 Frio', color: '#94A3B8', pulse: false };
+    : { label: 'Frio', color: 'hsl(var(--muted-foreground))', pulse: false };
 
   return (
     <Badge
@@ -115,7 +115,7 @@ export default function LeadScoringPage() {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">🔥 Hot (90+)</p>
+            <p className="text-xs text-muted-foreground">Hot (90+)</p>
             <p className="text-2xl font-bold" style={{ color: 'hsl(var(--destructive))' }}>
               {scores.filter(s => s.score >= 90).length}
             </p>
@@ -123,7 +123,7 @@ export default function LeadScoringPage() {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">🟢 Quentes (70–89)</p>
+            <p className="text-xs text-muted-foreground">Quentes (70–89)</p>
             <p className="text-2xl font-bold" style={{ color: DC.teal }}>
               {scores.filter(s => s.score >= 70 && s.score < 90).length}
             </p>

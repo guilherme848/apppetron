@@ -24,7 +24,7 @@ function FunnelsStagesTab() {
   const [funnelForm, setFunnelForm] = useState({ name: '', description: '', color: 'hsl(var(--primary))' });
   const [showStageDialog, setShowStageDialog] = useState(false);
   const [editingStage, setEditingStage] = useState<any>(null);
-  const [stageForm, setStageForm] = useState({ name: '', color: '#64748B', probability: '50', funnel_id: '' });
+  const [stageForm, setStageForm] = useState({ name: '', color: 'hsl(var(--muted-foreground))', probability: '50', funnel_id: '' });
   const [deleteTarget, setDeleteTarget] = useState<{ type: 'funnel' | 'stage'; id: string; name: string } | null>(null);
 
   const openNewFunnel = () => {
@@ -56,7 +56,7 @@ function FunnelsStagesTab() {
   const openNewStage = (funnelId: string) => {
     const funnelStages = stages.filter(s => s.funnel_id === funnelId);
     setEditingStage(null);
-    setStageForm({ name: '', color: '#64748B', probability: '50', funnel_id: funnelId });
+    setStageForm({ name: '', color: 'hsl(var(--muted-foreground))', probability: '50', funnel_id: funnelId });
     setShowStageDialog(true);
   };
 

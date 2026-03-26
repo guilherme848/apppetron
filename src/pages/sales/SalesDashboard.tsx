@@ -254,8 +254,8 @@ export default function SalesDashboard() {
       if (a.status === 'completed') {
         if (a.result === 'answered' || a.result === 'Atendeu') { statusLabel = 'Realizada'; statusColor = DC.teal; }
         else if (a.result === 'not_answered' || a.result === 'Não Atendeu' || a.result === 'no_show') { statusLabel = 'No-show'; statusColor = DC.red; }
-        else { statusLabel = 'Cancelada'; statusColor = '#64748B'; }
-      } else if (a.status === 'canceled') { statusLabel = 'Cancelada'; statusColor = '#64748B'; }
+        else { statusLabel = 'Cancelada'; statusColor = 'hsl(var(--muted-foreground))'; }
+      } else if (a.status === 'canceled') { statusLabel = 'Cancelada'; statusColor = 'hsl(var(--muted-foreground))'; }
       return {
         id: a.id,
         date: a.scheduled_at ? format(new Date(a.scheduled_at), 'dd/MM/yyyy HH:mm') : '—',
@@ -808,7 +808,7 @@ export default function SalesDashboard() {
                     <Pie data={lossReasonData} dataKey="count" nameKey="name" cx="50%" cy="50%"
                       outerRadius={70} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
                       {lossReasonData.map((_, i) => (
-                        <Cell key={i} fill={[DC.red, DC.orange, DC.teal, DC.dark, '#64748B', '#94A3B8', '#CBD5E1'][i % 7]} />
+                        <Cell key={i} fill={[DC.red, DC.orange, DC.teal, DC.dark, 'hsl(var(--muted-foreground))', 'hsl(var(--muted-foreground))', 'hsl(var(--border))'][i % 7]} />
                       ))}
                     </Pie>
                     <Tooltip contentStyle={tooltipStyle} />

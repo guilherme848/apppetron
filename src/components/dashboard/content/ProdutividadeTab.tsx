@@ -284,7 +284,7 @@ export function ProdutividadeTab({ data }: ProdutividadeTabProps) {
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          📋 Visão Geral
+          Visão Geral
         </Button>
       </div>
 
@@ -569,7 +569,7 @@ export function ProdutividadeTab({ data }: ProdutividadeTabProps) {
                         />
                       )}
                       {allStats.slice(0, 8).map((s, i) => {
-                        const colors = [ROLE_COLORS.designer, ROLE_COLORS.social, ROLE_COLORS.videomaker, 'hsl(var(--primary))', 'hsl(var(--destructive))', '#94a3b8', 'hsl(var(--info))', 'hsl(var(--purple))'];
+                        const colors = [ROLE_COLORS.designer, ROLE_COLORS.social, ROLE_COLORS.videomaker, 'hsl(var(--primary))', 'hsl(var(--destructive))', 'hsl(var(--muted-foreground))', 'hsl(var(--info))', 'hsl(var(--purple))'];
                         return (
                           <Bar key={`${s.id}-${s.role}`} dataKey={`${s.name}_${s.role}`} name={s.name} fill={colors[i % colors.length]} radius={[4, 4, 0, 0]} />
                         );
