@@ -180,7 +180,13 @@ export function SuggestContentModal({ open, onOpenChange, accounts, onContentAdd
       batchId = newBatch.id;
     }
 
-    // Insert posts
+    // Insert posts — derive responsible_role_key from format
+    const formatToRoleKey = (fmt: string): string => {
+      if (['post', 'carrossel', 'carousel', 'story'].includes(fmt)) return 'designer';
+      if (['video', 'vídeo', 'reels'].includes(fmt)) return 'videomaker';
+      return 'social';
+    };
+
     const posts = selected.map((s, i) => ({
       batch_id: batchId,
       title: s.titulo,
@@ -192,6 +198,7 @@ export function SuggestContentModal({ open, onOpenChange, accounts, onContentAdd
       briefing_sugerido: s.briefing,
       caption: s.legenda,
       briefing_rich: s.briefing,
+      responsible_role_key: formatToRoleKey(s.formato),
     }));
 
     const { error: postError } = await supabase.from('content_posts').insert(posts);
