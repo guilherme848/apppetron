@@ -116,6 +116,7 @@ export function useContentProductionData() {
       .from('accounts')
       .select('id, name, status, designer_member_id, videomaker_member_id, social_member_id, traffic_member_id, support_member_id, cs_member_id')
       .eq('status', 'active')
+      .or('cliente_interno.is.null,cliente_interno.eq.false')
       .order('name', { ascending: true });
     if (error) {
       console.error('Error fetching accounts:', error);

@@ -99,7 +99,7 @@ export function useCsOverview() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     const [acRes, obRes, ckRes, svcRes, nicRes, tmRes] = await Promise.all([
-      supabase.from('accounts').select('*').is('deleted_at', null),
+      supabase.from('accounts').select('*').is('deleted_at', null).or('cliente_interno.is.null,cliente_interno.eq.false'),
       supabase.from('onboardings').select('*'),
       supabase.from('cliente_checkup').select('*'),
       supabase.from('services').select('id, name').order('name'),

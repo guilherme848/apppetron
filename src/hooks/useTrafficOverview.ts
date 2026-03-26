@@ -76,6 +76,7 @@ export function useTrafficOverview() {
       .select('id, name, ad_monthly_budget, ad_payment_method, traffic_member_id, service_id, services!inner(has_traffic)')
       .eq('status', 'active')
       .is('deleted_at', null)
+      .or('cliente_interno.is.null,cliente_interno.eq.false')
       .eq('services.has_traffic', true);
 
     if (!isAdmin) {
