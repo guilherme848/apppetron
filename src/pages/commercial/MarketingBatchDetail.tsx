@@ -288,6 +288,14 @@ export default function MarketingBatchDetail() {
   };
 
   const handlePostStatusChange = async (postId: string, status: string) => {
+    // Block transition to 'doing' without assignee
+    if (status === 'doing') {
+      const post = posts.find(p => p.id === postId);
+      if (post && !post.assignee_id) {
+        toast.error('Atribua um responsável antes de iniciar a produção');
+        return;
+      }
+    }
     await supabase
       .from('content_posts')
       .update({ status, updated_at: new Date().toISOString() })

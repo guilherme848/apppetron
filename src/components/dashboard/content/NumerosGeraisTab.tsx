@@ -209,6 +209,21 @@ export function NumerosGeraisTab({ data }: NumerosGeraisTabProps) {
       }
     });
 
+    // Alert for posts without assignee (todo or doing)
+    const postsWithoutAssignee = allPosts.filter((p: any) => 
+      !p.assignee_id && (p.status === 'todo' || p.status === 'doing')
+    ).length;
+    if (postsWithoutAssignee > 0) {
+      alerts.push({
+        id: 'no-assignee',
+        name: `${postsWithoutAssignee} post${postsWithoutAssignee > 1 ? 's' : ''}`,
+        role: 'geral',
+        description: 'sem responsável atribuído',
+        severity: 'medium',
+        color: 'bg-yellow-500',
+      });
+    }
+
     return alerts;
   }, [enrichedPosts, today]);
 
