@@ -744,20 +744,20 @@ export default function CommercialPlanningPage() {
         {/* ══ Tab 2 — Análise de Cenários ═════════════════════ */}
         <TabsContent value="scenarios" className="space-y-6 mt-6">
           <MrrScenarioCard
-            label="Cenário Inicial" emoji="🔴" colorClass="red"
+            label="Cenário Inicial" colorClass="red"
             config={scenarios.cenarioInicial} clientesIniciais={activeClients} ticketMedio={avgTicket}
             onConfigChange={c => setScenarios(prev => ({ ...prev, cenarioInicial: c }))}
             monthlyActuals={monthlyActuals} lastSavedAt={lastSavedAt}
           />
           <MrrScenarioCard
-            label="BP · Cenário Bom" emoji="🟡" colorClass="yellow"
+            label="BP · Cenário Bom" colorClass="yellow"
             config={scenarios.cenarioBom} clientesIniciais={activeClients} ticketMedio={avgTicket}
             onConfigChange={c => setScenarios(prev => ({ ...prev, cenarioBom: c }))}
             monthlyActuals={monthlyActuals} lastSavedAt={lastSavedAt}
             isBP bpLocked={bpLocked} onLockBP={handleLockBP}
           />
           <MrrScenarioCard
-            label="Cenário Ótimo" emoji="🟢" colorClass="green"
+            label="Cenário Ótimo" colorClass="green"
             config={scenarios.cenarioOtimo} clientesIniciais={activeClients} ticketMedio={avgTicket}
             onConfigChange={c => setScenarios(prev => ({ ...prev, cenarioOtimo: c }))}
             monthlyActuals={monthlyActuals} lastSavedAt={lastSavedAt}
