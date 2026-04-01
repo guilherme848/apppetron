@@ -247,7 +247,8 @@ export default function MatemarketingPage() {
     // Pair: CPL <-> Investimento/Leads
     // CPL is always derived unless user edited it
     if (lastEdited['cpl_pair'] === 'cpl') {
-      s.investimento = round2(s.cpl * s.leads);
+      // When user edits CPL, recalculate Leads keeping Investimento fixed
+      s.leads = s.cpl > 0 ? roundInt(s.investimento / s.cpl) : 0;
     } else {
       s.cpl = round2(safe(s.investimento, s.leads));
     }
