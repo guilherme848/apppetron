@@ -498,12 +498,12 @@ export default function TrafficBalancesPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            disabled={isRefreshing || row.paymentMethod === 'cartao'}
+                            disabled={isRefreshing || row.paymentMethod === 'cartao' || isTokenExpired}
                             onClick={() => handleRefreshSingle(row.adAccountId)}
-                            title="Atualizar saldo"
+                            title={isTokenExpired ? 'Token expirado — reconecte o Meta' : 'Atualizar saldo'}
                           >
                             {isRefreshing ? (
-                              <Skeleton className="h-4 w-16 rounded" />
+                              <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
                               <RotateCw className="h-4 w-4" />
                             )}
