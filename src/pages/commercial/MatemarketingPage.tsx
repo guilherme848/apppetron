@@ -319,8 +319,9 @@ export default function MatemarketingPage() {
 
   const handleCpl = useCallback((v: number) => {
     const cpl = round2(v);
-    setSim(p => ({ ...p, cpl, investimento: round2(cpl * p.leads) }));
-    setEditedFields(p => new Set(p).add('cpl').add('investimento'));
+    const newLeads = cpl > 0 ? roundInt(sim.investimento / cpl) : 0;
+    setSim(p => ({ ...p, cpl, leads: newLeads }));
+    setEditedFields(p => new Set(p).add('cpl').add('leads'));
     setLastEdited(p => ({ ...p, cpl_pair: 'cpl' }));
   }, []);
 
