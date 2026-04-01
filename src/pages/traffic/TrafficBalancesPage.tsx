@@ -178,6 +178,14 @@ export default function TrafficBalancesPage() {
   const lowBalanceCount = balanceRows.filter(r => r.isLowBalance).length;
   const missingBudgetCount = balanceRows.filter(r => !r.monthlyBudget && r.paymentMethod !== 'cartao').length;
 
+  const isTokenExpired = connection?.token_expires_at
+    ? new Date(connection.token_expires_at) < new Date()
+    : false;
+
+  const handleReconnect = async () => {
+    await startOAuth();
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
