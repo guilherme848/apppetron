@@ -435,7 +435,7 @@ export default function CrmList() {
                   <div className="flex items-center text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Valor Mensal<SortIcon columnKey="monthly_value" /></div>
                 </TableHead>
               )}
-              
+              <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Fonte</TableHead>
               <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Status</TableHead>
               <TableHead className="w-[100px] text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Ações</TableHead>
             </TableRow>
