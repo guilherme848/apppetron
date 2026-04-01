@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
-import { Calculator, RotateCcw, ArrowUp, ArrowDown, Minus, Zap } from 'lucide-react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { Calculator, RotateCcw, ArrowUp, ArrowDown, Minus, Zap, Pencil } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,27 +21,42 @@ interface SimState {
   reunioes: number;
   vendas: number;
   ticketMedio: number;
+  cpl: number;
 }
 
-interface RealState extends SimState {}
+type EditableField = 'investimento' | 'leads' | 'cpl' | 'mql' | 'txQualif' | 'agendamentos' | 'txAgend' | 'reunioes' | 'txCompar' | 'vendas' | 'txConv' | 'ticketMedio';
 
 /* ─── Helpers ─── */
 const safe = (a: number, b: number) => (b === 0 ? 0 : a / b);
-const pct = (a: number, b: number) => safe(a, b) * 100;
+const pct = (a: number, b: number) => (b === 0 ? 0 : (a / b) * 100);
+const clampPct = (v: number) => Math.max(0, Math.min(100, v));
+const clampPos = (v: number) => Math.max(0, v);
+const roundInt = (v: number) => Math.round(clampPos(v));
+const round2 = (v: number) => Math.round(clampPos(v) * 100) / 100;
+const round1 = (v: number) => Math.round(v * 10) / 10;
 
 function fmtBRL(v: number) {
+  if (!isFinite(v)) return '--';
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
 }
 function fmtInt(v: number) {
+  if (!isFinite(v)) return '--';
   return Math.round(v).toLocaleString('pt-BR');
 }
 function fmtPct(v: number) {
+  if (!isFinite(v)) return '--';
   return `${v.toFixed(1)}%`;
 }
 
 function variationPct(sim: number, real: number) {
   if (real === 0) return sim === 0 ? 0 : 100;
   return ((sim - real) / Math.abs(real)) * 100;
+}
+
+function fmtVariation(diff: number) {
+  if (Math.abs(diff) > 999) return diff > 0 ? '>999%' : '<-999%';
+  const sign = diff > 0 ? '+' : '';
+  return `${sign}${diff.toFixed(1)}%`;
 }
 
 /* ─── Variation indicator ─── */
@@ -51,12 +66,11 @@ function VariationBadge({ sim, real, isCost }: { sim: number; real: number; isCo
     return <span className="inline-flex items-center gap-0.5 text-[13px] text-muted-foreground"><Minus className="h-3 w-3" /> 0%</span>;
   }
   const isUp = diff > 0;
-  // For costs, down is good; for volume/revenue, up is good
   const isGood = isCost ? !isUp : isUp;
   return (
     <span className={cn('inline-flex items-center gap-0.5 text-[13px] font-medium', isGood ? 'text-success' : 'text-destructive')}>
       {isUp ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
-      {Math.abs(diff).toFixed(1)}%
+      {fmtVariation(diff)}
     </span>
   );
 }
@@ -77,14 +91,47 @@ function NumInput({
   isInteger?: boolean;
   wasEdited?: boolean;
 }) {
-  const [local, setLocal] = useState('');
+  const [localText, setLocalText] = useState('');
   const [focused, setFocused] = useState(false);
+  const committedRef = useRef(value);
 
+  // Keep committed ref in sync with external value changes
   useEffect(() => {
-    if (!focused) {
-      setLocal(isInteger ? Math.round(value).toString() : value.toFixed(2));
+    committedRef.current = value;
+  }, [value]);
+
+  const rawToDisplay = useCallback((v: number) => {
+    if (isInteger) return fmtInt(v);
+    if (prefix === 'R$') return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (suffix === '%') return v.toFixed(1);
+    return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }, [isInteger, prefix, suffix]);
+
+  const rawToEdit = useCallback((v: number) => {
+    if (isInteger) return Math.round(v).toString();
+    if (suffix === '%') return v.toFixed(1);
+    return v.toFixed(2);
+  }, [isInteger, suffix]);
+
+  const handleFocus = () => {
+    setFocused(true);
+    setLocalText(rawToEdit(committedRef.current));
+  };
+
+  const handleBlur = () => {
+    setFocused(false);
+    const parsed = parseFloat(localText.replace(/\./g, '').replace(',', '.'));
+    if (!isNaN(parsed) && isFinite(parsed)) {
+      const finalVal = isInteger ? roundInt(parsed) : round2(parsed);
+      if (finalVal !== committedRef.current) {
+        committedRef.current = finalVal;
+        onChange(finalVal);
+      }
     }
-  }, [value, focused, isInteger]);
+    // If invalid, just revert display - value stays the same
+  };
+
+  const displayValue = focused ? localText : rawToDisplay(value);
 
   return (
     <div
@@ -99,17 +146,14 @@ function NumInput({
       <input
         type="text"
         inputMode="decimal"
-        className="w-full bg-transparent outline-none text-foreground font-mono"
-        value={focused ? local : (isInteger ? fmtInt(value) : value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))}
-        onFocus={() => setFocused(true)}
-        onBlur={() => {
-          setFocused(false);
-          const parsed = parseFloat(local.replace(/\./g, '').replace(',', '.'));
-          if (!isNaN(parsed)) onChange(parsed);
-        }}
-        onChange={(e) => setLocal(e.target.value)}
+        className="w-full bg-transparent outline-none text-foreground font-mono text-right"
+        value={displayValue}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        onChange={(e) => setLocalText(e.target.value)}
       />
       {suffix && <span className="text-muted-foreground text-xs shrink-0">{suffix}</span>}
+      <Pencil className="h-3 w-3 text-muted-foreground/50 shrink-0 ml-1" />
     </div>
   );
 }
@@ -117,11 +161,25 @@ function NumInput({
 /* ─── Calculated field (read-only) ─── */
 function CalcField({ value, prefix, suffix }: { value: string; prefix?: string; suffix?: string }) {
   return (
-    <div className="flex items-center gap-1 h-[42px] px-3 font-mono text-sm text-foreground">
+    <div className="flex items-center gap-1 h-[42px] px-3 font-mono text-sm text-foreground justify-end">
       {prefix && <span className="text-muted-foreground text-xs">{prefix}</span>}
       <span>{value}</span>
       {suffix && <span className="text-muted-foreground text-xs">{suffix}</span>}
     </div>
+  );
+}
+
+/* ─── Section separator ─── */
+function SectionLabel({ label }: { label: string }) {
+  return (
+    <tr>
+      <td colSpan={4} className="px-5 pt-4 pb-1">
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/60">{label}</span>
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+        </div>
+      </td>
+    </tr>
   );
 }
 
@@ -138,7 +196,6 @@ export default function MatemarketingPage() {
 
   const { metrics: metaMetrics, loading: metaLoading } = useFunnelMetaMetrics(filters.year, selectedAdAccountIds);
 
-  // Build month options for the current year
   const monthOptions = useMemo(() => {
     return Array.from({ length: 12 }, (_, i) => {
       const d = new Date(filters.year, i, 1);
@@ -148,16 +205,20 @@ export default function MatemarketingPage() {
 
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
 
-  // Build real data from actuals + metaMetrics + clientMetrics
-  const realData = useMemo((): RealState => {
+  // Build real data
+  const realData = useMemo((): SimState => {
     const monthStr = format(startOfMonth(new Date(filters.year, selectedMonth, 1)), 'yyyy-MM-dd');
     const actual = actuals.find((a) => a.month === monthStr);
     const cm = clientMetrics.find((m) => m.month === selectedMonth);
     const meta = metaMetrics.find((m) => m.month === monthStr);
 
+    const investimento = meta?.investment ?? actual?.investment_actual ?? 0;
+    const leads = meta?.leads ?? actual?.leads_actual ?? 0;
+
     return {
-      investimento: meta?.investment ?? actual?.investment_actual ?? 0,
-      leads: meta?.leads ?? actual?.leads_actual ?? 0,
+      investimento,
+      leads,
+      cpl: safe(investimento, leads),
       mql: actual?.mql_actual ?? 0,
       agendamentos: actual?.appointments_actual ?? 0,
       reunioes: actual?.meetings_held_actual ?? 0,
@@ -166,37 +227,107 @@ export default function MatemarketingPage() {
     };
   }, [actuals, clientMetrics, metaMetrics, selectedMonth, filters.year]);
 
-  // Sim state
+  // Sim state + tracking which fields user edited
   const [sim, setSim] = useState<SimState>({ ...realData });
-  const [editedFields, setEditedFields] = useState<Set<keyof SimState>>(new Set());
+  const [editedFields, setEditedFields] = useState<Set<string>>(new Set());
+  // Track last edited for each bidirectional pair
+  const [lastEdited, setLastEdited] = useState<Record<string, EditableField>>({});
 
-  // Reset sim when real data or month changes
+  // Reset sim when real data changes
   useEffect(() => {
     setSim({ ...realData });
     setEditedFields(new Set());
+    setLastEdited({});
   }, [realData]);
 
-  const updateSim = useCallback((field: keyof SimState, value: number) => {
-    setSim((prev) => ({ ...prev, [field]: value }));
-    setEditedFields((prev) => new Set(prev).add(field));
+  // Recalculate derived values whenever sim changes
+  const derived = useMemo(() => {
+    const s = { ...sim };
+
+    // Pair: CPL <-> Investimento/Leads
+    // CPL is always derived unless user edited it
+    if (lastEdited['cpl_pair'] === 'cpl') {
+      s.investimento = round2(s.cpl * s.leads);
+    } else {
+      s.cpl = round2(safe(s.investimento, s.leads));
+    }
+
+    // Pair: MQL <-> Tx Qualificacao
+    const txQualif = lastEdited['qualif_pair'] === 'txQualif'
+      ? clampPct(pct(s.mql, s.leads)) // mql was set from tx
+      : round1(clampPct(pct(s.mql, s.leads)));
+
+    // Pair: Agendamentos <-> Tx Agendamento
+    const txAgend = round1(clampPct(pct(s.agendamentos, s.mql)));
+
+    // Pair: Reunioes <-> Tx Comparecimento
+    const txCompar = round1(clampPct(pct(s.reunioes, s.agendamentos)));
+
+    // Pair: Vendas <-> Tx Conversao
+    const txConv = round1(clampPct(pct(s.vendas, s.reunioes)));
+
+    const cpmql = round2(safe(s.investimento, s.mql));
+    const custoCompar = round2(safe(s.investimento, s.reunioes));
+    const cac = round2(safe(s.investimento, s.vendas));
+    const receita = round2(s.vendas * s.ticketMedio);
+    const roi = round1(safe(receita - s.investimento, s.investimento) * 100);
+
+    return { ...s, txQualif, txAgend, txCompar, txConv, cpmql, custoCompar, cac, receita, roi };
+  }, [sim, lastEdited]);
+
+  const updateField = useCallback((field: keyof SimState, value: number, pairKey?: string, editKey?: EditableField) => {
+    setSim(prev => ({ ...prev, [field]: value }));
+    setEditedFields(prev => new Set(prev).add(field));
+    if (pairKey && editKey) {
+      setLastEdited(prev => ({ ...prev, [pairKey]: editKey }));
+    }
+  }, []);
+
+  // Bidirectional rate handlers
+  const handleTxQualif = useCallback((v: number) => {
+    const clamped = clampPct(v);
+    const newMql = roundInt((clamped / 100) * sim.leads);
+    setSim(p => ({ ...p, mql: newMql }));
+    setEditedFields(p => new Set(p).add('mql'));
+    setLastEdited(p => ({ ...p, qualif_pair: 'txQualif' }));
+  }, [sim.leads]);
+
+  const handleTxAgend = useCallback((v: number) => {
+    const clamped = clampPct(v);
+    const newAgend = roundInt((clamped / 100) * sim.mql);
+    setSim(p => ({ ...p, agendamentos: newAgend }));
+    setEditedFields(p => new Set(p).add('agendamentos'));
+    setLastEdited(p => ({ ...p, agend_pair: 'txAgend' }));
+  }, [sim.mql]);
+
+  const handleTxCompar = useCallback((v: number) => {
+    const clamped = clampPct(v);
+    const newReun = roundInt((clamped / 100) * sim.agendamentos);
+    setSim(p => ({ ...p, reunioes: newReun }));
+    setEditedFields(p => new Set(p).add('reunioes'));
+    setLastEdited(p => ({ ...p, compar_pair: 'txCompar' }));
+  }, [sim.agendamentos]);
+
+  const handleTxConv = useCallback((v: number) => {
+    const clamped = clampPct(v);
+    const newVendas = roundInt((clamped / 100) * sim.reunioes);
+    setSim(p => ({ ...p, vendas: newVendas }));
+    setEditedFields(p => new Set(p).add('vendas'));
+    setLastEdited(p => ({ ...p, conv_pair: 'txConv' }));
+  }, [sim.reunioes]);
+
+  const handleCpl = useCallback((v: number) => {
+    const cpl = round2(v);
+    setSim(p => ({ ...p, cpl, investimento: round2(cpl * p.leads) }));
+    setEditedFields(p => new Set(p).add('cpl').add('investimento'));
+    setLastEdited(p => ({ ...p, cpl_pair: 'cpl' }));
   }, []);
 
   const resetToReal = () => {
     setSim({ ...realData });
     setEditedFields(new Set());
+    setLastEdited({});
   };
-
-  // Derived calculated values
-  const cpl = safe(sim.investimento, sim.leads);
-  const txQualif = pct(sim.mql, sim.leads);
-  const cpmql = safe(sim.investimento, sim.mql);
-  const txAgend = pct(sim.agendamentos, sim.mql);
-  const txCompar = pct(sim.reunioes, sim.agendamentos);
-  const custoCompar = safe(sim.investimento, sim.reunioes);
-  const txConv = pct(sim.vendas, sim.reunioes);
-  const cac = safe(sim.investimento, sim.vendas);
-  const receita = sim.vendas * sim.ticketMedio;
-  const roi = safe(receita - sim.investimento, sim.investimento) * 100;
 
   // Real derived
   const realCpl = safe(realData.investimento, realData.leads);
@@ -206,31 +337,8 @@ export default function MatemarketingPage() {
   const realReceita = realData.vendas * realData.ticketMedio;
   const realRoi = safe(realReceita - realData.investimento, realData.investimento) * 100;
 
-  // Bidirectional rate handlers
-  const handleTxQualif = (v: number) => {
-    const newMql = Math.round((v / 100) * sim.leads);
-    setSim((p) => ({ ...p, mql: newMql }));
-    setEditedFields((p) => new Set(p).add('mql'));
-  };
-  const handleTxAgend = (v: number) => {
-    const newAgend = Math.round((v / 100) * sim.mql);
-    setSim((p) => ({ ...p, agendamentos: newAgend }));
-    setEditedFields((p) => new Set(p).add('agendamentos'));
-  };
-  const handleTxCompar = (v: number) => {
-    const newReun = Math.round((v / 100) * sim.agendamentos);
-    setSim((p) => ({ ...p, reunioes: newReun }));
-    setEditedFields((p) => new Set(p).add('reunioes'));
-  };
-  const handleTxConv = (v: number) => {
-    const newVendas = Math.round((v / 100) * sim.reunioes);
-    setSim((p) => ({ ...p, vendas: newVendas }));
-    setEditedFields((p) => new Set(p).add('vendas'));
-  };
-
   const isLoading = funnelLoading || metaLoading;
 
-  // Benchmarks
   const benchmarks: Record<string, number> = {
     txAgend: 40,
     txCompar: 80,
@@ -256,122 +364,137 @@ export default function MatemarketingPage() {
     variationSim: number;
     variationReal: number;
     isCost?: boolean;
+    highlight?: boolean;
+    sectionLabel?: string;
   };
 
   const metrics: MetricRow[] = [
+    // AQUISIÇÃO
     {
+      sectionLabel: 'AQUISIÇÃO',
       label: 'Investimento',
       realValue: fmtBRL(realData.investimento),
-      simContent: <NumInput value={sim.investimento} onChange={(v) => updateSim('investimento', v)} prefix="R$" wasEdited={editedFields.has('investimento')} />,
-      variationSim: sim.investimento, variationReal: realData.investimento, isCost: true,
+      simContent: <NumInput value={sim.investimento} onChange={(v) => updateField('investimento', v, 'cpl_pair', 'investimento')} prefix="R$" wasEdited={editedFields.has('investimento')} />,
+      variationSim: derived.investimento, variationReal: realData.investimento, isCost: true,
     },
     {
       label: 'Leads',
       realValue: fmtInt(realData.leads),
-      simContent: <NumInput value={sim.leads} onChange={(v) => updateSim('leads', v)} isInteger wasEdited={editedFields.has('leads')} />,
+      simContent: <NumInput value={sim.leads} onChange={(v) => updateField('leads', v, 'cpl_pair', 'leads')} isInteger wasEdited={editedFields.has('leads')} />,
       variationSim: sim.leads, variationReal: realData.leads,
     },
     {
       label: 'CPL',
       realValue: fmtBRL(realCpl),
-      simContent: <CalcField value={fmtBRL(cpl)} />,
-      variationSim: cpl, variationReal: realCpl, isCost: true,
+      simContent: <NumInput value={derived.cpl} onChange={handleCpl} prefix="R$" wasEdited={editedFields.has('cpl')} />,
+      variationSim: derived.cpl, variationReal: realCpl, isCost: true,
     },
+    // QUALIFICAÇÃO
     {
+      sectionLabel: 'QUALIFICAÇÃO',
       label: 'MQL',
       realValue: fmtInt(realData.mql),
-      simContent: <NumInput value={sim.mql} onChange={(v) => updateSim('mql', v)} isInteger wasEdited={editedFields.has('mql')} />,
+      simContent: <NumInput value={sim.mql} onChange={(v) => updateField('mql', roundInt(v), 'qualif_pair', 'mql')} isInteger wasEdited={editedFields.has('mql')} />,
       variationSim: sim.mql, variationReal: realData.mql,
     },
     {
       label: 'Tx Qualificação',
       realValue: fmtPct(pct(realData.mql, realData.leads)),
-      simContent: <NumInput value={txQualif} onChange={handleTxQualif} suffix="%" wasEdited={editedFields.has('mql')} />,
-      variationSim: txQualif, variationReal: pct(realData.mql, realData.leads),
+      simContent: <NumInput value={derived.txQualif} onChange={handleTxQualif} suffix="%" wasEdited={editedFields.has('mql')} />,
+      variationSim: derived.txQualif, variationReal: pct(realData.mql, realData.leads),
     },
     {
       label: 'CPMQL',
       realValue: fmtBRL(realCpmql),
-      simContent: <CalcField value={fmtBRL(cpmql)} />,
-      variationSim: cpmql, variationReal: realCpmql, isCost: true,
+      simContent: <CalcField value={fmtBRL(derived.cpmql)} />,
+      variationSim: derived.cpmql, variationReal: realCpmql, isCost: true,
     },
+    // AGENDAMENTO
     {
+      sectionLabel: 'AGENDAMENTO',
       label: 'Agendamentos',
       realValue: fmtInt(realData.agendamentos),
-      simContent: <NumInput value={sim.agendamentos} onChange={(v) => updateSim('agendamentos', v)} isInteger wasEdited={editedFields.has('agendamentos')} />,
+      simContent: <NumInput value={sim.agendamentos} onChange={(v) => updateField('agendamentos', roundInt(v), 'agend_pair', 'agendamentos')} isInteger wasEdited={editedFields.has('agendamentos')} />,
       variationSim: sim.agendamentos, variationReal: realData.agendamentos,
     },
     {
       label: 'Tx Agendamento',
       benchKey: 'txAgend',
       realValue: fmtPct(pct(realData.agendamentos, realData.mql)),
-      simContent: <NumInput value={txAgend} onChange={handleTxAgend} suffix="%" wasEdited={editedFields.has('agendamentos')} />,
-      variationSim: txAgend, variationReal: pct(realData.agendamentos, realData.mql),
+      simContent: <NumInput value={derived.txAgend} onChange={handleTxAgend} suffix="%" wasEdited={editedFields.has('agendamentos')} />,
+      variationSim: derived.txAgend, variationReal: pct(realData.agendamentos, realData.mql),
     },
+    // REUNIÃO
     {
+      sectionLabel: 'REUNIÃO',
       label: 'Reuniões',
       realValue: fmtInt(realData.reunioes),
-      simContent: <NumInput value={sim.reunioes} onChange={(v) => updateSim('reunioes', v)} isInteger wasEdited={editedFields.has('reunioes')} />,
+      simContent: <NumInput value={sim.reunioes} onChange={(v) => updateField('reunioes', roundInt(v), 'compar_pair', 'reunioes')} isInteger wasEdited={editedFields.has('reunioes')} />,
       variationSim: sim.reunioes, variationReal: realData.reunioes,
     },
     {
       label: 'Tx Comparecimento',
       benchKey: 'txCompar',
       realValue: fmtPct(pct(realData.reunioes, realData.agendamentos)),
-      simContent: <NumInput value={txCompar} onChange={handleTxCompar} suffix="%" wasEdited={editedFields.has('reunioes')} />,
-      variationSim: txCompar, variationReal: pct(realData.reunioes, realData.agendamentos),
+      simContent: <NumInput value={derived.txCompar} onChange={handleTxCompar} suffix="%" wasEdited={editedFields.has('reunioes')} />,
+      variationSim: derived.txCompar, variationReal: pct(realData.reunioes, realData.agendamentos),
     },
     {
       label: 'Custo por Comparecimento',
       realValue: fmtBRL(realCustoCompar),
-      simContent: <CalcField value={fmtBRL(custoCompar)} />,
-      variationSim: custoCompar, variationReal: realCustoCompar, isCost: true,
+      simContent: <CalcField value={fmtBRL(derived.custoCompar)} />,
+      variationSim: derived.custoCompar, variationReal: realCustoCompar, isCost: true,
     },
+    // CONVERSÃO
     {
+      sectionLabel: 'CONVERSÃO',
       label: 'Vendas',
       realValue: fmtInt(realData.vendas),
-      simContent: <NumInput value={sim.vendas} onChange={(v) => updateSim('vendas', v)} isInteger wasEdited={editedFields.has('vendas')} />,
+      simContent: <NumInput value={sim.vendas} onChange={(v) => updateField('vendas', roundInt(v), 'conv_pair', 'vendas')} isInteger wasEdited={editedFields.has('vendas')} />,
       variationSim: sim.vendas, variationReal: realData.vendas,
     },
     {
       label: 'Tx Conversão',
       benchKey: 'txConv',
       realValue: fmtPct(pct(realData.vendas, realData.reunioes)),
-      simContent: <NumInput value={txConv} onChange={handleTxConv} suffix="%" wasEdited={editedFields.has('vendas')} />,
-      variationSim: txConv, variationReal: pct(realData.vendas, realData.reunioes),
+      simContent: <NumInput value={derived.txConv} onChange={handleTxConv} suffix="%" wasEdited={editedFields.has('vendas')} />,
+      variationSim: derived.txConv, variationReal: pct(realData.vendas, realData.reunioes),
     },
+    // RESULTADO
     {
+      sectionLabel: 'RESULTADO',
       label: 'CAC',
       realValue: fmtBRL(realCac),
-      simContent: <CalcField value={fmtBRL(cac)} />,
-      variationSim: cac, variationReal: realCac, isCost: true,
+      simContent: <CalcField value={fmtBRL(derived.cac)} />,
+      variationSim: derived.cac, variationReal: realCac, isCost: true,
     },
     {
       label: 'Ticket Médio',
       realValue: fmtBRL(realData.ticketMedio),
-      simContent: <NumInput value={sim.ticketMedio} onChange={(v) => updateSim('ticketMedio', v)} prefix="R$" wasEdited={editedFields.has('ticketMedio')} />,
+      simContent: <NumInput value={sim.ticketMedio} onChange={(v) => updateField('ticketMedio', v)} prefix="R$" wasEdited={editedFields.has('ticketMedio')} />,
       variationSim: sim.ticketMedio, variationReal: realData.ticketMedio,
     },
     {
       label: 'Receita',
       realValue: fmtBRL(realReceita),
-      simContent: <CalcField value={fmtBRL(receita)} />,
-      variationSim: receita, variationReal: realReceita,
+      simContent: <CalcField value={fmtBRL(derived.receita)} />,
+      variationSim: derived.receita, variationReal: realReceita,
+      highlight: true,
     },
     {
       label: 'ROI',
       realValue: fmtPct(realRoi),
-      simContent: <CalcField value={fmtPct(roi)} />,
-      variationSim: roi, variationReal: realRoi,
+      simContent: <CalcField value={fmtPct(derived.roi)} />,
+      variationSim: derived.roi, variationReal: realRoi,
+      highlight: true,
     },
   ];
 
-  // Summary KPIs
   const summaryKpis = [
     { label: 'Vendas projetadas', value: fmtInt(sim.vendas), sim: sim.vendas, real: realData.vendas },
-    { label: 'CAC projetado', value: fmtBRL(cac), sim: cac, real: realCac, isCost: true },
-    { label: 'Receita projetada', value: fmtBRL(receita), sim: receita, real: realReceita },
-    { label: 'ROI projetado', value: fmtPct(roi), sim: roi, real: realRoi },
+    { label: 'CAC projetado', value: fmtBRL(derived.cac), sim: derived.cac, real: realCac, isCost: true },
+    { label: 'Receita projetada', value: fmtBRL(derived.receita), sim: derived.receita, real: realReceita },
+    { label: 'ROI projetado', value: fmtPct(derived.roi), sim: derived.roi, real: realRoi },
   ];
 
   if (isLoading) {
@@ -453,31 +576,37 @@ export default function MatemarketingPage() {
               </thead>
               <tbody>
                 {metrics.map((row, idx) => (
-                  <tr
-                    key={row.label}
-                    className="border-b last:border-0 hover:bg-muted/30 transition-colors"
-                    style={{
-                      animationName: 'fadeInUp',
-                      animationDuration: '280ms',
-                      animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
-                      animationDelay: `${idx * 25}ms`,
-                      animationFillMode: 'both',
-                    }}
-                  >
-                    <td className="px-5 py-2">
-                      <div className="font-semibold text-foreground">{row.label}</div>
-                      {row.benchKey && <BenchLabel benchKey={row.benchKey} simValue={row.variationSim} />}
-                    </td>
-                    <td className="px-5 py-2 text-right font-mono text-muted-foreground">
-                      {row.realValue}
-                    </td>
-                    <td className="px-5 py-2">
-                      {row.simContent}
-                    </td>
-                    <td className="px-5 py-2 text-right">
-                      <VariationBadge sim={row.variationSim} real={row.variationReal} isCost={row.isCost} />
-                    </td>
-                  </tr>
+                  <>
+                    {row.sectionLabel && <SectionLabel key={`section-${row.sectionLabel}`} label={row.sectionLabel} />}
+                    <tr
+                      key={row.label}
+                      className={cn(
+                        'border-b last:border-0 hover:bg-muted/30 transition-colors',
+                        row.highlight && 'bg-primary/[0.03]',
+                      )}
+                      style={{
+                        animationName: 'fadeInUp',
+                        animationDuration: '280ms',
+                        animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                        animationDelay: `${idx * 25}ms`,
+                        animationFillMode: 'both',
+                      }}
+                    >
+                      <td className="px-5 py-2">
+                        <div className="font-semibold text-foreground">{row.label}</div>
+                        {row.benchKey && <BenchLabel benchKey={row.benchKey} simValue={row.variationSim} />}
+                      </td>
+                      <td className="px-5 py-2 text-right font-mono text-[13px] text-muted-foreground">
+                        {row.realValue}
+                      </td>
+                      <td className="px-5 py-2">
+                        {row.simContent}
+                      </td>
+                      <td className="px-5 py-2 text-right">
+                        <VariationBadge sim={row.variationSim} real={row.variationReal} isCost={row.isCost} />
+                      </td>
+                    </tr>
+                  </>
                 ))}
               </tbody>
             </table>
