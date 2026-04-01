@@ -402,6 +402,14 @@ export default function CsOnboarding() {
                   >
                     {ONBOARDING_STATUS_LABELS[ob.status as keyof typeof ONBOARDING_STATUS_LABELS]}
                   </Badge>
+                  {ob.created_at && differenceInHours(new Date(), new Date(ob.created_at)) < 48 && (
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] font-semibold px-1.5 py-0 rounded-md border bg-primary/10 text-primary border-primary/25"
+                    >
+                      Novo
+                    </Badge>
+                  )}
                 </div>
 
                 {/* Plan badge */}
