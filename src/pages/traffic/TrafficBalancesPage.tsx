@@ -265,7 +265,32 @@ export default function TrafficBalancesPage() {
         </div>
       </div>
 
-      {/* Alerts */}
+      {/* Token expired alert */}
+      {isTokenExpired && (
+        <Card className="border-destructive bg-destructive/10">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+                <div>
+                  <p className="font-medium text-destructive">
+                    Token do Meta Ads expirado
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    A conexão com o Meta expirou em {new Date(connection!.token_expires_at!).toLocaleDateString('pt-BR')}. 
+                    Os saldos não estão sendo atualizados. Reconecte para restaurar a sincronização.
+                  </p>
+                </div>
+              </div>
+              <Button variant="destructive" size="sm" onClick={handleReconnect}>
+                <LinkIcon className="h-4 w-4 mr-1" />
+                Reconectar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {lowBalanceCount > 0 && (
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="py-4">
