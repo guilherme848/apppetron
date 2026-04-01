@@ -1002,9 +1002,9 @@ export function useCsDashboardMetrics() {
     let avgOnboardingDays = 0;
     if (completedOnboardings && completedOnboardings.length > 0) {
       const totalDays = completedOnboardings.reduce((sum, o) => {
-        if (o.started_at && o.completed_at) {
-          const start = new Date(o.started_at);
-          const end = new Date(o.completed_at);
+        if (o.data_inicio && o.data_conclusao) {
+          const start = new Date(o.data_inicio);
+          const end = new Date(o.data_conclusao);
           return sum + Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
         }
         return sum;
