@@ -242,7 +242,7 @@ export default function MatemarketingPage() {
     if (!bench) return null;
     const isBelow = simValue < bench;
     return (
-      <span className={cn('text-[11px]', isBelow ? 'text-red-500' : 'text-emerald-500')}>
+      <span className={cn('text-[11px]', isBelow ? 'text-destructive' : 'text-success')}>
         Bench: {bench}%
       </span>
     );
