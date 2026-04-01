@@ -55,6 +55,7 @@ export interface OnboardingReuniaoResposta {
   onboarding_id: string;
   pergunta_id: string | null;
   resposta: string | null;
+  resposta_json: any;
   created_at: string;
   updated_at: string;
 }
