@@ -4810,7 +4810,11 @@ export type Database = {
           atividade_template_id: string | null
           created_at: string | null
           data_conclusao: string | null
+          delegado_em: string | null
+          delegado_para_id: string | null
+          delegado_por_id: string | null
           descricao: string | null
+          etapa: number | null
           id: string
           onboarding_id: string
           ordem: number | null
@@ -4823,7 +4827,11 @@ export type Database = {
           atividade_template_id?: string | null
           created_at?: string | null
           data_conclusao?: string | null
+          delegado_em?: string | null
+          delegado_para_id?: string | null
+          delegado_por_id?: string | null
           descricao?: string | null
+          etapa?: number | null
           id?: string
           onboarding_id: string
           ordem?: number | null
@@ -4836,7 +4844,11 @@ export type Database = {
           atividade_template_id?: string | null
           created_at?: string | null
           data_conclusao?: string | null
+          delegado_em?: string | null
+          delegado_para_id?: string | null
+          delegado_por_id?: string | null
           descricao?: string | null
+          etapa?: number | null
           id?: string
           onboarding_id?: string
           ordem?: number | null
@@ -4851,6 +4863,20 @@ export type Database = {
             columns: ["atividade_template_id"]
             isOneToOne: false
             referencedRelation: "petron_onboarding_activity_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_atividades_delegado_para_id_fkey"
+            columns: ["delegado_para_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_atividades_delegado_por_id_fkey"
+            columns: ["delegado_por_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
             referencedColumns: ["id"]
           },
           {
@@ -5325,6 +5351,7 @@ export type Database = {
           default_owner_role: string
           default_sla_days: number
           description: string | null
+          etapa: number | null
           id: string
           title: string
           updated_at: string
@@ -5335,6 +5362,7 @@ export type Database = {
           default_owner_role?: string
           default_sla_days?: number
           description?: string | null
+          etapa?: number | null
           id?: string
           title: string
           updated_at?: string
@@ -5345,6 +5373,7 @@ export type Database = {
           default_owner_role?: string
           default_sla_days?: number
           description?: string | null
+          etapa?: number | null
           id?: string
           title?: string
           updated_at?: string
