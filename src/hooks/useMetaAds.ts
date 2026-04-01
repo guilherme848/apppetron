@@ -147,13 +147,40 @@ export function useMetaAds() {
       const { data, error } = await supabase.functions.invoke('meta-fetch-finance', {
         body: { adAccountIds },
       });
-      if (error) throw error;
-      toast.success(`Dados financeiros atualizados`);
+      
+      // supabase.functions.invoke wraps non-2xx as error
+      if (error) {
+        // Try to parse the error context for token expiration
+        const errorMsg = typeof error === 'object' && error.message ? error.message : String(error);
+        if (errorMsg.includes('TOKEN_EXPIRED') || errorMsg.includes('expirado') || errorMsg.includes('401')) {
+          toast.error('Token do Meta Ads expirado. Reconecte sua conta Meta nas configurações.', { duration: 8000 });
+        } else {
+          toast.error('Erro ao buscar saldos: ' + errorMsg);
+        }
+        return null;
+      }
+
+      // Check if response body itself has error
+      if (data?.error) {
+        if (data.errorCode === 'TOKEN_EXPIRED') {
+          toast.error('Token do Meta Ads expirado. Reconecte sua conta Meta nas configurações.', { duration: 8000 });
+        } else {
+          toast.error(data.error);
+        }
+        return null;
+      }
+      
+      if (data?.errorCount > 0) {
+        toast.warning(`Atualizado com ${data.errorCount} erro(s) em ${data.count + data.errorCount} contas`);
+      } else {
+        toast.success(`Dados financeiros atualizados (${data.count} contas)`);
+      }
       await fetchSnapshots();
       return data.snapshots;
     } catch (error: any) {
       console.error('Finance fetch error:', error);
-      toast.error('Erro ao buscar dados: ' + error.message);
+      toast.error('Erro ao buscar dados: ' + (error?.message || 'erro desconhecido'));
+      return null;
     }
   };
 

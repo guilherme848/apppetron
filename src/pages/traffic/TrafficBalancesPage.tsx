@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { DollarSign, RefreshCw, AlertTriangle, TrendingDown, Clock, RotateCw } from 'lucide-react';
+import { DollarSign, RefreshCw, AlertTriangle, TrendingDown, Clock, RotateCw, LinkIcon, Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -35,6 +35,7 @@ export default function TrafficBalancesPage() {
     adAccounts,
     getLatestSnapshot,
     fetchFinanceData,
+    startOAuth,
     loading: metaLoading,
   } = useMetaAds();
 
@@ -177,6 +178,14 @@ export default function TrafficBalancesPage() {
   const lowBalanceCount = balanceRows.filter(r => r.isLowBalance).length;
   const missingBudgetCount = balanceRows.filter(r => !r.monthlyBudget && r.paymentMethod !== 'cartao').length;
 
+  const isTokenExpired = connection?.token_expires_at
+    ? new Date(connection.token_expires_at) < new Date()
+    : false;
+
+  const handleReconnect = async () => {
+    await startOAuth();
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -229,14 +238,22 @@ export default function TrafficBalancesPage() {
           </p>
         </div>
         <div className="flex flex-col items-end gap-2">
-          <Button onClick={handleRefreshAll} disabled={fetchingFinance || balanceRows.length === 0}>
-            {fetchingFinance ? (
-              <Skeleton className="h-4 w-16 rounded" />
-            ) : (
-              <RefreshCw className="h-4 w-4 mr-2" />
+          <div className="flex items-center gap-2">
+            {isTokenExpired && (
+              <Button variant="destructive" size="sm" onClick={handleReconnect}>
+                <LinkIcon className="h-4 w-4 mr-1" />
+                Reconectar Meta
+              </Button>
             )}
-            Atualizar Todos
-          </Button>
+            <Button onClick={handleRefreshAll} disabled={fetchingFinance || balanceRows.length === 0 || isTokenExpired}>
+              {fetchingFinance ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-2" />
+              )}
+              Atualizar Todos
+            </Button>
+          </div>
           {latestUpdateTimestamp && (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Clock className="h-3 w-3" />
@@ -248,7 +265,32 @@ export default function TrafficBalancesPage() {
         </div>
       </div>
 
-      {/* Alerts */}
+      {/* Token expired alert */}
+      {isTokenExpired && (
+        <Card className="border-destructive bg-destructive/10">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+                <div>
+                  <p className="font-medium text-destructive">
+                    Token do Meta Ads expirado
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    A conexão com o Meta expirou em {new Date(connection!.token_expires_at!).toLocaleDateString('pt-BR')}. 
+                    Os saldos não estão sendo atualizados. Reconecte para restaurar a sincronização.
+                  </p>
+                </div>
+              </div>
+              <Button variant="destructive" size="sm" onClick={handleReconnect}>
+                <LinkIcon className="h-4 w-4 mr-1" />
+                Reconectar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {lowBalanceCount > 0 && (
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="py-4">
@@ -456,12 +498,12 @@ export default function TrafficBalancesPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            disabled={isRefreshing || row.paymentMethod === 'cartao'}
+                            disabled={isRefreshing || row.paymentMethod === 'cartao' || isTokenExpired}
                             onClick={() => handleRefreshSingle(row.adAccountId)}
-                            title="Atualizar saldo"
+                            title={isTokenExpired ? 'Token expirado — reconecte o Meta' : 'Atualizar saldo'}
                           >
                             {isRefreshing ? (
-                              <Skeleton className="h-4 w-16 rounded" />
+                              <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
                               <RotateCw className="h-4 w-4" />
                             )}

@@ -19,9 +19,9 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     if (!businessId || !supabaseUrl || !supabaseServiceKey) {
-      console.error('Missing required environment variables');
+      console.error('[meta-fetch-finance] Missing required environment variables');
       return new Response(
-        JSON.stringify({ error: 'Server configuration error' }),
+        JSON.stringify({ error: 'Configuração do servidor incompleta' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -36,11 +36,27 @@ serve(async (req) => {
       .single();
 
     if (connError || !connection) {
-      console.error('No Meta connection found:', connError);
+      console.error('[meta-fetch-finance] No Meta connection found:', connError);
       return new Response(
-        JSON.stringify({ error: 'Meta not connected' }),
+        JSON.stringify({ error: 'Meta Ads não conectado. Conecte sua conta nas configurações.' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Check token expiration
+    if (connection.token_expires_at) {
+      const expiresAt = new Date(connection.token_expires_at);
+      if (expiresAt < new Date()) {
+        console.error('[meta-fetch-finance] Token expired at:', connection.token_expires_at);
+        return new Response(
+          JSON.stringify({ 
+            error: 'Token do Meta Ads expirado. Reconecte sua conta Meta nas configurações.',
+            errorCode: 'TOKEN_EXPIRED',
+            expiredAt: connection.token_expires_at,
+          }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     const accessToken = connection.access_token_encrypted;
@@ -54,20 +70,31 @@ serve(async (req) => {
       accountsToFetch = allAccounts?.map(a => a.ad_account_id) || [];
     }
 
-    console.log(`Fetching finance data for ${accountsToFetch.length} accounts`);
+    console.log(`[meta-fetch-finance] Fetching finance data for ${accountsToFetch.length} accounts`);
 
     const results = [];
+    let errorCount = 0;
+    let tokenError = false;
 
     for (const adAccountId of accountsToFetch) {
       try {
-        // Fetch account insights
         const graphUrl = `https://graph.facebook.com/v19.0/${adAccountId}?fields=name,currency,amount_spent,spend_cap&access_token=${accessToken}`;
         
         const response = await fetch(graphUrl);
         const data = await response.json();
 
         if (data.error) {
-          console.error(`Error fetching ${adAccountId}:`, data.error);
+          console.error(`[meta-fetch-finance] Meta API error for ${adAccountId}:`, JSON.stringify(data.error));
+          
+          // Detect token/auth errors
+          const code = data.error.code;
+          const subcode = data.error.error_subcode;
+          if (code === 190 || subcode === 463 || subcode === 467) {
+            tokenError = true;
+            break; // No point continuing if token is invalid
+          }
+          
+          errorCount++;
           continue;
         }
 
@@ -90,7 +117,7 @@ serve(async (req) => {
           });
 
         if (insertError) {
-          console.error('Error saving snapshot:', insertError);
+          console.error('[meta-fetch-finance] Error saving snapshot:', insertError);
         }
 
         results.push({
@@ -102,21 +129,36 @@ serve(async (req) => {
           available_balance: availableBalance,
         });
       } catch (err) {
-        console.error(`Error processing ${adAccountId}:`, err);
+        console.error(`[meta-fetch-finance] Error processing ${adAccountId}:`, err);
+        errorCount++;
       }
     }
+
+    if (tokenError) {
+      console.error('[meta-fetch-finance] Token is invalid/expired (Meta API code 190)');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Token do Meta Ads expirado ou revogado. Reconecte sua conta Meta.',
+          errorCode: 'TOKEN_EXPIRED',
+        }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`[meta-fetch-finance] Completed. Success: ${results.length}, Errors: ${errorCount}`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         count: results.length,
+        errorCount,
         snapshots: results 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Error in meta-fetch-finance:', error);
+    console.error('[meta-fetch-finance] Fatal error:', error);
     return new Response(
       JSON.stringify({ error: message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
