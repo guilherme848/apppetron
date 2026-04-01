@@ -121,11 +121,9 @@ export default function ActivitiesSection({
     setOpenStages(initial);
   }, [stages.length]);
 
-  const canInteract = (at: OnboardingAtividade): boolean => {
+  const canInteract = (_at: OnboardingAtividade): boolean => {
     if (isConcluido) return false;
-    if (hasFullAccess) return true;
-    if (member?.id && at.delegado_para_id === member.id) return true;
-    return false;
+    return true;
   };
 
   const handleDelegate = async (atividadeId: string, memberId: string, onboardingId: string) => {

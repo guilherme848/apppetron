@@ -1,0 +1,1 @@
+ALTER TABLE public.onboarding_atividades ADD COLUMN concluida_por uuid REFERENCES public.team_members(id);

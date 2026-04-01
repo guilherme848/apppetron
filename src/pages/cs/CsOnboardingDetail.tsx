@@ -20,6 +20,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 import StickyNav from '@/components/cs/onboarding-detail/StickyNav';
 import TranscriptionUploadCard from '@/components/cs/onboarding-detail/TranscriptionUploadCard';
@@ -62,6 +63,7 @@ export default function CsOnboardingDetail() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { members } = useTeamMembers();
+  const { member } = useAuth();
 
   const { data: onboarding, isLoading: loadingDetail } = useOnboardingDetail(onboardingId || null);
   const { data: atividades, isLoading: loadingAtividades } = useOnboardingAtividades(onboardingId || null);
@@ -173,9 +175,17 @@ export default function CsOnboardingDetail() {
   const handleToggleAtividade = (atividadeId: string, currentStatus: string) => {
     if (!onboardingId) return;
     const newStatus = currentStatus === 'concluida' ? 'pendente' : 'concluida';
+    const isConcluindo = newStatus === 'concluida';
     updateAtividade.mutate({
       atividadeId, onboardingId,
-      updates: { status: newStatus as any, data_conclusao: newStatus === 'concluida' ? new Date().toISOString() : null },
+      updates: {
+        status: newStatus as any,
+        data_conclusao: isConcluindo ? new Date().toISOString() : null,
+        ...(isConcluindo
+          ? { concluida_por: member?.id || null }
+          : { concluida_por: null }
+        ),
+      } as any,
     });
   };
 

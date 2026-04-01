@@ -4817,6 +4817,7 @@ export type Database = {
       onboarding_atividades: {
         Row: {
           atividade_template_id: string | null
+          concluida_por: string | null
           created_at: string | null
           data_conclusao: string | null
           delegado_em: string | null
@@ -4836,6 +4837,7 @@ export type Database = {
         }
         Insert: {
           atividade_template_id?: string | null
+          concluida_por?: string | null
           created_at?: string | null
           data_conclusao?: string | null
           delegado_em?: string | null
@@ -4855,6 +4857,7 @@ export type Database = {
         }
         Update: {
           atividade_template_id?: string | null
+          concluida_por?: string | null
           created_at?: string | null
           data_conclusao?: string | null
           delegado_em?: string | null
@@ -4878,6 +4881,13 @@ export type Database = {
             columns: ["atividade_template_id"]
             isOneToOne: false
             referencedRelation: "petron_onboarding_activity_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_atividades_concluida_por_fkey"
+            columns: ["concluida_por"]
+            isOneToOne: false
+            referencedRelation: "team_members"
             referencedColumns: ["id"]
           },
           {
