@@ -994,10 +994,10 @@ export function useCsDashboardMetrics() {
 
     // Calculate avg onboarding time
     const { data: completedOnboardings } = await supabase
-      .from('cs_client_onboarding')
-      .select('started_at, completed_at')
-      .eq('status', 'completed')
-      .not('completed_at', 'is', null);
+      .from('onboardings')
+      .select('data_inicio, data_conclusao')
+      .eq('status', 'concluido')
+      .not('data_conclusao', 'is', null);
 
     let avgOnboardingDays = 0;
     if (completedOnboardings && completedOnboardings.length > 0) {
