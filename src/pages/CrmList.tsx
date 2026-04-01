@@ -59,6 +59,24 @@ const getPlanBadgeStyle = (planName: string | null | undefined) => {
   return 'bg-muted text-muted-foreground border-border';
 };
 
+const getSourceBadgeStyle = (origin: string | null | undefined) => {
+  switch (origin) {
+    case 'inbound': return 'bg-[hsl(var(--success)/.12)] text-[hsl(var(--success))] border-[hsl(var(--success)/.25)]';
+    case 'outbound': return 'bg-[hsl(var(--info)/.12)] text-[hsl(var(--info))] border-[hsl(var(--info)/.25)]';
+    case 'indicacao': return 'bg-[hsl(var(--purple)/.12)] text-[hsl(var(--purple))] border-[hsl(var(--purple)/.25)]';
+    default: return 'bg-destructive/12 text-destructive border-destructive/25';
+  }
+};
+
+const getSourceLabel = (origin: string | null | undefined) => {
+  switch (origin) {
+    case 'inbound': return 'Inbound';
+    case 'outbound': return 'Outbound';
+    case 'indicacao': return 'Indicação';
+    default: return 'Sem fonte';
+  }
+};
+
 const getCheckupBadge = (classificacao: string | null | undefined) => {
   if (!classificacao) return null;
   const colorMap: Record<string, string> = {
@@ -102,6 +120,7 @@ export default function CrmList() {
   const [filterCs, setFilterCs] = useState('all');
   const [filterNiche, setFilterNiche] = useState('all');
   const [filterEntryMonth, setFilterEntryMonth] = useState('all');
+  const [filterSource, setFilterSource] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
 
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
@@ -132,7 +151,7 @@ export default function CrmList() {
     }));
   };
 
-  const hasActiveFilters = search || filterPlan !== 'all' || filterTrafficManager !== 'all' || filterCs !== 'all' || filterNiche !== 'all' || filterEntryMonth !== 'all' || showChurned;
+  const hasActiveFilters = search || filterPlan !== 'all' || filterTrafficManager !== 'all' || filterCs !== 'all' || filterNiche !== 'all' || filterEntryMonth !== 'all' || filterSource !== 'all' || showChurned;
 
   const clearFilters = () => {
     setSearch('');
@@ -141,6 +160,7 @@ export default function CrmList() {
     setFilterCs('all');
     setFilterNiche('all');
     setFilterEntryMonth('all');
+    setFilterSource('all');
     setShowChurned(false);
     setCurrentPage(1);
   };
@@ -191,6 +211,13 @@ export default function CrmList() {
       if (filterCs !== 'all' && account.cs_member_id !== filterCs) return false;
       if (filterNiche !== 'all' && account.niche !== filterNiche) return false;
       if (filterEntryMonth !== 'all' && (!account.start_date || !account.start_date.startsWith(filterEntryMonth))) return false;
+      if (filterSource !== 'all') {
+        if (filterSource === '__none__') {
+          if (account.origin) return false;
+        } else {
+          if (account.origin !== filterSource) return false;
+        }
+      }
       return true;
     });
 
@@ -218,12 +245,12 @@ export default function CrmList() {
         default: return 0;
       }
     });
-  }, [accounts, search, sortConfig, showChurned, filterPlan, filterTrafficManager, filterCs, filterNiche, filterEntryMonth]);
+  }, [accounts, search, sortConfig, showChurned, filterPlan, filterTrafficManager, filterCs, filterNiche, filterEntryMonth, filterSource]);
 
   const totalPages = Math.max(1, Math.ceil(sortedAndFilteredAccounts.length / ITEMS_PER_PAGE));
   const paginatedAccounts = sortedAndFilteredAccounts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
-  useEffect(() => { setCurrentPage(1); }, [search, showChurned, filterPlan, filterTrafficManager, filterCs, filterNiche, filterEntryMonth]);
+  useEffect(() => { setCurrentPage(1); }, [search, showChurned, filterPlan, filterTrafficManager, filterCs, filterNiche, filterEntryMonth, filterSource]);
 
   const handleSubmit = async (data: Partial<Account>) => {
     if (editingAccount) {
@@ -363,6 +390,17 @@ export default function CrmList() {
           </SelectContent>
         </Select>
 
+        <Select value={filterSource} onValueChange={setFilterSource}>
+          <SelectTrigger className="w-[150px] h-10"><SelectValue placeholder="Fonte" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as fontes</SelectItem>
+            <SelectItem value="inbound">Inbound</SelectItem>
+            <SelectItem value="outbound">Outbound</SelectItem>
+            <SelectItem value="indicacao">Indicação</SelectItem>
+            <SelectItem value="__none__">Sem fonte</SelectItem>
+          </SelectContent>
+        </Select>
+
         <div className="flex items-center gap-2 ml-auto">
           {hasActiveFilters && (
             <button onClick={clearFilters} className="flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground transition-colors">
@@ -397,7 +435,7 @@ export default function CrmList() {
                   <div className="flex items-center text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Valor Mensal<SortIcon columnKey="monthly_value" /></div>
                 </TableHead>
               )}
-              
+              <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Fonte</TableHead>
               <TableHead className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Status</TableHead>
               <TableHead className="w-[100px] text-[11px] font-semibold uppercase text-muted-foreground tracking-wide">Ações</TableHead>
             </TableRow>
@@ -405,7 +443,7 @@ export default function CrmList() {
           <TableBody>
             {paginatedAccounts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={showFinancialValues ? 7 : 6} className="text-center py-16">
+                <TableCell colSpan={showFinancialValues ? 8 : 7} className="text-center py-16">
                   <div className="flex flex-col items-center gap-3">
                     <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center">
                       <Search className="h-7 w-7 text-muted-foreground" />
@@ -464,6 +502,11 @@ export default function CrmList() {
                         <span className="text-sm font-semibold font-mono text-foreground">{formatCurrency(account.monthly_value)}</span>
                       </TableCell>
                     )}
+                    <TableCell>
+                      <span className={`inline-flex items-center px-2 py-[3px] text-[11px] font-semibold rounded-[6px] border ${getSourceBadgeStyle(account.origin)}`}>
+                        {getSourceLabel(account.origin)}
+                      </span>
+                    </TableCell>
                     <TableCell>
                       <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-semibold rounded-md border ${
                         account.status === 'active' ? 'bg-[hsl(var(--success)/.12)] text-[hsl(var(--success))] border-[hsl(var(--success)/.25)]' :
