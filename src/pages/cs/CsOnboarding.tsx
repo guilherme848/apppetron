@@ -456,10 +456,10 @@ export default function CsOnboarding() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-1.5">
-                      <div className="h-6 w-6 rounded-md bg-muted flex items-center justify-center shrink-0">
-                        <User className="h-3.5 w-3.5 text-muted-foreground" />
+                      <div className="h-6 w-6 rounded-md bg-[hsl(var(--warning)/0.15)] flex items-center justify-center shrink-0">
+                        <AlertTriangle className="h-3.5 w-3.5 text-[hsl(var(--warning,45_93%_47%))]" />
                       </div>
-                      <span className="text-[11px] text-muted-foreground">Sem responsável CS</span>
+                      <span className="text-[11px] font-medium text-[hsl(var(--warning,45_93%_47%))]">CS não atribuído</span>
                     </div>
                   )}
                   {isConcluido ? (
