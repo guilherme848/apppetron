@@ -12,12 +12,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import type { OnboardingAtividade } from '@/hooks/useOnboardings';
 
-const ETAPA_CONFIG: Record<number, { label: string; name: string }> = {
-  1: { label: 'ETAPA 1', name: 'PRIMEIROS PASSOS' },
-  2: { label: 'ETAPA 2', name: 'BM' },
-  3: { label: 'ETAPA 3', name: 'CAMPANHA' },
-};
-
 const FULL_ACCESS_ROLES = ['administrador', 'cs', 'customer success', 'diretor', 'sócio', 'socio'];
 
 interface ActivitiesSectionProps {
@@ -65,8 +59,15 @@ function ActivityCheckbox({ checked, onChange, disabled }: { checked: boolean; o
   );
 }
 
+interface StageGroup {
+  etapa: number;
+  etapaId: string;
+  nome: string;
+  items: OnboardingAtividade[];
+}
+
 export default function ActivitiesSection({
-  atividades, isConcluido, csMembers, onToggle, onResponsavelChange,
+  atividades, isConcluido, csMembers, onToggle,
 }: ActivitiesSectionProps) {
   const { member, isAdmin } = useAuth();
   const queryClient = useQueryClient();
@@ -93,25 +94,36 @@ export default function ActivitiesSection({
   const completedCount = atividades.filter(a => a.status === 'concluida').length;
   const totalCount = atividades.length;
 
-  // Group by etapa
-  const stages = useMemo(() => {
-    const map = new Map<number, OnboardingAtividade[]>();
+  // Group by etapa (integer), derive name from joined data
+  const stages = useMemo<StageGroup[]>(() => {
+    const map = new Map<number, StageGroup>();
     atividades.forEach(a => {
       const etapa = a.etapa || 1;
-      if (!map.has(etapa)) map.set(etapa, []);
-      map.get(etapa)!.push(a);
+      if (!map.has(etapa)) {
+        map.set(etapa, {
+          etapa,
+          etapaId: a.etapa_id || '',
+          nome: a.etapa_nome || `Etapa ${etapa}`,
+          items: [],
+        });
+      }
+      map.get(etapa)!.items.push(a);
     });
-    return [1, 2, 3]
-      .filter(e => map.has(e))
-      .map(e => ({ etapa: e, items: map.get(e)! }));
+    return Array.from(map.values()).sort((a, b) => a.etapa - b.etapa);
   }, [atividades]);
 
-  const [openStages, setOpenStages] = useState<Record<number, boolean>>({ 1: true, 2: true, 3: true });
+  const [openStages, setOpenStages] = useState<Record<number, boolean>>({});
+
+  // Initialize all stages as open
+  useEffect(() => {
+    const initial: Record<number, boolean> = {};
+    stages.forEach(s => { initial[s.etapa] = true; });
+    setOpenStages(initial);
+  }, [stages.length]);
 
   const canInteract = (at: OnboardingAtividade): boolean => {
     if (isConcluido) return false;
     if (hasFullAccess) return true;
-    // Non-CS users can only toggle activities delegated to them
     if (member?.id && at.delegado_para_id === member.id) return true;
     return false;
   };
@@ -135,8 +147,6 @@ export default function ActivitiesSection({
     queryClient.invalidateQueries({ queryKey: ['onboarding-atividades', onboardingId] });
   };
 
-  const allMembers = csMembers;
-
   return (
     <TooltipProvider>
       <div className="space-y-5">
@@ -150,7 +160,7 @@ export default function ActivitiesSection({
           </span>
         </div>
 
-        {/* Overall progress */}
+        {/* Overall progress bar */}
         <div className="w-full h-2 rounded-lg bg-muted overflow-hidden">
           <div
             className="h-full rounded-lg transition-all duration-500"
@@ -163,10 +173,9 @@ export default function ActivitiesSection({
 
         {/* Stages */}
         {stages.map((stage, stageIdx) => {
-          const config = ETAPA_CONFIG[stage.etapa] || { label: `ETAPA ${stage.etapa}`, name: '' };
           const stageCompleted = stage.items.filter(a => a.status === 'concluida').length;
           const stageTotal = stage.items.length;
-          const isStageComplete = stageCompleted === stageTotal;
+          const isStageComplete = stageCompleted === stageTotal && stageTotal > 0;
           const isOpen = openStages[stage.etapa] !== false;
           const pct = stageTotal > 0 ? (stageCompleted / stageTotal) * 100 : 0;
 
@@ -195,9 +204,9 @@ export default function ActivitiesSection({
                       !isOpen && '-rotate-90'
                     )} />
 
-                    <div className="flex-1 flex items-center gap-3">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
-                        {config.label} — {config.name}
+                    <div className="flex-1 flex items-center gap-3 min-w-0">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-foreground whitespace-nowrap">
+                        ETAPA {stage.etapa} — {stage.nome}
                       </span>
 
                       {isStageComplete && (
@@ -207,12 +216,12 @@ export default function ActivitiesSection({
                       )}
                     </div>
 
-                    <span className="text-xs font-mono text-muted-foreground">
+                    <span className="text-xs font-mono text-muted-foreground whitespace-nowrap">
                       {stageCompleted} de {stageTotal}
                     </span>
 
-                    {/* Mini progress bar */}
-                    <div className="w-20 h-1 rounded bg-muted overflow-hidden">
+                    {/* Mini progress */}
+                    <div className="w-20 h-1 rounded bg-muted overflow-hidden shrink-0">
                       <div
                         className="h-full rounded transition-all duration-500"
                         style={{
@@ -226,7 +235,7 @@ export default function ActivitiesSection({
                   </button>
                 </CollapsibleTrigger>
 
-                {/* Stage activities */}
+                {/* Activities */}
                 <CollapsibleContent>
                   <div className="mt-1">
                     {stage.items.map((at, idx) => {
@@ -244,7 +253,7 @@ export default function ActivitiesSection({
                             !isDone && !isReadOnly && 'hover:bg-primary/[0.03]',
                             isReadOnly && !isDone && 'opacity-70',
                           )}
-                          style={{ animationDelay: `${(stageIdx * 60) + (idx * 25)}ms`, animationFillMode: 'both' }}
+                          style={{ animationDelay: `${(stageIdx * 60) + (idx * 25)}ms` }}
                         >
                           <ActivityCheckbox
                             checked={isDone}
@@ -268,7 +277,7 @@ export default function ActivitiesSection({
                             </span>
                           )}
 
-                          {/* Delegation controls — only for full-access users */}
+                          {/* Delegation - full access users */}
                           {!isConcluido && hasFullAccess && (
                             delegadoName && at.delegado_para_id ? (
                               <div className="flex items-center gap-1.5 shrink-0">
@@ -293,7 +302,7 @@ export default function ActivitiesSection({
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="_none_">Nenhum</SelectItem>
-                                  {allMembers.map(m => (
+                                  {csMembers.map(m => (
                                     <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
                                   ))}
                                 </SelectContent>
@@ -301,7 +310,7 @@ export default function ActivitiesSection({
                             )
                           )}
 
-                          {/* Non-full-access: show delegated badge if delegated to them */}
+                          {/* Non-full-access: show delegated badge */}
                           {!isConcluido && !hasFullAccess && delegadoName && (
                             <div className="flex items-center gap-1.5 shrink-0">
                               <MemberAvatar name={delegadoName} />
@@ -309,7 +318,6 @@ export default function ActivitiesSection({
                             </div>
                           )}
 
-                          {/* Concluded onboarding: show delegated member */}
                           {isConcluido && delegadoName && (
                             <div className="flex items-center gap-1.5 shrink-0">
                               <MemberAvatar name={delegadoName} />
