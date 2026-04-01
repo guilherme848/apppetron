@@ -173,9 +173,17 @@ export default function CsOnboardingDetail() {
   const handleToggleAtividade = (atividadeId: string, currentStatus: string) => {
     if (!onboardingId) return;
     const newStatus = currentStatus === 'concluida' ? 'pendente' : 'concluida';
+    const isConcluindo = newStatus === 'concluida';
     updateAtividade.mutate({
       atividadeId, onboardingId,
-      updates: { status: newStatus as any, data_conclusao: newStatus === 'concluida' ? new Date().toISOString() : null },
+      updates: {
+        status: newStatus as any,
+        data_conclusao: isConcluindo ? new Date().toISOString() : null,
+        ...(isConcluindo
+          ? { concluida_por: member?.id || null }
+          : { concluida_por: null }
+        ),
+      } as any,
     });
   };
 
