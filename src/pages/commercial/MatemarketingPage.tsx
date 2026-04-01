@@ -378,16 +378,16 @@ export default function MatemarketingPage() {
       variationSim: derived.investimento, variationReal: realData.investimento, isCost: true,
     },
     {
-      label: 'Leads',
-      realValue: fmtInt(realData.leads),
-      simContent: <NumInput value={sim.leads} onChange={(v) => updateField('leads', v, 'cpl_pair', 'leads')} isInteger wasEdited={editedFields.has('leads')} />,
-      variationSim: sim.leads, variationReal: realData.leads,
-    },
-    {
       label: 'CPL',
       realValue: fmtBRL(realCpl),
       simContent: <NumInput value={derived.cpl} onChange={handleCpl} prefix="R$" wasEdited={editedFields.has('cpl')} />,
       variationSim: derived.cpl, variationReal: realCpl, isCost: true,
+    },
+    {
+      label: 'Leads',
+      realValue: fmtInt(realData.leads),
+      simContent: <NumInput value={sim.leads} onChange={(v) => updateField('leads', v, 'cpl_pair', 'leads')} isInteger wasEdited={editedFields.has('leads')} />,
+      variationSim: sim.leads, variationReal: realData.leads,
     },
     // QUALIFICAÇÃO
     {
