@@ -96,6 +96,7 @@ import MarketingBatchDetail from "./pages/commercial/MarketingBatchDetail";
 import MarketingPostDetail from "./pages/commercial/MarketingPostDetail";
 import CommercialPlanningPage from "./pages/commercial/CommercialPlanningPage";
 import OutboundFunnelPage from "./pages/commercial/OutboundFunnelPage";
+import MatemarketingPage from "./pages/commercial/MatemarketingPage";
 
 // Petron OS pages
 import PetronOSHub from "./pages/petron-os/PetronOSHub";
