@@ -30,6 +30,8 @@ export interface OnboardingAtividade {
   id: string;
   onboarding_id: string;
   atividade_template_id: string | null;
+  new_template_id: string | null;
+  etapa_id: string | null;
   titulo: string;
   descricao: string | null;
   responsavel_perfil: string | null;
@@ -45,6 +47,7 @@ export interface OnboardingAtividade {
   // Joined
   responsavel_name?: string;
   delegado_para_name?: string;
+  etapa_nome?: string;
 }
 
 export interface OnboardingReuniaoResposta {
