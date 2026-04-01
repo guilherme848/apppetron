@@ -3804,6 +3804,7 @@ export type Database = {
       cs_onboarding_questions: {
         Row: {
           ai_extract_hint: string | null
+          allow_other: boolean | null
           answer_key: string | null
           block_key: string
           block_title: string
@@ -3820,12 +3821,14 @@ export type Database = {
           placeholder: string | null
           prefill_field: string | null
           question_text: string
+          sub_fields: Json | null
           updated_at: string
           validation_json: Json | null
           weight: number
         }
         Insert: {
           ai_extract_hint?: string | null
+          allow_other?: boolean | null
           answer_key?: string | null
           block_key: string
           block_title: string
@@ -3842,12 +3845,14 @@ export type Database = {
           placeholder?: string | null
           prefill_field?: string | null
           question_text: string
+          sub_fields?: Json | null
           updated_at?: string
           validation_json?: Json | null
           weight?: number
         }
         Update: {
           ai_extract_hint?: string | null
+          allow_other?: boolean | null
           answer_key?: string | null
           block_key?: string
           block_title?: string
@@ -3864,6 +3869,7 @@ export type Database = {
           placeholder?: string | null
           prefill_field?: string | null
           question_text?: string
+          sub_fields?: Json | null
           updated_at?: string
           validation_json?: Json | null
           weight?: number
