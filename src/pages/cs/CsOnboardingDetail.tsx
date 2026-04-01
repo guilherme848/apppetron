@@ -20,6 +20,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 import StickyNav from '@/components/cs/onboarding-detail/StickyNav';
 import TranscriptionUploadCard from '@/components/cs/onboarding-detail/TranscriptionUploadCard';
