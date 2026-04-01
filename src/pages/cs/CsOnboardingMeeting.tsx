@@ -454,7 +454,7 @@ export default function CsOnboardingMeeting() {
                           <ChevronRight className="h-5 w-5" />
                         )}
                         <CardTitle className="text-lg">
-                          Bloco {block.block_key} — {block.block_title}
+                          {block.block_title}
                         </CardTitle>
                       </div>
                       <div className="flex items-center gap-2">
