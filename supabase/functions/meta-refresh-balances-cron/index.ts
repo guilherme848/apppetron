@@ -6,10 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-/**
- * This function is designed to be called by a cron job every 6 hours.
- * It fetches the latest financial data for all linked ad accounts.
- */
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -32,7 +28,6 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get the stored Meta connection
     const { data: connection, error: connError } = await supabase
       .from('meta_bm_connection')
       .select('*')
@@ -47,9 +42,20 @@ serve(async (req) => {
       );
     }
 
+    // Check token expiration
+    if (connection.token_expires_at) {
+      const expiresAt = new Date(connection.token_expires_at);
+      if (expiresAt < new Date()) {
+        console.error('[meta-refresh-balances-cron] Token expired at:', connection.token_expires_at);
+        return new Response(
+          JSON.stringify({ success: false, message: 'Token expired', expiredAt: connection.token_expires_at }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     const accessToken = connection.access_token_encrypted;
 
-    // Get all active client-ad account links
     const { data: clientLinks, error: linksError } = await supabase
       .from('client_meta_ad_accounts')
       .select('ad_account_id')
@@ -63,7 +69,6 @@ serve(async (req) => {
       );
     }
 
-    // Get unique ad account IDs
     const uniqueAccountIds = [...new Set(clientLinks?.map(l => l.ad_account_id) || [])];
 
     if (uniqueAccountIds.length === 0) {
@@ -81,26 +86,31 @@ serve(async (req) => {
 
     for (const adAccountId of uniqueAccountIds) {
       try {
-        // Fetch account insights from Meta Graph API
         const graphUrl = `https://graph.facebook.com/v19.0/${adAccountId}?fields=name,currency,amount_spent,spend_cap&access_token=${accessToken}`;
         
         const response = await fetch(graphUrl);
         const data = await response.json();
 
         if (data.error) {
-          console.error(`[meta-refresh-balances-cron] Error fetching ${adAccountId}:`, data.error.message);
+          console.error(`[meta-refresh-balances-cron] Meta API error for ${adAccountId}: code=${data.error.code}, msg=${data.error.message}`);
+          
+          // If token error, stop immediately
+          const code = data.error.code;
+          if (code === 190) {
+            console.error('[meta-refresh-balances-cron] Token invalid (code 190), stopping.');
+            break;
+          }
+          
           errorCount++;
           continue;
         }
 
-        // amount_spent and spend_cap come in cents
         const amountSpent = data.amount_spent ? parseFloat(data.amount_spent) / 100 : null;
         const spendCap = data.spend_cap ? parseFloat(data.spend_cap) / 100 : null;
         const availableBalance = spendCap !== null && amountSpent !== null 
           ? spendCap - amountSpent 
           : null;
 
-        // Save snapshot
         const { error: insertError } = await supabase
           .from('meta_ad_account_snapshots')
           .insert({
