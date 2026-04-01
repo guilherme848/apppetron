@@ -390,6 +390,17 @@ export default function CrmList() {
           </SelectContent>
         </Select>
 
+        <Select value={filterSource} onValueChange={setFilterSource}>
+          <SelectTrigger className="w-[150px] h-10"><SelectValue placeholder="Fonte" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as fontes</SelectItem>
+            <SelectItem value="inbound">Inbound</SelectItem>
+            <SelectItem value="outbound">Outbound</SelectItem>
+            <SelectItem value="indicacao">Indicação</SelectItem>
+            <SelectItem value="__none__">Sem fonte</SelectItem>
+          </SelectContent>
+        </Select>
+
         <div className="flex items-center gap-2 ml-auto">
           {hasActiveFilters && (
             <button onClick={clearFilters} className="flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground transition-colors">
