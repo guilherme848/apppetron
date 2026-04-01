@@ -212,8 +212,8 @@ export default function MatemarketingPage() {
     const cm = clientMetrics.find((m) => m.month === selectedMonth);
     const meta = metaMetrics.find((m) => m.month === monthStr);
 
-    const investimento = meta?.investment ?? actual?.investment_actual ?? 0;
-    const leads = meta?.leads ?? actual?.leads_actual ?? 0;
+    const investimento = (meta?.investment || 0) > 0 ? meta!.investment : (actual?.investment_actual ?? 0);
+    const leads = (meta?.leads || 0) > 0 ? meta!.leads : (actual?.leads_actual ?? 0);
 
     return {
       investimento,
