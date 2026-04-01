@@ -139,6 +139,7 @@ export function useSalesFunnel(source: 'inbound' | 'outbound' = 'inbound') {
     const { data, error } = await supabase
       .from('accounts')
       .select('start_date, monthly_value')
+      .eq('origin', source)
       .gte('start_date', startDate)
       .lte('start_date', endDate)
       .is('deleted_at', null)
@@ -171,7 +172,7 @@ export function useSalesFunnel(source: 'inbound' | 'outbound' = 'inbound') {
     });
 
     setClientMetrics(metricsByMonth);
-  }, [filters.year]);
+  }, [filters.year, source]);
 
   // Fetch average LT for active clients (for ROAS Expectativa calculation)
   const fetchBaseMetrics = useCallback(async () => {
