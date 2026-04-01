@@ -91,47 +91,55 @@ function NumInput({
   isInteger?: boolean;
   wasEdited?: boolean;
 }) {
-  const [localText, setLocalText] = useState('');
-  const [focused, setFocused] = useState(false);
-  const committedRef = useRef(value);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Keep committed ref in sync with external value changes
-  useEffect(() => {
-    committedRef.current = value;
-  }, [value]);
-
-  const rawToDisplay = useCallback((v: number) => {
+  const formatForDisplay = (v: number): string => {
     if (isInteger) return fmtInt(v);
     if (prefix === 'R$') return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     if (suffix === '%') return v.toFixed(1);
     return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }, [isInteger, prefix, suffix]);
+  };
 
-  const rawToEdit = useCallback((v: number) => {
+  const toRawString = (v: number): string => {
     if (isInteger) return Math.round(v).toString();
     if (suffix === '%') return v.toFixed(1);
     return v.toFixed(2);
-  }, [isInteger, suffix]);
+  };
+
+  const parseInput = (text: string): number | null => {
+    const cleaned = text.replace(/[^\d.,-]/g, '').replace(',', '.');
+    const n = parseFloat(cleaned);
+    return isNaN(n) || !isFinite(n) ? null : n;
+  };
 
   const handleFocus = () => {
-    setFocused(true);
-    setLocalText(rawToEdit(committedRef.current));
+    setIsEditing(true);
+    setEditText(toRawString(value));
+    requestAnimationFrame(() => inputRef.current?.select());
   };
 
   const handleBlur = () => {
-    setFocused(false);
-    const parsed = parseFloat(localText.replace(/\./g, '').replace(',', '.'));
-    if (!isNaN(parsed) && isFinite(parsed)) {
-      const finalVal = isInteger ? roundInt(parsed) : round2(parsed);
-      if (finalVal !== committedRef.current) {
-        committedRef.current = finalVal;
-        onChange(finalVal);
-      }
-    }
-    // If invalid, just revert display - value stays the same
+    setIsEditing(false);
+    // Value already committed via onChange during editing — nothing to do
   };
 
-  const displayValue = focused ? localText : rawToDisplay(value);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    setEditText(raw);
+    const parsed = parseInput(raw);
+    if (parsed !== null) {
+      const final = isInteger ? roundInt(parsed) : (suffix === '%' ? round1(parsed) : round2(parsed));
+      onChange(final);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      inputRef.current?.blur();
+    }
+  };
 
   return (
     <div
@@ -139,18 +147,20 @@ function NumInput({
         'flex items-center gap-1 h-[42px] rounded-lg border px-3 font-mono text-sm transition-all duration-150',
         'bg-surface border-border',
         wasEdited && 'bg-primary/5',
-        focused && 'border-primary ring-[3px] ring-primary/10',
+        isEditing && 'border-primary ring-[3px] ring-primary/10',
       )}
     >
       {prefix && <span className="text-muted-foreground text-xs shrink-0">{prefix}</span>}
       <input
+        ref={inputRef}
         type="text"
         inputMode="decimal"
         className="w-full bg-transparent outline-none text-foreground font-mono text-right"
-        value={displayValue}
+        value={isEditing ? editText : formatForDisplay(value)}
         onFocus={handleFocus}
         onBlur={handleBlur}
-        onChange={(e) => setLocalText(e.target.value)}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
       />
       {suffix && <span className="text-muted-foreground text-xs shrink-0">{suffix}</span>}
       <Pencil className="h-3 w-3 text-muted-foreground/50 shrink-0 ml-1" />
