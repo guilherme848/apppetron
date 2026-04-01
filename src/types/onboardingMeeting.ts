@@ -44,6 +44,7 @@ export const FIELD_TYPE_LABELS: Record<QuestionFieldType, string> = {
   phone: 'Telefone',
   time: 'Horário',
   email: 'E-mail',
+  compound: 'Campos Compostos',
 };
 
 export interface SelectOption {
