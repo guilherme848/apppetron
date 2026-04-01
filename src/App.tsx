@@ -75,6 +75,7 @@ import MetaIntegrationPage from "./pages/settings/MetaIntegrationPage";
 import { TrafficAnalyticsSettingsTab } from "./components/settings/TrafficAnalyticsSettingsTab";
 import OnboardingQuestionsPage from "./pages/settings/OnboardingQuestionsPage";
 
+import OnboardingActivitiesConfigPage from "./pages/settings/OnboardingActivitiesConfigPage";
 import PetronOnboardingActivitiesPage from "./pages/settings/PetronOnboardingActivitiesPage";
 import PetronOnboardingSequencesPage from "./pages/settings/PetronOnboardingSequencesPage";
 import { RouteGuard } from "./components/auth/RouteGuard";
@@ -272,7 +273,7 @@ const App = () => (
                           <Route path="sales/scoring" element={<LeadScoringPage />} />
                           <Route path="sales/templates" element={<SalesTemplatesPage />} />
                           <Route path="sales/automations" element={<SalesAutomationsPage />} />
-                          <Route path="cs/onboarding/activities" element={<PetronOnboardingActivitiesPage />} />
+                          <Route path="cs/onboarding/activities" element={<OnboardingActivitiesConfigPage />} />
                           <Route path="cs/onboarding/sequences" element={<PetronOnboardingSequencesPage />} />
                           <Route path="cs/onboarding/questions" element={<OnboardingQuestionsPage />} />
                         </Route>

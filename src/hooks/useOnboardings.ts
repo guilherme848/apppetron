@@ -30,6 +30,8 @@ export interface OnboardingAtividade {
   id: string;
   onboarding_id: string;
   atividade_template_id: string | null;
+  new_template_id: string | null;
+  etapa_id: string | null;
   titulo: string;
   descricao: string | null;
   responsavel_perfil: string | null;
@@ -45,6 +47,7 @@ export interface OnboardingAtividade {
   // Joined
   responsavel_name?: string;
   delegado_para_name?: string;
+  etapa_nome?: string;
 }
 
 export interface OnboardingReuniaoResposta {
@@ -154,7 +157,8 @@ export function useOnboardingAtividades(onboardingId: string | null) {
         .select(`
           *,
           team_members:responsavel_id (name),
-          delegado:delegado_para_id (name)
+          delegado:delegado_para_id (name),
+          etapa_template:etapa_id (nome, ordem)
         `)
         .eq('onboarding_id', onboardingId)
         .order('etapa')
@@ -165,6 +169,7 @@ export function useOnboardingAtividades(onboardingId: string | null) {
         ...d,
         responsavel_name: d.team_members?.name,
         delegado_para_name: d.delegado?.name,
+        etapa_nome: d.etapa_template?.nome,
       })) as OnboardingAtividade[];
     },
     enabled: !!onboardingId,

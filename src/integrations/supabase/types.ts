@@ -4815,7 +4815,9 @@ export type Database = {
           delegado_por_id: string | null
           descricao: string | null
           etapa: number | null
+          etapa_id: string | null
           id: string
+          new_template_id: string | null
           onboarding_id: string
           ordem: number | null
           responsavel_id: string | null
@@ -4832,7 +4834,9 @@ export type Database = {
           delegado_por_id?: string | null
           descricao?: string | null
           etapa?: number | null
+          etapa_id?: string | null
           id?: string
+          new_template_id?: string | null
           onboarding_id: string
           ordem?: number | null
           responsavel_id?: string | null
@@ -4849,7 +4853,9 @@ export type Database = {
           delegado_por_id?: string | null
           descricao?: string | null
           etapa?: number | null
+          etapa_id?: string | null
           id?: string
+          new_template_id?: string | null
           onboarding_id?: string
           ordem?: number | null
           responsavel_id?: string | null
@@ -4880,6 +4886,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "onboarding_atividades_etapa_id_fkey"
+            columns: ["etapa_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_etapas_template"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_atividades_new_template_id_fkey"
+            columns: ["new_template_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_atividades_template"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "onboarding_atividades_onboarding_id_fkey"
             columns: ["onboarding_id"]
             isOneToOne: false
@@ -4894,6 +4914,71 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      onboarding_atividades_template: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          etapa_id: string
+          id: string
+          nome: string
+          ordem: number
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          etapa_id: string
+          id?: string
+          nome: string
+          ordem: number
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          etapa_id?: string
+          id?: string
+          nome?: string
+          ordem?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_atividades_template_etapa_id_fkey"
+            columns: ["etapa_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_etapas_template"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_etapas_template: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          id: string
+          nome: string
+          ordem: number
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          id?: string
+          nome: string
+          ordem: number
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          id?: string
+          nome?: string
+          ordem?: number
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       onboarding_reuniao_respostas: {
         Row: {
