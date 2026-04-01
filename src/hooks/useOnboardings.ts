@@ -153,15 +153,18 @@ export function useOnboardingAtividades(onboardingId: string | null) {
         .from('onboarding_atividades')
         .select(`
           *,
-          team_members:responsavel_id (name)
+          team_members:responsavel_id (name),
+          delegado:delegado_para_id (name)
         `)
         .eq('onboarding_id', onboardingId)
+        .order('etapa')
         .order('ordem');
 
       if (error) throw error;
       return (data || []).map((d: any) => ({
         ...d,
         responsavel_name: d.team_members?.name,
+        delegado_para_name: d.delegado?.name,
       })) as OnboardingAtividade[];
     },
     enabled: !!onboardingId,
