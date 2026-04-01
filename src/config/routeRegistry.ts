@@ -39,6 +39,7 @@ import {
   Activity,
   Trophy,
   Wrench,
+  Calculator,
 } from 'lucide-react';
 
 // Action types for permissions
