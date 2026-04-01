@@ -153,14 +153,14 @@ export default function MatemarketingPage() {
     const monthStr = format(startOfMonth(new Date(filters.year, selectedMonth, 1)), 'yyyy-MM-dd');
     const actual = actuals.find((a) => a.month === monthStr);
     const cm = clientMetrics.find((m) => m.month === selectedMonth);
-    const meta = metaMetrics.find((m) => m.month === selectedMonth);
+    const meta = metaMetrics.find((m) => m.month === monthStr);
 
     return {
-      investimento: meta?.spend ?? actual?.investment_actual ?? 0,
+      investimento: meta?.investment ?? actual?.investment_actual ?? 0,
       leads: meta?.leads ?? actual?.leads_actual ?? 0,
       mql: actual?.mql_actual ?? 0,
-      agendamentos: actual?.scheduled_actual ?? 0,
-      reunioes: actual?.attended_actual ?? 0,
+      agendamentos: actual?.appointments_actual ?? 0,
+      reunioes: actual?.meetings_held_actual ?? 0,
       vendas: cm?.sales_count ?? actual?.sales_actual ?? 0,
       ticketMedio: cm ? (cm.sales_count > 0 ? cm.total_revenue / cm.sales_count : 0) : actual?.avg_ticket_actual ?? 0,
     };
