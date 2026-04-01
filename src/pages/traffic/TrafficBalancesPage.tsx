@@ -35,6 +35,7 @@ export default function TrafficBalancesPage() {
     adAccounts,
     getLatestSnapshot,
     fetchFinanceData,
+    startOAuth,
     loading: metaLoading,
   } = useMetaAds();
 
