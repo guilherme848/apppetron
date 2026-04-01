@@ -75,6 +75,7 @@ import MetaIntegrationPage from "./pages/settings/MetaIntegrationPage";
 import { TrafficAnalyticsSettingsTab } from "./components/settings/TrafficAnalyticsSettingsTab";
 import OnboardingQuestionsPage from "./pages/settings/OnboardingQuestionsPage";
 
+import OnboardingActivitiesConfigPage from "./pages/settings/OnboardingActivitiesConfigPage";
 import PetronOnboardingActivitiesPage from "./pages/settings/PetronOnboardingActivitiesPage";
 import PetronOnboardingSequencesPage from "./pages/settings/PetronOnboardingSequencesPage";
 import { RouteGuard } from "./components/auth/RouteGuard";
