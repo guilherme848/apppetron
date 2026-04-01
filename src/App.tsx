@@ -226,6 +226,7 @@ const App = () => (
                         <Route path="/commercial/funnel" element={<SalesFunnelPage />} />
                         <Route path="/commercial/planning" element={<CommercialPlanningPage />} />
                         <Route path="/commercial/outbound" element={<OutboundFunnelPage />} />
+                        <Route path="/commercial/matemarketing" element={<MatemarketingPage />} />
                         <Route path="/commercial/marketing" element={<MarketingProduction />} />
                         <Route path="/commercial/marketing/:id" element={<MarketingBatchDetail />} />
                         <Route path="/commercial/marketing/:batchId/posts/:postId" element={<MarketingPostDetail />} />

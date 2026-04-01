@@ -698,6 +698,16 @@ export const routeRegistry: RouteDefinition[] = [
     order: 3,
   },
   {
+    id: 'commercial.matemarketing',
+    path: '/commercial/matemarketing',
+    label: 'Matemarketing',
+    category: CATEGORIES.ANALYTICS,
+    module: MODULES.COMMERCIAL,
+    permissions: ['view'],
+    icon: Calculator,
+    order: 4,
+  },
+  {
     id: 'commercial.marketing_detail',
     path: '/commercial/marketing/:id',
     label: 'Detalhes do Planejamento',
