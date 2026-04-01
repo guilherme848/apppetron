@@ -245,7 +245,7 @@ export default function CrmList() {
         default: return 0;
       }
     });
-  }, [accounts, search, sortConfig, showChurned, filterPlan, filterTrafficManager, filterCs, filterNiche, filterEntryMonth]);
+  }, [accounts, search, sortConfig, showChurned, filterPlan, filterTrafficManager, filterCs, filterNiche, filterEntryMonth, filterSource]);
 
   const totalPages = Math.max(1, Math.ceil(sortedAndFilteredAccounts.length / ITEMS_PER_PAGE));
   const paginatedAccounts = sortedAndFilteredAccounts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
