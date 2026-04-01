@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { DollarSign, RefreshCw, AlertTriangle, TrendingDown, Clock, RotateCw, LinkIcon, Loader2, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
