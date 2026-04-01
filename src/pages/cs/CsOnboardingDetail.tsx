@@ -63,6 +63,7 @@ export default function CsOnboardingDetail() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { members } = useTeamMembers();
+  const { member } = useAuth();
 
   const { data: onboarding, isLoading: loadingDetail } = useOnboardingDetail(onboardingId || null);
   const { data: atividades, isLoading: loadingAtividades } = useOnboardingAtividades(onboardingId || null);
