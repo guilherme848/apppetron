@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Calculator, RotateCcw, ArrowUp, ArrowDown, Minus, Zap, Pencil, X, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
