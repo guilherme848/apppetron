@@ -23,7 +23,7 @@ export interface BaseMetrics {
   activeClientsCount: number;
 }
 
-export function useSalesFunnel() {
+export function useSalesFunnel(source: 'inbound' | 'outbound' = 'inbound') {
   const { toast } = useToast();
   const [targets, setTargets] = useState<SalesFunnelTarget[]>([]);
   const [actuals, setActuals] = useState<SalesFunnelActual[]>([]);
@@ -35,6 +35,7 @@ export function useSalesFunnel() {
   
   const [filters, setFilters] = useState<FunnelFilters>({
     year: new Date().getFullYear(),
+    source,
   });
 
   // Check if user can edit
