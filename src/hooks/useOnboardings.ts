@@ -36,10 +36,15 @@ export interface OnboardingAtividade {
   responsavel_id: string | null;
   status: AtividadeStatus;
   ordem: number;
+  etapa: number | null;
   data_conclusao: string | null;
+  delegado_para_id: string | null;
+  delegado_por_id: string | null;
+  delegado_em: string | null;
   created_at: string;
   // Joined
   responsavel_name?: string;
+  delegado_para_name?: string;
 }
 
 export interface OnboardingReuniaoResposta {
