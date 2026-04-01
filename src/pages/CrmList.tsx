@@ -59,6 +59,24 @@ const getPlanBadgeStyle = (planName: string | null | undefined) => {
   return 'bg-muted text-muted-foreground border-border';
 };
 
+const getSourceBadgeStyle = (origin: string | null | undefined) => {
+  switch (origin) {
+    case 'inbound': return 'bg-[hsl(var(--success)/.12)] text-[hsl(var(--success))] border-[hsl(var(--success)/.25)]';
+    case 'outbound': return 'bg-[hsl(var(--info)/.12)] text-[hsl(var(--info))] border-[hsl(var(--info)/.25)]';
+    case 'indicacao': return 'bg-[hsl(var(--purple)/.12)] text-[hsl(var(--purple))] border-[hsl(var(--purple)/.25)]';
+    default: return 'bg-destructive/12 text-destructive border-destructive/25';
+  }
+};
+
+const getSourceLabel = (origin: string | null | undefined) => {
+  switch (origin) {
+    case 'inbound': return 'Inbound';
+    case 'outbound': return 'Outbound';
+    case 'indicacao': return 'Indicação';
+    default: return 'Sem fonte';
+  }
+};
+
 const getCheckupBadge = (classificacao: string | null | undefined) => {
   if (!classificacao) return null;
   const colorMap: Record<string, string> = {
