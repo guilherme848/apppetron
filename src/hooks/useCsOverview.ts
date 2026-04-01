@@ -165,8 +165,8 @@ export function useCsOverview() {
 
     return {
       activeClients: active.length,
-      onboardingClients: onbInMonth.length,
-      onboardingOnTime: onbInMonth.length - delayed.length,
+      onboardingClients: activeOnboardings.length,
+      onboardingOnTime: activeOnboardings.length - delayed.length,
       onboardingDelayed: delayed.length,
       atRiskClients: atRisk.length,
       churnCount: churned.length,
