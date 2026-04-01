@@ -357,11 +357,13 @@ export default function CsOnboardingDetail() {
         {activeTab === 'reuniao' && (
           <MeetingSection
             onboardingId={onboardingId || ''}
+            clientId={onboarding.client_id}
             questions={questions || []}
             respostas={respostas || []}
             transcricaoOnboardingConteudo={ob.transcricao_onboarding_conteudo}
             isConcluido={isConcluido}
             onAnswerBlur={handleAnswerBlur}
+            onAnswerSave={handleAnswerSave}
             onAiComplete={() => {}}
             onRefreshRespostas={() => queryClient.invalidateQueries({ queryKey: ['onboarding-respostas', onboardingId] })}
           />
