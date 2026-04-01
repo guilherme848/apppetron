@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Calculator, RotateCcw, ArrowUp, ArrowDown, Minus, Zap, Pencil } from 'lucide-react';
+import { Calculator, RotateCcw, ArrowUp, ArrowDown, Minus, Zap, Pencil, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,18 +13,16 @@ import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
 /* ─── Types ─── */
-interface SimState {
-  investimento: number;
-  leads: number;
-  mql: number;
-  agendamentos: number;
-  reunioes: number;
-  vendas: number;
-  ticketMedio: number;
-  cpl: number;
-}
+type FieldKey =
+  | 'investimento' | 'leads' | 'cpl'
+  | 'mql' | 'txQualif'
+  | 'agendamentos' | 'txAgend'
+  | 'reunioes' | 'txCompar'
+  | 'vendas' | 'txConv'
+  | 'ticketMedio';
 
-type EditableField = 'investimento' | 'leads' | 'cpl' | 'mql' | 'txQualif' | 'agendamentos' | 'txAgend' | 'reunioes' | 'txCompar' | 'vendas' | 'txConv' | 'ticketMedio';
+type FieldState = { value: number; editedByUser: boolean };
+type SimFields = Record<FieldKey, FieldState>;
 
 /* ─── Helpers ─── */
 const safe = (a: number, b: number) => (b === 0 ? 0 : a / b);
@@ -59,6 +57,113 @@ function fmtVariation(diff: number) {
   return `${sign}${diff.toFixed(1)}%`;
 }
 
+/* ─── Build initial sim fields from real data ─── */
+function buildInitialFields(real: Record<FieldKey, number>): SimFields {
+  const fields = {} as SimFields;
+  for (const key of Object.keys(real) as FieldKey[]) {
+    fields[key] = { value: real[key], editedByUser: false };
+  }
+  return fields;
+}
+
+/* ─── Recalculate respecting locks ─── */
+function recalculate(fields: SimFields, changedField: FieldKey): SimFields {
+  const f = { ...fields };
+  // Helper to set a derived field only if not edited by user
+  const setIfFree = (key: FieldKey, val: number) => {
+    if (!f[key].editedByUser) {
+      f[key] = { ...f[key], value: key === 'txQualif' || key === 'txAgend' || key === 'txCompar' || key === 'txConv' ? round1(val) : (key === 'investimento' || key === 'cpl' || key === 'ticketMedio' ? round2(val) : roundInt(val)) };
+    }
+  };
+
+  const inv = f.investimento.value;
+  const leads = f.leads.value;
+  const cpl = f.cpl.value;
+  const mql = f.mql.value;
+  const txQ = f.txQualif.value;
+  const agend = f.agendamentos.value;
+  const txA = f.txAgend.value;
+  const reun = f.reunioes.value;
+  const txC = f.txCompar.value;
+  const vendas = f.vendas.value;
+  const txCv = f.txConv.value;
+
+  switch (changedField) {
+    case 'investimento':
+      setIfFree('cpl', safe(inv, leads));
+      break;
+
+    case 'leads':
+      setIfFree('cpl', safe(inv, leads));
+      setIfFree('txQualif', pct(mql, leads));
+      break;
+
+    case 'cpl':
+      if (!f.investimento.editedByUser) {
+        setIfFree('investimento', cpl * leads);
+      } else if (!f.leads.editedByUser) {
+        setIfFree('leads', cpl > 0 ? roundInt(inv / cpl) : 0);
+      }
+      break;
+
+    case 'mql':
+      setIfFree('txQualif', pct(mql, leads));
+      setIfFree('txAgend', pct(agend, mql));
+      break;
+
+    case 'txQualif':
+      setIfFree('mql', roundInt(leads * txQ / 100));
+      break;
+
+    case 'agendamentos':
+      setIfFree('txAgend', pct(agend, mql));
+      setIfFree('txCompar', pct(reun, agend));
+      break;
+
+    case 'txAgend':
+      setIfFree('agendamentos', roundInt(mql * txA / 100));
+      break;
+
+    case 'reunioes':
+      setIfFree('txCompar', pct(reun, agend));
+      setIfFree('txConv', pct(vendas, reun));
+      break;
+
+    case 'txCompar':
+      setIfFree('reunioes', roundInt(agend * txC / 100));
+      break;
+
+    case 'vendas':
+      setIfFree('txConv', pct(vendas, reun));
+      break;
+
+    case 'txConv':
+      setIfFree('vendas', roundInt(reun * txCv / 100));
+      break;
+
+    case 'ticketMedio':
+      // Only affects always-calculated fields below
+      break;
+  }
+
+  return f;
+}
+
+/* ─── Always-calculated derived metrics ─── */
+function calcDerived(f: SimFields) {
+  const inv = f.investimento.value;
+  const mql = f.mql.value;
+  const reun = f.reunioes.value;
+  const vendas = f.vendas.value;
+  const ticket = f.ticketMedio.value;
+  const cpmql = round2(safe(inv, mql));
+  const custoCompar = round2(safe(inv, reun));
+  const cac = round2(safe(inv, vendas));
+  const receita = round2(vendas * ticket);
+  const roi = round1(safe(receita - inv, inv) * 100);
+  return { cpmql, custoCompar, cac, receita, roi };
+}
+
 /* ─── Variation indicator ─── */
 function VariationBadge({ sim, real, isCost }: { sim: number; real: number; isCost?: boolean }) {
   const diff = variationPct(sim, real);
@@ -82,18 +187,32 @@ function NumInput({
   prefix,
   suffix,
   isInteger,
-  wasEdited,
+  editedByUser,
+  onReset,
+  flashKey,
 }: {
   value: number;
   onChange: (v: number) => void;
   prefix?: string;
   suffix?: string;
   isInteger?: boolean;
-  wasEdited?: boolean;
+  editedByUser?: boolean;
+  onReset?: () => void;
+  flashKey?: number;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const [flash, setFlash] = useState(false);
+
+  // Flash animation when value is recalculated (flashKey changes)
+  useEffect(() => {
+    if (flashKey && flashKey > 0) {
+      setFlash(true);
+      const t = setTimeout(() => setFlash(false), 600);
+      return () => clearTimeout(t);
+    }
+  }, [flashKey]);
 
   const formatForDisplay = (v: number): string => {
     if (isInteger) return fmtInt(v);
@@ -122,7 +241,6 @@ function NumInput({
 
   const handleBlur = () => {
     setIsEditing(false);
-    // Value already committed via onChange during editing — nothing to do
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -142,28 +260,44 @@ function NumInput({
   };
 
   return (
-    <div
-      className={cn(
-        'flex items-center gap-1 h-[42px] rounded-lg border px-3 font-mono text-sm transition-all duration-150',
-        'bg-surface border-border',
-        wasEdited && 'bg-primary/5',
-        isEditing && 'border-primary ring-[3px] ring-primary/10',
+    <div className="flex items-center gap-1">
+      <div
+        className={cn(
+          'flex items-center gap-1 h-[42px] rounded-lg border px-3 font-mono text-sm transition-all duration-150 flex-1',
+          'bg-surface border-border',
+          editedByUser && 'bg-primary/5 border-primary/30',
+          flash && !editedByUser && 'animate-pulse bg-primary/10',
+          isEditing && 'border-primary ring-[3px] ring-primary/10',
+        )}
+      >
+        {prefix && <span className="text-muted-foreground text-xs shrink-0">{prefix}</span>}
+        <input
+          ref={inputRef}
+          type="text"
+          inputMode="decimal"
+          className="w-full bg-transparent outline-none text-foreground font-mono text-right"
+          value={isEditing ? editText : formatForDisplay(value)}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+        />
+        {suffix && <span className="text-muted-foreground text-xs shrink-0">{suffix}</span>}
+        {editedByUser ? (
+          <Pencil className="h-3 w-3 text-primary shrink-0 ml-1 fill-primary" />
+        ) : (
+          <Pencil className="h-3 w-3 text-muted-foreground/50 shrink-0 ml-1" />
+        )}
+      </div>
+      {editedByUser && onReset && (
+        <button
+          onClick={onReset}
+          className="h-5 w-5 flex items-center justify-center rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
+          title="Resetar para valor real"
+        >
+          <X className="h-3 w-3" />
+        </button>
       )}
-    >
-      {prefix && <span className="text-muted-foreground text-xs shrink-0">{prefix}</span>}
-      <input
-        ref={inputRef}
-        type="text"
-        inputMode="decimal"
-        className="w-full bg-transparent outline-none text-foreground font-mono text-right"
-        value={isEditing ? editText : formatForDisplay(value)}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-      />
-      {suffix && <span className="text-muted-foreground text-xs shrink-0">{suffix}</span>}
-      <Pencil className="h-3 w-3 text-muted-foreground/50 shrink-0 ml-1" />
     </div>
   );
 }
@@ -215,8 +349,8 @@ export default function MatemarketingPage() {
 
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
 
-  // Build real data
-  const realData = useMemo((): SimState => {
+  // Build real data as flat values
+  const realValues = useMemo((): Record<FieldKey, number> => {
     const monthStr = format(startOfMonth(new Date(filters.year, selectedMonth, 1)), 'yyyy-MM-dd');
     const actual = actuals.find((a) => a.month === monthStr);
     const cm = clientMetrics.find((m) => m.month === selectedMonth);
@@ -224,130 +358,93 @@ export default function MatemarketingPage() {
 
     const investimento = (meta?.investment || 0) > 0 ? meta!.investment : (actual?.investment_actual ?? 0);
     const leads = (meta?.leads || 0) > 0 ? meta!.leads : (actual?.leads_actual ?? 0);
+    const mql = actual?.mql_actual ?? 0;
+    const agendamentos = actual?.appointments_actual ?? 0;
+    const reunioes = actual?.meetings_held_actual ?? 0;
+    const vendas = cm?.sales_count ?? actual?.sales_actual ?? 0;
+    const ticketMedio = cm ? (cm.sales_count > 0 ? cm.total_revenue / cm.sales_count : 0) : actual?.avg_ticket_actual ?? 0;
 
     return {
       investimento,
       leads,
-      cpl: safe(investimento, leads),
-      mql: actual?.mql_actual ?? 0,
-      agendamentos: actual?.appointments_actual ?? 0,
-      reunioes: actual?.meetings_held_actual ?? 0,
-      vendas: cm?.sales_count ?? actual?.sales_actual ?? 0,
-      ticketMedio: cm ? (cm.sales_count > 0 ? cm.total_revenue / cm.sales_count : 0) : actual?.avg_ticket_actual ?? 0,
+      cpl: round2(safe(investimento, leads)),
+      mql,
+      txQualif: round1(pct(mql, leads)),
+      agendamentos,
+      txAgend: round1(pct(agendamentos, mql)),
+      reunioes,
+      txCompar: round1(pct(reunioes, agendamentos)),
+      vendas,
+      txConv: round1(pct(vendas, reunioes)),
+      ticketMedio,
     };
   }, [actuals, clientMetrics, metaMetrics, selectedMonth, filters.year]);
 
-  // Sim state + tracking which fields user edited
-  const [sim, setSim] = useState<SimState>({ ...realData });
-  const [editedFields, setEditedFields] = useState<Set<string>>(new Set());
-  // Track last edited for each bidirectional pair
-  const [lastEdited, setLastEdited] = useState<Record<string, EditableField>>({});
+  // Sim state with editedByUser tracking per field
+  const [fields, setFields] = useState<SimFields>(() => buildInitialFields(realValues));
+  // Flash counter per field for recalc animation
+  const [flashCounters, setFlashCounters] = useState<Partial<Record<FieldKey, number>>>({});
 
-  // Reset sim when real data changes
+  // Reset when real data changes (month change)
   useEffect(() => {
-    setSim({ ...realData });
-    setEditedFields(new Set());
-    setLastEdited({});
-  }, [realData]);
+    setFields(buildInitialFields(realValues));
+    setFlashCounters({});
+  }, [realValues]);
 
-  // Recalculate derived values whenever sim changes
-  const derived = useMemo(() => {
-    const s = { ...sim };
+  // Handle user editing a field
+  const handleEdit = useCallback((fieldKey: FieldKey, newValue: number) => {
+    setFields(prev => {
+      const updated = { ...prev };
+      updated[fieldKey] = { value: newValue, editedByUser: true };
+      const recalced = recalculate(updated, fieldKey);
 
-    // Pair: CPL <-> Investimento/Leads
-    // CPL is always derived unless user edited it
-    if (lastEdited['cpl_pair'] === 'cpl') {
-      // When user edits CPL, recalculate Leads keeping Investimento fixed
-      s.leads = s.cpl > 0 ? roundInt(s.investimento / s.cpl) : 0;
-    } else {
-      s.cpl = round2(safe(s.investimento, s.leads));
-    }
+      // Track which fields were recalculated
+      const changedKeys: FieldKey[] = [];
+      for (const k of Object.keys(recalced) as FieldKey[]) {
+        if (k !== fieldKey && recalced[k].value !== prev[k].value) {
+          changedKeys.push(k);
+        }
+      }
+      if (changedKeys.length > 0) {
+        setFlashCounters(fc => {
+          const next = { ...fc };
+          for (const k of changedKeys) {
+            next[k] = (next[k] || 0) + 1;
+          }
+          return next;
+        });
+      }
 
-    // Pair: MQL <-> Tx Qualificacao
-    const txQualif = lastEdited['qualif_pair'] === 'txQualif'
-      ? clampPct(pct(s.mql, s.leads)) // mql was set from tx
-      : round1(clampPct(pct(s.mql, s.leads)));
-
-    // Pair: Agendamentos <-> Tx Agendamento
-    const txAgend = round1(clampPct(pct(s.agendamentos, s.mql)));
-
-    // Pair: Reunioes <-> Tx Comparecimento
-    const txCompar = round1(clampPct(pct(s.reunioes, s.agendamentos)));
-
-    // Pair: Vendas <-> Tx Conversao
-    const txConv = round1(clampPct(pct(s.vendas, s.reunioes)));
-
-    const cpmql = round2(safe(s.investimento, s.mql));
-    const custoCompar = round2(safe(s.investimento, s.reunioes));
-    const cac = round2(safe(s.investimento, s.vendas));
-    const receita = round2(s.vendas * s.ticketMedio);
-    const roi = round1(safe(receita - s.investimento, s.investimento) * 100);
-
-    return { ...s, txQualif, txAgend, txCompar, txConv, cpmql, custoCompar, cac, receita, roi };
-  }, [sim, lastEdited]);
-
-  const updateField = useCallback((field: keyof SimState, value: number, pairKey?: string, editKey?: EditableField) => {
-    setSim(prev => ({ ...prev, [field]: value }));
-    setEditedFields(prev => new Set(prev).add(field));
-    if (pairKey && editKey) {
-      setLastEdited(prev => ({ ...prev, [pairKey]: editKey }));
-    }
+      return recalced;
+    });
   }, []);
 
-  // Bidirectional rate handlers
-  const handleTxQualif = useCallback((v: number) => {
-    const clamped = clampPct(v);
-    const newMql = roundInt((clamped / 100) * sim.leads);
-    setSim(p => ({ ...p, mql: newMql }));
-    setEditedFields(p => new Set(p).add('mql'));
-    setLastEdited(p => ({ ...p, qualif_pair: 'txQualif' }));
-  }, [sim.leads]);
+  // Handle individual field reset
+  const handleFieldReset = useCallback((fieldKey: FieldKey) => {
+    setFields(prev => {
+      const updated = { ...prev };
+      updated[fieldKey] = { value: realValues[fieldKey], editedByUser: false };
+      const recalced = recalculate(updated, fieldKey);
+      return recalced;
+    });
+  }, [realValues]);
 
-  const handleTxAgend = useCallback((v: number) => {
-    const clamped = clampPct(v);
-    const newAgend = roundInt((clamped / 100) * sim.mql);
-    setSim(p => ({ ...p, agendamentos: newAgend }));
-    setEditedFields(p => new Set(p).add('agendamentos'));
-    setLastEdited(p => ({ ...p, agend_pair: 'txAgend' }));
-  }, [sim.mql]);
+  // Full reset
+  const resetToReal = useCallback(() => {
+    setFields(buildInitialFields(realValues));
+    setFlashCounters({});
+  }, [realValues]);
 
-  const handleTxCompar = useCallback((v: number) => {
-    const clamped = clampPct(v);
-    const newReun = roundInt((clamped / 100) * sim.agendamentos);
-    setSim(p => ({ ...p, reunioes: newReun }));
-    setEditedFields(p => new Set(p).add('reunioes'));
-    setLastEdited(p => ({ ...p, compar_pair: 'txCompar' }));
-  }, [sim.agendamentos]);
-
-  const handleTxConv = useCallback((v: number) => {
-    const clamped = clampPct(v);
-    const newVendas = roundInt((clamped / 100) * sim.reunioes);
-    setSim(p => ({ ...p, vendas: newVendas }));
-    setEditedFields(p => new Set(p).add('vendas'));
-    setLastEdited(p => ({ ...p, conv_pair: 'txConv' }));
-  }, [sim.reunioes]);
-
-  const handleCpl = useCallback((v: number) => {
-    const cpl = round2(v);
-    const newLeads = cpl > 0 ? roundInt(sim.investimento / cpl) : 0;
-    setSim(p => ({ ...p, cpl, leads: newLeads }));
-    setEditedFields(p => new Set(p).add('cpl').add('leads'));
-    setLastEdited(p => ({ ...p, cpl_pair: 'cpl' }));
-  }, []);
-
-  const resetToReal = () => {
-    setSim({ ...realData });
-    setEditedFields(new Set());
-    setLastEdited({});
-  };
+  // Derived always-calculated values
+  const derived = useMemo(() => calcDerived(fields), [fields]);
 
   // Real derived
-  const realCpl = safe(realData.investimento, realData.leads);
-  const realCpmql = safe(realData.investimento, realData.mql);
-  const realCustoCompar = safe(realData.investimento, realData.reunioes);
-  const realCac = safe(realData.investimento, realData.vendas);
-  const realReceita = realData.vendas * realData.ticketMedio;
-  const realRoi = safe(realReceita - realData.investimento, realData.investimento) * 100;
+  const realCpl = safe(realValues.investimento, realValues.leads);
+  const realCpmql = safe(realValues.investimento, realValues.mql);
+  const realCustoCompar = safe(realValues.investimento, realValues.reunioes);
+  const realCac = safe(realValues.investimento, realValues.vendas);
+  const realReceita = realValues.vendas * realValues.ticketMedio;
+  const realRoi = safe(realReceita - realValues.investimento, realValues.investimento) * 100;
 
   const isLoading = funnelLoading || metaLoading;
 
@@ -368,6 +465,20 @@ export default function MatemarketingPage() {
     );
   }
 
+  // Helper to build NumInput for a field
+  const inp = (key: FieldKey, opts: { prefix?: string; suffix?: string; isInteger?: boolean }) => (
+    <NumInput
+      value={fields[key].value}
+      onChange={(v) => handleEdit(key, v)}
+      prefix={opts.prefix}
+      suffix={opts.suffix}
+      isInteger={opts.isInteger}
+      editedByUser={fields[key].editedByUser}
+      onReset={() => handleFieldReset(key)}
+      flashKey={flashCounters[key] || 0}
+    />
+  );
+
   type MetricRow = {
     label: string;
     benchKey?: string;
@@ -380,40 +491,41 @@ export default function MatemarketingPage() {
     sectionLabel?: string;
   };
 
+  const f = fields;
   const metrics: MetricRow[] = [
     // AQUISIÇÃO
     {
       sectionLabel: 'AQUISIÇÃO',
       label: 'Investimento',
-      realValue: fmtBRL(realData.investimento),
-      simContent: <NumInput value={sim.investimento} onChange={(v) => updateField('investimento', v, 'cpl_pair', 'investimento')} prefix="R$" wasEdited={editedFields.has('investimento')} />,
-      variationSim: derived.investimento, variationReal: realData.investimento, isCost: true,
+      realValue: fmtBRL(realValues.investimento),
+      simContent: inp('investimento', { prefix: 'R$' }),
+      variationSim: f.investimento.value, variationReal: realValues.investimento, isCost: true,
     },
     {
       label: 'CPL',
       realValue: fmtBRL(realCpl),
-      simContent: <NumInput value={derived.cpl} onChange={handleCpl} prefix="R$" wasEdited={editedFields.has('cpl')} />,
-      variationSim: derived.cpl, variationReal: realCpl, isCost: true,
+      simContent: inp('cpl', { prefix: 'R$' }),
+      variationSim: f.cpl.value, variationReal: realCpl, isCost: true,
     },
     {
       label: 'Leads',
-      realValue: fmtInt(realData.leads),
-      simContent: <NumInput value={sim.leads} onChange={(v) => updateField('leads', v, 'cpl_pair', 'leads')} isInteger wasEdited={editedFields.has('leads')} />,
-      variationSim: sim.leads, variationReal: realData.leads,
+      realValue: fmtInt(realValues.leads),
+      simContent: inp('leads', { isInteger: true }),
+      variationSim: f.leads.value, variationReal: realValues.leads,
     },
     // QUALIFICAÇÃO
     {
       sectionLabel: 'QUALIFICAÇÃO',
       label: 'MQL',
-      realValue: fmtInt(realData.mql),
-      simContent: <NumInput value={sim.mql} onChange={(v) => updateField('mql', roundInt(v), 'qualif_pair', 'mql')} isInteger wasEdited={editedFields.has('mql')} />,
-      variationSim: sim.mql, variationReal: realData.mql,
+      realValue: fmtInt(realValues.mql),
+      simContent: inp('mql', { isInteger: true }),
+      variationSim: f.mql.value, variationReal: realValues.mql,
     },
     {
       label: 'Tx Qualificação',
-      realValue: fmtPct(pct(realData.mql, realData.leads)),
-      simContent: <NumInput value={derived.txQualif} onChange={handleTxQualif} suffix="%" wasEdited={editedFields.has('mql')} />,
-      variationSim: derived.txQualif, variationReal: pct(realData.mql, realData.leads),
+      realValue: fmtPct(realValues.txQualif),
+      simContent: inp('txQualif', { suffix: '%' }),
+      variationSim: f.txQualif.value, variationReal: realValues.txQualif,
     },
     {
       label: 'CPMQL',
@@ -425,31 +537,31 @@ export default function MatemarketingPage() {
     {
       sectionLabel: 'AGENDAMENTO',
       label: 'Agendamentos',
-      realValue: fmtInt(realData.agendamentos),
-      simContent: <NumInput value={sim.agendamentos} onChange={(v) => updateField('agendamentos', roundInt(v), 'agend_pair', 'agendamentos')} isInteger wasEdited={editedFields.has('agendamentos')} />,
-      variationSim: sim.agendamentos, variationReal: realData.agendamentos,
+      realValue: fmtInt(realValues.agendamentos),
+      simContent: inp('agendamentos', { isInteger: true }),
+      variationSim: f.agendamentos.value, variationReal: realValues.agendamentos,
     },
     {
       label: 'Tx Agendamento',
       benchKey: 'txAgend',
-      realValue: fmtPct(pct(realData.agendamentos, realData.mql)),
-      simContent: <NumInput value={derived.txAgend} onChange={handleTxAgend} suffix="%" wasEdited={editedFields.has('agendamentos')} />,
-      variationSim: derived.txAgend, variationReal: pct(realData.agendamentos, realData.mql),
+      realValue: fmtPct(realValues.txAgend),
+      simContent: inp('txAgend', { suffix: '%' }),
+      variationSim: f.txAgend.value, variationReal: realValues.txAgend,
     },
     // REUNIÃO
     {
       sectionLabel: 'REUNIÃO',
       label: 'Reuniões',
-      realValue: fmtInt(realData.reunioes),
-      simContent: <NumInput value={sim.reunioes} onChange={(v) => updateField('reunioes', roundInt(v), 'compar_pair', 'reunioes')} isInteger wasEdited={editedFields.has('reunioes')} />,
-      variationSim: sim.reunioes, variationReal: realData.reunioes,
+      realValue: fmtInt(realValues.reunioes),
+      simContent: inp('reunioes', { isInteger: true }),
+      variationSim: f.reunioes.value, variationReal: realValues.reunioes,
     },
     {
       label: 'Tx Comparecimento',
       benchKey: 'txCompar',
-      realValue: fmtPct(pct(realData.reunioes, realData.agendamentos)),
-      simContent: <NumInput value={derived.txCompar} onChange={handleTxCompar} suffix="%" wasEdited={editedFields.has('reunioes')} />,
-      variationSim: derived.txCompar, variationReal: pct(realData.reunioes, realData.agendamentos),
+      realValue: fmtPct(realValues.txCompar),
+      simContent: inp('txCompar', { suffix: '%' }),
+      variationSim: f.txCompar.value, variationReal: realValues.txCompar,
     },
     {
       label: 'Custo por Comparecimento',
@@ -461,16 +573,16 @@ export default function MatemarketingPage() {
     {
       sectionLabel: 'CONVERSÃO',
       label: 'Vendas',
-      realValue: fmtInt(realData.vendas),
-      simContent: <NumInput value={sim.vendas} onChange={(v) => updateField('vendas', roundInt(v), 'conv_pair', 'vendas')} isInteger wasEdited={editedFields.has('vendas')} />,
-      variationSim: sim.vendas, variationReal: realData.vendas,
+      realValue: fmtInt(realValues.vendas),
+      simContent: inp('vendas', { isInteger: true }),
+      variationSim: f.vendas.value, variationReal: realValues.vendas,
     },
     {
       label: 'Tx Conversão',
       benchKey: 'txConv',
-      realValue: fmtPct(pct(realData.vendas, realData.reunioes)),
-      simContent: <NumInput value={derived.txConv} onChange={handleTxConv} suffix="%" wasEdited={editedFields.has('vendas')} />,
-      variationSim: derived.txConv, variationReal: pct(realData.vendas, realData.reunioes),
+      realValue: fmtPct(realValues.txConv),
+      simContent: inp('txConv', { suffix: '%' }),
+      variationSim: f.txConv.value, variationReal: realValues.txConv,
     },
     // RESULTADO
     {
@@ -482,9 +594,9 @@ export default function MatemarketingPage() {
     },
     {
       label: 'Ticket Médio',
-      realValue: fmtBRL(realData.ticketMedio),
-      simContent: <NumInput value={sim.ticketMedio} onChange={(v) => updateField('ticketMedio', v)} prefix="R$" wasEdited={editedFields.has('ticketMedio')} />,
-      variationSim: sim.ticketMedio, variationReal: realData.ticketMedio,
+      realValue: fmtBRL(realValues.ticketMedio),
+      simContent: inp('ticketMedio', { prefix: 'R$' }),
+      variationSim: f.ticketMedio.value, variationReal: realValues.ticketMedio,
     },
     {
       label: 'Receita',
@@ -503,7 +615,7 @@ export default function MatemarketingPage() {
   ];
 
   const summaryKpis = [
-    { label: 'Vendas projetadas', value: fmtInt(sim.vendas), sim: sim.vendas, real: realData.vendas },
+    { label: 'Vendas projetadas', value: fmtInt(f.vendas.value), sim: f.vendas.value, real: realValues.vendas },
     { label: 'CAC projetado', value: fmtBRL(derived.cac), sim: derived.cac, real: realCac, isCost: true },
     { label: 'Receita projetada', value: fmtBRL(derived.receita), sim: derived.receita, real: realReceita },
     { label: 'ROI projetado', value: fmtPct(derived.roi), sim: derived.roi, real: realRoi },
@@ -578,7 +690,7 @@ export default function MatemarketingPage() {
                   <th className="text-right px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground sticky top-0 bg-muted/50 w-[180px]">
                     Realizado
                   </th>
-                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground sticky top-0 bg-muted/50 w-[220px]">
+                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground sticky top-0 bg-muted/50 w-[240px]">
                     Simulado
                   </th>
                   <th className="text-right px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground sticky top-0 bg-muted/50 w-[100px]">
