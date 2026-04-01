@@ -247,7 +247,8 @@ export default function MatemarketingPage() {
     // Pair: CPL <-> Investimento/Leads
     // CPL is always derived unless user edited it
     if (lastEdited['cpl_pair'] === 'cpl') {
-      s.investimento = round2(s.cpl * s.leads);
+      // When user edits CPL, recalculate Leads keeping Investimento fixed
+      s.leads = s.cpl > 0 ? roundInt(s.investimento / s.cpl) : 0;
     } else {
       s.cpl = round2(safe(s.investimento, s.leads));
     }
@@ -318,8 +319,9 @@ export default function MatemarketingPage() {
 
   const handleCpl = useCallback((v: number) => {
     const cpl = round2(v);
-    setSim(p => ({ ...p, cpl, investimento: round2(cpl * p.leads) }));
-    setEditedFields(p => new Set(p).add('cpl').add('investimento'));
+    const newLeads = cpl > 0 ? roundInt(sim.investimento / cpl) : 0;
+    setSim(p => ({ ...p, cpl, leads: newLeads }));
+    setEditedFields(p => new Set(p).add('cpl').add('leads'));
     setLastEdited(p => ({ ...p, cpl_pair: 'cpl' }));
   }, []);
 
