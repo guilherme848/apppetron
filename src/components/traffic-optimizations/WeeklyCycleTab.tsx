@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -52,6 +52,42 @@ const WEEKDAYS = [
 ];
 const TARGET_PER_DAY = 5;
 
+const WEEKDAY_ABBREV: Record<number, string> = {
+  0: 'Dom', 1: 'Seg', 2: 'Ter', 3: 'Qua', 4: 'Qui', 5: 'Sex', 6: 'Sáb',
+};
+
+/* ── Week calculation (Monday-based, America/Sao_Paulo) ─── */
+function getSPDate(): Date {
+  const now = new Date();
+  // Use Intl to get SP date parts
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(now);
+  return new Date(parts + 'T12:00:00');
+}
+
+function getWeekRange(): { start: string; end: string } {
+  const spDate = getSPDate();
+  const dayOfWeek = spDate.getDay(); // 0=Sun
+  const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(spDate);
+  monday.setDate(spDate.getDate() + diffToMonday);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  const fmt = (d: Date) => d.toISOString().split('T')[0];
+  return { start: fmt(monday), end: fmt(sunday) };
+}
+
+function getTodayStr(): string {
+  return getSPDate().toISOString().split('T')[0];
+}
+
+function getTodayWeekday(): number {
+  const d = getSPDate().getDay();
+  return d === 0 ? 1 : d; // Map Sunday→Monday for display
+}
+
 /* ── Types ────────────────────────────────────────────────── */
 interface Account {
   id: string;
@@ -59,6 +95,17 @@ interface Account {
   traffic_member_id?: string | null;
   niche?: string | null;
   midias_ativas?: string[] | null;
+}
+
+interface WeekOptInfo {
+  optimizedThisWeek: boolean;
+  latestDate: string | null; // YYYY-MM-DD
+  latestDayOfWeek: number | null; // 0-6
+  isToday: boolean;
+}
+
+interface LastOptInfo {
+  daysSince: number | null; // null = never
 }
 
 interface Props {
@@ -86,7 +133,9 @@ function DraggableClientCard({
   entryId,
   clientName,
   clientNiche,
-  isOptimizedToday,
+  weekOptInfo,
+  lastOptInfo,
+  isOverdue,
   isHighComplexity,
   onRemove,
   onClick,
@@ -94,7 +143,9 @@ function DraggableClientCard({
   entryId: string;
   clientName: string;
   clientNiche: string | null;
-  isOptimizedToday: boolean;
+  weekOptInfo: WeekOptInfo;
+  lastOptInfo: LastOptInfo;
+  isOverdue: boolean;
   isHighComplexity: boolean;
   onRemove: () => void;
   onClick?: () => void;
@@ -106,17 +157,55 @@ function DraggableClientCard({
     ? { transform: CSS.Translate.toString(transform), zIndex: 50 }
     : undefined;
 
+  // Status label
+  let statusLabel: string | null = null;
+  if (weekOptInfo.optimizedThisWeek) {
+    if (weekOptInfo.isToday) {
+      statusLabel = '✓ Otimizado hoje';
+    } else if (weekOptInfo.latestDayOfWeek !== null) {
+      statusLabel = `✓ Otimizado (${WEEKDAY_ABBREV[weekOptInfo.latestDayOfWeek] || ''})`;
+    }
+  }
+
+  // Days since label
+  let daysSinceLabel: string | null = null;
+  let daysSinceClass = 'text-muted-foreground';
+  if (weekOptInfo.isToday) {
+    // Don't show
+  } else if (weekOptInfo.optimizedThisWeek && !weekOptInfo.isToday) {
+    if (lastOptInfo.daysSince !== null && lastOptInfo.daysSince > 0) {
+      daysSinceLabel = `Última otimização: ${lastOptInfo.daysSince}d`;
+    }
+  } else if (lastOptInfo.daysSince === null) {
+    daysSinceLabel = 'Nunca otimizado';
+    daysSinceClass = 'text-destructive font-semibold';
+  } else if (lastOptInfo.daysSince <= 7) {
+    daysSinceLabel = `${lastOptInfo.daysSince} dias sem otimização`;
+    daysSinceClass = 'text-[hsl(var(--warning,45_93%_47%))]';
+  } else {
+    daysSinceLabel = `${lastOptInfo.daysSince} dias sem otimização`;
+    daysSinceClass = 'text-destructive font-semibold';
+  }
+
+  // Circle color
+  const circleClass = isOverdue
+    ? 'bg-destructive'
+    : weekOptInfo.optimizedThisWeek
+      ? 'bg-emerald-500'
+      : 'bg-transparent border-[1.5px] border-muted-foreground/40';
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       className={cn(
-        'group relative flex items-center gap-2 rounded-[10px] border bg-card px-3 py-2.5 mb-1.5 transition-all duration-150',
-        isOptimizedToday && 'border-l-2 border-l-emerald-500/40',
+        'group relative flex items-center gap-2 rounded-[10px] border bg-card px-3 py-2.5 mb-1.5 transition-all duration-200',
+        isOverdue && 'border-l-[3px] border-l-destructive',
+        !isOverdue && weekOptInfo.optimizedThisWeek && 'border-l-2 border-l-emerald-500/40',
         isDragging
           ? 'opacity-40 scale-[1.02] shadow-lg'
           : 'hover:bg-muted/50 hover:border-border',
-        !isDragging && !isOptimizedToday && 'border-border/60',
+        !isDragging && !isOverdue && !weekOptInfo.optimizedThisWeek && 'border-border/60',
       )}
     >
       {/* Drag handle zone */}
@@ -138,10 +227,8 @@ function DraggableClientCard({
           {/* Status dot */}
           <span
             className={cn(
-              'inline-block h-2 w-2 rounded-full shrink-0 transition-colors duration-300',
-              isOptimizedToday
-                ? 'bg-emerald-500 animate-pulse'
-                : 'bg-muted-foreground/30',
+              'inline-block h-2 w-2 rounded-full shrink-0 transition-all duration-200',
+              circleClass,
             )}
           />
           <p className="text-[13px] font-semibold text-foreground truncate">{clientName}</p>
@@ -156,9 +243,23 @@ function DraggableClientCard({
             {clientNiche}
           </span>
         )}
-        {isOptimizedToday && (
-          <span className="block ml-3.5 mt-0.5 text-[10px] text-emerald-500 font-medium">
-            ✓ Otimizado hoje
+        {/* Status line */}
+        {statusLabel && (
+          <span className="block ml-3.5 mt-0.5 text-[11px] text-emerald-500 font-medium transition-opacity duration-200">
+            {statusLabel}
+          </span>
+        )}
+        {isOverdue && !weekOptInfo.optimizedThisWeek && (
+          <span
+            className="inline-block ml-3.5 mt-1 text-[11px] font-semibold text-destructive bg-destructive/[0.12] border border-destructive/25 rounded-md px-2 py-0.5 transition-opacity duration-150"
+          >
+            Em atraso
+          </span>
+        )}
+        {/* Days since */}
+        {daysSinceLabel && (
+          <span className={cn('block ml-3.5 mt-0.5 text-[11px]', daysSinceClass)}>
+            {daysSinceLabel}
           </span>
         )}
       </div>
@@ -214,11 +315,17 @@ function DroppableDayColumn({
   label,
   children,
   count,
+  optimizedCount,
+  totalCount,
+  todayWeekday,
 }: {
   weekday: number;
   label: string;
   children: React.ReactNode;
   count: number;
+  optimizedCount: number;
+  totalCount: number;
+  todayWeekday: number;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `day-${weekday}` });
   const progress = Math.min((count / TARGET_PER_DAY) * 100, 100);
@@ -229,6 +336,15 @@ function DroppableDayColumn({
     : count <= TARGET_PER_DAY
       ? 'bg-success/12 text-success'
       : 'bg-destructive/12 text-destructive';
+
+  // Optimized counter color
+  const allOptimized = totalCount > 0 && optimizedCount === totalCount;
+  const dayPassed = weekday < todayWeekday;
+  const optCounterClass = allOptimized
+    ? 'text-emerald-500'
+    : dayPassed && optimizedCount < totalCount
+      ? 'text-destructive'
+      : 'text-muted-foreground';
 
   return (
     <Card
@@ -241,18 +357,25 @@ function DroppableDayColumn({
       <CardHeader className="pb-2 px-4 pt-4 space-y-2">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-foreground">{label}</h3>
-          <TooltipProvider delayDuration={200}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Badge variant="outline" className={cn('text-[11px] font-semibold border-0 font-mono', badgeClass)}>
-                  {count}/{TARGET_PER_DAY}
-                </Badge>
-              </TooltipTrigger>
-              {overTarget && (
-                <TooltipContent><p>Meta excedida</p></TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
+          <div className="text-right">
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className={cn('text-[11px] font-semibold border-0 font-mono', badgeClass)}>
+                    {count}/{TARGET_PER_DAY}
+                  </Badge>
+                </TooltipTrigger>
+                {overTarget && (
+                  <TooltipContent><p>Meta excedida</p></TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+            {totalCount > 0 && (
+              <p className={cn('text-[11px] font-mono mt-0.5', optCounterClass)}>
+                {optimizedCount}/{totalCount} otimizados
+              </p>
+            )}
+          </div>
         </div>
         <div className="h-[3px] rounded-full bg-border overflow-hidden">
           <div
@@ -400,71 +523,73 @@ function AiLoadingOverlay() {
   );
 }
 
-/* ── Niche-grouped entries renderer ───────────────────────── */
-function NicheGroupedEntries({
+/* ── Sorted & Grouped entries renderer ────────────────────── */
+function SortedGroupedEntries({
   entries,
   getClient,
   onRemove,
   onClientClick,
-  todayOptimizedClientIds,
+  weekOptMap,
+  lastOptMap,
+  todayWeekday,
+  weekday,
   highComplexityClientIds,
 }: {
   entries: WeeklyCycleEntry[];
   getClient: (id: string) => Account | undefined;
   onRemove: (id: string) => void;
   onClientClick?: (clientId: string) => void;
-  todayOptimizedClientIds: Set<string>;
+  weekOptMap: Map<string, WeekOptInfo>;
+  lastOptMap: Map<string, LastOptInfo>;
+  todayWeekday: number;
+  weekday: number;
   highComplexityClientIds: Set<string>;
 }) {
-  const grouped = useMemo(() => {
-    const map = new Map<string, WeeklyCycleEntry[]>();
-    for (const entry of entries) {
-      const niche = getClient(entry.client_id)?.niche || '__none__';
-      if (!map.has(niche)) map.set(niche, []);
-      map.get(niche)!.push(entry);
-    }
-    return [...map.entries()]
-      .sort(([a], [b]) => {
-        if (a === '__none__') return 1;
-        if (b === '__none__') return -1;
-        return a.localeCompare(b);
-      })
-      .map(([niche, items]) => ({
-        niche: niche === '__none__' ? null : niche,
-        items,
-      }));
-  }, [entries, getClient]);
+  // Sort: overdue first (only for past days), then not optimized, then optimized
+  const sorted = useMemo(() => {
+    const isPastDay = weekday < todayWeekday;
+    return [...entries].sort((a, b) => {
+      const aOpt = weekOptMap.get(a.client_id);
+      const bOpt = weekOptMap.get(b.client_id);
+      const aOptimized = aOpt?.optimizedThisWeek ?? false;
+      const bOptimized = bOpt?.optimizedThisWeek ?? false;
+      const aOverdue = isPastDay && !aOptimized;
+      const bOverdue = isPastDay && !bOptimized;
+
+      // Group order: overdue(0) > not-optimized(1) > optimized(2)
+      const aGroup = aOverdue ? 0 : !aOptimized ? 1 : 2;
+      const bGroup = bOverdue ? 0 : !bOptimized ? 1 : 2;
+      if (aGroup !== bGroup) return aGroup - bGroup;
+      return a.sort_order - b.sort_order;
+    });
+  }, [entries, weekOptMap, weekday, todayWeekday]);
 
   return (
     <>
-      {grouped.map((group, gi) => (
-        <div key={group.niche || '__none__'}>
-          {gi > 0 && group.niche && (
-            <div className="flex items-center gap-2 my-2">
-              <div className="flex-1 border-t border-dashed border-border/60" />
-              <span className="text-[10px] uppercase tracking-wide text-muted-foreground/60 font-medium">
-                {group.niche}
-              </span>
-              <div className="flex-1 border-t border-dashed border-border/60" />
-            </div>
-          )}
-          {group.items.map((entry) => {
-            const client = getClient(entry.client_id);
-            return (
-              <DraggableClientCard
-                key={entry.id}
-                entryId={entry.id}
-                clientName={client?.name || 'Cliente'}
-                clientNiche={client?.niche || null}
-                isOptimizedToday={todayOptimizedClientIds.has(entry.client_id)}
-                isHighComplexity={highComplexityClientIds.has(entry.client_id)}
-                onRemove={() => onRemove(entry.id)}
-                onClick={() => onClientClick?.(entry.client_id)}
-              />
-            );
-          })}
-        </div>
-      ))}
+      {sorted.map((entry) => {
+        const client = getClient(entry.client_id);
+        const wOpt = weekOptMap.get(entry.client_id) || {
+          optimizedThisWeek: false, latestDate: null, latestDayOfWeek: null, isToday: false,
+        };
+        const lOpt = lastOptMap.get(entry.client_id) || { daysSince: null };
+        const isPastDay = weekday < todayWeekday;
+        const isOverdue = isPastDay && !wOpt.optimizedThisWeek;
+
+        return (
+          <DraggableClientCard
+            key={entry.id}
+            entryId={entry.id}
+            clientName={client?.name || 'Cliente'}
+            clientNiche={client?.niche || null}
+            weekOptInfo={wOpt}
+            lastOptInfo={lOpt}
+            isOverdue={isOverdue}
+            isHighComplexity={highComplexityClientIds.has(entry.client_id)}
+            onRemove={() => onRemove(entry.id)}
+            onClick={() => onClientClick?.(entry.client_id)}
+          />
+        );
+      })}
     </>
   );
 }
@@ -533,30 +658,73 @@ export function OptimizationWeeklyCycleTab({
     [accounts],
   );
 
-  /* ── Today's status sets ────────────────────────────────── */
-  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
-  const todayWeekday = useMemo(() => {
-    const d = new Date().getDay();
-    return d === 0 ? 1 : d;
-  }, []);
+  /* ── Week optimization data (single query cached in Map) ── */
+  const todayStr = useMemo(() => getTodayStr(), []);
+  const todayWeekday = useMemo(() => getTodayWeekday(), []);
+  const weekRange = useMemo(() => getWeekRange(), []);
 
-  const todayOptimizedClientIds = useMemo(() => {
-    const ids = new Set<string>();
-    for (const o of optimizations) {
-      if (o.optimization_date === todayStr) ids.add(o.client_id);
+  // Build weekOptMap from optimizations prop (already loaded)
+  const weekOptMap = useMemo(() => {
+    const map = new Map<string, WeekOptInfo>();
+    // Filter optimizations for this week and relevant manager
+    const relevant = optimizations.filter((o) => {
+      if (o.optimization_date < weekRange.start || o.optimization_date > weekRange.end) return false;
+      if (!isAdmin || selectedManagerId) {
+        return o.member_id === effectiveManagerId;
+      }
+      return true;
+    });
+
+    for (const o of relevant) {
+      const existing = map.get(o.client_id);
+      if (!existing || (o.optimization_date > (existing.latestDate || ''))) {
+        const dateObj = new Date(o.optimization_date + 'T12:00:00');
+        map.set(o.client_id, {
+          optimizedThisWeek: true,
+          latestDate: o.optimization_date,
+          latestDayOfWeek: dateObj.getDay(),
+          isToday: o.optimization_date === todayStr,
+        });
+      }
     }
-    return ids;
-  }, [optimizations, todayStr]);
+    return map;
+  }, [optimizations, weekRange, effectiveManagerId, isAdmin, selectedManagerId, todayStr]);
 
-  // High complexity = clients that have "alta" task type entries in the cycle for today's weekday
-  // We determine "high complexity" based on context: if the entry is in today's weekday column
+  // Build lastOptMap: days since last optimization per client
+  const lastOptMap = useMemo(() => {
+    const map = new Map<string, LastOptInfo>();
+    // Group by client, find max date
+    const maxDates = new Map<string, string>();
+    for (const o of optimizations) {
+      if (!isAdmin || selectedManagerId) {
+        if (o.member_id !== effectiveManagerId) continue;
+      }
+      const cur = maxDates.get(o.client_id);
+      if (!cur || o.optimization_date > cur) {
+        maxDates.set(o.client_id, o.optimization_date);
+      }
+    }
+    // Calc days since for all assigned clients
+    for (const clientId of assignedClientIds) {
+      const maxDate = maxDates.get(clientId);
+      if (!maxDate) {
+        map.set(clientId, { daysSince: null });
+      } else {
+        const diff = Math.floor(
+          (new Date(todayStr + 'T12:00:00').getTime() - new Date(maxDate + 'T12:00:00').getTime()) / 86400000,
+        );
+        map.set(clientId, { daysSince: Math.max(0, diff) });
+      }
+    }
+    return map;
+  }, [optimizations, effectiveManagerId, isAdmin, selectedManagerId, assignedClientIds, todayStr]);
+
+  // High complexity client IDs (clients in today's weekday column)
   const todayEntryClientIds = useMemo(() => {
     return new Set(myCycle.filter(w => w.weekday === todayWeekday).map(w => w.client_id));
   }, [myCycle, todayWeekday]);
 
-  // For now, mark as high complexity if client is scheduled for today (the user spec says to show badge)
-  // We'll use a simple heuristic: empty for now, will be set per-column below
-  const highComplexityClientIds = useMemo(() => new Set<string>(), []);
+  const emptyHighComplexity = useMemo(() => new Set<string>(), []);
 
   /* ── Inline modal handlers ──────────────────────────────── */
   const handleOpenInlineModal = useCallback((clientId: string) => {
@@ -770,12 +938,11 @@ export function OptimizationWeeklyCycleTab({
               {WEEKDAYS.map((day, i) => {
                 const dayEntries = myCycle
                   .filter((w) => w.weekday === day.value)
-                  .sort((a, b) => {
-                    const nicheA = getClient(a.client_id)?.niche || 'zzz';
-                    const nicheB = getClient(b.client_id)?.niche || 'zzz';
-                    if (nicheA !== nicheB) return nicheA.localeCompare(nicheB);
-                    return a.sort_order - b.sort_order;
-                  });
+                  .sort((a, b) => a.sort_order - b.sort_order);
+
+                const optimizedCount = dayEntries.filter(
+                  (e) => weekOptMap.get(e.client_id)?.optimizedThisWeek,
+                ).length;
 
                 return (
                   <div
@@ -787,14 +954,20 @@ export function OptimizationWeeklyCycleTab({
                       weekday={day.value}
                       label={day.label}
                       count={dayEntries.length}
+                      optimizedCount={optimizedCount}
+                      totalCount={dayEntries.length}
+                      todayWeekday={todayWeekday}
                     >
-                      <NicheGroupedEntries
+                      <SortedGroupedEntries
                         entries={dayEntries}
                         getClient={getClient}
                         onRemove={removeWeeklyCycleEntry}
                         onClientClick={handleOpenInlineModal}
-                        todayOptimizedClientIds={todayOptimizedClientIds}
-                        highComplexityClientIds={day.value === todayWeekday ? todayEntryClientIds : highComplexityClientIds}
+                        weekOptMap={weekOptMap}
+                        lastOptMap={lastOptMap}
+                        todayWeekday={todayWeekday}
+                        weekday={day.value}
+                        highComplexityClientIds={day.value === todayWeekday ? todayEntryClientIds : emptyHighComplexity}
                       />
                       <AddClientPopover
                         availableClients={availableClients}
