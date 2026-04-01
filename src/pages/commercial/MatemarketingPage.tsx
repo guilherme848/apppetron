@@ -54,7 +54,7 @@ function VariationBadge({ sim, real, isCost }: { sim: number; real: number; isCo
   // For costs, down is good; for volume/revenue, up is good
   const isGood = isCost ? !isUp : isUp;
   return (
-    <span className={cn('inline-flex items-center gap-0.5 text-[13px] font-medium', isGood ? 'text-emerald-500' : 'text-red-500')}>
+    <span className={cn('inline-flex items-center gap-0.5 text-[13px] font-medium', isGood ? 'text-success' : 'text-destructive')}>
       {isUp ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
       {Math.abs(diff).toFixed(1)}%
     </span>
