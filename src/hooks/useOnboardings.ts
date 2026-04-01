@@ -55,6 +55,7 @@ export interface OnboardingReuniaoResposta {
   onboarding_id: string;
   pergunta_id: string | null;
   resposta: string | null;
+  resposta_json: any;
   created_at: string;
   updated_at: string;
 }
@@ -299,17 +300,20 @@ export function useUpsertResposta() {
       onboardingId,
       perguntaId,
       resposta,
+      respostaJson,
     }: {
       onboardingId: string;
       perguntaId: string;
-      resposta: string;
+      resposta?: string | null;
+      respostaJson?: any;
     }) => {
+      const payload: any = { onboarding_id: onboardingId, pergunta_id: perguntaId };
+      if (resposta !== undefined) payload.resposta = resposta;
+      if (respostaJson !== undefined) payload.resposta_json = respostaJson;
+      
       const { error } = await supabase
         .from('onboarding_reuniao_respostas')
-        .upsert(
-          { onboarding_id: onboardingId, pergunta_id: perguntaId, resposta },
-          { onConflict: 'onboarding_id,pergunta_id' }
-        );
+        .upsert(payload, { onConflict: 'onboarding_id,pergunta_id' });
       if (error) throw error;
     },
     onSuccess: (_, { onboardingId }) => {

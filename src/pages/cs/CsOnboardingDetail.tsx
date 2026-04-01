@@ -94,9 +94,23 @@ export default function CsOnboardingDetail() {
 
   const answeredCount = useMemo(() => {
     if (!questions || !respostas) return 0;
-    return questions.filter((q: any) =>
-      respostas.some(r => r.pergunta_id === q.id && r.resposta && r.resposta.trim() !== '')
-    ).length;
+    return questions.filter((q: any) => {
+      const record = respostas.find(r => r.pergunta_id === q.id);
+      if (!record) return false;
+      // Check text answer
+      if (record.resposta && record.resposta.trim() !== '') return true;
+      // Check structured answers in resposta_json
+      const json = record.resposta_json;
+      if (!json) return false;
+      if (json.select) return true;
+      if (json.toggle !== undefined && json.toggle !== null) return true;
+      if (Array.isArray(json.multi) && json.multi.length > 0) return true;
+      if (json.number !== undefined && json.number !== null && json.number !== '') return true;
+      if (json.compound && typeof json.compound === 'object') {
+        return Object.values(json.compound).some((v: any) => v !== null && v !== undefined && v !== '');
+      }
+      return false;
+    }).length;
   }, [questions, respostas]);
 
   const transcriptionCount = useMemo(() => {
@@ -170,6 +184,11 @@ export default function CsOnboardingDetail() {
   const handleAnswerBlur = (perguntaId: string, value: string) => {
     if (!onboardingId) return;
     upsertResposta.mutate({ onboardingId, perguntaId, resposta: value });
+  };
+
+  const handleAnswerSave = (perguntaId: string, data: { resposta?: string | null; respostaJson?: any }) => {
+    if (!onboardingId) return;
+    upsertResposta.mutate({ onboardingId, perguntaId, resposta: data.resposta ?? undefined, respostaJson: data.respostaJson });
   };
 
   const handleToggleAtividade = (atividadeId: string, currentStatus: string) => {
@@ -352,11 +371,13 @@ export default function CsOnboardingDetail() {
         {activeTab === 'reuniao' && (
           <MeetingSection
             onboardingId={onboardingId || ''}
+            clientId={onboarding.client_id}
             questions={questions || []}
             respostas={respostas || []}
             transcricaoOnboardingConteudo={ob.transcricao_onboarding_conteudo}
             isConcluido={isConcluido}
             onAnswerBlur={handleAnswerBlur}
+            onAnswerSave={handleAnswerSave}
             onAiComplete={() => {}}
             onRefreshRespostas={() => queryClient.invalidateQueries({ queryKey: ['onboarding-respostas', onboardingId] })}
           />
