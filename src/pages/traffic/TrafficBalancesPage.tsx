@@ -262,6 +262,27 @@ export default function TrafficBalancesPage() {
               </span>
             </div>
           )}
+          {connection?.token_expires_at && (
+            (() => {
+              const expiresAt = new Date(connection.token_expires_at);
+              const now = new Date();
+              const daysLeft = differenceInDays(expiresAt, now);
+              if (isTokenExpired) {
+                return (
+                  <div className="flex items-center gap-1.5 text-xs text-destructive">
+                    <ShieldAlert className="h-3 w-3" />
+                    <span>Token expirado em {expiresAt.toLocaleDateString('pt-BR')}</span>
+                  </div>
+                );
+              }
+              return (
+                <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+                  <ShieldCheck className="h-3 w-3" />
+                  <span>Token ativo — expira em {daysLeft} dia{daysLeft !== 1 ? 's' : ''}</span>
+                </div>
+              );
+            })()
+          )}
         </div>
       </div>
 
