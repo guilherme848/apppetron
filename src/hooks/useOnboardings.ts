@@ -36,10 +36,15 @@ export interface OnboardingAtividade {
   responsavel_id: string | null;
   status: AtividadeStatus;
   ordem: number;
+  etapa: number | null;
   data_conclusao: string | null;
+  delegado_para_id: string | null;
+  delegado_por_id: string | null;
+  delegado_em: string | null;
   created_at: string;
   // Joined
   responsavel_name?: string;
+  delegado_para_name?: string;
 }
 
 export interface OnboardingReuniaoResposta {
@@ -148,15 +153,18 @@ export function useOnboardingAtividades(onboardingId: string | null) {
         .from('onboarding_atividades')
         .select(`
           *,
-          team_members:responsavel_id (name)
+          team_members:responsavel_id (name),
+          delegado:delegado_para_id (name)
         `)
         .eq('onboarding_id', onboardingId)
+        .order('etapa')
         .order('ordem');
 
       if (error) throw error;
       return (data || []).map((d: any) => ({
         ...d,
         responsavel_name: d.team_members?.name,
+        delegado_para_name: d.delegado?.name,
       })) as OnboardingAtividade[];
     },
     enabled: !!onboardingId,
