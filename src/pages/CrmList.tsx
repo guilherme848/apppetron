@@ -211,6 +211,13 @@ export default function CrmList() {
       if (filterCs !== 'all' && account.cs_member_id !== filterCs) return false;
       if (filterNiche !== 'all' && account.niche !== filterNiche) return false;
       if (filterEntryMonth !== 'all' && (!account.start_date || !account.start_date.startsWith(filterEntryMonth))) return false;
+      if (filterSource !== 'all') {
+        if (filterSource === '__none__') {
+          if (account.origin) return false;
+        } else {
+          if (account.origin !== filterSource) return false;
+        }
+      }
       return true;
     });
 
