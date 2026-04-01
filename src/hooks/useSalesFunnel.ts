@@ -275,9 +275,10 @@ export function useSalesFunnel(source: 'inbound' | 'outbound' = 'inbound') {
     const { data: { user } } = await supabase.auth.getUser();
     
     // Auto-calculate derived fields if not provided
-    const payload: Partial<SalesFunnelActual> & { month: string; created_by?: string } = {
+    const payload: Partial<SalesFunnelActual> & { month: string; source: string; created_by?: string } = {
       ...data,
       month: normalizedMonth,
+      source,
       created_by: user?.id ?? undefined,
     };
 
