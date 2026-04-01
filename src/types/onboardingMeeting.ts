@@ -14,7 +14,23 @@ export type QuestionFieldType =
   | 'boolean'
   | 'phone'
   | 'time'
-  | 'email';
+  | 'email'
+  | 'compound';
+
+// ============ Sub-field for compound questions ============
+export interface SubFieldDef {
+  key: string;
+  label: string;
+  type: 'short_text' | 'single_select' | 'multi_select' | 'boolean' | 'money' | 'date' | 'number';
+  options?: SelectOption[];
+  prefill_field?: string;
+  per_option?: boolean; // show one input per selected option
+  condition?: {
+    field: string;
+    equals?: unknown;
+    in?: string[];
+  };
+}
 
 export const FIELD_TYPE_LABELS: Record<QuestionFieldType, string> = {
   short_text: 'Texto Curto',
