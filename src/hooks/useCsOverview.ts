@@ -135,14 +135,15 @@ export function useCsOverview() {
   // KPIs
   const kpiData = useMemo((): CsOverviewKPI => {
     const active = accounts.filter(a => a.status === 'active');
+    const activeAccountIds = new Set(active.map(a => a.id));
 
-    // Onboarding in selected month
-    const onbInMonth = onboardings.filter(o => {
-      if (!o.data_inicio) return false;
-      const d = parseISO(o.data_inicio);
-      return isValid(d) && d >= monthStart && d <= monthEnd && o.status !== 'concluido';
+    // Active onboardings for active clients
+    const activeOnboardings = onboardings.filter(o => {
+      if (o.status === 'concluido') return false;
+      return activeAccountIds.has(o.client_id);
     });
-    const delayed = onbInMonth.filter(o => {
+
+    const delayed = activeOnboardings.filter(o => {
       if (!o.data_inicio) return false;
       return differenceInDays(now, parseISO(o.data_inicio)) > 10;
     });
