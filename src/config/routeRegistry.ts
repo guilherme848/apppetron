@@ -39,6 +39,7 @@ import {
   Activity,
   Trophy,
   Wrench,
+  Calculator,
 } from 'lucide-react';
 
 // Action types for permissions
@@ -695,6 +696,16 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view', 'edit'],
     icon: Megaphone,
     order: 3,
+  },
+  {
+    id: 'commercial.matemarketing',
+    path: '/commercial/matemarketing',
+    label: 'Matemarketing',
+    category: CATEGORIES.ANALYTICS,
+    module: MODULES.COMMERCIAL,
+    permissions: ['view'],
+    icon: Calculator,
+    order: 4,
   },
   {
     id: 'commercial.marketing_detail',

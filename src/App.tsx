@@ -96,6 +96,7 @@ import MarketingBatchDetail from "./pages/commercial/MarketingBatchDetail";
 import MarketingPostDetail from "./pages/commercial/MarketingPostDetail";
 import CommercialPlanningPage from "./pages/commercial/CommercialPlanningPage";
 import OutboundFunnelPage from "./pages/commercial/OutboundFunnelPage";
+import MatemarketingPage from "./pages/commercial/MatemarketingPage";
 
 // Petron OS pages
 import PetronOSHub from "./pages/petron-os/PetronOSHub";
@@ -225,6 +226,7 @@ const App = () => (
                         <Route path="/commercial/funnel" element={<SalesFunnelPage />} />
                         <Route path="/commercial/planning" element={<CommercialPlanningPage />} />
                         <Route path="/commercial/outbound" element={<OutboundFunnelPage />} />
+                        <Route path="/commercial/matemarketing" element={<MatemarketingPage />} />
                         <Route path="/commercial/marketing" element={<MarketingProduction />} />
                         <Route path="/commercial/marketing/:id" element={<MarketingBatchDetail />} />
                         <Route path="/commercial/marketing/:batchId/posts/:postId" element={<MarketingPostDetail />} />
