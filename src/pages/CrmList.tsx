@@ -120,6 +120,7 @@ export default function CrmList() {
   const [filterCs, setFilterCs] = useState('all');
   const [filterNiche, setFilterNiche] = useState('all');
   const [filterEntryMonth, setFilterEntryMonth] = useState('all');
+  const [filterSource, setFilterSource] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
 
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
