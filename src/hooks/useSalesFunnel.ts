@@ -78,6 +78,7 @@ export function useSalesFunnel(source: 'inbound' | 'outbound' = 'inbound') {
     const { data, error } = await supabase
       .from('petron_sales_funnel_targets')
       .select('*')
+      .eq('source', source)
       .gte('month', startDate)
       .lte('month', endDate)
       .order('month', { ascending: true });
@@ -88,7 +89,7 @@ export function useSalesFunnel(source: 'inbound' | 'outbound' = 'inbound') {
     }
 
     setTargets(data || []);
-  }, [filters.year]);
+  }, [filters.year, source]);
 
   const fetchActuals = useCallback(async () => {
     const startDate = `${filters.year}-01-01`;
