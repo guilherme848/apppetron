@@ -5689,6 +5689,7 @@ export type Database = {
           revenue_actual: number | null
           roas_actual: number | null
           sales_actual: number | null
+          source: string
           updated_at: string
         }
         Insert: {
@@ -5710,6 +5711,7 @@ export type Database = {
           revenue_actual?: number | null
           roas_actual?: number | null
           sales_actual?: number | null
+          source?: string
           updated_at?: string
         }
         Update: {
@@ -5731,6 +5733,7 @@ export type Database = {
           revenue_actual?: number | null
           roas_actual?: number | null
           sales_actual?: number | null
+          source?: string
           updated_at?: string
         }
         Relationships: []
@@ -5755,6 +5758,7 @@ export type Database = {
           revenue_target: number | null
           roas_target: number | null
           sales_target: number | null
+          source: string
           updated_at: string
         }
         Insert: {
@@ -5776,6 +5780,7 @@ export type Database = {
           revenue_target?: number | null
           roas_target?: number | null
           sales_target?: number | null
+          source?: string
           updated_at?: string
         }
         Update: {
@@ -5797,6 +5802,7 @@ export type Database = {
           revenue_target?: number | null
           roas_target?: number | null
           sales_target?: number | null
+          source?: string
           updated_at?: string
         }
         Relationships: []
@@ -7598,6 +7604,7 @@ export type Database = {
           sales_actual: number | null
           sales_mom_change: number | null
           sales_target: number | null
+          source: string | null
           target_notes: string | null
         }
         Relationships: []

@@ -23,7 +23,7 @@ export interface BaseMetrics {
   activeClientsCount: number;
 }
 
-export function useSalesFunnel() {
+export function useSalesFunnel(source: 'inbound' | 'outbound' = 'inbound') {
   const { toast } = useToast();
   const [targets, setTargets] = useState<SalesFunnelTarget[]>([]);
   const [actuals, setActuals] = useState<SalesFunnelActual[]>([]);
@@ -35,6 +35,7 @@ export function useSalesFunnel() {
   
   const [filters, setFilters] = useState<FunnelFilters>({
     year: new Date().getFullYear(),
+    source,
   });
 
   // Check if user can edit
@@ -77,6 +78,7 @@ export function useSalesFunnel() {
     const { data, error } = await supabase
       .from('petron_sales_funnel_targets')
       .select('*')
+      .eq('source', source)
       .gte('month', startDate)
       .lte('month', endDate)
       .order('month', { ascending: true });
@@ -87,7 +89,7 @@ export function useSalesFunnel() {
     }
 
     setTargets(data || []);
-  }, [filters.year]);
+  }, [filters.year, source]);
 
   const fetchActuals = useCallback(async () => {
     const startDate = `${filters.year}-01-01`;
@@ -96,6 +98,7 @@ export function useSalesFunnel() {
     const { data, error } = await supabase
       .from('petron_sales_funnel_actuals')
       .select('*')
+      .eq('source', source)
       .gte('month', startDate)
       .lte('month', endDate)
       .order('month', { ascending: true });
@@ -106,7 +109,7 @@ export function useSalesFunnel() {
     }
 
     setActuals(data || []);
-  }, [filters.year]);
+  }, [filters.year, source]);
 
   const fetchKpis = useCallback(async () => {
     const startDate = `${filters.year}-01-01`;
@@ -115,6 +118,7 @@ export function useSalesFunnel() {
     const { data, error } = await supabase
       .from('petron_sales_funnel_kpis_monthly')
       .select('*')
+      .eq('source', source)
       .gte('month', startDate)
       .lte('month', endDate)
       .order('month', { ascending: true });
@@ -125,7 +129,7 @@ export function useSalesFunnel() {
     }
 
     setKpis((data || []) as SalesFunnelKPI[]);
-  }, [filters.year]);
+  }, [filters.year, source]);
 
   // Fetch client metrics from accounts table (sales, revenue, ticket)
   const fetchClientMetrics = useCallback(async () => {
@@ -230,6 +234,7 @@ export function useSalesFunnel() {
     const payload = {
       ...data,
       month: normalizedMonth,
+      source,
       created_by: user?.id,
     };
     
@@ -270,9 +275,10 @@ export function useSalesFunnel() {
     const { data: { user } } = await supabase.auth.getUser();
     
     // Auto-calculate derived fields if not provided
-    const payload: Partial<SalesFunnelActual> & { month: string; created_by?: string } = {
+    const payload: Partial<SalesFunnelActual> & { month: string; source: string; created_by?: string } = {
       ...data,
       month: normalizedMonth,
+      source,
       created_by: user?.id ?? undefined,
     };
 

@@ -107,6 +107,7 @@ export interface FunnelFilters {
   year: number;
   startMonth?: number;
   endMonth?: number;
+  source?: 'inbound' | 'outbound';
 }
 
 export const MONTH_NAMES = [

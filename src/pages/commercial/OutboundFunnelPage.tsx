@@ -11,7 +11,7 @@ export default function OutboundFunnelPage() {
           Em construção — em breve disponível
         </AlertDescription>
       </Alert>
-      <SalesFunnelPage />
+      <SalesFunnelPage source="outbound" />
     </div>
   );
 }

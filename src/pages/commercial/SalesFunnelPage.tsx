@@ -15,7 +15,11 @@ import { FunnelDashboard } from '@/components/commercial/FunnelDashboard';
 import { FunnelBenchmarksDialog } from '@/components/commercial/FunnelBenchmarksDialog';
 import { FunnelAdAccountSelector } from '@/components/commercial/FunnelAdAccountSelector';
 
-export default function SalesFunnelPage() {
+interface SalesFunnelPageProps {
+  source?: 'inbound' | 'outbound';
+}
+
+export default function SalesFunnelPage({ source = 'inbound' }: SalesFunnelPageProps) {
   const {
     targets,
     actuals,
@@ -28,7 +32,7 @@ export default function SalesFunnelPage() {
     setFilters,
     saveTarget,
     saveActual,
-  } = useSalesFunnel();
+  } = useSalesFunnel(source);
 
   const {
     benchmarks,
