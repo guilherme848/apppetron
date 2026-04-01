@@ -151,7 +151,7 @@ export default function CrmList() {
     }));
   };
 
-  const hasActiveFilters = search || filterPlan !== 'all' || filterTrafficManager !== 'all' || filterCs !== 'all' || filterNiche !== 'all' || filterEntryMonth !== 'all' || showChurned;
+  const hasActiveFilters = search || filterPlan !== 'all' || filterTrafficManager !== 'all' || filterCs !== 'all' || filterNiche !== 'all' || filterEntryMonth !== 'all' || filterSource !== 'all' || showChurned;
 
   const clearFilters = () => {
     setSearch('');
