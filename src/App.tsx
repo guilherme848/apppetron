@@ -273,7 +273,7 @@ const App = () => (
                           <Route path="sales/scoring" element={<LeadScoringPage />} />
                           <Route path="sales/templates" element={<SalesTemplatesPage />} />
                           <Route path="sales/automations" element={<SalesAutomationsPage />} />
-                          <Route path="cs/onboarding/activities" element={<PetronOnboardingActivitiesPage />} />
+                          <Route path="cs/onboarding/activities" element={<OnboardingActivitiesConfigPage />} />
                           <Route path="cs/onboarding/sequences" element={<PetronOnboardingSequencesPage />} />
                           <Route path="cs/onboarding/questions" element={<OnboardingQuestionsPage />} />
                         </Route>
