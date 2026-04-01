@@ -3818,6 +3818,7 @@ export type Database = {
           options_json: Json | null
           order_index: number
           placeholder: string | null
+          prefill_field: string | null
           question_text: string
           updated_at: string
           validation_json: Json | null
@@ -3839,6 +3840,7 @@ export type Database = {
           options_json?: Json | null
           order_index?: number
           placeholder?: string | null
+          prefill_field?: string | null
           question_text: string
           updated_at?: string
           validation_json?: Json | null
@@ -3860,6 +3862,7 @@ export type Database = {
           options_json?: Json | null
           order_index?: number
           placeholder?: string | null
+          prefill_field?: string | null
           question_text?: string
           updated_at?: string
           validation_json?: Json | null
@@ -4987,6 +4990,7 @@ export type Database = {
           onboarding_id: string
           pergunta_id: string | null
           resposta: string | null
+          resposta_json: Json | null
           updated_at: string | null
         }
         Insert: {
@@ -4995,6 +4999,7 @@ export type Database = {
           onboarding_id: string
           pergunta_id?: string | null
           resposta?: string | null
+          resposta_json?: Json | null
           updated_at?: string | null
         }
         Update: {
@@ -5003,6 +5008,7 @@ export type Database = {
           onboarding_id?: string
           pergunta_id?: string | null
           resposta?: string | null
+          resposta_json?: Json | null
           updated_at?: string | null
         }
         Relationships: [
