@@ -26,7 +26,7 @@ export function useOnboardingQuestions(onlyActive = true) {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as CsOnboardingQuestion[];
+      return data as unknown as CsOnboardingQuestion[];
     },
   });
 }
