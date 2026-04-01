@@ -172,6 +172,11 @@ export default function CsOnboardingDetail() {
     upsertResposta.mutate({ onboardingId, perguntaId, resposta: value });
   };
 
+  const handleAnswerSave = (perguntaId: string, data: { resposta?: string | null; respostaJson?: any }) => {
+    if (!onboardingId) return;
+    upsertResposta.mutate({ onboardingId, perguntaId, resposta: data.resposta ?? undefined, respostaJson: data.respostaJson });
+  };
+
   const handleToggleAtividade = (atividadeId: string, currentStatus: string) => {
     if (!onboardingId) return;
     const newStatus = currentStatus === 'concluida' ? 'pendente' : 'concluida';
