@@ -118,6 +118,7 @@ export function useSalesFunnel(source: 'inbound' | 'outbound' = 'inbound') {
     const { data, error } = await supabase
       .from('petron_sales_funnel_kpis_monthly')
       .select('*')
+      .eq('source', source)
       .gte('month', startDate)
       .lte('month', endDate)
       .order('month', { ascending: true });
@@ -128,7 +129,7 @@ export function useSalesFunnel(source: 'inbound' | 'outbound' = 'inbound') {
     }
 
     setKpis((data || []) as SalesFunnelKPI[]);
-  }, [filters.year]);
+  }, [filters.year, source]);
 
   // Fetch client metrics from accounts table (sales, revenue, ticket)
   const fetchClientMetrics = useCallback(async () => {
