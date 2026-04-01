@@ -238,14 +238,22 @@ export default function TrafficBalancesPage() {
           </p>
         </div>
         <div className="flex flex-col items-end gap-2">
-          <Button onClick={handleRefreshAll} disabled={fetchingFinance || balanceRows.length === 0}>
-            {fetchingFinance ? (
-              <Skeleton className="h-4 w-16 rounded" />
-            ) : (
-              <RefreshCw className="h-4 w-4 mr-2" />
+          <div className="flex items-center gap-2">
+            {isTokenExpired && (
+              <Button variant="destructive" size="sm" onClick={handleReconnect}>
+                <LinkIcon className="h-4 w-4 mr-1" />
+                Reconectar Meta
+              </Button>
             )}
-            Atualizar Todos
-          </Button>
+            <Button onClick={handleRefreshAll} disabled={fetchingFinance || balanceRows.length === 0 || isTokenExpired}>
+              {fetchingFinance ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-2" />
+              )}
+              Atualizar Todos
+            </Button>
+          </div>
           {latestUpdateTimestamp && (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Clock className="h-3 w-3" />
