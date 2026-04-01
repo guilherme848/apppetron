@@ -972,7 +972,7 @@ export function useCsDashboardMetrics() {
       meetingsRes,
     ] = await Promise.all([
       supabase.from('accounts').select('id', { count: 'exact' }).eq('status', 'active').or('cliente_interno.is.null,cliente_interno.eq.false'),
-      supabase.from('cs_client_onboarding').select('*').eq('status', 'in_progress'),
+      supabase.from('onboardings').select('*').eq('status', 'em_andamento'),
       supabase.from('cs_risk_cases').select('id', { count: 'exact' }).in('status', ['open', 'in_progress']),
       supabase.from('cs_cancellations').select('id', { count: 'exact' }).gte('effective_cancel_date', startOfMonth.toISOString().split('T')[0]),
       supabase.from('cs_nps_responses').select('score'),
@@ -994,17 +994,17 @@ export function useCsDashboardMetrics() {
 
     // Calculate avg onboarding time
     const { data: completedOnboardings } = await supabase
-      .from('cs_client_onboarding')
-      .select('started_at, completed_at')
-      .eq('status', 'completed')
-      .not('completed_at', 'is', null);
+      .from('onboardings')
+      .select('data_inicio, data_conclusao')
+      .eq('status', 'concluido')
+      .not('data_conclusao', 'is', null);
 
     let avgOnboardingDays = 0;
     if (completedOnboardings && completedOnboardings.length > 0) {
       const totalDays = completedOnboardings.reduce((sum, o) => {
-        if (o.started_at && o.completed_at) {
-          const start = new Date(o.started_at);
-          const end = new Date(o.completed_at);
+        if (o.data_inicio && o.data_conclusao) {
+          const start = new Date(o.data_inicio);
+          const end = new Date(o.data_conclusao);
           return sum + Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
         }
         return sum;
@@ -1028,11 +1028,12 @@ export function useCsDashboardMetrics() {
 
     // Onboarding delays
     const overdueOnboardings = (onboardingRes.data || []).filter((o: any) => {
+      // onboardings table doesn't have expected_end_at; skip alert if not present
       if (!o.expected_end_at) return false;
       return new Date(o.expected_end_at) < now;
     });
     
-    for (const o of overdueOnboardings) {
+    for (const o of overdueOnboardings as any[]) {
       const { data: client } = await supabase.from('accounts').select('name').eq('id', o.client_id).single();
       if (client) {
         const daysOverdue = Math.ceil((now.getTime() - new Date(o.expected_end_at).getTime()) / (1000 * 60 * 60 * 24));
