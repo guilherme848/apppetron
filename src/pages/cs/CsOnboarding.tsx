@@ -45,7 +45,7 @@ import {
 import { useCrmData } from '@/hooks/useCrmData';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useAuth } from '@/contexts/AuthContext';
-import { format, differenceInDays } from 'date-fns';
+import { format, differenceInDays, differenceInHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
@@ -402,6 +402,14 @@ export default function CsOnboarding() {
                   >
                     {ONBOARDING_STATUS_LABELS[ob.status as keyof typeof ONBOARDING_STATUS_LABELS]}
                   </Badge>
+                  {ob.created_at && differenceInHours(new Date(), new Date(ob.created_at)) < 48 && (
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] font-semibold px-1.5 py-0 rounded-md border bg-primary/10 text-primary border-primary/25"
+                    >
+                      Novo
+                    </Badge>
+                  )}
                 </div>
 
                 {/* Plan badge */}
@@ -448,10 +456,10 @@ export default function CsOnboarding() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-1.5">
-                      <div className="h-6 w-6 rounded-md bg-muted flex items-center justify-center shrink-0">
-                        <User className="h-3.5 w-3.5 text-muted-foreground" />
+                      <div className="h-6 w-6 rounded-md bg-[hsl(var(--warning)/0.15)] flex items-center justify-center shrink-0">
+                        <AlertTriangle className="h-3.5 w-3.5 text-[hsl(var(--warning,45_93%_47%))]" />
                       </div>
-                      <span className="text-[11px] text-muted-foreground">Sem responsável CS</span>
+                      <span className="text-[11px] font-medium text-[hsl(var(--warning,45_93%_47%))]">CS não atribuído</span>
                     </div>
                   )}
                   {isConcluido ? (
