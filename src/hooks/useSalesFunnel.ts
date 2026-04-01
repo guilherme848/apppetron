@@ -234,6 +234,7 @@ export function useSalesFunnel(source: 'inbound' | 'outbound' = 'inbound') {
     const payload = {
       ...data,
       month: normalizedMonth,
+      source,
       created_by: user?.id,
     };
     
