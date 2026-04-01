@@ -75,6 +75,9 @@ export interface CsOnboardingQuestion {
   answer_key: string | null;
   validation_json: unknown;
   ai_extract_hint: string | null;
+  prefill_field: string | null;
+  allow_other: boolean;
+  sub_fields: SubFieldDef[] | null;
 }
 
 // ============ Meetings ============
