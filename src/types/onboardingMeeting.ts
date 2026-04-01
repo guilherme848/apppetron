@@ -14,7 +14,23 @@ export type QuestionFieldType =
   | 'boolean'
   | 'phone'
   | 'time'
-  | 'email';
+  | 'email'
+  | 'compound';
+
+// ============ Sub-field for compound questions ============
+export interface SubFieldDef {
+  key: string;
+  label: string;
+  type: 'short_text' | 'single_select' | 'multi_select' | 'boolean' | 'money' | 'date' | 'number';
+  options?: SelectOption[];
+  prefill_field?: string;
+  per_option?: boolean; // show one input per selected option
+  condition?: {
+    field: string;
+    equals?: unknown;
+    in?: string[];
+  };
+}
 
 export const FIELD_TYPE_LABELS: Record<QuestionFieldType, string> = {
   short_text: 'Texto Curto',
@@ -28,6 +44,7 @@ export const FIELD_TYPE_LABELS: Record<QuestionFieldType, string> = {
   phone: 'Telefone',
   time: 'Horário',
   email: 'E-mail',
+  compound: 'Campos Compostos',
 };
 
 export interface SelectOption {
@@ -58,6 +75,9 @@ export interface CsOnboardingQuestion {
   answer_key: string | null;
   validation_json: unknown;
   ai_extract_hint: string | null;
+  prefill_field: string | null;
+  allow_other: boolean;
+  sub_fields: SubFieldDef[] | null;
 }
 
 // ============ Meetings ============
