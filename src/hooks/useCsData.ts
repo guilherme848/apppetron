@@ -1028,11 +1028,12 @@ export function useCsDashboardMetrics() {
 
     // Onboarding delays
     const overdueOnboardings = (onboardingRes.data || []).filter((o: any) => {
+      // onboardings table doesn't have expected_end_at; skip alert if not present
       if (!o.expected_end_at) return false;
       return new Date(o.expected_end_at) < now;
     });
     
-    for (const o of overdueOnboardings) {
+    for (const o of overdueOnboardings as any[]) {
       const { data: client } = await supabase.from('accounts').select('name').eq('id', o.client_id).single();
       if (client) {
         const daysOverdue = Math.ceil((now.getTime() - new Date(o.expected_end_at).getTime()) / (1000 * 60 * 60 * 24));
