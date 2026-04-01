@@ -160,6 +160,7 @@ export default function CrmList() {
     setFilterCs('all');
     setFilterNiche('all');
     setFilterEntryMonth('all');
+    setFilterSource('all');
     setShowChurned(false);
     setCurrentPage(1);
   };
