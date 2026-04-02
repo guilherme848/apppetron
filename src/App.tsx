@@ -203,6 +203,7 @@ const App = () => (
                         <Route path="/traffic/accounts/:id" element={<TrafficAccountDetail />} />
                         <Route path="/traffic/benchmarks" element={<TrafficBenchmarks />} />
                         <Route path="/traffic/optimizations" element={<TrafficOptimizationsPage />} />
+                        <Route path="/traffic/contacts" element={<TrafficContacts />} />
 
                         {/* Traffic Creative Requests */}
                         <Route path="/traffic/creative-requests" element={<CreativeRequestsList />} />
