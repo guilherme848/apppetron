@@ -90,22 +90,25 @@ export function useTodayContacts(memberId: string | null, showAll = false) {
 }
 
 // ---- Monthly contact counts ----
-export function useMonthlyContactCounts(memberId: string | null) {
+export function useMonthlyContactCounts(memberId: string | null, showAll = false) {
   const now = new Date();
   const monthStart = format(startOfMonth(now), 'yyyy-MM-dd');
   const monthEnd = format(endOfMonth(now), 'yyyy-MM-dd');
 
   return useQuery({
-    queryKey: ['traffic-contacts-monthly', memberId, monthStart],
-    enabled: !!memberId,
+    queryKey: ['traffic-contacts-monthly', showAll ? '__all__' : memberId, monthStart],
+    enabled: showAll || !!memberId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from('traffic_contacts')
         .select('contact_date')
-        .eq('member_id', memberId!)
         .eq('completed', true)
         .gte('contact_date', monthStart)
         .lte('contact_date', monthEnd);
+      if (!showAll) {
+        q = q.eq('member_id', memberId!);
+      }
+      const { data, error } = await q;
       if (error) throw error;
 
       const counts: Record<string, number> = {};
