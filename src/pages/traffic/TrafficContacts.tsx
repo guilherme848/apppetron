@@ -1,5 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRouteAccess } from '@/hooks/useRouteAccess';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -25,12 +26,14 @@ import { toast } from 'sonner';
 
 export default function TrafficContacts() {
   const { member, isAdmin } = useAuth();
+  const { roleKey } = useRouteAccess();
   const memberId = member?.id || null;
   const qc = useQueryClient();
+  const showAll = isAdmin || roleKey === 'cs';
 
-  const { data: clients, isLoading: clientsLoading } = useClientLastContacts(memberId, isAdmin);
-  const { data: todayContacts, isLoading: todayLoading } = useTodayContacts(memberId, isAdmin);
-  const { data: monthlyCounts, isLoading: monthlyLoading } = useMonthlyContactCounts(memberId, isAdmin);
+  const { data: clients, isLoading: clientsLoading } = useClientLastContacts(memberId, showAll);
+  const { data: todayContacts, isLoading: todayLoading } = useTodayContacts(memberId, showAll);
+  const { data: monthlyCounts, isLoading: monthlyLoading } = useMonthlyContactCounts(memberId, showAll);
   const { data: reasons, isLoading: reasonsLoading } = useContactReasons();
   const { data: channels } = useContactChannels();
   const { data: settings } = useContactSettings();
