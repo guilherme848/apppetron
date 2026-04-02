@@ -52,15 +52,16 @@ export function useContactSettings() {
 }
 
 // ---- Client last contacts (view) ----
-export function useClientLastContacts(memberId: string | null) {
+export function useClientLastContacts(memberId: string | null, showAll = false) {
   return useQuery({
-    queryKey: ['traffic-client-last-contacts', memberId],
-    enabled: !!memberId,
+    queryKey: ['traffic-client-last-contacts', showAll ? '__all__' : memberId],
+    enabled: showAll || !!memberId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('traffic_client_last_contact')
-        .select('*')
-        .eq('traffic_member_id', memberId!);
+      let q = supabase.from('traffic_client_last_contact').select('*');
+      if (!showAll) {
+        q = q.eq('traffic_member_id', memberId!);
+      }
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
