@@ -1,5 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRouteAccess } from '@/hooks/useRouteAccess';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
