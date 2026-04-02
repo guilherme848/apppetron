@@ -195,9 +195,7 @@ export function TrafficContactRow({
           <Select
             value={todayContact?.channel_id || ''}
             onValueChange={(v) => {
-              if (todayContact) {
-                onUpdateField(todayContact.id, 'channel_id', v);
-              }
+              onUpdateField(todayContact?.id ?? '', 'channel_id', v);
             }}
           >
             <SelectTrigger className="h-8 text-xs px-1.5">
