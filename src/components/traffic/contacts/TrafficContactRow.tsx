@@ -203,7 +203,6 @@ export function TrafficContactRow({
                 onUpdateField(todayContact.id, 'channel_id', v);
               }
             }}
-            disabled={completed || !todayContact}
           >
             <SelectTrigger className="h-8 text-xs px-1.5">
               <SelectValue placeholder="—" />
