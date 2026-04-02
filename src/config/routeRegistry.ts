@@ -40,6 +40,7 @@ import {
   Trophy,
   Wrench,
   Calculator,
+  MessageCircle,
 } from 'lucide-react';
 
 // Action types for permissions
