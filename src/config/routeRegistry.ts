@@ -40,6 +40,7 @@ import {
   Trophy,
   Wrench,
   Calculator,
+  MessageCircle,
 } from 'lucide-react';
 
 // Action types for permissions
@@ -530,6 +531,16 @@ export const routeRegistry: RouteDefinition[] = [
     hideInMenu: true,
     parentId: 'traffic.overview',
     order: 93,
+  },
+  {
+    id: 'traffic.contacts',
+    path: '/traffic/contacts',
+    label: 'Pontos de Contato',
+    category: CATEGORIES.CONTACTS,
+    module: MODULES.TRAFFIC,
+    permissions: ['view', 'edit', 'manage'],
+    icon: MessageCircle,
+    order: 4.5,
   },
   // ============================================
   // CUSTOMER SUCCESS MODULE

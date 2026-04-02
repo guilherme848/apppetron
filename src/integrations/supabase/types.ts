@@ -51,6 +51,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "account_history_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "account_history_member_id_fkey"
             columns: ["member_id"]
             isOneToOne: false
@@ -85,6 +92,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_services_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
           },
           {
             foreignKeyName: "account_services_service_id_fkey"
@@ -398,6 +412,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "arquivos_inteligencia_cliente_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "arquivos_inteligencia_cliente_enviado_por_fkey"
             columns: ["enviado_por"]
             isOneToOne: false
@@ -444,6 +465,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atividade_sistema_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
           },
           {
             foreignKeyName: "atividade_sistema_usuario_id_fkey"
@@ -599,6 +627,13 @@ export type Database = {
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "client_meta_ad_accounts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
         ]
       }
       cliente_anexos: {
@@ -648,6 +683,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_anexos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
           },
           {
             foreignKeyName: "cliente_anexos_uploaded_by_fkey"
@@ -722,6 +764,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cliente_checkup_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "cliente_checkup_onboarding_id_fkey"
             columns: ["onboarding_id"]
             isOneToOne: true
@@ -779,6 +828,13 @@ export type Database = {
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "cliente_concorrentes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
         ]
       }
       cliente_links: {
@@ -816,6 +872,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_links_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
           },
         ]
       }
@@ -934,6 +997,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_batches_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
           },
         ]
       }
@@ -1113,6 +1183,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "content_extra_requests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "content_extra_requests_requested_by_member_id_fkey"
             columns: ["requested_by_member_id"]
             isOneToOne: false
@@ -1183,6 +1260,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_items_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
           },
         ]
       }
@@ -1716,6 +1800,13 @@ export type Database = {
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contracts_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
         ]
       }
       contracts_generated: {
@@ -1801,6 +1892,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_generated_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
           },
           {
             foreignKeyName: "contracts_generated_template_id_fkey"
@@ -2859,6 +2957,13 @@ export type Database = {
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "cs_audit_log_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
         ]
       }
       cs_cancellation_reason_links: {
@@ -2954,6 +3059,13 @@ export type Database = {
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "cs_cancellations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
         ]
       }
       cs_churn_events: {
@@ -3014,6 +3126,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cs_churn_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "cs_churn_events_owner_member_id_fkey"
             columns: ["owner_member_id"]
             isOneToOne: false
@@ -3061,6 +3180,13 @@ export type Database = {
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "cs_client_health_scores_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
         ]
       }
       cs_client_onboarding: {
@@ -3104,6 +3230,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "accounts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_client_onboarding_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
           },
           {
             foreignKeyName: "cs_client_onboarding_flow_id_fkey"
@@ -3326,6 +3459,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cs_meetings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "cs_meetings_responsible_member_id_fkey"
             columns: ["responsible_member_id"]
             isOneToOne: false
@@ -3405,6 +3545,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_nps_responses_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
           },
           {
             foreignKeyName: "cs_nps_responses_survey_id_fkey"
@@ -3561,6 +3708,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_onboarding_briefings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
           },
           {
             foreignKeyName: "cs_onboarding_briefings_transcript_id_fkey"
@@ -3793,6 +3947,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cs_onboarding_meetings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "cs_onboarding_meetings_cs_owner_id_fkey"
             columns: ["cs_owner_id"]
             isOneToOne: false
@@ -4011,6 +4172,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cs_onboardings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "cs_onboardings_cs_owner_id_fkey"
             columns: ["cs_owner_id"]
             isOneToOne: false
@@ -4122,6 +4290,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cs_playbooks_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "cs_playbooks_responsible_member_id_fkey"
             columns: ["responsible_member_id"]
             isOneToOne: false
@@ -4230,6 +4405,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cs_risk_cases_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "cs_risk_cases_owner_member_id_fkey"
             columns: ["owner_member_id"]
             isOneToOne: false
@@ -4267,6 +4449,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_sales_transcripts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
           },
           {
             foreignKeyName: "cs_sales_transcripts_created_by_member_id_fkey"
@@ -4345,6 +4534,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cs_transcripts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
           },
           {
             foreignKeyName: "cs_transcripts_created_by_fkey"
@@ -4473,6 +4669,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "historico_acoes_comerciais_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "historico_acoes_comerciais_registrado_por_fkey"
             columns: ["registrado_por"]
             isOneToOne: false
@@ -4522,6 +4725,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_sugestoes_ia_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
           },
           {
             foreignKeyName: "historico_sugestoes_ia_solicitado_por_fkey"
@@ -4612,6 +4822,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "accounts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inteligencia_cliente_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: true
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
           },
           {
             foreignKeyName: "inteligencia_cliente_preenchido_por_fkey"
@@ -5120,6 +5337,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "onboardings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "onboardings_cs_owner_id_fkey"
             columns: ["cs_owner_id"]
             isOneToOne: false
@@ -5309,6 +5533,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "petron_content_jobs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "petron_content_jobs_stage_id_fkey"
             columns: ["stage_id"]
             isOneToOne: false
@@ -5395,6 +5626,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "petron_customer_onboardings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
           },
           {
             foreignKeyName: "petron_customer_onboardings_plan_id_fkey"
@@ -5790,6 +6028,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "petron_os_geracoes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "petron_os_geracoes_ferramenta_id_fkey"
             columns: ["ferramenta_id"]
             isOneToOne: false
@@ -6173,6 +6418,13 @@ export type Database = {
             referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tasks_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
         ]
       }
       team_members: {
@@ -6330,10 +6582,223 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "traffic_client_status_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "traffic_client_status_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      traffic_contact_channels: {
+        Row: {
+          active: boolean
+          created_at: string
+          icon: string | null
+          id: string
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      traffic_contact_comments: {
+        Row: {
+          contact_id: string
+          content: string
+          created_at: string
+          id: string
+          member_id: string
+        }
+        Insert: {
+          contact_id: string
+          content: string
+          created_at?: string
+          id?: string
+          member_id: string
+        }
+        Update: {
+          contact_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traffic_contact_comments_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traffic_contact_comments_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      traffic_contact_reasons: {
+        Row: {
+          active: boolean
+          color: string
+          created_at: string
+          id: string
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      traffic_contact_settings: {
+        Row: {
+          frequency_days: number
+          id: string
+          updated_at: string
+          updated_by: string | null
+          warning_threshold_days: number
+        }
+        Insert: {
+          frequency_days?: number
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+          warning_threshold_days?: number
+        }
+        Update: {
+          frequency_days?: number
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+          warning_threshold_days?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traffic_contact_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      traffic_contacts: {
+        Row: {
+          channel_id: string | null
+          client_id: string
+          completed: boolean
+          completed_at: string | null
+          contact_date: string
+          created_at: string
+          id: string
+          member_id: string
+          notes: string | null
+          reason_id: string | null
+          result: string | null
+          updated_at: string
+        }
+        Insert: {
+          channel_id?: string | null
+          client_id: string
+          completed?: boolean
+          completed_at?: string | null
+          contact_date?: string
+          created_at?: string
+          id?: string
+          member_id: string
+          notes?: string | null
+          reason_id?: string | null
+          result?: string | null
+          updated_at?: string
+        }
+        Update: {
+          channel_id?: string | null
+          client_id?: string
+          completed?: boolean
+          completed_at?: string | null
+          contact_date?: string
+          created_at?: string
+          id?: string
+          member_id?: string
+          notes?: string | null
+          reason_id?: string | null
+          result?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traffic_contacts_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_contact_channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traffic_contacts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traffic_contacts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
+          {
+            foreignKeyName: "traffic_contacts_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traffic_contacts_reason_id_fkey"
+            columns: ["reason_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_contact_reasons"
             referencedColumns: ["id"]
           },
         ]
@@ -6587,6 +7052,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traffic_creative_requests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
           },
           {
             foreignKeyName: "traffic_creative_requests_requested_by_member_id_fkey"
@@ -6918,6 +7390,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "traffic_optimization_weekly_cycle_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "traffic_optimization_weekly_cycle_manager_member_id_fkey"
             columns: ["manager_member_id"]
             isOneToOne: false
@@ -6981,6 +7460,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "traffic_optimizations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "traffic_optimizations_member_id_fkey"
             columns: ["member_id"]
             isOneToOne: false
@@ -7027,6 +7513,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traffic_periods_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
           },
           {
             foreignKeyName: "traffic_periods_cycle_id_fkey"
@@ -7084,6 +7577,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traffic_playbook_overrides_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
           },
           {
             foreignKeyName: "traffic_playbook_overrides_owner_override_fkey"
@@ -7182,6 +7682,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traffic_playbook_tasks_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
           },
           {
             foreignKeyName: "traffic_playbook_tasks_template_id_fkey"
@@ -7513,6 +8020,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "traffic_tasks_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "traffic_client_last_contact"
+            referencedColumns: ["client_id"]
+          },
+          {
             foreignKeyName: "traffic_tasks_period_id_fkey"
             columns: ["period_id"]
             isOneToOne: false
@@ -7744,6 +8258,25 @@ export type Database = {
           target_notes: string | null
         }
         Relationships: []
+      }
+      traffic_client_last_contact: {
+        Row: {
+          client_id: string | null
+          client_name: string | null
+          client_status: string | null
+          days_since_contact: number | null
+          last_contact_date: string | null
+          traffic_member_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounts_traffic_member_id_fkey"
+            columns: ["traffic_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       traffic_weekly_load_by_day: {
         Row: {
