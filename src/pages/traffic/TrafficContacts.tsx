@@ -26,8 +26,10 @@ import { toast } from 'sonner';
 
 export default function TrafficContacts() {
   const { member, isAdmin } = useAuth();
+  const { roleKey } = useRouteAccess();
   const memberId = member?.id || null;
   const qc = useQueryClient();
+  const showAll = isAdmin || roleKey === 'cs';
 
   const { data: clients, isLoading: clientsLoading } = useClientLastContacts(memberId, isAdmin);
   const { data: todayContacts, isLoading: todayLoading } = useTodayContacts(memberId, isAdmin);
