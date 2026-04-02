@@ -45,6 +45,7 @@ import TrafficAccountDetail from "./pages/traffic/TrafficAccountDetail";
 import TrafficBenchmarks from "./pages/traffic/TrafficBenchmarks";
 import TrafficOptimizationsPage from "./pages/traffic/TrafficOptimizationsPage";
 import TrafficOperationalDashboard from "./pages/traffic/TrafficOperationalDashboard";
+import TrafficContacts from "./pages/traffic/TrafficContacts";
 
 // CS pages
 import CsDashboard from "./pages/cs/CsDashboard";
