@@ -141,7 +141,6 @@ export function TrafficContactRow({
                 onUpdateField(todayContact.id, 'reason_id', v);
               }
             }}
-            disabled={completed || !todayContact}
           >
             <SelectTrigger className="h-8 text-xs">
               <SelectValue placeholder="Motivo" />
