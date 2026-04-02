@@ -137,11 +137,8 @@ export function TrafficContactRow({
           <Select
             value={todayContact?.reason_id || ''}
             onValueChange={(v) => {
-              if (todayContact) {
-                onUpdateField(todayContact.id, 'reason_id', v);
-              }
+              onUpdateField(todayContact?.id ?? '', 'reason_id', v);
             }}
-            disabled={completed || !todayContact}
           >
             <SelectTrigger className="h-8 text-xs">
               <SelectValue placeholder="Motivo" />
@@ -164,11 +161,8 @@ export function TrafficContactRow({
           <Select
             value={todayContact?.result || ''}
             onValueChange={(v) => {
-              if (todayContact) {
-                onUpdateField(todayContact.id, 'result', v);
-              }
+              onUpdateField(todayContact?.id ?? '', 'result', v);
             }}
-            disabled={completed || !todayContact}
           >
             <SelectTrigger className="h-8 text-xs">
               <SelectValue placeholder="Resultado" />
@@ -201,11 +195,8 @@ export function TrafficContactRow({
           <Select
             value={todayContact?.channel_id || ''}
             onValueChange={(v) => {
-              if (todayContact) {
-                onUpdateField(todayContact.id, 'channel_id', v);
-              }
+              onUpdateField(todayContact?.id ?? '', 'channel_id', v);
             }}
-            disabled={completed || !todayContact}
           >
             <SelectTrigger className="h-8 text-xs px-1.5">
               <SelectValue placeholder="—" />
