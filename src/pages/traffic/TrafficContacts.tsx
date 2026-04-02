@@ -24,13 +24,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 export default function TrafficContacts() {
-  const { member } = useAuth();
+  const { member, isAdmin } = useAuth();
   const memberId = member?.id || null;
   const qc = useQueryClient();
 
-  const { data: clients, isLoading: clientsLoading } = useClientLastContacts(memberId);
-  const { data: todayContacts, isLoading: todayLoading } = useTodayContacts(memberId);
-  const { data: monthlyCounts, isLoading: monthlyLoading } = useMonthlyContactCounts(memberId);
+  const { data: clients, isLoading: clientsLoading } = useClientLastContacts(memberId, isAdmin);
+  const { data: todayContacts, isLoading: todayLoading } = useTodayContacts(memberId, isAdmin);
+  const { data: monthlyCounts, isLoading: monthlyLoading } = useMonthlyContactCounts(memberId, isAdmin);
   const { data: reasons, isLoading: reasonsLoading } = useContactReasons();
   const { data: channels } = useContactChannels();
   const { data: settings } = useContactSettings();

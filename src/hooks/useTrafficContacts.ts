@@ -52,15 +52,16 @@ export function useContactSettings() {
 }
 
 // ---- Client last contacts (view) ----
-export function useClientLastContacts(memberId: string | null) {
+export function useClientLastContacts(memberId: string | null, showAll = false) {
   return useQuery({
-    queryKey: ['traffic-client-last-contacts', memberId],
-    enabled: !!memberId,
+    queryKey: ['traffic-client-last-contacts', showAll ? '__all__' : memberId],
+    enabled: showAll || !!memberId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('traffic_client_last_contact')
-        .select('*')
-        .eq('traffic_member_id', memberId!);
+      let q = supabase.from('traffic_client_last_contact').select('*');
+      if (!showAll) {
+        q = q.eq('traffic_member_id', memberId!);
+      }
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
@@ -68,17 +69,20 @@ export function useClientLastContacts(memberId: string | null) {
 }
 
 // ---- Today contacts ----
-export function useTodayContacts(memberId: string | null) {
+export function useTodayContacts(memberId: string | null, showAll = false) {
   const today = format(new Date(), 'yyyy-MM-dd');
   return useQuery({
-    queryKey: ['traffic-contacts-today', memberId, today],
-    enabled: !!memberId,
+    queryKey: ['traffic-contacts-today', showAll ? '__all__' : memberId, today],
+    enabled: showAll || !!memberId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from('traffic_contacts')
         .select('*, traffic_contact_reasons(*), traffic_contact_channels(*)')
-        .eq('member_id', memberId!)
         .eq('contact_date', today);
+      if (!showAll) {
+        q = q.eq('member_id', memberId!);
+      }
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
@@ -86,22 +90,25 @@ export function useTodayContacts(memberId: string | null) {
 }
 
 // ---- Monthly contact counts ----
-export function useMonthlyContactCounts(memberId: string | null) {
+export function useMonthlyContactCounts(memberId: string | null, showAll = false) {
   const now = new Date();
   const monthStart = format(startOfMonth(now), 'yyyy-MM-dd');
   const monthEnd = format(endOfMonth(now), 'yyyy-MM-dd');
 
   return useQuery({
-    queryKey: ['traffic-contacts-monthly', memberId, monthStart],
-    enabled: !!memberId,
+    queryKey: ['traffic-contacts-monthly', showAll ? '__all__' : memberId, monthStart],
+    enabled: showAll || !!memberId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from('traffic_contacts')
         .select('contact_date')
-        .eq('member_id', memberId!)
         .eq('completed', true)
         .gte('contact_date', monthStart)
         .lte('contact_date', monthEnd);
+      if (!showAll) {
+        q = q.eq('member_id', memberId!);
+      }
+      const { data, error } = await q;
       if (error) throw error;
 
       const counts: Record<string, number> = {};
