@@ -31,9 +31,9 @@ export default function TrafficContacts() {
   const qc = useQueryClient();
   const showAll = isAdmin || roleKey === 'cs';
 
-  const { data: clients, isLoading: clientsLoading } = useClientLastContacts(memberId, isAdmin);
-  const { data: todayContacts, isLoading: todayLoading } = useTodayContacts(memberId, isAdmin);
-  const { data: monthlyCounts, isLoading: monthlyLoading } = useMonthlyContactCounts(memberId, isAdmin);
+  const { data: clients, isLoading: clientsLoading } = useClientLastContacts(memberId, showAll);
+  const { data: todayContacts, isLoading: todayLoading } = useTodayContacts(memberId, showAll);
+  const { data: monthlyCounts, isLoading: monthlyLoading } = useMonthlyContactCounts(memberId, showAll);
   const { data: reasons, isLoading: reasonsLoading } = useContactReasons();
   const { data: channels } = useContactChannels();
   const { data: settings } = useContactSettings();
