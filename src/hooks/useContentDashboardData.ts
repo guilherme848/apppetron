@@ -120,7 +120,7 @@ function computeProfessionalProductivity(
         if (isToday(cd)) s.completedToday++;
         if (!isBefore(cd, from) && !isAfter(cd, to)) {
           s.completedInPeriod++;
-          if (changePostIds.has(p.id)) s.postsWithChanges++;
+          if ((p.rework_count && p.rework_count > 0) || changePostIds.has(p.id)) s.postsWithChanges++;
           const day = getDate(cd);
           s.dailyCounts[day] = (s.dailyCounts[day] || 0) + 1;
           if (p.due_date || p.batch?.planning_due_date) {
@@ -131,9 +131,11 @@ function computeProfessionalProductivity(
               if (!isAfter(cd, dueDate)) s.onTimeCount++;
             }
           }
-          if (typeof p.created_at === 'string') {
-            const created = parseISO(p.created_at);
-            const prodTime = Math.max(differenceInDays(cd, created), 0);
+          // Use started_at (when production began) instead of created_at (when post was planned)
+          const prodStart = p.started_at || p.production_entered_at || p.created_at;
+          if (typeof prodStart === 'string') {
+            const started = parseISO(prodStart);
+            const prodTime = Math.max(differenceInDays(cd, started), 0);
             s.productionTimes.push(prodTime);
           }
         }
@@ -316,8 +318,8 @@ export function useContentDashboardData() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     const [postsRes, batchesRes, accountsRes, membersRes, changeRequestsRes, metasRes] = await Promise.all([
-      supabase.from('content_posts').select('id, batch_id, title, status, responsible_role_key, assignee_id, started_at, completed_at, data_conclusao, created_at, updated_at, due_date').or('archived.is.null,archived.eq.false'),
-      supabase.from('content_batches').select('id, client_id, month_ref, status, planning_due_date, archived, created_at').eq('archived', false),
+      supabase.from('content_posts').select('id, batch_id, title, status, responsible_role_key, assignee_id, started_at, completed_at, data_conclusao, created_at, updated_at, due_date, production_entered_at, first_completed_at, rework_count').or('archived.is.null,archived.eq.false'),
+      supabase.from('content_batches').select('id, client_id, month_ref, status, planning_due_date, archived, created_at').or('archived.is.null,archived.eq.false'),
       supabase.from('accounts').select('id, name, designer_member_id, videomaker_member_id, social_member_id, traffic_member_id, support_member_id, cs_member_id, cliente_interno').eq('status', 'active'),
       supabase.from('team_members').select('id, name, role_id, active').eq('active', true),
       supabase.from('content_change_requests').select('id, post_id, requested_at, status, resolved_at'),

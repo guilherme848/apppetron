@@ -29,6 +29,8 @@ import { Toggle } from '@/components/ui/toggle';
 export default function BatchDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
+  useEffect(() => { window.scrollTo(0, 0); }, []);
   const { 
     batches, posts, accounts, loading, 
     updateBatch, updateBatchWithReset, deleteBatch, archiveBatch, addPost, updatePost, deletePost, fetchPosts, updatePostsOrder 
@@ -147,7 +149,7 @@ export default function BatchDetail() {
     return (
       <div className="text-center py-12">
         <h2 className="text-xl font-semibold mb-2">Pacote não encontrado</h2>
-        <Button variant="outline" onClick={() => navigate('/content/production')}>
+        <Button variant="outline" onClick={() => navigate(`/content/production?tab=${batch?.status || 'planning'}`)}>
           Voltar
         </Button>
       </div>
@@ -182,9 +184,10 @@ export default function BatchDetail() {
     }
   };
 
-  // Calculate progress
-  const doneCount = batchPosts.filter(p => p.status === 'done').length;
-  const totalCount = batchPosts.length;
+  // Calculate progress (use total unfiltered posts, not filtered batchPosts)
+  const allBatchPosts = posts.filter(p => p.batch_id === id);
+  const doneCount = allBatchPosts.filter(p => p.status === 'done').length;
+  const totalCount = allBatchPosts.length;
   const progress = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
 
   // Autosave handlers - commit-based (queue on change, flush on blur)
@@ -211,13 +214,13 @@ export default function BatchDetail() {
   const handleDeleteBatch = async () => {
     await deleteBatch(batch.id);
     toast.success('Pacote excluído');
-    navigate('/content/production');
+    navigate(`/content/production?tab=${batch?.status || 'planning'}`);
   };
 
   const handleArchiveBatch = async () => {
     await archiveBatch(batch.id);
     toast.success('Pacote finalizado e arquivado');
-    navigate('/content/production');
+    navigate(`/content/production?tab=${batch?.status || 'planning'}`);
   };
 
   const handleNewPost = async () => {
@@ -300,7 +303,7 @@ export default function BatchDetail() {
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/content/production')}>
+        <Button variant="ghost" size="icon" onClick={() => navigate(`/content/production?tab=${batch?.status || 'planning'}`)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">

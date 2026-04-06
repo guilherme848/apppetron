@@ -11,26 +11,29 @@ export function useSalesCrmData() {
   const [loading, setLoading] = useState(true);
 
   const fetchFunnels = useCallback(async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('crm_funnels')
       .select('*')
       .order('created_at', { ascending: true });
+    if (error) console.error('[CRM] Error fetching funnels:', error);
     setFunnels((data as any[]) || []);
   }, []);
 
   const fetchStages = useCallback(async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('crm_funnel_stages')
       .select('*')
       .order('sort_order', { ascending: true });
+    if (error) console.error('[CRM] Error fetching stages:', error);
     setStages((data as any[]) || []);
   }, []);
 
   const fetchDeals = useCallback(async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('crm_deals')
       .select('*, crm_contacts(*), team_members(id, name, avatar_url)')
       .order('created_at', { ascending: false });
+    if (error) console.error('[CRM] Error fetching deals:', error);
     const mapped = ((data as any[]) || []).map((d: any) => ({
       ...d,
       tags: d.tags || [],
@@ -41,18 +44,20 @@ export function useSalesCrmData() {
   }, []);
 
   const fetchContacts = useCallback(async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('crm_contacts')
       .select('*')
       .order('created_at', { ascending: false });
+    if (error) console.error('[CRM] Error fetching contacts:', error);
     setContacts(((data as any[]) || []).map((c: any) => ({ ...c, tags: c.tags || [] })));
   }, []);
 
   const fetchActivities = useCallback(async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('crm_activities')
       .select('*, crm_deals(id, title, funnel_id, stage_id), crm_contacts(id, name, company), team_members(id, name)')
       .order('scheduled_at', { ascending: true });
+    if (error) console.error('[CRM] Error fetching activities:', error);
     const mapped = ((data as any[]) || []).map((a: any) => ({
       ...a,
       deal: a.crm_deals || null,
@@ -87,7 +92,8 @@ export function useSalesCrmData() {
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
   const monthDeals = deals.filter(d => d.created_at >= monthStart);
   const wonThisMonth = monthDeals.filter(d => d.status === 'won').length;
-  const conversionRate = monthDeals.length > 0 ? (wonThisMonth / monthDeals.length) * 100 : 0;
+  const closedThisMonth = monthDeals.filter(d => d.status === 'won' || d.status === 'lost').length;
+  const conversionRate = closedThisMonth > 0 ? (wonThisMonth / closedThisMonth) * 100 : 0;
 
   const getStagesByFunnel = (funnelId: string) =>
     stages.filter(s => s.funnel_id === funnelId).sort((a, b) => a.sort_order - b.sort_order);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, RefreshCw, CheckCircle, Circle, PlayCircle, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function TrafficClientDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
+  useEffect(() => { window.scrollTo(0, 0); }, []);
   const {
     getCycleById,
     getActivePeriodByClient,
@@ -133,7 +135,7 @@ export default function TrafficClientDetail() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/traffic')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>

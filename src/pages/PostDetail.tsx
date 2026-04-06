@@ -32,6 +32,8 @@ import { resolveAssigneeFromAccountTeam } from '@/lib/accountTeam';
 export default function PostDetail() {
   const { batchId, postId } = useParams<{ batchId: string; postId: string }>();
   const navigate = useNavigate();
+
+  useEffect(() => { window.scrollTo(0, 0); }, []);
   const { batches, posts, accounts, loading, updatePost, deletePost, fetchPosts } = useContentProduction();
   const { getActiveMembers } = useTeamMembers();
   const { 

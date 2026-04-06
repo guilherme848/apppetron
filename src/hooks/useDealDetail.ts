@@ -144,7 +144,7 @@ export function useDealDetail(dealId: string | undefined) {
     const toStage = stages.find(s => s.id === newStageId);
     const { error } = await supabase.from('crm_deals').update({ stage_id: newStageId } as any).eq('id', deal.id);
     if (!error) {
-      await supabase.from('crm_deal_stage_history').insert({ deal_id: deal.id, from_stage_id: deal.stage_id, to_stage_id: newStageId } as any);
+      await supabase.from('crm_deal_stage_history').insert({ deal_id: deal.id, from_stage_id: deal.stage_id, to_stage_id: newStageId, changed_at: new Date().toISOString() } as any);
       await supabase.from('crm_deal_events').insert({
         deal_id: deal.id,
         event_type: 'stage_changed',

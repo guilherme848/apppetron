@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +26,8 @@ import { DealHistoryTab } from '@/components/sales/deal-tabs/DealHistoryTab';
 export default function DealDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
+  useEffect(() => { window.scrollTo(0, 0); }, []);
   const {
     deal, activities, events, files, stages, funnel, adjacentDeals, loading,
     changeStage, updateDealField, updateContact, uploadFile, deleteFile,
@@ -269,7 +271,7 @@ export default function DealDetailPage() {
               <DealBusinessTab deal={deal} updateDealField={updateDealField} />
             </TabsContent>
             <TabsContent value="conversations" className="mt-0 p-6">
-              <DealConversationsTab />
+              <DealConversationsTab dealId={id} />
             </TabsContent>
             <TabsContent value="files" className="mt-0 p-6">
               <DealFilesTab files={files} uploadFile={uploadFile} deleteFile={deleteFile} />

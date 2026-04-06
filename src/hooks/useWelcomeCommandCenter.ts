@@ -200,7 +200,7 @@ export function useWelcomeCommandCenter() {
           supabase
             .from('accounts')
             .select('ad_monthly_budget, start_date')
-            .eq('status', 'ativo')
+            .eq('status', 'active')
             .is('deleted_at', null)
             .or('cliente_interno.is.null,cliente_interno.eq.false'),
           // Contracts pillar: current month

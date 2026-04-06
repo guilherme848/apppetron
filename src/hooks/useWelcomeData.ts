@@ -160,7 +160,8 @@ export function useWelcomeData() {
       const posts = postsRes.data || [];
       const aFazer = posts.filter(p => p.status === 'backlog' || p.status === 'todo').length;
       const emAndamento = posts.filter(p => p.status === 'in_progress' || p.status === 'review').length;
-      const delegado = posts.filter(p => p.assignee_id && p.assignee_id !== currentMemberId).length;
+      // delegado count: posts assigned to current member that were originally from other members
+      const delegado = 0; // TODO: Requires a separate query to count posts delegated by this member to others
 
       const onboardings = onboardingsRes.data || [];
       const onboardingsAtivos = onboardings.length;
@@ -170,6 +171,14 @@ export function useWelcomeData() {
 
       const meetings = meetingsRes.data || [];
       setTodayMeetings(meetings);
+
+      // Process low balance accounts (Pix/Boleto only)
+      const balanceData = (balanceRes.data || []) as any[];
+      const lowBalance = balanceData.filter(b => {
+        const method = b.accounts?.ad_payment_method;
+        return method && method !== 'cartao' && method !== 'cartão' && method !== 'credit_card';
+      });
+      setLowBalanceAccounts(lowBalance);
 
       setMetrics({
         pendencias: { aFazer, emAndamento, delegado },

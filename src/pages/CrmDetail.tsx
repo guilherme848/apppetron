@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useClientIntelligence } from '@/hooks/useClientIntelligence';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Pencil, Trash2, ExternalLink, Phone, Mail, MapPin, Lock, Star, Users, FileText, Package, TrendingUp, Clock } from 'lucide-react';
@@ -61,6 +61,8 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
 export default function CrmDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
+  useEffect(() => { window.scrollTo(0, 0); }, []);
   const {
     accounts, loading, getAccountById, getContractsByAccount,
     updateAccount, softDeleteAccount, churnAccount, addContract, updateContract,

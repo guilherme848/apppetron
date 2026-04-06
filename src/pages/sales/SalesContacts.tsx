@@ -291,7 +291,7 @@ export default function SalesContacts() {
                         <p className="text-sm text-center py-4 text-muted-foreground">Nenhum negócio</p>
                       ) : (
                         contactDeals.map(d => {
-                          const stage = d.stage_id ? (deals as any[]).find(x => x.id === d.id) : null;
+                          // stage lookup removed - was using wrong array (self-lookup bug)
                           return (
                             <div key={d.id} className="p-3 border rounded-lg border-border">
                               <div className="flex items-center justify-between">

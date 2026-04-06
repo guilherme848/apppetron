@@ -222,7 +222,21 @@ export default function TrafficOverview() {
             <RefreshCw className="h-4 w-4 mr-2" />
             Atualizar
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => {
+            // Export performance data as CSV
+            const headers = ['Cliente', 'Score', 'Status'];
+            const csvRows = [headers.join(',')];
+            performanceRows.forEach(r => {
+              csvRows.push([`"${r.accountName}"`, r.score ?? '', r.healthStatus].join(','));
+            });
+            const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `traffic-overview-${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+          }}>
             <Download className="h-4 w-4 mr-2" />
             Exportar
           </Button>

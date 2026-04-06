@@ -116,6 +116,9 @@ export function useTrafficAnalytics() {
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
+    const days = parseInt(filters.period) || 30;
+    const endDate = new Date().toISOString().split('T')[0];
+    const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     await Promise.all([
       fetchMetrics(),
       fetchTargets(),
@@ -123,9 +126,10 @@ export function useTrafficAnalytics() {
       fetchAlertRules(),
       fetchLayouts(),
       fetchSavedViews(),
+      fetchDailyMetrics(startDate, endDate),
     ]);
     setLoading(false);
-  }, [fetchMetrics, fetchTargets, fetchScores, fetchAlertRules, fetchLayouts, fetchSavedViews]);
+  }, [fetchMetrics, fetchTargets, fetchScores, fetchAlertRules, fetchLayouts, fetchSavedViews, fetchDailyMetrics, filters.period]);
 
   useEffect(() => {
     fetchAll();
@@ -334,8 +338,12 @@ export function useTrafficAnalytics() {
           for (const { slug, weight } of weights) {
             const value = metricValues[slug];
             if (value !== null) {
-              // Normalize based on targets (simplified)
-              weightedSum += weight; // Placeholder - real normalization would use benchmarks
+              // Find target for this metric+account to normalize
+              const target = targets.find(t => t.metric_slug === slug && t.account_id === account.id);
+              const targetValue = target?.target_value;
+              // Normalize: if target exists, score = min(value/target, 1); otherwise 0.5 (neutral)
+              const normalized = targetValue && targetValue > 0 ? Math.min(value / targetValue, 1) : 0.5;
+              weightedSum += normalized * weight;
               totalWeight += weight;
             }
           }

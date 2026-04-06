@@ -62,7 +62,14 @@ export function useTrafficOverview() {
       .eq('auth_user_id', user.id)
       .maybeSingle()
       .then(({ data }) => {
-        if (data) setCurrentMemberId(data.id);
+        if (data) {
+          setCurrentMemberId(data.id);
+        } else {
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        setLoading(false);
       });
   }, [user?.id]);
 
@@ -104,7 +111,7 @@ export function useTrafficOverview() {
       supabase
         .from('traffic_creative_requests')
         .select('id, client_id, title, status')
-        .in('status', ['pending', 'in_progress']),
+        .in('status', ['open', 'in_progress', 'ready_for_review']),
     ]);
 
     const clientsData = (clientsRes.data || []) as OverviewClient[];

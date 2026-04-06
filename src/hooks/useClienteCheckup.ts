@@ -115,24 +115,10 @@ export function useUpsertCheckup() {
         preenchido_por_id: memberData?.id || null,
       };
 
-      const { data: existing } = await (supabase as any)
+      const { error } = await (supabase as any)
         .from('cliente_checkup')
-        .select('id')
-        .eq('onboarding_id', onboardingId)
-        .maybeSingle();
-
-      if (existing) {
-        const { error } = await (supabase as any)
-          .from('cliente_checkup')
-          .update(payload)
-          .eq('id', (existing as any).id);
-        if (error) throw error;
-      } else {
-        const { error } = await (supabase as any)
-          .from('cliente_checkup')
-          .insert(payload);
-        if (error) throw error;
-      }
+        .upsert(payload, { onConflict: 'onboarding_id' });
+      if (error) throw error;
 
       // Update accounts table with classification
       if (classificacao) {

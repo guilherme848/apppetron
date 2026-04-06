@@ -61,6 +61,8 @@ function DayCounter({ dataInicio }: { dataInicio: string }) {
 export default function CsOnboardingDetail() {
   const { onboardingId } = useParams<{ onboardingId: string }>();
   const navigate = useNavigate();
+
+  useEffect(() => { window.scrollTo(0, 0); }, []);
   const queryClient = useQueryClient();
   const { members } = useTeamMembers();
   const { member } = useAuth();

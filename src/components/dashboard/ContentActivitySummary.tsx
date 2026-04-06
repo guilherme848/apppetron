@@ -40,7 +40,7 @@ export function ContentActivitySummary() {
     const { data: batchesByStatus } = await supabase
       .from('content_batches')
       .select('status')
-      .eq('archived', false);
+      .or('archived.is.null,archived.eq.false');
 
     if (batchesByStatus) {
       const counts: Record<string, number> = {};
@@ -55,7 +55,7 @@ export function ContentActivitySummary() {
       .from('content_batches')
       .select('id')
       .eq('month_ref', currentMonthRef)
-      .eq('archived', false);
+      .or('archived.is.null,archived.eq.false');
 
     if (batchesThisMonth && batchesThisMonth.length > 0) {
       const batchIds = batchesThisMonth.map(b => b.id);
@@ -73,7 +73,7 @@ export function ContentActivitySummary() {
     const { count: overdueCount } = await supabase
       .from('content_batches')
       .select('*', { count: 'exact', head: true })
-      .eq('archived', false)
+      .or('archived.is.null,archived.eq.false')
       .lt('planning_due_date', today)
       .not('planning_due_date', 'is', null);
 

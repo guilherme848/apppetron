@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
+import { useSearchParamState } from '@/hooks/usePersistedState';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -90,7 +91,7 @@ export default function SalesDashboard() {
     conversionRate, getStagesByFunnel,
   } = useSalesCrmData();
 
-  const [period, setPeriod] = useState<PeriodKey>('month');
+  const [period, setPeriod] = useSearchParamState('period', 'month');
   const [filterFunnels, setFilterFunnels] = useState<string[]>([]);
   const [filterResponsible, setFilterResponsible] = useState<string[]>([]);
   const [selectedChannelFunnelId, setSelectedChannelFunnelId] = useState<string>('');
@@ -194,10 +195,10 @@ export default function SalesDashboard() {
       const nextStage = convStages[i + 1];
       const nextDeals = nextStage ? fDeals.filter(d => d.stage_id === nextStage.id && d.status === 'open').length : 0;
       const advanceRate = stageDeals > 0 && nextStage ? ((nextDeals / stageDeals) * 100) : 0;
-      // Average time: approximate from deal created_at vs now
+      // Average time: use updated_at as proxy for when deal entered current stage
       const stageDealsList = fDeals.filter(d => d.stage_id === stage.id && d.status === 'open');
       const avgDays = stageDealsList.length > 0
-        ? stageDealsList.reduce((s, d) => s + differenceInDays(new Date(), new Date(d.created_at)), 0) / stageDealsList.length
+        ? stageDealsList.reduce((s, d) => s + differenceInDays(new Date(), new Date(d.updated_at || d.created_at)), 0) / stageDealsList.length
         : 0;
       return { name: stage.name, deals: stageDeals, advanceRate, avgDays: Math.round(avgDays), color: stage.color };
     });

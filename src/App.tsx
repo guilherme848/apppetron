@@ -11,6 +11,7 @@ import { ContentProductionProvider } from "@/contexts/ContentProductionContext";
 import { TrafficProvider } from "@/contexts/TrafficContext";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProfileGuard } from "@/components/common/ProfileGuard";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
@@ -159,6 +160,7 @@ const App = () => (
               <SettingsProvider>
                 <ContentProductionProvider>
                   <TrafficProvider>
+                    <ErrorBoundary>
                     <Routes>
                       {/* Public routes */}
                       <Route path="/login" element={<LoginPage />} />
@@ -283,6 +285,7 @@ const App = () => (
                         <Route path="*" element={<NotFound />} />
                       </Route>
                     </Routes>
+                    </ErrorBoundary>
                   </TrafficProvider>
                 </ContentProductionProvider>
               </SettingsProvider>

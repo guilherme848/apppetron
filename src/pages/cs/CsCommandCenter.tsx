@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, startOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -151,8 +151,10 @@ export default function CsCommandCenter() {
           <KpiCard label="Em Risco" value={kpiData.atRiskClients} subtitle="requerem atenção imediata"
             icon={AlertTriangle} danger={kpiData.atRiskClients > 0}
             onClick={() => healthRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />
-          <KpiCard label="NPS Médio" value="—" subtitle="disponível em breve"
-            icon={Star} badge="Em breve" />
+          <KpiCard label="NPS Médio"
+            value={kpiData.avgNps !== null ? kpiData.avgNps : '—'}
+            subtitle={kpiData.npsCount > 0 ? `${kpiData.npsCount} resposta${kpiData.npsCount > 1 ? 's' : ''} no período` : 'sem respostas'}
+            icon={Star} />
           <KpiCard label="Churn no Período" value={kpiData.churnCount} subtitle={selectedMonthLabel}
             icon={TrendingDown} danger={kpiData.churnCount > 0} />
           <KpiCard
@@ -363,6 +365,7 @@ function ChurnHistoryCard({ data }: { data: ChurnHistoryItem[] }) {
 }
 
 function AlertsCard({ alerts, navigate }: { alerts: CsAlert[]; navigate: ReturnType<typeof useNavigate> }) {
+  const [showAllAlerts, setShowAllAlerts] = useState(false);
   const iconMap: Record<CsAlert['type'], React.ElementType> = {
     onboarding_delayed: Clock,
     meeting_overdue: Calendar,
@@ -390,8 +393,11 @@ function AlertsCard({ alerts, navigate }: { alerts: CsAlert[]; navigate: ReturnT
             )}
           </div>
           {alerts.length > 0 && (
-            <button className="flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground transition-colors">
-              Ver todos <ChevronRight className="h-3.5 w-3.5" />
+            <button
+              className="flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => setShowAllAlerts(prev => !prev)}
+            >
+              {showAllAlerts ? 'Ver menos' : 'Ver todos'} <ChevronRight className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
@@ -405,7 +411,7 @@ function AlertsCard({ alerts, navigate }: { alerts: CsAlert[]; navigate: ReturnT
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {alerts.map(a => {
+            {(showAllAlerts ? alerts : alerts.slice(0, 5)).map(a => {
               const Icon = iconMap[a.type];
               const dotColor = colorMap[a.type];
               return (

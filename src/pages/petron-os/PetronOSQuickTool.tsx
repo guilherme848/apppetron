@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Sparkles, Copy, RefreshCw, Star, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -33,7 +33,7 @@ export default function PetronOSQuickTool() {
   const [clientSearch, setClientSearch] = useState('');
 
   // Load active clients
-  useState(() => {
+  useEffect(() => {
     supabase
       .from('accounts')
       .select('id, name, niche, city, state')
@@ -41,7 +41,7 @@ export default function PetronOSQuickTool() {
       .is('deleted_at', null)
       .order('name')
       .then(({ data }) => setClients(data || []));
-  });
+  }, []);
 
   const filteredClients = useMemo(() => {
     if (!clientSearch.trim()) return clients.slice(0, 20);

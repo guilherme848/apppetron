@@ -11,6 +11,8 @@ export interface CsOverviewKPI {
   atRiskClients: number;
   churnCount: number;
   revenueAtRisk: number;
+  avgNps: number | null;
+  npsCount: number;
 }
 
 export interface FinancialMetrics {
@@ -70,6 +72,7 @@ export function useCsOverview() {
   const [accounts, setAccounts] = useState<any[]>([]);
   const [onboardings, setOnboardings] = useState<any[]>([]);
   const [checkups, setCheckups] = useState<any[]>([]);
+  const [npsResponses, setNpsResponses] = useState<any[]>([]);
   const [services, setServices] = useState<any[]>([]);
   const [niches, setNiches] = useState<any[]>([]);
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
@@ -98,10 +101,11 @@ export function useCsOverview() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const [acRes, obRes, ckRes, svcRes, nicRes, tmRes] = await Promise.all([
+    const [acRes, obRes, ckRes, npsRes, svcRes, nicRes, tmRes] = await Promise.all([
       supabase.from('accounts').select('*').is('deleted_at', null).or('cliente_interno.is.null,cliente_interno.eq.false'),
       supabase.from('onboardings').select('*'),
       supabase.from('cliente_checkup').select('*'),
+      supabase.from('cs_nps_responses').select('id, score, client_id, created_at'),
       supabase.from('services').select('id, name').order('name'),
       supabase.from('niches').select('id, name').order('name'),
       supabase.from('team_members').select('id, name'),
@@ -109,6 +113,7 @@ export function useCsOverview() {
     if (acRes.data) setAccounts(acRes.data);
     if (obRes.data) setOnboardings(obRes.data);
     if (ckRes.data) setCheckups(ckRes.data);
+    if (npsRes.data) setNpsResponses(npsRes.data);
     if (svcRes.data) setServices(svcRes.data);
     if (nicRes.data) setNiches(nicRes.data);
     if (tmRes.data) setTeamMembers(tmRes.data);
@@ -163,6 +168,16 @@ export function useCsOverview() {
       .filter(a => a.status === 'active' && (a.checkup_classificacao === 'C' || a.checkup_classificacao === 'D'))
       .reduce((sum, a) => sum + Number(a.monthly_value || 0), 0);
 
+    // NPS average from active client responses in the selected month
+    const npsInMonth = npsResponses.filter(n => {
+      if (!n.created_at) return false;
+      const d = parseISO(n.created_at);
+      return isValid(d) && d >= monthStart && d <= monthEnd;
+    });
+    const avgNps = npsInMonth.length > 0
+      ? Math.round((npsInMonth.reduce((sum: number, n: any) => sum + n.score, 0) / npsInMonth.length) * 10) / 10
+      : null;
+
     return {
       activeClients: active.length,
       onboardingClients: activeOnboardings.length,
@@ -171,8 +186,10 @@ export function useCsOverview() {
       atRiskClients: atRisk.length,
       churnCount: churned.length,
       revenueAtRisk,
+      avgNps,
+      npsCount: npsInMonth.length,
     };
-  }, [accounts, onboardings, monthStart, monthEnd]);
+  }, [accounts, onboardings, npsResponses, monthStart, monthEnd]);
 
   // Alerts (always today, not filtered by month)
   const alerts = useMemo((): CsAlert[] => {

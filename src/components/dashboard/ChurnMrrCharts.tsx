@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useCrm } from '@/contexts/CrmContext';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from 'recharts';
 import { TrendingDown, DollarSign } from 'lucide-react';
+import { parseISO, isValid, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 
 interface MonthData {
   month: string;
@@ -38,25 +39,27 @@ export function ChurnMrrCharts() {
 
     // Generate last 12 months
     for (let i = 11; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthRef = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
-      const lastDayOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+      const monthDate = subMonths(now, i);
+      const firstDay = startOfMonth(monthDate);
+      const lastDay = endOfMonth(monthDate);
+      const monthRef = `${firstDay.getFullYear()}-${String(firstDay.getMonth() + 1).padStart(2, '0')}`;
 
       // Churned count: clients with churned_at in this month
       const churnedCount = accounts.filter(a => {
         if (!a.churned_at) return false;
-        const churnDate = new Date(a.churned_at);
-        return churnDate >= firstDayOfMonth && churnDate <= lastDayOfMonth;
+        const churnDate = parseISO(a.churned_at);
+        if (!isValid(churnDate)) return false;
+        return churnDate >= firstDay && churnDate <= lastDay;
       }).length;
 
       // Active at start of month: clients who had start_date <= first day AND (no churned_at OR churned_at > first day)
       const activeStartCount = accounts.filter(a => {
-        const startDate = a.start_date ? new Date(a.start_date) : null;
-        if (!startDate || startDate > firstDayOfMonth) return false;
+        if (!a.start_date) return false;
+        const startDate = parseISO(a.start_date);
+        if (!isValid(startDate) || startDate > firstDay) return false;
         if (!a.churned_at) return true;
-        const churnDate = new Date(a.churned_at);
-        return churnDate > firstDayOfMonth;
+        const churnDate = parseISO(a.churned_at);
+        return !isValid(churnDate) || churnDate > firstDay;
       }).length;
 
       // Churn rate
@@ -66,11 +69,12 @@ export function ChurnMrrCharts() {
       let mrr = 0;
       let activeCount = 0;
       accounts.forEach(a => {
-        const startDate = a.start_date ? new Date(a.start_date) : null;
-        if (!startDate || startDate > lastDayOfMonth) return;
+        if (!a.start_date) return;
+        const startDate = parseISO(a.start_date);
+        if (!isValid(startDate) || startDate > lastDay) return;
         if (a.churned_at) {
-          const churnDate = new Date(a.churned_at);
-          if (churnDate <= lastDayOfMonth) return;
+          const churnDate = parseISO(a.churned_at);
+          if (isValid(churnDate) && churnDate <= lastDay) return;
         }
         mrr += Number(a.monthly_value || 0);
         activeCount++;

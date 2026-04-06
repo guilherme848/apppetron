@@ -974,10 +974,13 @@ export function useCsDashboardMetrics() {
       supabase.from('accounts').select('id', { count: 'exact' }).eq('status', 'active').or('cliente_interno.is.null,cliente_interno.eq.false'),
       supabase.from('onboardings').select('*').eq('status', 'em_andamento'),
       supabase.from('cs_risk_cases').select('id', { count: 'exact' }).in('status', ['open', 'in_progress']),
-      supabase.from('cs_cancellations').select('id', { count: 'exact' }).gte('effective_cancel_date', startOfMonth.toISOString().split('T')[0]),
+      supabase.from('accounts').select('id', { count: 'exact' })
+        .not('churned_at', 'is', null)
+        .gte('churned_at', startOfMonth.toISOString().split('T')[0])
+        .or('cliente_interno.is.null,cliente_interno.eq.false'),
       supabase.from('cs_nps_responses').select('score'),
       supabase.from('cs_settings').select('*'),
-      supabase.from('cs_meetings').select('client_id, meeting_date').eq('status', 'done'),
+      supabase.from('cs_meetings').select('client_id, meeting_date, status').in('status', ['done', 'scheduled']),
     ]);
 
     const activeClients = activeClientsRes.count || 0;
@@ -986,7 +989,8 @@ export function useCsDashboardMetrics() {
     const cancellationsThisMonth = cancellationsRes.count || 0;
 
     // Calculate churn rate
-    const churnRate = activeClients > 0 ? (cancellationsThisMonth / activeClients) * 100 : 0;
+    const startOfMonthActive = activeClients + cancellationsThisMonth;
+    const churnRate = startOfMonthActive > 0 ? (cancellationsThisMonth / startOfMonthActive) * 100 : 0;
 
     // Calculate average NPS
     const npsScores = (npsRes.data || []).map((r: any) => r.score);
@@ -1033,14 +1037,18 @@ export function useCsDashboardMetrics() {
       return new Date(o.expected_end_at) < now;
     });
     
+    // Batch fetch all account names we need (avoid N+1)
+    const { data: activeAccountsData } = await supabase.from('accounts').select('id, name').eq('status', 'active');
+    const accountMap = new Map((activeAccountsData || []).map((a: any) => [a.id, a.name]));
+
     for (const o of overdueOnboardings as any[]) {
-      const { data: client } = await supabase.from('accounts').select('name').eq('id', o.client_id).single();
-      if (client) {
+      const clientName = accountMap.get(o.client_id);
+      if (clientName) {
         const daysOverdue = Math.ceil((now.getTime() - new Date(o.expected_end_at).getTime()) / (1000 * 60 * 60 * 24));
         newAlerts.push({
           type: 'onboarding_delayed',
           clientId: o.client_id,
-          clientName: client.name,
+          clientName,
           details: `Onboarding atrasado há ${daysOverdue} dias`,
           daysOverdue,
         });
@@ -1048,12 +1056,19 @@ export function useCsDashboardMetrics() {
     }
 
     // No meeting alerts
-    const { data: activeAccountsData } = await supabase.from('accounts').select('id, name').eq('status', 'active');
     const allMeetings = meetingsRes.data || [];
-    
+
     for (const account of (activeAccountsData || [])) {
       const clientMeetings = allMeetings.filter((m: any) => m.client_id === account.id);
-      const lastMeeting = clientMeetings.sort((a: any, b: any) => 
+
+      // Skip alert if client has a scheduled future meeting
+      const hasScheduledFuture = clientMeetings.some((m: any) =>
+        m.status === 'scheduled' && new Date(m.meeting_date) >= now
+      );
+      if (hasScheduledFuture) continue;
+
+      const doneMeetings = clientMeetings.filter((m: any) => m.status === 'done');
+      const lastMeeting = doneMeetings.sort((a: any, b: any) =>
         new Date(b.meeting_date).getTime() - new Date(a.meeting_date).getTime()
       )[0];
 
@@ -1078,7 +1093,7 @@ export function useCsDashboardMetrics() {
       }
     }
 
-    // Detractors without follow-up
+    // Detractors without follow-up (batch)
     const { data: recentDetractors } = await supabase
       .from('cs_nps_responses')
       .select('client_id')
@@ -1091,15 +1106,15 @@ export function useCsDashboardMetrics() {
       .in('status', ['open', 'in_progress']);
 
     const riskClientIds = new Set((openRiskCases || []).map((r: any) => r.client_id));
-    
+
     for (const detractor of (recentDetractors || [])) {
       if (!riskClientIds.has(detractor.client_id)) {
-        const { data: client } = await supabase.from('accounts').select('name').eq('id', detractor.client_id).single();
-        if (client) {
+        const clientName = accountMap.get(detractor.client_id);
+        if (clientName) {
           newAlerts.push({
             type: 'detractor_no_followup',
             clientId: detractor.client_id,
-            clientName: client.name,
+            clientName,
             details: 'NPS detrator sem caso de risco aberto',
           });
         }

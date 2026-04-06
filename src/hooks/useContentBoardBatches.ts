@@ -110,7 +110,7 @@ export function useContentBoardBatches() {
           social_member_id
         )
       `)
-      .eq('archived', false)
+      .or('archived.is.null,archived.eq.false')
       .not('status', 'in', '("delivered","scheduling")')
       .order('planning_due_date', { ascending: true, nullsFirst: false });
 

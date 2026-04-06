@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -25,6 +26,8 @@ import {
 } from "@/components/ui/tooltip";
 
 export default function ContractDetail() {
+  useEffect(() => { window.scrollTo(0, 0); }, []);
+
   const { id } = useParams<{ id: string }>();
   const { data: contract, isLoading: contractLoading } = useContract(id);
   const { data: events = [], isLoading: eventsLoading } = useContractEvents(id);

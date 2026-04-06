@@ -87,7 +87,7 @@ export function useMyTasks() {
 
     // Helper to create proper promises
     const createPromise = (fn: () => Promise<void>): Promise<void> => {
-      return new Promise((resolve) => fn().then(resolve));
+      return new Promise((resolve, reject) => fn().then(resolve).catch(reject));
     };
 
     // Parallel fetch based on role's task sources

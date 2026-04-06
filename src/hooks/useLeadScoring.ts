@@ -122,11 +122,11 @@ export function useLeadScoring() {
 
       score = Math.max(0, Math.min(100, score));
 
-      await supabase.from('crm_deal_scores').insert({
+      await supabase.from('crm_deal_scores').upsert({
         deal_id: deal.id,
         score,
         breakdown,
-      } as any);
+      } as any, { onConflict: 'deal_id' });
     }
     await fetchScores();
   };

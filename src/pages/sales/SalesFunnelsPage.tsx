@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSearchParamState } from '@/hooks/usePersistedState';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -118,8 +119,8 @@ export default function SalesFunnelsPage() {
   const { members: teamMembers } = useTeamMembers();
   const navigate = useNavigate();
 
-  const [activeFunnelId, setActiveFunnelId] = useState<string>('');
-  const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
+  const [activeFunnelId, setActiveFunnelId] = useSearchParamState('funnel', '');
+  const [viewMode, setViewMode] = useSearchParamState('view', 'kanban');
   const [showNewDealDialog, setShowNewDealDialog] = useState(false);
   const [newDealStageId, setNewDealStageId] = useState('');
   const [newDealForm, setNewDealForm] = useState({ title: '', value: '', contact_id: '', responsible_id: '' });
@@ -263,6 +264,7 @@ export default function SalesFunnelsPage() {
       ) : (
         <Card>
           <CardContent className="p-0">
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -307,6 +309,7 @@ export default function SalesFunnelsPage() {
                 )}
               </TableBody>
             </Table>
+            </div>
           </CardContent>
         </Card>
       )}

@@ -136,10 +136,15 @@ export function useSalesFunnel(source: 'inbound' | 'outbound' = 'inbound') {
     const startDate = `${filters.year}-01-01`;
     const endDate = `${filters.year}-12-31`;
     
+    // Map source to actual origin values in DB
+    const originValues = source === 'inbound'
+      ? ['inbound', 'indicacao', 'indicação', 'clint']
+      : ['outbound', 'prospecção', 'prospecção ativa', 'other'];
+
     const { data, error } = await supabase
       .from('accounts')
       .select('start_date, monthly_value')
-      .eq('origin', source)
+      .in('origin', originValues)
       .gte('start_date', startDate)
       .lte('start_date', endDate)
       .is('deleted_at', null)

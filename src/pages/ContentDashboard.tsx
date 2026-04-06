@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
+import { useSearchParamState } from '@/hooks/usePersistedState';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -33,6 +34,9 @@ export default function ContentDashboard() {
   const [monthDropdownOpen, setMonthDropdownOpen] = useState(false);
   const [useCustomDates, setUseCustomDates] = useState(false);
   const monthDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Dashboard tab persisted in URL
+  const [dashboardTab, setDashboardTab] = useSearchParamState('tab', 'numeros');
 
   // Sidebar filter panel
   const [panelOpen, setPanelOpen] = useState(false);
@@ -222,7 +226,7 @@ export default function ContentDashboard() {
                 {/* Month grid */}
                 <div className="grid grid-cols-3 gap-1.5">
                   {MONTH_NAMES.map((name, idx) => {
-                    const isSelected = idx === selectedMonth && selectedYear === selectedYear;
+                    const isSelected = idx === selectedMonth;
                     const isCurrent = idx === now.getMonth() && selectedYear === now.getFullYear();
                     return (
                       <button
@@ -298,7 +302,7 @@ export default function ContentDashboard() {
       )}
 
       {/* Tabs */}
-      <Tabs defaultValue="numeros" className="space-y-5">
+      <Tabs value={dashboardTab} onValueChange={setDashboardTab} className="space-y-5">
         <TabsList className="bg-muted/40 border border-border/50 p-1 rounded-xl w-full max-w-md">
           <TabsTrigger value="numeros" className="rounded-lg data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm text-sm font-medium flex-1">
             Visão Geral

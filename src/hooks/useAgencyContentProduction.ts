@@ -19,7 +19,7 @@ export function useAgencyContentProduction() {
         .from('content_batches')
         .select('*')
         .eq('scope', 'agency')
-        .eq('archived', false)
+        .or('archived.is.null,archived.eq.false')
         .order('created_at', { ascending: false });
 
       if (batchError) throw batchError;

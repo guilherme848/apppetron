@@ -31,6 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const initialSessionResolvedRef = useRef(false);
   const isMountedRef = useRef(true);
   const memberRef = useRef<TeamMember | null>(null);
+  const pendingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Keep ref in sync with state for use in callbacks
   useEffect(() => {
@@ -84,11 +85,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.warn('[auth] Error fetching role:', roleError);
           }
 
-          if (roleData && isMountedRef.current) {
-            const isAdminRole = roleData.name.toLowerCase().includes('admin') || 
-                               roleData.name === 'Administrador';
+          if (isMountedRef.current) {
+            const isAdminRole = roleData
+              ? (roleData.name.toLowerCase().includes('admin') || roleData.name === 'Administrador')
+              : false;
             setIsAdmin(isAdminRole);
             console.debug('[auth] isAdmin:', isAdminRole);
+          }
+        } else {
+          // No role_id means not admin — always reset
+          if (isMountedRef.current) {
+            setIsAdmin(false);
           }
         }
         
@@ -153,7 +160,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (currentSession?.user) {
           // Use setTimeout to avoid Supabase auth deadlock
           // Don't show loading if we already have member data (background refresh)
-          setTimeout(async () => {
+          if (pendingTimeoutRef.current) clearTimeout(pendingTimeoutRef.current);
+          pendingTimeoutRef.current = setTimeout(async () => {
+            pendingTimeoutRef.current = null;
             if (!isMountedRef.current) return;
             const shouldShowLoading = !memberRef.current;
             await fetchMemberData(currentSession.user.id, shouldShowLoading);
@@ -219,6 +228,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       isMountedRef.current = false;
+      if (pendingTimeoutRef.current) clearTimeout(pendingTimeoutRef.current);
       subscription.unsubscribe();
     };
   }, [fetchMemberData]);

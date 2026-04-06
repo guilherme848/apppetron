@@ -161,7 +161,7 @@ export function SuggestContentModal({ open, onOpenChange, accounts, onContentAdd
       .select('id')
       .eq('client_id', clienteId)
       .eq('month_ref', monthRef)
-      .eq('archived', false)
+      .or('archived.is.null,archived.eq.false')
       .maybeSingle();
 
     if (existingBatch) {

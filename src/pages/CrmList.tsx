@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSearchParamState } from '@/hooks/usePersistedState';
 import { Plus, Search, Eye, Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Lock, AlertTriangle, RotateCcw, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -110,12 +111,12 @@ export default function CrmList() {
     return !hasLinkedAdAccount;
   };
 
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useSearchParamState('q', '');
   const [formOpen, setFormOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | undefined>();
   const [sortConfig, setSortConfig] = useState<SortConfig>(getStoredSort);
   const [showChurned, setShowChurned] = useState(false);
-  const [filterPlan, setFilterPlan] = useState('all');
+  const [filterPlan, setFilterPlan] = useSearchParamState('plan', 'all');
   const [filterTrafficManager, setFilterTrafficManager] = useState('all');
   const [filterCs, setFilterCs] = useState('all');
   const [filterNiche, setFilterNiche] = useState('all');

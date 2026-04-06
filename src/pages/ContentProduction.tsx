@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSearchParamState } from '@/hooks/usePersistedState';
 import { Plus, Archive, RotateCcw, LayoutGrid, Search, Sparkles } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -19,13 +20,13 @@ import { SuggestContentModal } from '@/components/content/SuggestContentModal';
 
 export default function ContentProduction() {
   const navigate = useNavigate();
-  const { batches, posts, accounts, loading, addBatch, updateBatchWithReset, addPost, unarchiveBatch } = useContentProduction();
+  const { batches, posts, accounts, loading, addBatch, updateBatchWithReset, addPost, unarchiveBatch, fetchBatches, fetchPosts } = useContentProduction();
   const { roles, getRoleById } = useJobRoles();
   const { responsibilities, getResponsibilityByStage } = useStageResponsibilities();
   const [batchFormOpen, setBatchFormOpen] = useState(false);
   const [postFormOpen, setPostFormOpen] = useState(false);
   const [selectedBatchId, setSelectedBatchId] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<BatchStatus>('planning');
+  const [activeTab, setActiveTab] = useSearchParamState('tab', 'planning');
   const [showArchived, setShowArchived] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [suggestOpen, setSuggestOpen] = useState(false);
@@ -354,7 +355,7 @@ export default function ContentProduction() {
         open={suggestOpen}
         onOpenChange={setSuggestOpen}
         accounts={accounts}
-        onContentAdded={() => window.location.reload()}
+        onContentAdded={() => { fetchBatches(); fetchPosts(); }}
       />
     </div>
   );

@@ -115,7 +115,9 @@ export function useBaseHealthScore() {
 
     // Churns in period
     const churnsThisPeriod = accounts.filter((a) => {
-      if (a.status !== 'canceled' || !a.churned_at) return false;
+      if (!a.churned_at) return false;
+      const isChurned = a.status === 'churned' || a.status === 'canceled';
+      if (!isChurned) return false;
       const churnDate = parseISO(a.churned_at);
       return churnDate >= periodStart && churnDate <= periodEnd;
     });

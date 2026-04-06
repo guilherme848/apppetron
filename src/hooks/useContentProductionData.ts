@@ -69,7 +69,7 @@ export function useContentProductionData() {
       .order('month_ref', { ascending: false });
     
     if (!includeArchived) {
-      query = query.eq('archived', false);
+      query = query.or('archived.is.null,archived.eq.false');
     }
     
     const { data, error } = await query;

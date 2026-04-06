@@ -1,4 +1,5 @@
-import { Users, DollarSign, TrendingDown, Receipt, Lock } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Users, DollarSign, TrendingDown, Receipt, Lock, UserCheck } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { ClientEvolutionChart } from '@/components/dashboard/ClientEvolutionChart';
@@ -10,6 +11,7 @@ import { TicketByNicheChart } from '@/components/dashboard/TicketByNicheChart';
 import { BaseHealthScoreCard } from '@/components/dashboard/BaseHealthScoreCard';
 import { useExecutiveDashboard } from '@/hooks/useExecutiveDashboard';
 import { useSensitivePermission } from '@/hooks/useSensitivePermission';
+import { supabase } from '@/integrations/supabase/client';
 export default function Dashboard() {
   const {
     loading,
@@ -28,6 +30,35 @@ export default function Dashboard() {
 
   const { canViewFinancialValues, loading: permissionLoading } = useSensitivePermission();
   const canViewFinancial = canViewFinancialValues();
+
+  // Extra KPIs: New clients this month, Onboardings
+  const [newClientsThisMonth, setNewClientsThisMonth] = useState(0);
+  const [activeOnboardings, setActiveOnboardings] = useState(0);
+
+  useEffect(() => {
+    async function fetchExtraKpis() {
+      const now = new Date();
+      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+
+      const [newClientsRes, onboardingsRes] = await Promise.all([
+        supabase
+          .from('accounts')
+          .select('id', { count: 'exact', head: true })
+          .gte('start_date', monthStart)
+          .is('deleted_at', null)
+          .or('cliente_interno.is.null,cliente_interno.eq.false'),
+        supabase
+          .from('onboardings')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'em_andamento'),
+      ]);
+
+      setNewClientsThisMonth(newClientsRes.count ?? 0);
+      setActiveOnboardings(onboardingsRes.count ?? 0);
+    }
+
+    fetchExtraKpis();
+  }, []);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -104,6 +135,22 @@ export default function Dashboard() {
             />
           </>
         )}
+      </div>
+
+      {/* Row 2: New Clients + Onboardings */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <StatsCard
+          title="Novos Clientes no Mês"
+          value={newClientsThisMonth}
+          icon={UserCheck}
+          description="Clientes que iniciaram neste mês"
+        />
+        <StatsCard
+          title="Onboardings Ativos"
+          value={activeOnboardings}
+          icon={Users}
+          description="Onboardings em andamento"
+        />
       </div>
 
       {/* Churn and MRR Charts (existing) */}

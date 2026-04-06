@@ -39,6 +39,7 @@ export function useCommandCenter() {
   const [meetings, setMeetings] = useState<any[]>([]);
   const [npsResponses, setNpsResponses] = useState<any[]>([]);
   const [playbooks, setPlaybooks] = useState<any[]>([]);
+  const [playbookTasks, setPlaybookTasks] = useState<any[]>([]);
   const [churnEvents, setChurnEvents] = useState<any[]>([]);
   const [cancellations, setCancellations] = useState<any[]>([]);
   const [csMembers, setCsMembers] = useState<TeamMember[]>([]);
@@ -101,6 +102,7 @@ export function useCommandCenter() {
       meetingsRes,
       npsRes,
       playbooksRes,
+      playbookTasksRes,
       churnEventsRes,
       cancellationsRes,
       membersRes,
@@ -113,6 +115,7 @@ export function useCommandCenter() {
       supabase.from('cs_meetings').select('*, accounts:client_id(name), team_members:responsible_member_id(name)'),
       supabase.from('cs_nps_responses').select('*, accounts:client_id(name)'),
       supabase.from('cs_playbooks').select('*, accounts:client_id(name), team_members:responsible_member_id(name)'),
+      supabase.from('traffic_playbook_tasks').select('id, client_id, status, due_date'),
       supabase.from('cs_churn_events').select('*, accounts:client_id(name, niche_id, service_id, state), team_members:owner_member_id(name)'),
       supabase.from('cs_cancellations').select('*, accounts:client_id(name)'),
       supabase.from('team_members').select('id, name'),
@@ -126,6 +129,7 @@ export function useCommandCenter() {
     if (meetingsRes.data) setMeetings(meetingsRes.data);
     if (npsRes.data) setNpsResponses(npsRes.data);
     if (playbooksRes.data) setPlaybooks(playbooksRes.data);
+    if (playbookTasksRes.data) setPlaybookTasks(playbookTasksRes.data);
     if (churnEventsRes.data) setChurnEvents(churnEventsRes.data);
     if (cancellationsRes.data) setCancellations(cancellationsRes.data);
     
@@ -212,9 +216,12 @@ export function useCommandCenter() {
 
     const churnMrr = churnsInPeriod.reduce((sum, a) => sum + Number(a.monthly_value || 0), 0);
 
+    // Calculate active clients delta: how many churned in period (lost) vs new starts in period (gained)
+    const activeClientsDelta = -churnsInPeriod.length;
+
     return {
       activeClients: active.length,
-      activeClientsDelta: 0, // TODO: compare with previous period
+      activeClientsDelta,
       onboardingClients: inOnboarding.length,
       onboardingOnTime: onboardingOnTime.length,
       atRiskClients: atRisk.length,
@@ -455,19 +462,26 @@ export function useCommandCenter() {
   const activePlaybooks = useMemo((): Playbook[] => {
     return playbooks
       .filter(p => p.status === 'active')
-      .map(p => ({
-        id: p.id,
-        clientId: p.client_id,
-        clientName: p.accounts?.name || 'Cliente',
-        type: p.type,
-        status: p.status,
-        responsibleName: p.team_members?.name,
-        dueAt: p.due_at,
-        progress: 0, // TODO: calculate from tasks
-        tasksDone: 0,
-        tasksTotal: 0,
-      }));
-  }, [playbooks]);
+      .map(p => {
+        const clientTasks = playbookTasks.filter(t => t.client_id === p.client_id);
+        const totalTasks = clientTasks.length;
+        const doneTasks = clientTasks.filter(t => t.status === 'done').length;
+        const progress = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
+
+        return {
+          id: p.id,
+          clientId: p.client_id,
+          clientName: p.accounts?.name || 'Cliente',
+          type: p.type,
+          status: p.status,
+          responsibleName: p.team_members?.name,
+          dueAt: p.due_at,
+          progress,
+          tasksDone: doneTasks,
+          tasksTotal: totalTasks,
+        };
+      });
+  }, [playbooks, playbookTasks]);
 
   // Client list
   const getClientList = useCallback((view: ClientListView): ClientListItem[] => {
@@ -479,7 +493,10 @@ export function useCommandCenter() {
         // Clients needing attention today
         filtered = filtered.filter(a => {
           const isAtRisk = a.health_status === 'critical' || a.health_status === 'attention';
-          const hasOverdueTasks = false; // TODO
+          const todayStr = format(now, 'yyyy-MM-dd');
+          const hasOverdueTasks = playbookTasks.some(
+            t => t.client_id === a.id && t.due_date < todayStr && t.status !== 'done' && t.status !== 'skipped'
+          );
           return isAtRisk || hasOverdueTasks;
         });
         break;
@@ -541,7 +558,7 @@ export function useCommandCenter() {
         monthlyValue: a.monthly_value,
       };
     });
-  }, [filteredAccounts, onboardings, npsResponses, meetings, services, niches, csMembers]);
+  }, [filteredAccounts, onboardings, npsResponses, meetings, playbookTasks, services, niches, csMembers]);
 
   // States list for filter
   const availableStates = useMemo(() => {

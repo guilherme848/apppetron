@@ -190,7 +190,7 @@ export function BatchDetailModal({ open, onOpenChange, batch }: BatchDetailModal
                     key={post.id}
                     onClick={() => {
                       onOpenChange(false);
-                      navigate(`/content/production/${batch.id}/post/${post.id}`);
+                      navigate(`/content/production/${batch.id}/posts/${post.id}`);
                     }}
                     className="flex items-center justify-between gap-2 p-3 bg-muted/30 rounded-lg overflow-hidden cursor-pointer hover:bg-muted/50 transition-colors"
                   >
@@ -223,7 +223,7 @@ export function BatchDetailModal({ open, onOpenChange, batch }: BatchDetailModal
                     key={post.id}
                     onClick={() => {
                       onOpenChange(false);
-                      navigate(`/content/production/${batch.id}/post/${post.id}`);
+                      navigate(`/content/production/${batch.id}/posts/${post.id}`);
                     }}
                     className="flex items-center justify-between gap-2 p-3 bg-muted/30 rounded-lg overflow-hidden cursor-pointer hover:bg-muted/50 transition-colors"
                   >
