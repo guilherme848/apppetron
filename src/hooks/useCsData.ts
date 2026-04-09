@@ -386,7 +386,7 @@ export function useCsClientOnboarding() {
       .from('accounts')
       .select('cs_member_id, social_member_id, traffic_member_id, support_member_id, designer_member_id, videomaker_member_id')
       .eq('id', clientId)
-      .single();
+      .maybeSingle();
 
     const roleFieldMap: Record<string, string> = {
       cs: 'cs_member_id',
@@ -647,7 +647,7 @@ export function useCsNps() {
   const fetchAll = useCallback(async () => {
     setLoading(true);
     const [responsesRes, surveysRes, tagsRes] = await Promise.all([
-      supabase.from('cs_nps_responses').select(`*, accounts:client_id (name), cs_nps_surveys:survey_id (name)`).order('created_at', { ascending: false }),
+      supabase.from('cs_nps_responses').select(`*, accounts:client_id (name), cs_nps_surveys:survey_id (name)`).order('created_at', { ascending: false }).limit(1000),
       supabase.from('cs_nps_surveys').select('*').order('name'),
       supabase.from('cs_nps_tags').select('*').order('name'),
     ]);

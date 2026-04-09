@@ -46,7 +46,7 @@ export function PetronTeamDialog({ open, onOpenChange }: PetronTeamDialogProps) 
       .from('accounts')
       .select('designer_member_id, videomaker_member_id, social_member_id, traffic_member_id, support_member_id, cs_member_id, service_id')
       .eq('id', PETRON_INTERNAL_ACCOUNT_ID)
-      .single();
+      .maybeSingle();
     
     if (error) {
       console.error('Error fetching Petron team:', error);
@@ -59,7 +59,7 @@ export function PetronTeamDialog({ open, onOpenChange }: PetronTeamDialogProps) 
           .from('services')
           .select('has_content, has_traffic')
           .eq('id', data.service_id)
-          .single();
+          .maybeSingle();
         if (svc) {
           setPlanFlags({ has_content: svc.has_content ?? true, has_traffic: svc.has_traffic ?? true });
         }

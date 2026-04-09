@@ -82,7 +82,8 @@ export function useCrmData() {
       .select('*, services(name)')
       .is('deleted_at', null)
       .or('cliente_interno.is.null,cliente_interno.eq.false')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(500);
     if (error) {
       console.error('Error fetching accounts:', error);
     } else {
@@ -94,7 +95,8 @@ export function useCrmData() {
     const { data, error } = await supabase
       .from('contracts')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(500);
     if (error) {
       console.error('Error fetching contracts:', error);
     } else {
@@ -106,7 +108,8 @@ export function useCrmData() {
     const { data, error } = await supabase
       .from('tasks')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(500);
     if (error) {
       console.error('Error fetching tasks:', error);
     } else {

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,111 +14,116 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { ProfileGuard } from "@/components/common/ProfileGuard";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { AuthGuard } from "@/components/auth/AuthGuard";
+import { RouteGuard } from "./components/auth/RouteGuard";
+
+// Core pages - eager loaded (always needed)
 import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import WelcomePage from "./pages/WelcomePage";
-import CrmList from "./pages/CrmList";
-import CrmDetail from "./pages/CrmDetail";
-import TaskList from "./pages/TaskList";
-import ContentPage from "./pages/ContentPage";
-import ContentDetail from "./pages/ContentDetail";
-import ContentProduction from "./pages/ContentProduction";
-import ContentBoardPage from "./pages/ContentBoardPage";
-import ContentDashboard from "./pages/ContentDashboard";
-import ContentTasks from "./pages/ContentTasks";
-import BatchDetail from "./pages/BatchDetail";
-import PostDetail from "./pages/PostDetail";
-import ExtraRequestsList from "./pages/content/ExtraRequestsList";
-import ExtraRequestNew from "./pages/content/ExtraRequestNew";
-import ExtraRequestDetail from "./pages/content/ExtraRequestDetail";
-import DrawerPostsPage from "./pages/content/DrawerPostsPage";
 import NotFound from "./pages/NotFound";
-
-// Profile pages
 import ProfilePage from "./pages/profile/ProfilePage";
 import ProfileSetupPage from "./pages/profile/ProfileSetupPage";
 
-// Traffic pages
-import TrafficDashboard from "./pages/traffic/TrafficDashboard";
-import TrafficTasks from "./pages/traffic/TrafficTasks";
-import TrafficClientDetail from "./pages/traffic/TrafficClientDetail";
-import TrafficOverview from "./pages/traffic/TrafficOverview";
-import TrafficAccountDetail from "./pages/traffic/TrafficAccountDetail";
-import TrafficBenchmarks from "./pages/traffic/TrafficBenchmarks";
-import TrafficOptimizationsPage from "./pages/traffic/TrafficOptimizationsPage";
-import TrafficOperationalDashboard from "./pages/traffic/TrafficOperationalDashboard";
-import TrafficContacts from "./pages/traffic/TrafficContacts";
+// --- Lazy-loaded page components ---
 
-// CS pages
-import CsDashboard from "./pages/cs/CsDashboard";
-import CsCommandCenter from "./pages/cs/CsCommandCenter";
-import CsOnboarding from "./pages/cs/CsOnboarding";
-import CsMeetings from "./pages/cs/CsMeetings";
-import CsNps from "./pages/cs/CsNps";
-import CsRisk from "./pages/cs/CsRisk";
-import CsClientDetail from "./pages/cs/CsClientDetail";
-import CsOnboardingMeeting from "./pages/cs/CsOnboardingMeeting";
-import CsOnboardingDetail from "./pages/cs/CsOnboardingDetail";
+// CRM module
+const CrmList = lazy(() => import("./pages/CrmList"));
+const CrmDetail = lazy(() => import("./pages/CrmDetail"));
 
-// Settings pages
-import { SettingsLayout } from "./pages/settings/SettingsLayout";
-import SettingsHome from "./pages/settings/SettingsHome";
-import RolesPage from "./pages/settings/RolesPage";
-import UsersPage from "./pages/settings/UsersPage";
-import PermissionsPage from "./pages/settings/PermissionsPage";
-import ServicesPage from "./pages/settings/ServicesPage";
-import DeliverablesPage from "./pages/settings/DeliverablesPage";
-import PipelinePage from "./pages/settings/PipelinePage";
-import NichesPage from "./pages/settings/NichesPage";
-import TrafficRoutinesPage from "./pages/settings/TrafficRoutinesPage";
-import TrafficCyclesPage from "./pages/settings/TrafficCyclesPage";
-import TrafficPlaybookPage from "./pages/settings/TrafficPlaybookPage";
-import TrafficPlaybookTasksPage from "./pages/traffic/TrafficPlaybookTasksPage";
-import MetaIntegrationPage from "./pages/settings/MetaIntegrationPage";
-import { TrafficAnalyticsSettingsTab } from "./components/settings/TrafficAnalyticsSettingsTab";
-import OnboardingQuestionsPage from "./pages/settings/OnboardingQuestionsPage";
+// Tasks module
+const TaskList = lazy(() => import("./pages/TaskList"));
 
-import OnboardingActivitiesConfigPage from "./pages/settings/OnboardingActivitiesConfigPage";
-import PetronOnboardingActivitiesPage from "./pages/settings/PetronOnboardingActivitiesPage";
-import PetronOnboardingSequencesPage from "./pages/settings/PetronOnboardingSequencesPage";
-import { RouteGuard } from "./components/auth/RouteGuard";
-import TrafficBalancesPage from "./pages/traffic/TrafficBalancesPage";
+// Content module
+const ContentPage = lazy(() => import("./pages/ContentPage"));
+const ContentDetail = lazy(() => import("./pages/ContentDetail"));
+const ContentProduction = lazy(() => import("./pages/ContentProduction"));
+const ContentBoardPage = lazy(() => import("./pages/ContentBoardPage"));
+const ContentDashboard = lazy(() => import("./pages/ContentDashboard"));
+const ContentTasks = lazy(() => import("./pages/ContentTasks"));
+const BatchDetail = lazy(() => import("./pages/BatchDetail"));
+const PostDetail = lazy(() => import("./pages/PostDetail"));
+const ExtraRequestsList = lazy(() => import("./pages/content/ExtraRequestsList"));
+const ExtraRequestNew = lazy(() => import("./pages/content/ExtraRequestNew"));
+const ExtraRequestDetail = lazy(() => import("./pages/content/ExtraRequestDetail"));
+const DrawerPostsPage = lazy(() => import("./pages/content/DrawerPostsPage"));
 
-// Traffic Creative Requests
-import CreativeRequestsList from "./pages/traffic/CreativeRequestsList";
-import CreativeRequestNew from "./pages/traffic/CreativeRequestNew";
-import CreativeRequestDetail from "./pages/traffic/CreativeRequestDetail";
+// Traffic module
+const TrafficDashboard = lazy(() => import("./pages/traffic/TrafficDashboard"));
+const TrafficTasks = lazy(() => import("./pages/traffic/TrafficTasks"));
+const TrafficClientDetail = lazy(() => import("./pages/traffic/TrafficClientDetail"));
+const TrafficOverview = lazy(() => import("./pages/traffic/TrafficOverview"));
+const TrafficAccountDetail = lazy(() => import("./pages/traffic/TrafficAccountDetail"));
+const TrafficBenchmarks = lazy(() => import("./pages/traffic/TrafficBenchmarks"));
+const TrafficOptimizationsPage = lazy(() => import("./pages/traffic/TrafficOptimizationsPage"));
+const TrafficOperationalDashboard = lazy(() => import("./pages/traffic/TrafficOperationalDashboard"));
+const TrafficContacts = lazy(() => import("./pages/traffic/TrafficContacts"));
+const TrafficBalancesPage = lazy(() => import("./pages/traffic/TrafficBalancesPage"));
+const TrafficPlaybookTasksPage = lazy(() => import("./pages/traffic/TrafficPlaybookTasksPage"));
+const CreativeRequestsList = lazy(() => import("./pages/traffic/CreativeRequestsList"));
+const CreativeRequestNew = lazy(() => import("./pages/traffic/CreativeRequestNew"));
+const CreativeRequestDetail = lazy(() => import("./pages/traffic/CreativeRequestDetail"));
 
-// Contracts pages
-import ContractsList from "./pages/contracts/ContractsList";
-import ContractDetail from "./pages/contracts/ContractDetail";
+// CS module
+const CsDashboard = lazy(() => import("./pages/cs/CsDashboard"));
+const CsCommandCenter = lazy(() => import("./pages/cs/CsCommandCenter"));
+const CsOnboarding = lazy(() => import("./pages/cs/CsOnboarding"));
+const CsMeetings = lazy(() => import("./pages/cs/CsMeetings"));
+const CsNps = lazy(() => import("./pages/cs/CsNps"));
+const CsRisk = lazy(() => import("./pages/cs/CsRisk"));
+const CsClientDetail = lazy(() => import("./pages/cs/CsClientDetail"));
+const CsOnboardingMeeting = lazy(() => import("./pages/cs/CsOnboardingMeeting"));
+const CsOnboardingDetail = lazy(() => import("./pages/cs/CsOnboardingDetail"));
 
-// Commercial pages
-import SalesFunnelPage from "./pages/commercial/SalesFunnelPage";
-import MarketingProduction from "./pages/commercial/MarketingProduction";
-import MarketingBatchDetail from "./pages/commercial/MarketingBatchDetail";
-import MarketingPostDetail from "./pages/commercial/MarketingPostDetail";
-import CommercialPlanningPage from "./pages/commercial/CommercialPlanningPage";
-import OutboundFunnelPage from "./pages/commercial/OutboundFunnelPage";
-import MatemarketingPage from "./pages/commercial/MatemarketingPage";
+// Settings module
+const SettingsLayout = lazy(() => import("./pages/settings/SettingsLayout").then(m => ({ default: m.SettingsLayout })));
+const SettingsHome = lazy(() => import("./pages/settings/SettingsHome"));
+const RolesPage = lazy(() => import("./pages/settings/RolesPage"));
+const UsersPage = lazy(() => import("./pages/settings/UsersPage"));
+const PermissionsPage = lazy(() => import("./pages/settings/PermissionsPage"));
+const ServicesPage = lazy(() => import("./pages/settings/ServicesPage"));
+const DeliverablesPage = lazy(() => import("./pages/settings/DeliverablesPage"));
+const PipelinePage = lazy(() => import("./pages/settings/PipelinePage"));
+const NichesPage = lazy(() => import("./pages/settings/NichesPage"));
+const TrafficRoutinesPage = lazy(() => import("./pages/settings/TrafficRoutinesPage"));
+const TrafficCyclesPage = lazy(() => import("./pages/settings/TrafficCyclesPage"));
+const TrafficPlaybookPage = lazy(() => import("./pages/settings/TrafficPlaybookPage"));
+const MetaIntegrationPage = lazy(() => import("./pages/settings/MetaIntegrationPage"));
+const TrafficAnalyticsSettingsTab = lazy(() => import("./components/settings/TrafficAnalyticsSettingsTab").then(m => ({ default: m.TrafficAnalyticsSettingsTab })));
+const OnboardingQuestionsPage = lazy(() => import("./pages/settings/OnboardingQuestionsPage"));
+const OnboardingActivitiesConfigPage = lazy(() => import("./pages/settings/OnboardingActivitiesConfigPage"));
+const PetronOnboardingActivitiesPage = lazy(() => import("./pages/settings/PetronOnboardingActivitiesPage"));
+const PetronOnboardingSequencesPage = lazy(() => import("./pages/settings/PetronOnboardingSequencesPage"));
+const SalesSettingsPage = lazy(() => import("./pages/sales/SalesSettingsPage"));
+const LeadScoringPage = lazy(() => import("./pages/sales/LeadScoringPage"));
+const SalesTemplatesPage = lazy(() => import("./pages/sales/SalesTemplatesPage"));
+const SalesAutomationsPage = lazy(() => import("./pages/sales/SalesAutomationsPage"));
 
-// Petron OS pages
-import PetronOSHub from "./pages/petron-os/PetronOSHub";
-import PetronOSQuickTool from "./pages/petron-os/PetronOSQuickTool";
-import PetronOSBuilder from "./pages/petron-os/PetronOSBuilder";
-import PetronOSSettings from "./pages/petron-os/PetronOSSettings";
+// Contracts module
+const ContractsList = lazy(() => import("./pages/contracts/ContractsList"));
+const ContractDetail = lazy(() => import("./pages/contracts/ContractDetail"));
 
-// Sales CRM pages
-import SalesDashboard from "./pages/sales/SalesDashboard";
-import SalesFunnelsPage from "./pages/sales/SalesFunnelsPage";
-import SalesActivities from "./pages/sales/SalesActivities";
-import SalesContacts from "./pages/sales/SalesContacts";
-import SalesSettingsPage from "./pages/sales/SalesSettingsPage";
-import LeadScoringPage from "./pages/sales/LeadScoringPage";
-import SalesTemplatesPage from "./pages/sales/SalesTemplatesPage";
-import SalesAutomationsPage from "./pages/sales/SalesAutomationsPage";
-import SalesGoalsPage from "./pages/sales/SalesGoalsPage";
-import DealDetailPage from "./pages/sales/DealDetailPage";
+// Commercial module
+const SalesFunnelPage = lazy(() => import("./pages/commercial/SalesFunnelPage"));
+const MarketingProduction = lazy(() => import("./pages/commercial/MarketingProduction"));
+const MarketingBatchDetail = lazy(() => import("./pages/commercial/MarketingBatchDetail"));
+const MarketingPostDetail = lazy(() => import("./pages/commercial/MarketingPostDetail"));
+const CommercialPlanningPage = lazy(() => import("./pages/commercial/CommercialPlanningPage"));
+const OutboundFunnelPage = lazy(() => import("./pages/commercial/OutboundFunnelPage"));
+const MatemarketingPage = lazy(() => import("./pages/commercial/MatemarketingPage"));
+
+// Petron OS module
+const PetronOSHub = lazy(() => import("./pages/petron-os/PetronOSHub"));
+const PetronOSQuickTool = lazy(() => import("./pages/petron-os/PetronOSQuickTool"));
+const PetronOSBuilder = lazy(() => import("./pages/petron-os/PetronOSBuilder"));
+const PetronOSSettings = lazy(() => import("./pages/petron-os/PetronOSSettings"));
+
+// Sales CRM module
+const SalesDashboard = lazy(() => import("./pages/sales/SalesDashboard"));
+const SalesFunnelsPage = lazy(() => import("./pages/sales/SalesFunnelsPage"));
+const SalesActivities = lazy(() => import("./pages/sales/SalesActivities"));
+const SalesContacts = lazy(() => import("./pages/sales/SalesContacts"));
+const SalesGoalsPage = lazy(() => import("./pages/sales/SalesGoalsPage"));
+const DealDetailPage = lazy(() => import("./pages/sales/DealDetailPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -148,6 +154,17 @@ function ProtectedAppShell() {
   );
 }
 
+function LoadingSpinner() {
+  return (
+    <div className="flex h-full w-full items-center justify-center min-h-[200px]">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
+        <span className="text-sm text-muted-foreground">Carregando...</span>
+      </div>
+    </div>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -161,6 +178,7 @@ const App = () => (
                 <ContentProductionProvider>
                   <TrafficProvider>
                     <ErrorBoundary>
+                    <Suspense fallback={<LoadingSpinner />}>
                     <Routes>
                       {/* Public routes */}
                       <Route path="/login" element={<LoginPage />} />
@@ -285,6 +303,7 @@ const App = () => (
                         <Route path="*" element={<NotFound />} />
                       </Route>
                     </Routes>
+                    </Suspense>
                     </ErrorBoundary>
                   </TrafficProvider>
                 </ContentProductionProvider>

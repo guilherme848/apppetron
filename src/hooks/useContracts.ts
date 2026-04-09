@@ -41,7 +41,7 @@ export function useContract(id: string | undefined) {
           contract_templates(id, name)
         `)
         .eq("id", id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 

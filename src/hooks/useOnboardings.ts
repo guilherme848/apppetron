@@ -128,7 +128,7 @@ export function useOnboardingDetail(onboardingId: string | null) {
           traffic_owner:team_members!onboardings_traffic_owner_id_fkey (name)
         `)
         .eq('id', onboardingId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('useOnboardingDetail error:', error);

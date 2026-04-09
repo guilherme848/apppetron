@@ -370,7 +370,7 @@ export function usePetronCustomerOnboarding(id: string | undefined) {
           team_members(name)
         `)
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 

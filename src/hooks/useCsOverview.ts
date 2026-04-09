@@ -102,10 +102,10 @@ export function useCsOverview() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     const [acRes, obRes, ckRes, npsRes, svcRes, nicRes, tmRes] = await Promise.all([
-      supabase.from('accounts').select('*').is('deleted_at', null).or('cliente_interno.is.null,cliente_interno.eq.false'),
-      supabase.from('onboardings').select('*'),
-      supabase.from('cliente_checkup').select('*'),
-      supabase.from('cs_nps_responses').select('id, score, client_id, created_at'),
+      supabase.from('accounts').select('*').is('deleted_at', null).or('cliente_interno.is.null,cliente_interno.eq.false').limit(500),
+      supabase.from('onboardings').select('*').limit(500),
+      supabase.from('cliente_checkup').select('*').limit(500),
+      supabase.from('cs_nps_responses').select('id, score, client_id, created_at').limit(1000),
       supabase.from('services').select('id, name').order('name'),
       supabase.from('niches').select('id, name').order('name'),
       supabase.from('team_members').select('id, name'),

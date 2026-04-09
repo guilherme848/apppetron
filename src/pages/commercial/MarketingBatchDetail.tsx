@@ -58,7 +58,7 @@ export default function MarketingBatchDetail() {
       .select('*')
       .eq('id', id)
       .eq('scope', 'agency')
-      .single();
+      .maybeSingle();
 
     if (error || !data) {
       console.error('Error fetching batch:', error);

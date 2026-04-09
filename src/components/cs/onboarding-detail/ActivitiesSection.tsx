@@ -79,7 +79,7 @@ export default function ActivitiesSection({
       .from('job_roles')
       .select('name')
       .eq('id', member.role_id)
-      .single()
+      .maybeSingle()
       .then(({ data }) => {
         if (data) setUserRoleName(data.name.toLowerCase());
       });

@@ -202,7 +202,7 @@ export function useCreativeRequestDetail(id: string | undefined) {
         reviewer:reviewer_member_id (name)
       `)
       .eq('id', id)
-      .single();
+      .maybeSingle();
 
     if (error || !data) {
       setRequest(null);

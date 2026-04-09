@@ -174,7 +174,8 @@ export function useWelcomeCommandCenter() {
             .select('id, title, status, due_date, data_conclusao, assignee_id, batch_id')
             .is('data_conclusao', null)
             .not('status', 'eq', 'done')
-            .or('archived.is.null,archived.eq.false'),
+            .or('archived.is.null,archived.eq.false')
+            .limit(500),
           // Activity feed
           supabase
             .from('atividade_sistema')

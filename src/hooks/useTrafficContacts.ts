@@ -44,7 +44,7 @@ export function useContactSettings() {
         .from('traffic_contact_settings')
         .select('*')
         .limit(1)
-        .single();
+        .maybeSingle();
       if (error) throw error;
       return data;
     },

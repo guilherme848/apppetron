@@ -78,7 +78,7 @@ export default function MarketingPostDetail() {
       .select('*')
       .eq('id', batchId)
       .eq('scope', 'agency')
-      .single();
+      .maybeSingle();
 
     if (error || !data) {
       console.error('Error fetching batch:', error);
@@ -107,7 +107,7 @@ export default function MarketingPostDetail() {
       .from('content_posts')
       .select('*')
       .eq('id', postId)
-      .single();
+      .maybeSingle();
 
     if (error || !data) {
       console.error('Error fetching post:', error);

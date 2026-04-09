@@ -100,7 +100,7 @@ export default function CsClientDetail() {
       .from('accounts')
       .select('*')
       .eq('id', clientId)
-      .single();
+      .maybeSingle();
     if (!error && data) {
       setClient(data);
     }

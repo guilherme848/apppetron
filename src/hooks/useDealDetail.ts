@@ -41,7 +41,7 @@ export function useDealDetail(dealId: string | undefined) {
       .from('crm_deals')
       .select('*, crm_contacts(*), team_members(id, name, avatar_url)')
       .eq('id', dealId)
-      .single();
+      .maybeSingle();
     if (data) {
       const mapped = {
         ...(data as any),
@@ -56,7 +56,7 @@ export function useDealDetail(dealId: string | undefined) {
         .from('crm_funnels')
         .select('*')
         .eq('id', mapped.funnel_id)
-        .single();
+        .maybeSingle();
       setFunnel(funnelData);
 
       const { data: stagesData } = await supabase

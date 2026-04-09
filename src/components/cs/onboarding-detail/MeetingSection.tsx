@@ -293,7 +293,7 @@ export default function MeetingSection({
       .from('accounts')
       .select('*')
       .eq('id', clientId)
-      .single()
+      .maybeSingle()
       .then(({ data }) => {
         if (data) setClientData(data);
       });

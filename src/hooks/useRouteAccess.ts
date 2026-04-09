@@ -43,7 +43,7 @@ export function useRouteAccess() {
         .from('job_roles')
         .select('name')
         .eq('id', member.role_id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('[permissions] Error fetching role:', error);

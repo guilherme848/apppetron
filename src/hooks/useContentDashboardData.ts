@@ -318,11 +318,11 @@ export function useContentDashboardData() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     const [postsRes, batchesRes, accountsRes, membersRes, changeRequestsRes, metasRes] = await Promise.all([
-      supabase.from('content_posts').select('id, batch_id, title, status, responsible_role_key, assignee_id, started_at, completed_at, data_conclusao, created_at, updated_at, due_date, production_entered_at, first_completed_at, rework_count').or('archived.is.null,archived.eq.false'),
-      supabase.from('content_batches').select('id, client_id, month_ref, status, planning_due_date, archived, created_at').or('archived.is.null,archived.eq.false'),
-      supabase.from('accounts').select('id, name, designer_member_id, videomaker_member_id, social_member_id, traffic_member_id, support_member_id, cs_member_id, cliente_interno').eq('status', 'active'),
-      supabase.from('team_members').select('id, name, role_id, active').eq('active', true),
-      supabase.from('content_change_requests').select('id, post_id, requested_at, status, resolved_at'),
+      supabase.from('content_posts').select('id, batch_id, title, status, responsible_role_key, assignee_id, started_at, completed_at, data_conclusao, created_at, updated_at, due_date, production_entered_at, first_completed_at, rework_count').or('archived.is.null,archived.eq.false').limit(2000),
+      supabase.from('content_batches').select('id, client_id, month_ref, status, planning_due_date, archived, created_at').or('archived.is.null,archived.eq.false').limit(1000),
+      supabase.from('accounts').select('id, name, designer_member_id, videomaker_member_id, social_member_id, traffic_member_id, support_member_id, cs_member_id, cliente_interno').eq('status', 'active').limit(500),
+      supabase.from('team_members').select('id, name, role_id, active').eq('active', true).limit(200),
+      supabase.from('content_change_requests').select('id, post_id, requested_at, status, resolved_at').limit(2000),
       supabase.from('metas_producao_diaria').select('id, cargo, meta_diaria, ativo').eq('ativo', true),
     ]);
 

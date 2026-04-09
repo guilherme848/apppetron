@@ -303,7 +303,7 @@ export function useContentProductionData() {
       .eq('batch_id', post.batch_id)
       .order('sort_order', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
     
     const nextSortOrder = (maxOrderData?.sort_order ?? -1) + 1;
     

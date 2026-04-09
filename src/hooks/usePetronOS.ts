@@ -113,7 +113,7 @@ export function usePetronOSFerramenta(slug: string | undefined) {
         .from('petron_os_ferramentas')
         .select('*')
         .eq('slug', slug)
-        .single();
+        .maybeSingle();
       if (error) throw error;
       const f = data as unknown as PetronOSFerramenta;
       return {
