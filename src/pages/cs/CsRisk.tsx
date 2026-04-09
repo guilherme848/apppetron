@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { AlertTriangle, Plus } from 'lucide-react';
+import { AlertTriangle, AlertCircle, Info, Plus } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -102,7 +102,10 @@ export default function CsRisk() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base">{riskCase.client_name}</CardTitle>
                   <div className="flex gap-2">
-                    <Badge variant={getLevelColor(riskCase.level)}>
+                    <Badge variant={getLevelColor(riskCase.level)} className="flex items-center gap-1">
+                      {riskCase.level === 'critical' && <AlertTriangle className="h-3.5 w-3.5" />}
+                      {riskCase.level === 'moderate' && <AlertCircle className="h-3.5 w-3.5" />}
+                      {riskCase.level === 'low' && <Info className="h-3.5 w-3.5" />}
                       {CS_RISK_LEVEL_LABELS[riskCase.level]}
                     </Badge>
                     <Badge variant="outline">

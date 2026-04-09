@@ -47,17 +47,7 @@ import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, differenceInDays, differenceInHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
-
-function getPlanBadgeClass(planName?: string): string {
-  if (!planName) return 'bg-muted text-muted-foreground border-border';
-  const lower = planName.toLowerCase();
-  if (lower.includes('start')) return 'bg-[hsl(215_16%_43%/0.12)] text-[hsl(215,16%,43%)] border-[hsl(215,16%,43%,0.25)]';
-  if (lower.includes('performance')) return 'bg-[hsl(239,84%,67%,0.12)] text-[hsl(239,84%,67%)] border-[hsl(239,84%,67%,0.25)]';
-  if (lower.includes('escala')) return 'bg-[hsl(25,95%,53%,0.12)] text-[hsl(25,95%,53%)] border-[hsl(25,95%,53%,0.25)]';
-  if (lower.includes('growth')) return 'bg-[hsl(258,90%,66%,0.12)] text-[hsl(258,90%,66%)] border-[hsl(258,90%,66%,0.25)]';
-  return 'bg-muted text-muted-foreground border-border';
-}
+import { cn, getPlanBadgeStyle } from '@/lib/utils';
 
 // CS Owner Avatar with gradient
 function CsAvatar({ name }: { name: string }) {
@@ -416,7 +406,7 @@ export default function CsOnboarding() {
                 {ob.client_service_name && (
                   <Badge
                     variant="outline"
-                    className={cn('text-[11px] font-semibold px-2 py-[3px] rounded-md border mb-3', getPlanBadgeClass(ob.client_service_name))}
+                    className={cn('text-[11px] font-semibold px-2 py-[3px] rounded-md border mb-3', getPlanBadgeStyle(ob.client_service_name))}
                   >
                     {ob.client_service_name}
                   </Badge>

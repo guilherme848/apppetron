@@ -33,6 +33,17 @@ export default function PetronOSSettings() {
   const [form, setForm] = useState<Partial<PetronOSFerramenta>>({});
   const [campos, setCampos] = useState<PetronOSCampoFormulario[]>([]);
   const [saving, setSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Helper to mark form as dirty on any change
+  const updateForm = (updater: (prev: Partial<PetronOSFerramenta>) => Partial<PetronOSFerramenta>) => {
+    setForm(updater);
+    setHasUnsavedChanges(true);
+  };
+  const updateCampos = (next: PetronOSCampoFormulario[]) => {
+    setCampos(next);
+    setHasUnsavedChanges(true);
+  };
 
   // Load selected tool data
   useEffect(() => {
@@ -41,6 +52,7 @@ export default function PetronOSSettings() {
       if (f) {
         setForm(f);
         setCampos(f.campos_formulario || []);
+        setHasUnsavedChanges(false);
       }
     }
   }, [selectedId, ferramentas]);
@@ -74,6 +86,7 @@ export default function PetronOSSettings() {
 
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ['petron-os-ferramentas'] });
+      setHasUnsavedChanges(false);
       toast({ title: 'Configuração salva!' });
     } catch (err: any) {
       toast({ title: 'Erro ao salvar', description: err.message, variant: 'destructive' });
@@ -153,11 +166,11 @@ export default function PetronOSSettings() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <Label className="text-xs">Nome</Label>
-                      <Input value={form.nome || ''} onChange={e => setForm(p => ({ ...p, nome: e.target.value }))} />
+                      <Input value={form.nome || ''} onChange={e => updateForm(p => ({ ...p, nome: e.target.value }))} />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs">Categoria</Label>
-                      <Select value={form.categoria_id || ''} onValueChange={v => setForm(p => ({ ...p, categoria_id: v }))}>
+                      <Select value={form.categoria_id || ''} onValueChange={v => updateForm(p => ({ ...p, categoria_id: v }))}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {categorias?.map(c => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
@@ -167,16 +180,16 @@ export default function PetronOSSettings() {
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs">Descrição</Label>
-                    <Textarea value={form.descricao || ''} onChange={e => setForm(p => ({ ...p, descricao: e.target.value }))} />
+                    <Textarea value={form.descricao || ''} onChange={e => updateForm(p => ({ ...p, descricao: e.target.value }))} />
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
-                      <Switch checked={form.ativo ?? true} onCheckedChange={v => setForm(p => ({ ...p, ativo: v }))} />
+                      <Switch checked={form.ativo ?? true} onCheckedChange={v => updateForm(p => ({ ...p, ativo: v }))} />
                       <Label className="text-xs">Ativa</Label>
                     </div>
                     <div className="space-y-1.5 flex-1">
                       <Label className="text-xs">Ordem</Label>
-                      <Input type="number" value={form.ordem ?? 0} onChange={e => setForm(p => ({ ...p, ordem: Number(e.target.value) }))} />
+                      <Input type="number" value={form.ordem ?? 0} onChange={e => updateForm(p => ({ ...p, ordem: Number(e.target.value) }))} />
                     </div>
                   </div>
                 </div>
@@ -189,7 +202,7 @@ export default function PetronOSSettings() {
                   </h3>
                   <Textarea
                     value={form.system_prompt || ''}
-                    onChange={e => setForm(p => ({ ...p, system_prompt: e.target.value }))}
+                    onChange={e => updateForm(p => ({ ...p, system_prompt: e.target.value }))}
                     className="min-h-[300px] font-mono text-[13px] leading-relaxed"
                     placeholder="Digite o prompt que será enviado à IA..."
                   />
@@ -209,7 +222,7 @@ export default function PetronOSSettings() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <Label className="text-xs">Modelo</Label>
-                      <Select value={form.modelo_ia || 'google/gemini-2.5-flash'} onValueChange={v => setForm(p => ({ ...p, modelo_ia: v }))}>
+                      <Select value={form.modelo_ia || 'google/gemini-2.5-flash'} onValueChange={v => updateForm(p => ({ ...p, modelo_ia: v }))}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="google/gemini-2.5-flash">Gemini 2.5 Flash</SelectItem>
@@ -222,7 +235,7 @@ export default function PetronOSSettings() {
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs">Max Tokens</Label>
-                      <Input type="number" value={form.max_tokens ?? 2000} onChange={e => setForm(p => ({ ...p, max_tokens: Number(e.target.value) }))} />
+                      <Input type="number" value={form.max_tokens ?? 2000} onChange={e => updateForm(p => ({ ...p, max_tokens: Number(e.target.value) }))} />
                     </div>
                   </div>
                 </div>
@@ -240,7 +253,7 @@ export default function PetronOSSettings() {
                             onChange={e => {
                               const updated = [...campos];
                               updated[idx] = { ...updated[idx], label: e.target.value };
-                              setCampos(updated);
+                              updateCampos(updated);
                             }}
                             placeholder="Label"
                             className="text-xs h-8"
@@ -250,7 +263,7 @@ export default function PetronOSSettings() {
                             onValueChange={v => {
                               const updated = [...campos];
                               updated[idx] = { ...updated[idx], tipo: v as any };
-                              setCampos(updated);
+                              updateCampos(updated);
                             }}
                           >
                             <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
@@ -268,7 +281,7 @@ export default function PetronOSSettings() {
                               onCheckedChange={v => {
                                 const updated = [...campos];
                                 updated[idx] = { ...updated[idx], obrigatorio: v };
-                                setCampos(updated);
+                                updateCampos(updated);
                               }}
                             />
                             <span className="text-[10px] text-muted-foreground">Obrigatório</span>
@@ -278,7 +291,7 @@ export default function PetronOSSettings() {
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 text-destructive"
-                          onClick={() => setCampos(campos.filter((_, i) => i !== idx))}
+                          onClick={() => updateCampos(campos.filter((_, i) => i !== idx))}
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
@@ -287,7 +300,7 @@ export default function PetronOSSettings() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCampos([...campos, { nome: `campo_${campos.length + 1}`, label: '', tipo: 'text', obrigatorio: false }])}
+                      onClick={() => updateCampos([...campos, { nome: `campo_${campos.length + 1}`, label: '', tipo: 'text', obrigatorio: false }])}
                       className="gap-1"
                     >
                       <Plus className="h-3 w-3" /> Adicionar Campo
@@ -296,7 +309,8 @@ export default function PetronOSSettings() {
                 )}
 
                 {/* Save */}
-                <div className="flex gap-3 justify-end pb-6">
+                <div className="flex gap-3 justify-end items-center pb-6">
+                  {hasUnsavedChanges && <span className="text-xs text-warning">Alterações não salvas</span>}
                   <Button variant="outline" onClick={() => setSelectedId(null)}>Cancelar</Button>
                   <Button
                     onClick={handleSave}

@@ -418,8 +418,9 @@ export default function PostDetail() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
+          <p className="text-sm text-muted-foreground mb-1">Produção › {clientName || 'Cliente'}</p>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold">{title || 'Novo Post'}</h1>
+            <h1 className="text-xl font-bold">{title || 'Post sem título'}</h1>
             {hasBriefing && (
               <Badge variant="secondary" className="text-xs">B</Badge>
             )}

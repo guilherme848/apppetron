@@ -26,20 +26,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTrafficOverview, type ManagerStat } from '@/hooks/useTrafficOverview';
 import { TASK_TYPE_OPTIONS } from '@/hooks/useTrafficOptimizations';
-import { cn } from '@/lib/utils';
+import { cn, getInitials } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 /* ── helpers ─────────────────────────────── */
-
-function getInitials(name: string) {
-  return name
-    .split(' ')
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
-}
 
 const taskTypeLabel = (type: string) =>
   TASK_TYPE_OPTIONS.find((t) => t.value === type)?.label || type;

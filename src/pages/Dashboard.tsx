@@ -11,6 +11,7 @@ import { TicketByNicheChart } from '@/components/dashboard/TicketByNicheChart';
 import { BaseHealthScoreCard } from '@/components/dashboard/BaseHealthScoreCard';
 import { useExecutiveDashboard } from '@/hooks/useExecutiveDashboard';
 import { useSensitivePermission } from '@/hooks/useSensitivePermission';
+import { formatCurrency } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 export default function Dashboard() {
   const {
@@ -59,15 +60,6 @@ export default function Dashboard() {
 
     fetchExtraKpis();
   }, []);
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value);
-  };
 
   if (loading || permissionLoading) {
     return (

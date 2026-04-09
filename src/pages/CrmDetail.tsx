@@ -29,24 +29,13 @@ import { toast } from '@/hooks/use-toast';
 import { useSensitivePermission } from '@/hooks/useSensitivePermission';
 import { useAccountHistory } from '@/hooks/useAccountHistory';
 import { useSettings } from '@/contexts/SettingsContext';
+import { formatCurrency, getInitials, getPlanBadgeStyle } from '@/lib/utils';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
-const getInitials = (name: string) => name.split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
-
-const getPlanBadgeStyle = (planName: string | null | undefined) => {
-  if (!planName) return '';
-  const lower = planName.toLowerCase();
-  if (lower.includes('start')) return 'bg-secondary/80 text-secondary-foreground border-border';
-  if (lower.includes('performance')) return 'bg-[hsl(var(--info)/.12)] text-[hsl(var(--info))] border-[hsl(var(--info)/.25)]';
-  if (lower.includes('escala')) return 'bg-primary/12 text-primary border-primary/25';
-  if (lower.includes('growth')) return 'bg-purple-500/12 text-purple-600 dark:text-purple-400 border-purple-500/25';
-  return 'bg-muted text-muted-foreground border-border';
-};
 
 const EVENT_TYPE_COLORS: Record<string, string> = {
   created: 'bg-[hsl(var(--success))]',
@@ -117,10 +106,6 @@ export default function CrmDetail() {
     );
   }
 
-  const formatCurrency = (value: number | null | undefined) => {
-    if (value == null) return '-';
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-  };
   const formatDate = (date: string | null | undefined) => {
     if (!date) return '-';
     return new Date(date).toLocaleDateString('pt-BR');

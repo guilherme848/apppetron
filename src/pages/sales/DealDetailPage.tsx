@@ -36,6 +36,7 @@ export default function DealDetailPage() {
   const { members: teamMembers } = useTeamMembers();
   const { templates, getTemplatesForContext, replaceVariables } = useCrmTemplates();
   const [stageConfirm, setStageConfirm] = useState<string | null>(null);
+  const [changingStage, setChangingStage] = useState(false);
 
   if (loading) {
     return (
@@ -72,7 +73,9 @@ export default function DealDetailPage() {
 
   const confirmStageChange = async () => {
     if (!stageConfirm) return;
+    setChangingStage(true);
     const ok = await changeStage(stageConfirm);
+    setChangingStage(false);
     if (ok) toast.success('Etapa atualizada!');
     setStageConfirm(null);
   };
@@ -293,8 +296,10 @@ export default function DealDetailPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setStageConfirm(null)}>Cancelar</Button>
-            <Button onClick={confirmStageChange} style={{ backgroundColor: DC.orange }}>Confirmar</Button>
+            <Button variant="outline" onClick={() => setStageConfirm(null)} disabled={changingStage}>Cancelar</Button>
+            <Button onClick={confirmStageChange} disabled={changingStage} style={{ backgroundColor: DC.orange }}>
+              {changingStage ? 'Movendo...' : 'Confirmar'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

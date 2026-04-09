@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatCurrency } from "@/lib/utils";
 import {
   Tooltip,
   TooltipContent,
@@ -36,14 +37,6 @@ export default function ContractDetail() {
   const { canViewFinancialValues, loading: permLoading } = useSensitivePermission();
 
   const showValues = canViewFinancialValues();
-
-  const formatCurrency = (value: number | null) => {
-    if (value === null || value === undefined) return "-";
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value);
-  };
 
   const formatDate = (date: string | null) => {
     if (!date) return "-";

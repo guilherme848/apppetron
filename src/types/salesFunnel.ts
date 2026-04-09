@@ -120,14 +120,7 @@ export const formatPercent = (value: number | null, decimals = 1): string => {
   return `${(value * 100).toFixed(decimals)}%`;
 };
 
-export const formatCurrency = (value: number | null): string => {
-  if (value === null || value === undefined) return '-';
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    minimumFractionDigits: 2,
-  }).format(value);
-};
+export { formatCurrency } from '@/lib/utils';
 
 export const formatNumber = (value: number | null): string => {
   if (value === null || value === undefined) return '-';

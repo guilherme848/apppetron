@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -83,6 +83,9 @@ export default function CsOnboardingMeeting() {
   const uploadFile = useUploadOnboardingMeetingFile();
   const deleteFile = useDeleteOnboardingMeetingFile();
 
+  // Debounce ref for answer saves
+  const saveTimerRef = useRef<NodeJS.Timeout>();
+
   // Local state
   const [openBlocks, setOpenBlocks] = useState<Set<string>>(new Set());
   const [localAnswers, setLocalAnswers] = useState<Record<string, string>>({});
@@ -148,26 +151,29 @@ export default function CsOnboardingMeeting() {
     }
   };
 
-  // Save answer on blur
-  const handleAnswerBlur = async (questionId: string) => {
+  // Save answer on blur (debounced 300ms)
+  const handleAnswerBlur = (questionId: string) => {
     if (!meetingId) return;
-    
-    setPendingSaves(prev => new Set(prev).add(questionId));
-    
-    try {
-      await saveAnswer.mutateAsync({
-        meeting_id: meetingId,
-        question_id: questionId,
-        answer_text: localAnswers[questionId] || null,
-        answer_value_json: localAnswersJson[questionId] ?? null,
-      });
-    } finally {
-      setPendingSaves(prev => {
-        const next = new Set(prev);
-        next.delete(questionId);
-        return next;
-      });
-    }
+
+    clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(async () => {
+      setPendingSaves(prev => new Set(prev).add(questionId));
+
+      try {
+        await saveAnswer.mutateAsync({
+          meeting_id: meetingId,
+          question_id: questionId,
+          answer_text: localAnswers[questionId] || null,
+          answer_value_json: localAnswersJson[questionId] ?? null,
+        });
+      } finally {
+        setPendingSaves(prev => {
+          const next = new Set(prev);
+          next.delete(questionId);
+          return next;
+        });
+      }
+    }, 300);
   };
 
   // AI Autofill handler

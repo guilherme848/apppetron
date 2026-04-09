@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatCurrency } from "@/lib/utils";
 import {
   Tooltip,
   TooltipContent,
@@ -52,14 +53,6 @@ export default function ContractsList() {
 
     return matchesSearch && matchesStatus;
   });
-
-  const formatCurrency = (value: number | null) => {
-    if (value === null || value === undefined) return "-";
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value);
-  };
 
   const RestrictedValue = () => (
     <TooltipProvider>

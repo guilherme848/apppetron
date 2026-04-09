@@ -36,6 +36,14 @@ export default function SalesContacts() {
 
   const handleSave = async () => {
     if (!form.name) return;
+    if (form.email && !form.email.includes('@')) {
+      toast.error('Email inválido');
+      return;
+    }
+    if (form.phone && form.phone.length < 10) {
+      toast.error('Telefone inválido');
+      return;
+    }
     const { error } = await supabase.from('crm_contacts').insert(form as any);
     if (error) toast.error('Erro ao criar contato');
     else {

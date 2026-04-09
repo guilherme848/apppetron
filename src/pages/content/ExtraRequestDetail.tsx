@@ -366,7 +366,7 @@ export default function ExtraRequestDetail() {
                         const blob = await zip.generateAsync({ type: 'blob' });
                         saveAs(blob, `anexos-${request.title || 'solicitacao'}.zip`);
                       } catch {
-                        toast({ title: 'Erro ao baixar arquivos', variant: 'destructive' });
+                        toast({ title: 'Erro ao gerar download. Tente novamente.', variant: 'destructive' });
                       }
                       setDownloadingAll(false);
                     }}

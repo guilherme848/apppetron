@@ -50,18 +50,14 @@ export function ContentFileUpload({
   clientName,
 }: ContentFileUploadProps) {
   const [uploading, setUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [downloadingAll, setDownloadingAll] = useState(false);
   const [previewFile, setPreviewFile] = useState<ContentFile | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // No file size limit
-
+  const processFile = async (file: File) => {
     setUploading(true);
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const storagePath = `posts/${postId}/${context}/${Date.now()}-${safeName}`;
@@ -100,6 +96,36 @@ export function ContentFileUpload({
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = '';
+    }
+  };
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await processFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      await processFile(files[0]);
     }
   };
 
@@ -182,7 +208,15 @@ export function ContentFileUpload({
   };
 
   return (
-    <div className="space-y-4">
+    <div
+      className={`space-y-4 rounded-lg transition-colors ${
+        isDragging && files.length > 0 ? 'ring-2 ring-primary bg-primary/5' : ''
+      }`}
+      onDragOver={handleDragOver}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <div className="flex items-center gap-2">
         <input
           ref={inputRef}
@@ -207,10 +241,21 @@ export function ContentFileUpload({
       </div>
 
       {files.length === 0 ? (
-        <div className="text-center py-8 border border-dashed rounded-lg">
-          <FileIcon className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+        <div
+          className={`text-center py-8 border border-dashed rounded-lg transition-colors cursor-pointer ${
+            isDragging
+              ? 'border-primary border-2 bg-primary/5'
+              : 'hover:border-muted-foreground/50'
+          }`}
+          onDragOver={handleDragOver}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={() => inputRef.current?.click()}
+        >
+          <Upload className={`h-8 w-8 mx-auto mb-2 ${isDragging ? 'text-primary' : 'text-muted-foreground'}`} />
           <p className="text-sm text-muted-foreground">
-            Nenhum arquivo anexado
+            {isDragging ? 'Solte o arquivo aqui' : 'Arraste um arquivo ou clique para enviar'}
           </p>
         </div>
       ) : (

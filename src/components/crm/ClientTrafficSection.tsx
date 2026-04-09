@@ -10,7 +10,7 @@ import { useMetaAds } from '@/hooks/useMetaAds';
 import { Account, AdPaymentMethod, AdPaymentFrequency } from '@/types/crm';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 
 interface ClientTrafficSectionProps {
   account: Account;
@@ -102,11 +102,6 @@ export function ClientTrafficSection({ account, onUpdate }: ClientTrafficSection
     const actualValue = value === 'none' ? null : value;
     setPaymentFrequency(value);
     await onUpdate('ad_payment_frequency' as keyof Account, actualValue);
-  };
-
-  const formatCurrency = (value: number | null | undefined) => {
-    if (value == null) return '-';
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   };
 
   const needsBudgetWarning =

@@ -132,11 +132,11 @@ interface CohortAnalysisCardProps {
 export function CohortAnalysisCard({ data }: CohortAnalysisCardProps) {
   const getRetentionColor = (value: number | null) => {
     if (value === null) return 'bg-muted';
-    if (value >= 90) return 'bg-green-500';
-    if (value >= 70) return 'bg-green-400';
-    if (value >= 50) return 'bg-yellow-400';
-    if (value >= 30) return 'bg-orange-400';
-    return 'bg-red-400';
+    if (value >= 90) return 'bg-success';
+    if (value >= 70) return 'bg-success/70';
+    if (value >= 50) return 'bg-warning';
+    if (value >= 30) return 'bg-warning/70';
+    return 'bg-destructive';
   };
 
   if (data.length === 0) {
@@ -194,23 +194,23 @@ export function CohortAnalysisCard({ data }: CohortAnalysisCardProps) {
         {/* Legend */}
         <div className="flex items-center justify-center gap-4 mt-4 text-xs">
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-green-500" />
+            <div className="w-3 h-3 rounded bg-success" />
             <span>90%+</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-green-400" />
+            <div className="w-3 h-3 rounded bg-success/70" />
             <span>70-89%</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-yellow-400" />
+            <div className="w-3 h-3 rounded bg-warning" />
             <span>50-69%</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-orange-400" />
+            <div className="w-3 h-3 rounded bg-warning/70" />
             <span>30-49%</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-red-400" />
+            <div className="w-3 h-3 rounded bg-destructive" />
             <span>&lt;30%</span>
           </div>
         </div>

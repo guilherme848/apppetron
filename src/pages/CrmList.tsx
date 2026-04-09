@@ -24,6 +24,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { formatCurrency, getInitials, getPlanBadgeStyle } from '@/lib/utils';
 import type { Account } from '@/types/crm';
 
 type SortKey = 'name' | 'plan' | 'start_date' | 'monthly_value' | 'niche';
@@ -44,20 +45,6 @@ const getStoredSort = (): SortConfig => {
     }
   } catch { /* ignore */ }
   return { key: 'name', direction: 'asc' };
-};
-
-const getInitials = (name: string) => {
-  return name.split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
-};
-
-const getPlanBadgeStyle = (planName: string | null | undefined) => {
-  if (!planName) return null;
-  const lower = planName.toLowerCase();
-  if (lower.includes('start')) return 'bg-secondary/80 text-secondary-foreground border-border';
-  if (lower.includes('performance')) return 'bg-[hsl(var(--info)/.12)] text-[hsl(var(--info))] border-[hsl(var(--info)/.25)]';
-  if (lower.includes('escala')) return 'bg-primary/12 text-primary border-primary/25';
-  if (lower.includes('growth')) return 'bg-purple-500/12 text-purple-600 dark:text-purple-400 border-purple-500/25';
-  return 'bg-muted text-muted-foreground border-border';
 };
 
 const getSourceBadgeStyle = (origin: string | null | undefined) => {
@@ -291,11 +278,6 @@ export default function CrmList() {
   const SortIcon = ({ columnKey }: { columnKey: SortKey }) => {
     if (sortConfig.key !== columnKey) return <ArrowUpDown className="ml-1 h-3 w-3 text-muted-foreground/50" />;
     return sortConfig.direction === 'asc' ? <ArrowUp className="ml-1 h-3 w-3" /> : <ArrowDown className="ml-1 h-3 w-3" />;
-  };
-
-  const formatCurrency = (value: number | null | undefined) => {
-    if (value == null) return '—';
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   };
 
   const MemberCell = ({ memberId }: { memberId: string | null | undefined }) => {

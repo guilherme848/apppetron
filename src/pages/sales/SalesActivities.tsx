@@ -178,7 +178,7 @@ export default function SalesActivities() {
                   return (
                     <TableRow
                       key={act.id}
-                      className="cursor-pointer"
+                      className="cursor-pointer hover:bg-muted/50"
                       style={{ backgroundColor: isOverdue ? DC.redBg : undefined }}
                       onClick={() => { setSelectedActivity(act); setResultForm({ result: act.result || '', notes: act.notes || '' }); }}
                     >

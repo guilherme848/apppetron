@@ -32,7 +32,7 @@ function DeltaBadge({ value, invert = false }: { value: number; invert?: boolean
       variant={isPositive ? 'default' : 'destructive'} 
       className={cn(
         'text-xs font-normal',
-        isPositive && 'bg-green-500/10 text-green-600 hover:bg-green-500/20'
+        isPositive && 'bg-success/10 text-success hover:bg-success/20'
       )}
     >
       <Icon className="h-3 w-3 mr-0.5" />

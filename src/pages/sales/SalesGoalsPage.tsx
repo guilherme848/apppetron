@@ -295,6 +295,7 @@ export default function SalesGoalsPage() {
                         <TableCell>
                           <Input
                             type="number"
+                            min={0}
                             className="w-24 h-8"
                             value={edited.deals_target ?? goal?.deals_target ?? ''}
                             onChange={e => setEditedGoals(g => ({ ...g, [m.id]: { ...g[m.id], deals_target: parseInt(e.target.value) || 0 } }))}
@@ -303,6 +304,7 @@ export default function SalesGoalsPage() {
                         <TableCell>
                           <Input
                             type="number"
+                            min={0}
                             className="w-32 h-8"
                             value={edited.value_target ?? goal?.value_target ?? ''}
                             onChange={e => setEditedGoals(g => ({ ...g, [m.id]: { ...g[m.id], value_target: parseFloat(e.target.value) || 0 } }))}
@@ -311,6 +313,7 @@ export default function SalesGoalsPage() {
                         <TableCell>
                           <Input
                             type="number"
+                            min={0}
                             className="w-24 h-8"
                             value={edited.activities_target ?? goal?.activities_target ?? ''}
                             onChange={e => setEditedGoals(g => ({ ...g, [m.id]: { ...g[m.id], activities_target: parseInt(e.target.value) || 0 } }))}
@@ -319,6 +322,7 @@ export default function SalesGoalsPage() {
                         <TableCell>
                           <Input
                             type="number"
+                            min={0}
                             className="w-24 h-8"
                             value={edited.calls_target ?? goal?.calls_target ?? ''}
                             onChange={e => setEditedGoals(g => ({ ...g, [m.id]: { ...g[m.id], calls_target: parseInt(e.target.value) || 0 } }))}

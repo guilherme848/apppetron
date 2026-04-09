@@ -19,7 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
+import { cn, getPlanBadgeStyle } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
 import StickyNav from '@/components/cs/onboarding-detail/StickyNav';
@@ -28,16 +28,6 @@ import MeetingSection from '@/components/cs/onboarding-detail/MeetingSection';
 import ActivitiesSection from '@/components/cs/onboarding-detail/ActivitiesSection';
 import CheckupSection from '@/components/cs/onboarding-detail/CheckupSection';
 import { useClienteCheckup, countFilled } from '@/hooks/useClienteCheckup';
-
-function getPlanBadgeClass(planName?: string): string {
-  if (!planName) return 'bg-muted text-muted-foreground border-border';
-  const lower = planName.toLowerCase();
-  if (lower.includes('start')) return 'bg-secondary text-secondary-foreground border-border';
-  if (lower.includes('performance')) return 'bg-[hsl(var(--info)/0.12)] text-[hsl(var(--info))] border-[hsl(var(--info)/0.25)]';
-  if (lower.includes('escala')) return 'bg-primary/12 text-primary border-primary/25';
-  if (lower.includes('growth')) return 'bg-[hsl(258,90%,66%,0.12)] text-[hsl(258,90%,66%)] border-[hsl(258,90%,66%,0.25)]';
-  return 'bg-muted text-muted-foreground border-border';
-}
 
 function DayCounter({ dataInicio }: { dataInicio: string }) {
   const days = differenceInDays(new Date(), new Date(dataInicio));
@@ -280,7 +270,7 @@ export default function CsOnboardingDetail() {
               {ONBOARDING_STATUS_LABELS[onboarding.status as keyof typeof ONBOARDING_STATUS_LABELS]}
             </Badge>
             {onboarding.client_service_name && (
-              <Badge variant="outline" className={cn('text-[11px] font-semibold border rounded-md px-2 py-0.5', getPlanBadgeClass(onboarding.client_service_name))}>
+              <Badge variant="outline" className={cn('text-[11px] font-semibold border rounded-md px-2 py-0.5', getPlanBadgeStyle(onboarding.client_service_name))}>
                 {onboarding.client_service_name}
               </Badge>
             )}
