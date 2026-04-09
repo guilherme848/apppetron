@@ -677,8 +677,8 @@ export default function MeetingSection({
           <Sparkles className="h-4 w-4 text-[hsl(258,90%,66%)] animate-pulse" />
           <div className="flex-1">
             <p className="text-sm text-foreground">Analisando transcrição... isso pode levar alguns segundos.</p>
-            <div className="mt-2 h-1.5 rounded-full overflow-hidden bg-[hsl(258,90%,66%,0.2)]">
-              <div className="h-full rounded-full animate-pulse" style={{ width: '60%', background: 'linear-gradient(90deg, hsl(258,90%,66%), #f43f5e)' }} />
+            <div className="mt-2 h-1.5 rounded-full overflow-hidden bg-primary/20">
+              <div className="h-full rounded-full animate-pulse" style={{ width: '60%', background: 'linear-gradient(90deg, #F4762D, #2B5B6C)' }} />
             </div>
           </div>
         </div>

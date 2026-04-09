@@ -60,7 +60,7 @@ function CsAvatar({ name }: { name: string }) {
   return (
     <div
       className="h-6 w-6 rounded-md flex items-center justify-center text-[10px] font-semibold text-white shrink-0"
-      style={{ background: 'linear-gradient(135deg, #F97316, #f43f5e)' }}
+      style={{ background: 'linear-gradient(135deg, #F4762D, #2B5B6C)' }}
     >
       {initials}
     </div>
@@ -420,7 +420,7 @@ export default function CsOnboarding() {
                         className="h-full rounded-[4px] transition-all duration-300"
                         style={{
                           width: `${progress}%`,
-                          background: 'linear-gradient(90deg, #F97316, #f43f5e)',
+                          background: 'linear-gradient(90deg, #F4762D, #2B5B6C)',
                         }}
                       />
                     )}

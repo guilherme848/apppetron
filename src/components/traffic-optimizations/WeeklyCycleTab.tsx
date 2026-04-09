@@ -381,7 +381,7 @@ function DroppableDayColumn({
           <div
             className={cn(
               'h-full rounded-full transition-all duration-300',
-              overTarget ? 'bg-destructive' : 'bg-gradient-to-r from-primary to-[#f43f5e]',
+              overTarget ? 'bg-destructive' : 'bg-gradient-to-r from-primary to-[#2B5B6C]',
             )}
             style={{ width: `${Math.min(progress, 100)}%` }}
           />

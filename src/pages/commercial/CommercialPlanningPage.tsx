@@ -633,7 +633,7 @@ export default function CommercialPlanningPage() {
                         key={m}
                         className={cn(
                           'h-12 border-border/50 transition-all duration-150',
-                          'hover:bg-gradient-to-r hover:from-[#F9731608] hover:to-transparent',
+                          'hover:bg-gradient-to-r hover:from-[#F4762D08] hover:to-transparent',
                         )}
                       >
                         <TableCell className="text-[13px] font-semibold text-foreground">

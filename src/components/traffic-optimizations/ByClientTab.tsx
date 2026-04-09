@@ -151,7 +151,7 @@ export function OptimizationByClientTab({ optimizations, accounts, teamMembers }
               <div className="flex items-center gap-2">
                 <div
                   className="h-8 w-8 rounded-lg flex items-center justify-center text-[11px] font-bold text-white shrink-0"
-                  style={{ background: 'linear-gradient(135deg, #F97316, #f43f5e)' }}
+                  style={{ background: 'linear-gradient(135deg, #F4762D, #2B5B6C)' }}
                 >
                   {a.name.charAt(0).toUpperCase()}
                 </div>

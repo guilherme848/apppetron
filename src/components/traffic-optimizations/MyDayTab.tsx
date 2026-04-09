@@ -261,7 +261,7 @@ export function OptimizationMyDayTab({
                       width: `${Math.min(progressPercent, 100)}%`,
                       background: progressPercent >= 100
                         ? 'hsl(var(--success))'
-                        : 'linear-gradient(90deg, #F97316, #f43f5e)',
+                        : 'linear-gradient(90deg, #F4762D, #2B5B6C)',
                     }}
                   />
                 </div>
@@ -508,7 +508,7 @@ function ClientRow({ name, niche, done, doneTime, badgeText, subtitle, highlight
     >
       {/* Avatar */}
       <div className="h-9 w-9 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0"
-        style={{ background: 'linear-gradient(135deg, #F97316, #f43f5e)' }}>
+        style={{ background: 'linear-gradient(135deg, #F4762D, #2B5B6C)' }}>
         {name.charAt(0).toUpperCase()}
       </div>
 
@@ -799,7 +799,7 @@ function TeamPanel({ trafficManagers, accounts, optimizations, todayStr, todayHi
               <CardContent className="p-5 space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="h-9 w-9 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0"
-                    style={{ background: 'linear-gradient(135deg, #F97316, #f43f5e)' }}>
+                    style={{ background: 'linear-gradient(135deg, #F4762D, #2B5B6C)' }}>
                     {ms.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -814,7 +814,7 @@ function TeamPanel({ trafficManagers, accounts, optimizations, todayStr, todayHi
                     className="h-full rounded transition-all"
                     style={{
                       width: `${Math.min(ms.progress, 100)}%`,
-                      background: ms.progress >= 100 ? 'hsl(var(--success))' : 'linear-gradient(90deg, #F97316, #f43f5e)',
+                      background: ms.progress >= 100 ? 'hsl(var(--success))' : 'linear-gradient(90deg, #F4762D, #2B5B6C)',
                     }}
                   />
                 </div>

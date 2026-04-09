@@ -324,7 +324,7 @@ function ArquivosSubsection({ clienteId }: { clienteId: string }) {
         <div className="h-[3px] rounded-full bg-muted overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-300"
-            style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #F97316, #f43f5e)' }}
+            style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #F4762D, #2B5B6C)' }}
           />
         </div>
       )}

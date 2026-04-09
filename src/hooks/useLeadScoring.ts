@@ -67,7 +67,7 @@ export function useLeadScoring() {
   const getScoreBadge = (score: number) => {
     if (score >= 90) return { label: 'Hot', color: '#EF4444', pulse: true };
     if (score >= 70) return { label: 'Quente', color: '#0F766E', pulse: false };
-    if (score >= 40) return { label: 'Morno', color: '#F97316', pulse: false };
+    if (score >= 40) return { label: 'Morno', color: '#F4762D', pulse: false };
     return { label: 'Frio', color: '#94A3B8', pulse: false };
   };
 

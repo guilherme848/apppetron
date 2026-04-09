@@ -114,7 +114,7 @@ export interface SalesCall {
 }
 
 export const ACTIVITY_TYPE_COLORS: Record<string, string> = {
-  call: '#F97316',
+  call: '#F4762D',
   whatsapp: '#0F766E',
   email: '#1B2B3B',
   meeting: '#92400E',

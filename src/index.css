@@ -8,7 +8,7 @@
 /* 
  * Petron Design System v3 — Premium SaaS
  * Inspired by Linear, Vercel, Raycast
- * Accent: #F97316 (Petron Orange)
+ * Accent: #F4762D (Petron Orange)
  */
 
 @layer base {
@@ -29,7 +29,7 @@
     --popover-foreground: 230 50% 8%;
 
     /* Primary — Petron Orange */
-    --primary: 25 95% 53%;
+    --primary: 24 90% 57%;
     --primary-foreground: 0 0% 100%;
 
     /* Secondary */
@@ -41,7 +41,7 @@
     --muted-foreground: 215 16% 43%;
 
     /* Accent — Orange */
-    --accent: 25 95% 53%;
+    --accent: 24 90% 57%;
     --accent-foreground: 0 0% 100%;
 
     /* Destructive */
@@ -51,23 +51,23 @@
     /* Borders & Inputs */
     --border: 216 20% 90%;
     --input: 220 14% 95%;
-    --ring: 25 95% 53%;
+    --ring: 24 90% 57%;
 
     --radius: 0.625rem;
 
     /* Sidebar — Light */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 230 50% 8%;
-    --sidebar-primary: 25 95% 53%;
+    --sidebar-primary: 24 90% 57%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 210 25% 95%;
     --sidebar-accent-foreground: 230 50% 8%;
     --sidebar-border: 216 20% 90%;
-    --sidebar-ring: 25 95% 53%;
+    --sidebar-ring: 24 90% 57%;
     --sidebar-muted-foreground: 215 16% 43%;
 
     /* Chart */
-    --chart-1: 25 95% 53%;
+    --chart-1: 24 90% 57%;
     --chart-2: 239 84% 67%;
     --chart-3: 160 84% 39%;
     --chart-4: 258 90% 66%;
@@ -92,13 +92,13 @@
     --badge-info-text: 239 84% 55%;
     --badge-info-border: rgba(99, 102, 241, 0.20);
 
-    --badge-attention-bg: rgba(249, 115, 22, 0.10);
-    --badge-attention-text: 25 95% 45%;
-    --badge-attention-border: rgba(249, 115, 22, 0.25);
+    --badge-attention-bg: rgba(244, 118, 45, 0.10);
+    --badge-attention-text: 24 90% 45%;
+    --badge-attention-border: rgba(244, 118, 45, 0.25);
 
-    --badge-strong-bg: 25 95% 53%;
+    --badge-strong-bg: 24 90% 57%;
     --badge-strong-text: 0 0% 100%;
-    --badge-strong-border: rgba(249, 115, 22, 0.50);
+    --badge-strong-border: rgba(244, 118, 45, 0.50);
 
     --badge-muted-bg: rgba(15, 23, 42, 0.03);
     --badge-muted-text: 215 16% 55%;
@@ -119,7 +119,7 @@
     --popover-foreground: 220 30% 95%;
 
     /* Primary */
-    --primary: 25 95% 53%;
+    --primary: 24 90% 57%;
     --primary-foreground: 0 0% 100%;
 
     /* Secondary */
@@ -131,7 +131,7 @@
     --muted-foreground: 215 20% 55%;
 
     /* Accent */
-    --accent: 25 95% 53%;
+    --accent: 24 90% 57%;
     --accent-foreground: 0 0% 100%;
 
     /* Destructive */
@@ -141,21 +141,21 @@
     /* Borders & Inputs */
     --border: 228 20% 18%;
     --input: 230 28% 8%;
-    --ring: 25 95% 53%;
+    --ring: 24 90% 57%;
 
     /* Sidebar — Dark */
     --sidebar-background: 232 28% 6%;
     --sidebar-foreground: 220 30% 95%;
-    --sidebar-primary: 25 95% 53%;
+    --sidebar-primary: 24 90% 57%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 228 22% 14%;
     --sidebar-accent-foreground: 220 30% 95%;
     --sidebar-border: 228 20% 14%;
-    --sidebar-ring: 25 95% 53%;
+    --sidebar-ring: 24 90% 57%;
     --sidebar-muted-foreground: 215 20% 45%;
 
     /* Chart */
-    --chart-1: 25 95% 53%;
+    --chart-1: 24 90% 57%;
     --chart-2: 239 84% 67%;
     --chart-3: 160 84% 39%;
     --chart-4: 258 90% 66%;
@@ -180,13 +180,13 @@
     --badge-info-text: 239 84% 75%;
     --badge-info-border: rgba(99, 102, 241, 0.30);
 
-    --badge-attention-bg: rgba(249, 115, 22, 0.18);
-    --badge-attention-text: 25 95% 70%;
-    --badge-attention-border: rgba(249, 115, 22, 0.40);
+    --badge-attention-bg: rgba(244, 118, 45, 0.18);
+    --badge-attention-text: 24 90% 70%;
+    --badge-attention-border: rgba(244, 118, 45, 0.40);
 
-    --badge-strong-bg: 25 95% 53%;
+    --badge-strong-bg: 24 90% 57%;
     --badge-strong-text: 0 0% 100%;
-    --badge-strong-border: rgba(249, 115, 22, 0.65);
+    --badge-strong-border: rgba(244, 118, 45, 0.65);
 
     --badge-muted-bg: rgba(255, 255, 255, 0.03);
     --badge-muted-text: 215 20% 50%;
@@ -238,7 +238,7 @@
   transform: translateX(-50%);
   width: 120%;
   height: 400px;
-  background: radial-gradient(ellipse 80% 50% at 50% 0%, hsl(25 95% 53% / 0.04), transparent);
+  background: radial-gradient(ellipse 80% 50% at 50% 0%, hsl(24 90% 57% / 0.04), transparent);
   pointer-events: none;
   z-index: 0;
 }
@@ -252,17 +252,17 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(25 95% 53% / 0.25);
+  background: hsl(24 90% 57% / 0.25);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(25 95% 53% / 0.5);
+  background: hsl(24 90% 57% / 0.5);
 }
 
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: hsl(25 95% 53% / 0.25) transparent;
+  scrollbar-color: hsl(24 90% 57% / 0.25) transparent;
 }
 
 /* ─── Glassmorphism ─── */
@@ -287,7 +287,7 @@
   box-shadow: 0 0 0 1px hsl(160 84% 39% / 0.12), 0 0 24px hsl(160 84% 39% / 0.1);
 }
 .glow-accent {
-  box-shadow: 0 0 20px hsl(25 95% 53% / 0.18), 0 4px 12px hsl(25 95% 53% / 0.12);
+  box-shadow: 0 0 20px hsl(24 90% 57% / 0.18), 0 4px 12px hsl(24 90% 57% / 0.12);
 }
 
 /* ─── Active sidebar indicator gradient ─── */
@@ -302,7 +302,7 @@
   bottom: 4px;
   width: 2px;
   border-radius: 0 4px 4px 0;
-  background: linear-gradient(180deg, #F97316, #f43f5e);
+  background: linear-gradient(180deg, #F4762D, #2B5B6C);
 }
 
 /* ─── Sidebar custom scrollbar ─── */
@@ -311,7 +311,7 @@
   scrollbar-color: transparent transparent;
 }
 .petron-sidebar-scroll:hover {
-  scrollbar-color: hsl(25 95% 53% / 0.4) transparent;
+  scrollbar-color: hsl(24 90% 57% / 0.4) transparent;
 }
 .petron-sidebar-scroll::-webkit-scrollbar {
   width: 4px;
@@ -324,7 +324,7 @@
   background: transparent;
 }
 .petron-sidebar-scroll:hover::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #F97316, #f43f5e);
+  background: linear-gradient(180deg, #F4762D, #2B5B6C);
 }
 
 /* ─── Styled scrollbar for panels ─── */
@@ -333,7 +333,7 @@
   scrollbar-color: transparent transparent;
 }
 .scrollbar-styled:hover {
-  scrollbar-color: hsl(25 95% 53% / 0.3) transparent;
+  scrollbar-color: hsl(24 90% 57% / 0.3) transparent;
 }
 .scrollbar-styled::-webkit-scrollbar {
   width: 4px;
@@ -346,11 +346,11 @@
   background: transparent;
 }
 .scrollbar-styled:hover::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #F97316, #f43f5e);
+  background: linear-gradient(180deg, #F4762D, #2B5B6C);
 }
 
 .table-row-hover:hover {
-  background: linear-gradient(90deg, hsl(25 95% 53% / 0.05), transparent) !important;
+  background: linear-gradient(90deg, hsl(24 90% 57% / 0.05), transparent) !important;
 }
 
 /* ─── Micro-interactions ─── */
@@ -531,7 +531,7 @@
 
 /* ─── Gradient text utility ─── */
 .text-gradient-primary {
-  background: linear-gradient(135deg, #F97316, #f43f5e);
+  background: linear-gradient(135deg, #F4762D, #2B5B6C);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -542,11 +542,11 @@
   transition: all 0.3s ease;
 }
 .kpi-card:hover {
-  box-shadow: 0 0 0 1px hsl(25 95% 53% / 0.15), 0 8px 24px hsl(25 95% 53% / 0.08);
+  box-shadow: 0 0 0 1px hsl(24 90% 57% / 0.15), 0 8px 24px hsl(24 90% 57% / 0.08);
   transform: translateY(-2px);
 }
 .dark .kpi-card:hover {
-  box-shadow: 0 0 0 1px hsl(25 95% 53% / 0.25), 0 8px 32px hsl(25 95% 53% / 0.12);
+  box-shadow: 0 0 0 1px hsl(24 90% 57% / 0.25), 0 8px 32px hsl(24 90% 57% / 0.12);
 }
 
 /* ─── Stat number animation ─── */
@@ -557,10 +557,10 @@
 
 /* ─── Table row premium hover ─── */
 .table-row-premium:hover {
-  background: linear-gradient(90deg, hsl(25 95% 53% / 0.04), hsl(25 95% 53% / 0.01), transparent) !important;
+  background: linear-gradient(90deg, hsl(24 90% 57% / 0.04), hsl(24 90% 57% / 0.01), transparent) !important;
 }
 .dark .table-row-premium:hover {
-  background: linear-gradient(90deg, hsl(25 95% 53% / 0.08), hsl(25 95% 53% / 0.03), transparent) !important;
+  background: linear-gradient(90deg, hsl(24 90% 57% / 0.08), hsl(24 90% 57% / 0.03), transparent) !important;
 }
 
 /* ─── Section header with gradient underline ─── */
@@ -576,7 +576,7 @@
   width: 48px;
   height: 2px;
   border-radius: 1px;
-  background: linear-gradient(90deg, #F97316, #f43f5e);
+  background: linear-gradient(90deg, #F4762D, #2B5B6C);
 }
 
 @media (prefers-reduced-motion: reduce) {
