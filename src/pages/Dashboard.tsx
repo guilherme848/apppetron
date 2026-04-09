@@ -76,7 +76,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gradient-primary">Dashboard Executivo</h1>
+        <h1 className="text-2xl font-bold">Dashboard Executivo</h1>
         <p className="text-muted-foreground">Visão estratégica de CS, retenção e performance financeira</p>
       </div>
 
