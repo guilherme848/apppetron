@@ -65,9 +65,8 @@ function getProviderConfig(provider: string): ProviderConfig {
     case "google": {
       const apiKey = Deno.env.get("GOOGLE_AI_API_KEY");
       if (!apiKey) throw new Error("GOOGLE_AI_API_KEY não configurada. Adicione nas variáveis de ambiente do Supabase.");
-      const modelId = stripPrefix("google/gemini-2.5-flash").replace(/\./g, "-");
       return {
-        apiUrl: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+        apiUrl: `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions?key=${apiKey}`,
         apiKey,
         transformModel: (model: string) => stripPrefix(model),
       };
@@ -147,8 +146,7 @@ serve(async (req) => {
       headers["x-api-key"] = config.apiKey;
       headers["anthropic-version"] = "2023-06-01";
     } else if (provider === "google") {
-      // Google AI Studio uses API key as query param or Bearer
-      headers["Authorization"] = `Bearer ${config.apiKey}`;
+      // Google AI Studio uses API key as query param (already in URL)
     } else {
       headers["Authorization"] = `Bearer ${config.apiKey}`;
     }
