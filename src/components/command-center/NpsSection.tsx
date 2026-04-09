@@ -31,8 +31,8 @@ export function NpsSection({
     : 0;
 
   const getNpsColor = (score: number) => {
-    if (score >= 50) return 'text-green-600';
-    if (score >= 0) return 'text-yellow-600';
+    if (score >= 50) return 'text-success';
+    if (score >= 0) return 'text-warning';
     return 'text-destructive';
   };
 
@@ -65,15 +65,15 @@ export function NpsSection({
         <div className="space-y-2">
           <div className="h-3 rounded-full overflow-hidden flex">
             <div 
-              className="bg-green-500 transition-all"
+              className="bg-success transition-all"
               style={{ width: `${getPercentage(data.promoters)}%` }}
             />
             <div 
-              className="bg-gray-400 transition-all"
+              className="bg-muted-foreground transition-all"
               style={{ width: `${getPercentage(data.passives)}%` }}
             />
             <div 
-              className="bg-red-500 transition-all"
+              className="bg-destructive transition-all"
               style={{ width: `${getPercentage(data.detractors)}%` }}
             />
           </div>
@@ -84,11 +84,11 @@ export function NpsSection({
               className="p-2 rounded-lg hover:bg-muted/50 transition-colors"
               onClick={onViewPromoters}
             >
-              <div className="flex items-center justify-center gap-1 text-green-600">
+              <div className="flex items-center justify-center gap-1 text-success">
                 <ThumbsUp className="h-4 w-4" />
                 <span className="text-sm font-medium">Promotores</span>
               </div>
-              <div className="text-xl font-bold text-green-600">{data.promoters}</div>
+              <div className="text-xl font-bold text-success">{data.promoters}</div>
               <div className="text-xs text-muted-foreground">{getPercentage(data.promoters)}%</div>
             </button>
 

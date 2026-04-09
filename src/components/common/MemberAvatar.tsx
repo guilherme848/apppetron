@@ -39,7 +39,7 @@ export function MemberAvatar({ name, photoPath, size = 'md', className }: Member
 
   return (
     <Avatar className={cn(sizeClasses[size], className)}>
-      {photoUrl && <AvatarImage src={photoUrl} alt={name || 'Avatar'} />}
+      {photoUrl && <AvatarImage src={photoUrl} alt={name || 'Avatar do usuário'} />}
       <AvatarFallback className="bg-muted">
         {name ? (
           getInitials(name)

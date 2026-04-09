@@ -78,6 +78,7 @@ export function AppSidebar() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
+                  aria-label={isExpanded ? "Recolher menu" : "Expandir menu"}
                   onClick={toggleSidebar}
                   className={cn(
                     'h-7 w-7 shrink-0 rounded-full flex items-center justify-center',
@@ -119,7 +120,7 @@ export function AppSidebar() {
                   <div
                     className={cn(
                       'px-3 py-2 select-none',
-                      'text-[10px] font-semibold uppercase tracking-[0.12em]',
+                      'text-xs font-semibold uppercase tracking-[0.12em]',
                       'transition-colors duration-200',
                       moduleActive
                         ? 'text-sidebar-primary'
@@ -151,6 +152,7 @@ export function AppSidebar() {
                               <RouterNavLink
                                 to={route.path}
                                 end
+                                {...(isActive ? { 'aria-current': 'page' as const } : {})}
                                 className={cn(
                                   'flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] relative',
                                   'transition-all duration-150',

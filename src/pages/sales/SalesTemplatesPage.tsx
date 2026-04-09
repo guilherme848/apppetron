@@ -202,9 +202,9 @@ export default function SalesTemplatesPage() {
                   <ChevronDown className="h-4 w-4" /> Preview
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <div className="p-4 rounded-lg bg-muted mt-2 prose prose-sm max-w-none text-foreground"
-                    dangerouslySetInnerHTML={{ __html: previewContent }}
-                  />
+                  <div className="p-4 rounded-lg bg-muted mt-2 prose prose-sm max-w-none text-foreground">
+                    {previewContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()}
+                  </div>
                 </CollapsibleContent>
               </Collapsible>
             )}

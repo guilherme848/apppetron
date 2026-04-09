@@ -328,7 +328,7 @@ export default function ContentDashboard() {
       {/* Filter Side Panel */}
       <div
         className={cn(
-          'fixed top-0 right-0 z-50 h-full w-[360px] max-w-[90vw] bg-popover border-l border-border shadow-[-8px_0_24px_rgba(0,0,0,0.1)] flex flex-col transition-transform duration-250 ease-out',
+          'fixed top-0 right-0 z-50 h-full w-[95vw] sm:w-[360px] bg-popover border-l border-border shadow-[-8px_0_24px_rgba(0,0,0,0.1)] flex flex-col transition-transform duration-250 ease-out',
           panelOpen ? 'translate-x-0' : 'translate-x-full'
         )}
       >

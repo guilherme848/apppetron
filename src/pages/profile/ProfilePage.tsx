@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { User, Camera, Calendar, Briefcase } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,12 +25,20 @@ export default function ProfilePage() {
   const [fullName, setFullName] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [saving, setSaving] = useState<string | null>(null);
-  
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     if (currentMember) {
       setFullName(currentMember.full_name || currentMember.name || '');
       setBirthDate(currentMember.birth_date || '');
     }
+  }, [currentMember]);
+
+  const debouncedSave = useCallback((field: 'full_name' | 'birth_date', value: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      handleSaveField(field, value);
+    }, 300);
   }, [currentMember]);
 
   if (loading) {
@@ -49,7 +57,7 @@ export default function ProfilePage() {
             <User className="h-6 w-6" />
             Meu Perfil
           </h1>
-          <p className="text-muted-foreground">Selecione um usuário no seletor acima.</p>
+          <p className="text-muted-foreground">Perfil não encontrado. Faça login novamente.</p>
         </div>
       </div>
     );
@@ -162,7 +170,7 @@ export default function ProfilePage() {
                 onChange={(e) => setFullName(e.target.value)}
                 onBlur={() => {
                   if (fullName !== (currentMember.full_name || currentMember.name)) {
-                    handleSaveField('full_name', fullName);
+                    debouncedSave('full_name', fullName);
                   }
                 }}
                 placeholder="Seu nome completo"
@@ -184,7 +192,7 @@ export default function ProfilePage() {
                 onChange={(e) => setBirthDate(e.target.value)}
                 onBlur={() => {
                   if (birthDate !== currentMember.birth_date) {
-                    handleSaveField('birth_date', birthDate);
+                    debouncedSave('birth_date', birthDate);
                   }
                 }}
               />

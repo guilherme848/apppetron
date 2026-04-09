@@ -165,8 +165,9 @@ export default function LeadScoringPage() {
                       <Input
                         type="number"
                         className="w-20 h-8 text-sm text-center"
+                        min={0}
                         value={editedPoints[c.id] ?? c.points}
-                        onChange={(e) => setEditedPoints(prev => ({ ...prev, [c.id]: parseInt(e.target.value) || 0 }))}
+                        onChange={(e) => setEditedPoints(prev => ({ ...prev, [c.id]: Math.max(0, parseInt(e.target.value) || 0) }))}
                       />
                       <span className="text-xs text-muted-foreground">pts</span>
                     </div>

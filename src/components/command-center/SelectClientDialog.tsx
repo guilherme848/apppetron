@@ -99,7 +99,7 @@ export function SelectClientDialog({
                     <Badge variant="destructive">Crítico</Badge>
                   )}
                   {account.health_status === 'attention' && (
-                    <Badge className="bg-yellow-500/10 text-yellow-600">Atenção</Badge>
+                    <Badge className="bg-warning/10 text-warning">Atenção</Badge>
                   )}
                 </button>
               ))

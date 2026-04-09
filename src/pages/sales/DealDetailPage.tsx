@@ -236,7 +236,7 @@ export default function DealDetailPage() {
       <div className="flex-1 overflow-hidden">
         <Tabs defaultValue="activities" className="flex flex-col h-full">
           <div className="px-6 pt-3 border-b">
-            <TabsList className="h-auto flex-wrap">
+            <TabsList className="h-auto overflow-x-auto flex-nowrap">
               <TabsTrigger value="activities">Atividades</TabsTrigger>
               <TabsTrigger value="contact">Contato</TabsTrigger>
               <TabsTrigger value="company">Empresa</TabsTrigger>

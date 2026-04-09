@@ -131,7 +131,7 @@ export default function CrmDetail() {
   };
 
   const getFullAddress = () => {
-    const parts = [account.street, account.street_number, account.address_complement, account.neighborhood, account.city, account.state, account.postal_code].filter(Boolean);
+    const parts = [account.street, account.street_number, account.address_complement, account.neighborhood, account.city, account.state, account.postal_code].filter(v => v != null && String(v).trim() !== '');
     return parts.length > 0 ? parts.join(', ') : null;
   };
 

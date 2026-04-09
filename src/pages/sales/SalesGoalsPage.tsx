@@ -90,7 +90,7 @@ export default function SalesGoalsPage() {
     return (
       <div className="space-y-4">
         <Skeleton className="h-8 w-48" />
-        <div className="grid grid-cols-3 gap-4">{[1, 2, 3].map(i => <Skeleton key={i} className="h-32" />)}</div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">{[1, 2, 3].map(i => <Skeleton key={i} className="h-32" />)}</div>
         <Skeleton className="h-64 w-full" />
       </div>
     );
@@ -134,7 +134,7 @@ export default function SalesGoalsPage() {
 
           {/* Full table */}
           <Card>
-            <CardContent className="p-0">
+            <CardContent className="p-0 overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -274,7 +274,7 @@ export default function SalesGoalsPage() {
             </Button>
           </div>
           <Card>
-            <CardContent className="p-0">
+            <CardContent className="p-0 overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>

@@ -46,7 +46,7 @@ export function UserSelector() {
           <span className="max-w-[120px] truncate hidden sm:inline">
             {member?.name || user?.email?.split('@')[0] || 'Usuário'}
           </span>
-          <ChevronDown className="h-3 w-3 opacity-50" />
+          <ChevronDown className="h-3 w-3 opacity-50" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">

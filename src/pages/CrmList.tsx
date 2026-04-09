@@ -419,7 +419,7 @@ export default function CrmList() {
       </div>
 
       {/* Table */}
-      <div className="rounded-2xl border border-border bg-card overflow-hidden">
+      <div className="rounded-2xl border border-border bg-card overflow-hidden overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="bg-secondary/50 hover:bg-secondary/50">
@@ -519,7 +519,7 @@ export default function CrmList() {
                       </span>
                     </TableCell>
                     <TableCell onClick={e => e.stopPropagation()}>
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                      <div className="flex items-center gap-1">
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/crm/${account.id}`)}>
                           <Eye className="h-4 w-4" />
                         </Button>

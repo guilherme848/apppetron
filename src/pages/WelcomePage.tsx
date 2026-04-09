@@ -206,7 +206,7 @@ function PostItem({ post, onAction, onNavigate }: { post: any; onAction: () => v
         <Button
           variant="outline"
           size="sm"
-          className="text-[11px] h-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+          className="text-[11px] h-7 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0"
           onClick={(e) => { e.stopPropagation(); onAction(); }}
         >
           {actionLabel}

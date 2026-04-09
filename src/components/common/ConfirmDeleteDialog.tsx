@@ -13,6 +13,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AlertTriangle } from 'lucide-react';
 
 export interface ConfirmDeleteDialogProps {
   /** The trigger element (usually a button) */
@@ -113,7 +114,7 @@ export function ConfirmDeleteDialog({
             <span className="block">{description || defaultDescription}</span>
             {warning && (
               <span className="block text-accent font-medium">
-                ⚠️ {warning}
+                <AlertTriangle className="inline-block h-4 w-4 mr-1 align-text-bottom" /> {warning}
               </span>
             )}
           </AlertDialogDescription>

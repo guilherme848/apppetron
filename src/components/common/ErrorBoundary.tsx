@@ -30,7 +30,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
         <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
           <h2 className="text-xl font-semibold">Algo deu errado</h2>
           <p className="text-muted-foreground text-sm max-w-md text-center">
-            {this.state.error?.message || 'Erro inesperado na aplicacao'}
+            Ocorreu um erro inesperado. Tente novamente ou entre em contato com o suporte.
           </p>
           <Button onClick={() => this.setState({ hasError: false, error: null })}>
             Tentar novamente

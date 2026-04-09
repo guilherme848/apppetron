@@ -42,7 +42,7 @@ export function OnboardingFunnelCard({ data, onStageClick }: OnboardingFunnelCar
             className="text-center hover:bg-muted/50 rounded-lg p-3 transition-colors flex-1"
             onClick={() => onStageClick('completed')}
           >
-            <div className="text-2xl font-bold text-green-600">{data.completed}</div>
+            <div className="text-2xl font-bold text-success">{data.completed}</div>
             <div className="text-xs text-muted-foreground">Concluídos</div>
           </button>
         </div>
@@ -53,10 +53,10 @@ export function OnboardingFunnelCard({ data, onStageClick }: OnboardingFunnelCar
             className="flex items-center gap-3 p-2 hover:bg-muted/50 rounded-lg transition-colors"
             onClick={() => onStageClick('on_time')}
           >
-            <div className="w-3 h-3 rounded-full bg-green-500" />
+            <div className="w-3 h-3 rounded-full bg-success" />
             <div>
               <div className="text-sm font-medium">No Prazo</div>
-              <div className="text-lg font-bold text-green-600">{data.onTime}</div>
+              <div className="text-lg font-bold text-success">{data.onTime}</div>
             </div>
           </button>
           
@@ -64,10 +64,10 @@ export function OnboardingFunnelCard({ data, onStageClick }: OnboardingFunnelCar
             className="flex items-center gap-3 p-2 hover:bg-muted/50 rounded-lg transition-colors"
             onClick={() => onStageClick('delayed')}
           >
-            <div className="w-3 h-3 rounded-full bg-red-500" />
+            <div className="w-3 h-3 rounded-full bg-destructive" />
             <div>
               <div className="text-sm font-medium">Atrasados</div>
-              <div className="text-lg font-bold text-red-600">{data.delayed}</div>
+              <div className="text-lg font-bold text-destructive">{data.delayed}</div>
             </div>
           </button>
         </div>
@@ -114,7 +114,7 @@ export function NpsDistributionCard({ data, onSegmentClick }: NpsDistributionCar
             className="w-full flex items-center gap-3 hover:bg-muted/50 rounded-lg p-2 transition-colors"
             onClick={() => onSegmentClick('promoter')}
           >
-            <div className="w-3 h-3 rounded-full bg-green-500 shrink-0" />
+            <div className="w-3 h-3 rounded-full bg-success shrink-0" />
             <div className="flex-1">
               <div className="flex justify-between text-sm">
                 <span>Promotores (9-10)</span>
@@ -128,7 +128,7 @@ export function NpsDistributionCard({ data, onSegmentClick }: NpsDistributionCar
             className="w-full flex items-center gap-3 hover:bg-muted/50 rounded-lg p-2 transition-colors"
             onClick={() => onSegmentClick('passive')}
           >
-            <div className="w-3 h-3 rounded-full bg-yellow-500 shrink-0" />
+            <div className="w-3 h-3 rounded-full bg-warning shrink-0" />
             <div className="flex-1">
               <div className="flex justify-between text-sm">
                 <span>Neutros (7-8)</span>
@@ -142,7 +142,7 @@ export function NpsDistributionCard({ data, onSegmentClick }: NpsDistributionCar
             className="w-full flex items-center gap-3 hover:bg-muted/50 rounded-lg p-2 transition-colors"
             onClick={() => onSegmentClick('detractor')}
           >
-            <div className="w-3 h-3 rounded-full bg-red-500 shrink-0" />
+            <div className="w-3 h-3 rounded-full bg-destructive shrink-0" />
             <div className="flex-1">
               <div className="flex justify-between text-sm">
                 <span>Detratores (0-6)</span>

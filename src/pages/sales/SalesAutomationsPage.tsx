@@ -76,7 +76,11 @@ export default function SalesAutomationsPage() {
   };
 
   const handleSave = async () => {
-    if (!form.name || !form.trigger_type) return;
+    if (!form.name.trim()) {
+      toast.error('Nome da automação é obrigatório');
+      return;
+    }
+    if (!form.trigger_type) return;
     const payload = {
       name: form.name,
       trigger_type: form.trigger_type,

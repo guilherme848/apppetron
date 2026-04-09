@@ -148,7 +148,7 @@ export function FunnelActualsTable({
       case 'revenue_actual':
         return totalRevenue > 0 ? totalRevenue : null;
       case 'cpl_actual':
-        return investment && leads
+        return investment && leads && leads !== 0
           ? investment / leads
           : null;
       case 'cpmql_actual': {
@@ -159,7 +159,7 @@ export function FunnelActualsTable({
       }
       case 'rate_qualification_actual': {
         const mql2 = actual?.mql_actual ?? null;
-        return leads && mql2 && mql2 > 0
+        return leads && leads !== 0 && mql2 && mql2 > 0
           ? mql2 / leads
           : null;
       }
@@ -168,35 +168,35 @@ export function FunnelActualsTable({
         const mqlForScheduling = actual?.mql_actual ?? null;
         // Use MQL as base if available, otherwise use leads
         const base = mqlForScheduling && mqlForScheduling > 0 ? mqlForScheduling : leads;
-        return base && appointments
+        return base && base !== 0 && appointments
           ? appointments / base
           : null;
       }
       case 'rate_attendance_actual':
-        return actual?.appointments_actual && actual?.meetings_held_actual
+        return actual?.appointments_actual && actual.appointments_actual !== 0 && actual?.meetings_held_actual
           ? actual.meetings_held_actual / actual.appointments_actual
           : null;
       case 'cost_per_attendance_actual':
-        return investment && meetingsHeld
+        return investment && meetingsHeld && meetingsHeld !== 0
           ? investment / meetingsHeld
           : null;
       case 'rate_close_actual':
-        return meetingsHeld && salesCount
+        return meetingsHeld && meetingsHeld !== 0 && salesCount
           ? salesCount / meetingsHeld
           : null;
       case 'cost_per_sale_actual':
-        return investment && salesCount
+        return investment && salesCount && salesCount !== 0
           ? investment / salesCount
           : null;
       case 'roas_actual':
-        return totalRevenue && investment
+        return totalRevenue && investment && investment !== 0
           ? totalRevenue / investment
           : null;
       case 'roas_expected':
         if (baseMetrics.avgLtMonths > 0 && avgTicket > 0 && investment && salesCount > 0) {
           const ltv = baseMetrics.avgLtMonths * avgTicket;
           const cac = investment / salesCount;
-          return ltv / cac;
+          return cac !== 0 ? ltv / cac : null;
         }
         return null;
       default:

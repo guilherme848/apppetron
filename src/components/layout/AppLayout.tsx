@@ -28,7 +28,7 @@ function Breadcrumb() {
   if (crumbs.length === 0) return null;
 
   return (
-    <nav className="flex items-center gap-1.5 text-sm">
+    <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm">
       {crumbs.map((crumb, i) => (
         <span key={i} className="flex items-center gap-1.5">
           {i > 0 && <ChevronRight className="h-3 w-3 text-muted-foreground/40" />}
@@ -53,6 +53,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         '--sidebar-width-icon': '200px',
       } as React.CSSProperties}
     >
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:m-2">Pular para o conteúdo</a>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <main className="flex-1 flex flex-col min-w-0 relative">
@@ -67,7 +68,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               <UserSelector />
             </div>
           </header>
-          <div className="flex-1 p-6 animate-fade-in-up relative ambient-glow">
+          <div id="main-content" className="flex-1 p-4 md:p-6 animate-fade-in-up relative ambient-glow">
             {children}
           </div>
         </main>

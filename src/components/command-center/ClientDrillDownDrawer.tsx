@@ -24,9 +24,9 @@ interface ClientDrillDownDrawerProps {
 function getHealthBadge(status: HealthStatus) {
   switch (status) {
     case 'healthy':
-      return <Badge className="bg-green-500/10 text-green-600 hover:bg-green-500/20">Saudável</Badge>;
+      return <Badge className="bg-success/10 text-success hover:bg-success/20">Saudável</Badge>;
     case 'attention':
-      return <Badge className="bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20">Atenção</Badge>;
+      return <Badge className="bg-warning/10 text-warning hover:bg-warning/20">Atenção</Badge>;
     case 'critical':
       return <Badge variant="destructive">Crítico</Badge>;
   }

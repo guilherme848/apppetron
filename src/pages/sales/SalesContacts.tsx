@@ -207,7 +207,7 @@ export default function SalesContacts() {
 
       {/* Contact Detail Sheet */}
       <Sheet open={!!selectedContact} onOpenChange={() => setSelectedContact(null)}>
-        <SheetContent className="w-[520px] sm:max-w-[520px] overflow-y-auto">
+        <SheetContent className="w-[95vw] sm:w-[520px] sm:max-w-[520px] overflow-y-auto">
           {selectedContact && (
             <div className="space-y-6">
               <SheetHeader>

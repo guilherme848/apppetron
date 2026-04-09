@@ -134,6 +134,7 @@ export default function ContractsList() {
               </p>
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50 hover:bg-muted/50">
@@ -197,6 +198,7 @@ export default function ContractsList() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>

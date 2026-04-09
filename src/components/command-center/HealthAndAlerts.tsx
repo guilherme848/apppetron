@@ -24,17 +24,17 @@ export function HealthDistributionCard({ data, onSegmentClick }: HealthDistribut
         {/* Bar visualization */}
         <div className="h-4 rounded-full overflow-hidden flex mb-4">
           <div 
-            className="bg-green-500 cursor-pointer hover:opacity-80 transition-opacity"
+            className="bg-success cursor-pointer hover:opacity-80 transition-opacity"
             style={{ width: `${getPercentage(data.healthy)}%` }}
             onClick={() => onSegmentClick('healthy')}
           />
           <div 
-            className="bg-yellow-500 cursor-pointer hover:opacity-80 transition-opacity"
+            className="bg-warning cursor-pointer hover:opacity-80 transition-opacity"
             style={{ width: `${getPercentage(data.attention)}%` }}
             onClick={() => onSegmentClick('attention')}
           />
           <div 
-            className="bg-red-500 cursor-pointer hover:opacity-80 transition-opacity"
+            className="bg-destructive cursor-pointer hover:opacity-80 transition-opacity"
             style={{ width: `${getPercentage(data.critical)}%` }}
             onClick={() => onSegmentClick('critical')}
           />
@@ -47,10 +47,10 @@ export function HealthDistributionCard({ data, onSegmentClick }: HealthDistribut
             onClick={() => onSegmentClick('healthy')}
           >
             <div className="flex items-center justify-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-green-500" />
+              <div className="w-3 h-3 rounded-full bg-success" />
               <span className="text-sm font-medium">Saudável</span>
             </div>
-            <div className="text-2xl font-bold text-green-600">{data.healthy}</div>
+            <div className="text-2xl font-bold text-success">{data.healthy}</div>
             <div className="text-xs text-muted-foreground">{getPercentage(data.healthy)}%</div>
           </button>
 
@@ -59,10 +59,10 @@ export function HealthDistributionCard({ data, onSegmentClick }: HealthDistribut
             onClick={() => onSegmentClick('attention')}
           >
             <div className="flex items-center justify-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-yellow-500" />
+              <div className="w-3 h-3 rounded-full bg-warning" />
               <span className="text-sm font-medium">Atenção</span>
             </div>
-            <div className="text-2xl font-bold text-yellow-600">{data.attention}</div>
+            <div className="text-2xl font-bold text-warning">{data.attention}</div>
             <div className="text-xs text-muted-foreground">{getPercentage(data.attention)}%</div>
           </button>
 
@@ -71,10 +71,10 @@ export function HealthDistributionCard({ data, onSegmentClick }: HealthDistribut
             onClick={() => onSegmentClick('critical')}
           >
             <div className="flex items-center justify-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-red-500" />
+              <div className="w-3 h-3 rounded-full bg-destructive" />
               <span className="text-sm font-medium">Crítico</span>
             </div>
-            <div className="text-2xl font-bold text-red-600">{data.critical}</div>
+            <div className="text-2xl font-bold text-destructive">{data.critical}</div>
             <div className="text-xs text-muted-foreground">{getPercentage(data.critical)}%</div>
           </button>
         </div>
@@ -101,7 +101,7 @@ export function AlertsCard({ alerts, onAlertClick, onViewAll }: AlertsCardProps)
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'high': return 'text-destructive';
-      case 'medium': return 'text-yellow-600';
+      case 'medium': return 'text-warning';
       default: return 'text-muted-foreground';
     }
   };
@@ -151,7 +151,7 @@ export function AlertsCard({ alerts, onAlertClick, onViewAll }: AlertsCardProps)
                   className={cn(
                     'rounded-full',
                     typeAlerts[0].severity === 'high' && 'border-destructive text-destructive',
-                    typeAlerts[0].severity === 'medium' && 'border-yellow-500 text-yellow-600'
+                    typeAlerts[0].severity === 'medium' && 'border-warning text-warning'
                   )}
                 >
                   {typeAlerts.length}
