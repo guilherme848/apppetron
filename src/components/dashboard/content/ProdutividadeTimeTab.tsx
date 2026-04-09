@@ -180,8 +180,8 @@ function SparklineBlock({ prof }: { prof: any }) {
           <span className="text-[12px] font-mono text-muted-foreground">—</span>
         ) : sparklineTrend > 0 ? (
           <div className="flex flex-col items-center">
-            <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
-            <span className="text-[12px] font-bold font-mono text-emerald-500">{sparklineTrend}%</span>
+            <TrendingUp className="h-3.5 w-3.5 text-success" />
+            <span className="text-[12px] font-bold font-mono text-success">{sparklineTrend}%</span>
           </div>
         ) : (
           <div className="flex flex-col items-center">
@@ -347,7 +347,7 @@ function ClientDistributionBlock({ prof }: { prof: any }) {
         {topClientPct > 50 ? (
           <p className="text-[11px] text-warning flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> Produção concentrada em {clientDistribution[0]?.name}</p>
         ) : totalClientDeliveries > 0 ? (
-          <p className="text-[11px] text-emerald-500 flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Produção bem distribuída</p>
+          <p className="text-[11px] text-success flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Produção bem distribuída</p>
         ) : null}
       </div>
     </div>
@@ -425,8 +425,8 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {filtered.map((prof: any) => {
             const borderColor = ROLE_COLORS[prof.role] || 'hsl(var(--info))';
-            const punctualityColor = prof.punctuality >= 90 ? 'text-emerald-500' : prof.punctuality >= 70 ? 'text-warning' : 'text-destructive';
-            const prodTimeColor = prof.avgProdTime <= 3 ? 'text-emerald-500' : prof.avgProdTime <= 5 ? 'text-warning' : 'text-destructive';
+            const punctualityColor = prof.punctuality >= 90 ? 'text-success' : prof.punctuality >= 70 ? 'text-warning' : 'text-destructive';
+            const prodTimeColor = prof.avgProdTime <= 3 ? 'text-success' : prof.avgProdTime <= 5 ? 'text-warning' : 'text-destructive';
 
             return (
               <Card
@@ -457,7 +457,7 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
                   {/* BLOCK 2: Volume metrics */}
                   <div className="flex items-center divide-x divide-border">
                     <div className="flex-1 text-center pr-2">
-                      <p className="text-lg font-bold font-mono text-emerald-500">{prof.completedInPeriod}</p>
+                      <p className="text-lg font-bold font-mono text-success">{prof.completedInPeriod}</p>
                       <p className="text-[10px] uppercase text-muted-foreground">Entregas</p>
                     </div>
                     <div className="flex-1 text-center px-2">
@@ -534,8 +534,8 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
                     <div className="flex items-center gap-1.5 mt-2">
                       {prof.trendPct > 0 ? (
                         <>
-                          <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
-                          <span className="text-[11px] text-emerald-500">{prof.trendPct}% vs semana anterior</span>
+                          <TrendingUp className="h-3.5 w-3.5 text-success" />
+                          <span className="text-[11px] text-success">{prof.trendPct}% vs semana anterior</span>
                         </>
                       ) : prof.trendPct < 0 ? (
                         <>
@@ -593,12 +593,12 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
                         key={`${s.id}-${s.role}`}
                         className={cn(
                           "h-14 transition-colors hover:bg-gradient-to-r hover:from-primary/5 hover:to-transparent",
-                          isFirst && "bg-emerald-500/5",
+                          isFirst && "bg-success/5",
                           isLast && "bg-destructive/5",
                         )}
                       >
                         <TableCell className="font-mono text-muted-foreground">
-                          {isFirst ? <Trophy className="h-4 w-4 text-amber-500" /> : i + 1}
+                          {isFirst ? <Trophy className="h-4 w-4 text-warning" /> : i + 1}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
@@ -609,7 +609,7 @@ export function ProdutividadeTimeTab({ data }: ProdutividadeTimeTabProps) {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-right font-mono font-semibold text-emerald-500">{s.completedInPeriod}</TableCell>
+                        <TableCell className="text-right font-mono font-semibold text-success">{s.completedInPeriod}</TableCell>
                         <TableCell className="text-right font-mono font-semibold text-destructive">{s.postsWithChanges}</TableCell>
                         <TableCell className="text-right font-mono font-bold text-foreground">{s.netDeliveries}</TableCell>
                         <TableCell className="text-right font-mono text-sm text-muted-foreground">{s.avgProdTime}d</TableCell>

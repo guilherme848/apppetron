@@ -294,8 +294,8 @@ export function NumerosGeraisTab({ data }: NumerosGeraisTabProps) {
   const daysColor = (d: number | null) => {
     if (d === null) return 'text-muted-foreground';
     if (d < 3) return 'text-destructive';
-    if (d <= 7) return 'text-amber-500';
-    return 'text-emerald-500';
+    if (d <= 7) return 'text-warning';
+    return 'text-success';
   };
 
   return (
@@ -305,10 +305,10 @@ export function NumerosGeraisTab({ data }: NumerosGeraisTabProps) {
         <div className="flex items-center gap-2">
           <Radio className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Situação Atual</span>
-          <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-500">
+          <span className="flex items-center gap-1 text-[10px] font-semibold text-success">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-success" />
             </span>
             AO VIVO
           </span>
@@ -427,7 +427,7 @@ export function NumerosGeraisTab({ data }: NumerosGeraisTabProps) {
                             <span className="ml-1 text-[9px] font-medium text-warning bg-warning/10 px-1.5 py-0.5 rounded">Gargalo</span>
                           )}
                         </TableCell>
-                        <TableCell className="text-center font-mono text-sm text-emerald-500">{p.concluded}</TableCell>
+                        <TableCell className="text-center font-mono text-sm text-success">{p.concluded}</TableCell>
                         <TableCell className="text-center">
                           <span className={cn("font-mono text-sm", p.overdue > 0 ? "text-destructive font-bold" : "text-muted-foreground")}>
                             {p.overdue}
@@ -443,7 +443,7 @@ export function NumerosGeraisTab({ data }: NumerosGeraisTabProps) {
                       <TableCell className="text-center font-mono text-sm font-bold text-foreground">{funnelTotals.todo}</TableCell>
                       <TableCell className="text-center font-mono text-sm font-bold text-primary">{funnelTotals.doing}</TableCell>
                       <TableCell className="text-center font-mono text-sm font-bold text-warning">{funnelTotals.inReview}</TableCell>
-                      <TableCell className="text-center font-mono text-sm font-bold text-emerald-500">{funnelTotals.concluded}</TableCell>
+                      <TableCell className="text-center font-mono text-sm font-bold text-success">{funnelTotals.concluded}</TableCell>
                       <TableCell className="text-center font-mono text-sm font-bold text-destructive">{funnelTotals.overdue}</TableCell>
                       <TableCell className="text-center font-mono text-sm font-bold text-foreground">{funnelTotals.totalOpen}</TableCell>
                     </TableRow>

@@ -227,8 +227,8 @@ export function ProdutividadeTab({ data }: ProdutividadeTabProps) {
     return dailyProductivityStats.filter((s: any) => s.meta > 0 && s.avgPerDay < s.meta * 0.7);
   }, [dailyProductivityStats]);
 
-  const changeRateColor = (rate: number) => rate <= 10 ? 'text-emerald-500' : rate <= 20 ? 'text-amber-500' : 'text-red-500';
-  const changeRateBg = (rate: number) => rate <= 10 ? 'bg-emerald-500' : rate <= 20 ? 'bg-amber-500' : 'bg-red-500';
+  const changeRateColor = (rate: number) => rate <= 10 ? 'text-success' : rate <= 20 ? 'text-warning' : 'text-destructive';
+  const changeRateBg = (rate: number) => rate <= 10 ? 'bg-success' : rate <= 20 ? 'bg-warning' : 'bg-destructive';
 
   // Heatmap color based on meta
   const heatColor = (count: number, role: string) => {
@@ -318,7 +318,7 @@ export function ProdutividadeTab({ data }: ProdutividadeTabProps) {
               const metaPct = prof.meta > 0 ? (prof.avgPerDay / prof.meta) * 100 : 0;
               const isAboveMeta = metaPct >= 100;
               const isBelowThreshold = metaPct < 70 && prof.meta > 0;
-              const progressColor = metaPct >= 100 ? 'bg-emerald-500' : metaPct >= 70 ? 'bg-amber-500' : 'bg-red-500';
+              const progressColor = metaPct >= 100 ? 'bg-success' : metaPct >= 70 ? 'bg-warning' : 'bg-destructive';
               const borderColor = ROLE_COLORS[prof.role] || 'hsl(var(--info))';
 
               return (
@@ -330,7 +330,7 @@ export function ProdutividadeTab({ data }: ProdutividadeTabProps) {
                   {/* Danger/success glow */}
                   {isBelowThreshold && (
                     <>
-                      <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                      <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />
                       <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0 0 24px rgba(239,68,68,0.05)' }} />
                     </>
                   )}
@@ -394,13 +394,13 @@ export function ProdutividadeTab({ data }: ProdutividadeTabProps) {
                     <div className="flex items-center gap-1.5">
                       {prof.trendPct > 0 ? (
                         <>
-                          <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
-                          <span className="text-[11px] text-emerald-500">{prof.trendPct}% vs semana anterior</span>
+                          <TrendingUp className="h-3.5 w-3.5 text-success" />
+                          <span className="text-[11px] text-success">{prof.trendPct}% vs semana anterior</span>
                         </>
                       ) : prof.trendPct < 0 ? (
                         <>
-                          <TrendingDown className="h-3.5 w-3.5 text-red-500" />
-                          <span className="text-[11px] text-red-500">{Math.abs(prof.trendPct)}% vs semana anterior</span>
+                          <TrendingDown className="h-3.5 w-3.5 text-destructive" />
+                          <span className="text-[11px] text-destructive">{Math.abs(prof.trendPct)}% vs semana anterior</span>
                         </>
                       ) : (
                         <>
@@ -456,15 +456,15 @@ export function ProdutividadeTab({ data }: ProdutividadeTabProps) {
 
                         <div className="grid grid-cols-3 gap-2 text-center">
                           <div>
-                            <p className="text-xl font-extrabold font-mono text-emerald-500">{p.completed}</p>
+                            <p className="text-xl font-extrabold font-mono text-success">{p.completed}</p>
                             <p className="text-[10px] uppercase text-muted-foreground">Concluídos</p>
                           </div>
                           <div>
-                            <p className="text-xl font-extrabold font-mono text-blue-500">{p.wip}</p>
+                            <p className="text-xl font-extrabold font-mono text-primary">{p.wip}</p>
                             <p className="text-[10px] uppercase text-muted-foreground">WIP</p>
                           </div>
                           <div>
-                            <p className={`text-xl font-extrabold font-mono ${p.overdue > 0 ? 'text-red-500 animate-pulse' : 'text-muted-foreground'}`}>{p.overdue}</p>
+                            <p className={`text-xl font-extrabold font-mono ${p.overdue > 0 ? 'text-destructive animate-pulse' : 'text-muted-foreground'}`}>{p.overdue}</p>
                             <p className="text-[10px] uppercase text-muted-foreground">Atrasados</p>
                           </div>
                         </div>
@@ -478,7 +478,7 @@ export function ProdutividadeTab({ data }: ProdutividadeTabProps) {
                             <div className={`h-full rounded-full transition-all ${changeRateBg(p.changeRate)}`} style={{ width: `${Math.min(p.changeRate, 100)}%` }} />
                           </div>
                           {p.changeRate > 10 && (
-                            <Badge variant="outline" className="text-[9px] mt-1 border-amber-500/30 text-amber-500">Atenção</Badge>
+                            <Badge variant="outline" className="text-[9px] mt-1 border-warning/30 text-warning">Atenção</Badge>
                           )}
                         </div>
 
@@ -618,7 +618,7 @@ export function ProdutividadeTab({ data }: ProdutividadeTabProps) {
                         </TableCell>
                         <TableCell className="text-right font-mono text-sm">{s.wip}</TableCell>
                         <TableCell className="text-right">
-                          <span className={`font-mono text-sm ${s.overdue > 0 ? 'font-bold text-red-500' : 'text-muted-foreground'}`}>{s.overdue}</span>
+                          <span className={`font-mono text-sm ${s.overdue > 0 ? 'font-bold text-destructive' : 'text-muted-foreground'}`}>{s.overdue}</span>
                         </TableCell>
                         <TableCell className="text-right font-mono text-sm">{s.postsWithChanges}</TableCell>
                         <TableCell className="text-right">
@@ -644,14 +644,14 @@ export function ProdutividadeTab({ data }: ProdutividadeTabProps) {
         }`}>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              {overloaded.length > 0 && <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />}
-              <span className={overloaded.length > 0 ? 'text-red-500' : 'text-muted-foreground'}>Sobrecarregados</span>
+              {overloaded.length > 0 && <div className="w-2 h-2 rounded-full bg-destructive animate-pulse" />}
+              <span className={overloaded.length > 0 ? 'text-destructive' : 'text-muted-foreground'}>Sobrecarregados</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             {overloaded.length === 0 ? (
               <p className="text-sm text-muted-foreground flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-emerald-500" /> Nenhum profissional sobrecarregado
+                <CheckCircle className="h-4 w-4 text-success" /> Nenhum profissional sobrecarregado
               </p>
             ) : (
               <div className="space-y-2">
@@ -663,8 +663,8 @@ export function ProdutividadeTab({ data }: ProdutividadeTabProps) {
                       <RoleChip role={s.role} />
                     </div>
                     <div className="flex gap-3 text-xs font-mono">
-                      <span className="text-blue-500">WIP: {s.wip}</span>
-                      <span className="text-red-500">Atrasados: {s.overdue}</span>
+                      <span className="text-primary">WIP: {s.wip}</span>
+                      <span className="text-destructive">Atrasados: {s.overdue}</span>
                     </div>
                   </div>
                 ))}
@@ -679,15 +679,15 @@ export function ProdutividadeTab({ data }: ProdutividadeTabProps) {
         }`}>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              {lowProd.length > 0 && <div className="w-2 h-2 rounded-full bg-amber-500" />}
-              <span className={lowProd.length > 0 ? 'text-amber-500' : 'text-muted-foreground'}>Baixa Produção</span>
+              {lowProd.length > 0 && <div className="w-2 h-2 rounded-full bg-warning" />}
+              <span className={lowProd.length > 0 ? 'text-warning' : 'text-muted-foreground'}>Baixa Produção</span>
               {lowProd.length > 0 && <span className="text-[10px] text-muted-foreground font-normal">(&lt; 70% da meta)</span>}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {lowProd.length === 0 ? (
               <p className="text-sm text-muted-foreground flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-emerald-500" /> Todos dentro da média
+                <CheckCircle className="h-4 w-4 text-success" /> Todos dentro da média
               </p>
             ) : (
               <div className="space-y-2">

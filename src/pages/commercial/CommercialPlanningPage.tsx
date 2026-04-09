@@ -68,15 +68,15 @@ const fmtShort = (v: number) => {
 const pct = (v: number, t: number) => t > 0 ? Math.round((v / t) * 100) : 0;
 
 function getProgressColor(p: number) {
-  if (p >= 100) return 'bg-emerald-500';
-  if (p >= 70) return 'bg-amber-500';
-  return 'bg-red-500';
+  if (p >= 100) return 'bg-success';
+  if (p >= 70) return 'bg-warning';
+  return 'bg-destructive';
 }
 
 function getProgressTextColor(p: number) {
-  if (p >= 100) return 'text-emerald-500';
-  if (p >= 70) return 'text-amber-500';
-  return 'text-red-500';
+  if (p >= 100) return 'text-success';
+  if (p >= 70) return 'text-warning';
+  return 'text-destructive';
 }
 
 function getDiffColor(v: number) {
@@ -415,7 +415,7 @@ export default function CommercialPlanningPage() {
               className="flex items-start gap-3 rounded-xl border px-5 py-4 animate-fade-in"
               style={{ backgroundColor: 'hsl(45 93% 47% / 0.06)', borderColor: 'hsl(45 93% 47% / 0.20)' }}
             >
-              <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
+              <AlertTriangle className="h-5 w-5 text-warning mt-0.5 shrink-0" />
               <div>
                 <p className="text-sm font-semibold text-foreground">
                   Com o ritmo atual, você fechará o ano {fmt(Math.abs(gapFechamento))} abaixo do BP.
@@ -441,7 +441,7 @@ export default function CommercialPlanningPage() {
                   <div className="flex items-center gap-2">
                     <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">BP ANUAL</p>
                     {bpLocked && (
-                      <Badge className="text-[10px] bg-emerald-500/12 text-emerald-600 dark:text-emerald-400 border-0 rounded px-1.5 py-0">
+                      <Badge className="text-[10px] bg-success/12 text-emerald-600 dark:text-emerald-400 border-0 rounded px-1.5 py-0">
                         Congelado
                       </Badge>
                     )}

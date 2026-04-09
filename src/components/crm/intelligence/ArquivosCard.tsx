@@ -50,7 +50,7 @@ export function ArquivosCard({ anexos, loading, onDelete }: ArquivosCardProps) {
             <Paperclip className="h-3.5 w-3.5" />Arquivos
           </CardTitle>
           {anexos.length > 0 && (
-            <Badge className="text-[11px] font-semibold bg-purple-500/12 text-purple-600 dark:text-purple-400 border-purple-500/25 hover:bg-purple-500/12">
+            <Badge className="text-[11px] font-semibold bg-primary/12 text-primary border-primary/25 hover:bg-primary/12">
               {anexos.length}
             </Badge>
           )}

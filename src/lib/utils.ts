@@ -23,8 +23,8 @@ export function getPlanBadgeStyle(planName: string | null | undefined): string {
   if (!planName) return 'bg-muted text-muted-foreground border-border';
   const lower = planName.toLowerCase();
   if (lower.includes('start')) return 'bg-secondary/80 text-secondary-foreground border-border';
-  if (lower.includes('performance')) return 'bg-[hsl(var(--info)/.12)] text-[hsl(var(--info))] border-[hsl(var(--info)/.25)]';
+  if (lower.includes('performance')) return 'bg-primary/12 text-primary border-primary/25';
   if (lower.includes('escala')) return 'bg-primary/12 text-primary border-primary/25';
-  if (lower.includes('growth')) return 'bg-purple-500/12 text-purple-600 dark:text-purple-400 border-purple-500/25';
+  if (lower.includes('growth')) return 'bg-primary/12 text-primary border-primary/25';
   return 'bg-muted text-muted-foreground border-border';
 }

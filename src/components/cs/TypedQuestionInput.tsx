@@ -433,7 +433,7 @@ export function TypedQuestionInput({
                   <div className="flex items-center gap-2 mb-1">
                     <label className="text-sm text-muted-foreground">{sf.label}</label>
                     {sf.prefill_field && (
-                      <Badge variant="outline" className="text-[11px] px-1.5 py-0 text-blue-500 border-blue-200">
+                      <Badge variant="outline" className="text-[11px] px-1.5 py-0 text-primary border-primary/30">
                         <Database className="h-2.5 w-2.5 mr-0.5" />
                         Do cadastro
                       </Badge>
@@ -529,7 +529,7 @@ export function TypedQuestionInput({
               <span className="text-destructive">*</span>
             )}
             {isPrefilled && (
-              <Badge variant="outline" className="text-[11px] px-1.5 py-0 text-blue-500 border-blue-200">
+              <Badge variant="outline" className="text-[11px] px-1.5 py-0 text-primary border-primary/30">
                 <Database className="h-2.5 w-2.5 mr-0.5" />
                 Do cadastro
               </Badge>

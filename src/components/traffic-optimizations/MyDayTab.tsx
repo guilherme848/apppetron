@@ -287,7 +287,7 @@ export function OptimizationMyDayTab({
                   icon={<Activity className="h-3.5 w-3.5" />}
                   label="Média"
                   value={`${totalMedium} abertas`}
-                  colorClass={totalMedium > 0 ? 'text-info' : 'text-muted-foreground'}
+                  colorClass={totalMedium > 0 ? 'text-primary' : 'text-muted-foreground'}
                 />
               </div>
             </CardContent>
@@ -396,10 +396,10 @@ export function OptimizationMyDayTab({
             <CardContent className="p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <BlockHeader
-                  icon={<Activity className="h-4 w-4 text-info" />}
+                  icon={<Activity className="h-4 w-4 text-primary" />}
                   title="Média Complexidade"
                   badge={`${totalMedium} abertas · ~30min cada`}
-                  badgeColor="bg-info/10 text-info"
+                  badgeColor="bg-primary/10 text-primary"
                 />
                 <Button
                   variant="outline"
@@ -781,7 +781,7 @@ function TeamPanel({ trafficManagers, accounts, optimizations, todayStr, todayHi
               <p className="text-xs text-muted-foreground">alta complexidade</p>
             </div>
             <div>
-              <p className="text-2xl font-extrabold font-mono text-info">{totals.medium}</p>
+              <p className="text-2xl font-extrabold font-mono text-primary">{totals.medium}</p>
               <p className="text-xs text-muted-foreground">tarefas médias</p>
             </div>
           </div>
@@ -828,7 +828,7 @@ function TeamPanel({ trafficManagers, accounts, optimizations, todayStr, todayHi
                     <p className="text-[10px] text-muted-foreground">alta complexidade</p>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold font-mono text-info">{ms.medium}</p>
+                    <p className="text-sm font-semibold font-mono text-primary">{ms.medium}</p>
                     <p className="text-[10px] text-muted-foreground">tarefas médias</p>
                   </div>
                 </div>

@@ -238,7 +238,7 @@ export default function PetronOSBuilder() {
                 placeholder="Título do documento"
               />
               <div className="flex gap-2 mt-1">
-                <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-blue-500/12 text-blue-500">Documento</span>
+                <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-primary/12 text-primary">Documento</span>
                 <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-green-500/12 text-green-500">
                   {isCompleted ? 'Concluído' : 'Em construção'}
                 </span>
@@ -411,7 +411,7 @@ export default function PetronOSBuilder() {
               return (
                 <div key={section.slug} className="animate-fade-in" style={{ animationDelay: `${idx * 40}ms` }}>
                   <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-blue-500" />
+                    <FileText className="h-4 w-4 text-primary" />
                     {section.titulo}
                   </h3>
                   {content ? (

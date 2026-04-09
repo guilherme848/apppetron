@@ -21,9 +21,9 @@ interface AcoesCardProps {
 
 const TIPO_BADGES: Record<string, string> = {
   promocao: 'bg-primary/12 text-primary border-primary/25',
-  lancamento: 'bg-[hsl(var(--info)/.12)] text-[hsl(var(--info))] border-[hsl(var(--info)/.25)]',
-  sazonal: 'bg-purple-500/12 text-purple-600 dark:text-purple-400 border-purple-500/25',
-  acao_especial: 'bg-[hsl(var(--warning)/.12)] text-[hsl(var(--warning))] border-[hsl(var(--warning)/.25)]',
+  lancamento: 'bg-primary/12 text-primary border-primary/25',
+  sazonal: 'bg-primary/12 text-primary border-primary/25',
+  acao_especial: 'bg-primary/12 text-primary border-primary/25',
 };
 
 const TIPO_LABELS: Record<string, string> = {
@@ -66,7 +66,7 @@ export function AcoesCard({ acoes, loading, onAdd, onDelete }: AcoesCardProps) {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-              <History className="h-4 w-4 text-purple-500" />Histórico de Ações Comerciais
+              <History className="h-4 w-4 text-primary" />Histórico de Ações Comerciais
             </CardTitle>
             <Button variant="outline" size="sm" onClick={() => setModalOpen(true)} className="h-7 px-2 text-[11px]">
               <Plus className="h-3 w-3 mr-1" />Registrar

@@ -33,9 +33,9 @@ const ACTION_LABELS: Record<PermissionAction, string> = {
 };
 
 const ACTION_COLORS: Record<PermissionAction, string> = {
-  view: 'text-blue-500',
-  edit: 'text-amber-500',
-  manage: 'text-purple-500',
+  view: 'text-primary',
+  edit: 'text-warning',
+  manage: 'text-primary',
 };
 
 export function DynamicAccessTab() {
@@ -540,7 +540,7 @@ function PermissionMatrixWithOverrides({
                               {effectiveValue ? (
                                 <ShieldCheck className={`h-4 w-4 ${hasOverride ? 'text-green-500' : 'text-primary'}`} />
                               ) : (
-                                <ShieldX className={`h-4 w-4 ${hasOverride ? 'text-red-500' : 'text-destructive'}`} />
+                                <ShieldX className={`h-4 w-4 ${hasOverride ? 'text-destructive' : 'text-destructive'}`} />
                               )}
                               <div className="flex items-center gap-2">
                                 <span className={`text-xs font-medium ${ACTION_COLORS[action]}`}>

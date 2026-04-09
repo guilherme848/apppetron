@@ -13,26 +13,12 @@ function getIcon(name: string | null): React.ElementType {
   return (LucideIcons as any)[name] || Zap;
 }
 
-function getCSSColor(token: string | null): string {
-  switch (token) {
-    case '--success': return 'text-green-500';
-    case '--accent-primary': return 'text-orange-500';
-    case '--info': return 'text-blue-500';
-    case '--purple': return 'text-purple-500';
-    case '--warning': return 'text-yellow-500';
-    default: return 'text-primary';
-  }
+function getCSSColor(_token: string | null): string {
+  return 'text-primary';
 }
 
-function getBgColor(token: string | null): string {
-  switch (token) {
-    case '--success': return 'bg-green-500/12';
-    case '--accent-primary': return 'bg-orange-500/12';
-    case '--info': return 'bg-blue-500/12';
-    case '--purple': return 'bg-purple-500/12';
-    case '--warning': return 'bg-yellow-500/12';
-    default: return 'bg-primary/12';
-  }
+function getBgColor(_token: string | null): string {
+  return 'bg-primary/12';
 }
 
 export default function PetronOSHub() {
@@ -170,7 +156,7 @@ export default function PetronOSHub() {
                         'text-[9px] font-semibold px-1.5 py-0.5 rounded',
                         f.tipo === 'rapida'
                           ? 'bg-green-500/12 text-green-500'
-                          : 'bg-blue-500/12 text-blue-500'
+                          : 'bg-primary/12 text-primary'
                       )}>
                         {f.tipo === 'rapida' ? 'Rápida' : 'Documento'}
                       </span>

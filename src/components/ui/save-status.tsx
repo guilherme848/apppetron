@@ -44,8 +44,8 @@ export function SaveStatus({
 
       {status === 'pending' && (
         <>
-          <Edit3 className={cn(iconSize, 'text-amber-500')} />
-          <span className="text-amber-500">Alterações pendentes</span>
+          <Edit3 className={cn(iconSize, 'text-warning')} />
+          <span className="text-warning">Alterações pendentes</span>
         </>
       )}
       
@@ -97,7 +97,7 @@ export function SaveStatusInline({ status, className }: SaveStatusInlineProps) {
     <span 
       className={cn(
         'inline-flex items-center gap-1 text-xs',
-        status === 'pending' && 'text-amber-500',
+        status === 'pending' && 'text-warning',
         status === 'saving' && 'text-muted-foreground',
         status === 'saved' && 'text-green-600 dark:text-green-500',
         status === 'error' && 'text-destructive',

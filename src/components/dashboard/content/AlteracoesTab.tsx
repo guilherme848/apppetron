@@ -123,15 +123,15 @@ export function AlteracoesTab({ data }: AlteracoesTabProps) {
 
   const uniqueClients = useMemo(() => [...new Set(enrichedCRs.map((cr: any) => cr.clientName))].filter(Boolean).sort(), [enrichedCRs]);
 
-  const reworkColor = summaryMetrics.reworkRate <= 10 ? 'text-emerald-500' : summaryMetrics.reworkRate <= 20 ? 'text-amber-500' : 'text-red-500';
+  const reworkColor = summaryMetrics.reworkRate <= 10 ? 'text-success' : summaryMetrics.reworkRate <= 20 ? 'text-warning' : 'text-destructive';
   const reworkBadge = summaryMetrics.reworkRate <= 10 ? 'Bom' : summaryMetrics.reworkRate <= 25 ? 'Atenção' : 'Crítico';
-  const reworkBadgeBg = summaryMetrics.reworkRate <= 10 ? 'bg-emerald-500' : summaryMetrics.reworkRate <= 25 ? 'bg-amber-500' : 'bg-red-500';
+  const reworkBadgeBg = summaryMetrics.reworkRate <= 10 ? 'bg-success' : summaryMetrics.reworkRate <= 25 ? 'bg-warning' : 'bg-destructive';
 
   const daysColor = (d: number | null) => {
     if (d === null) return 'text-muted-foreground';
-    if (d < 3) return 'text-red-500';
-    if (d <= 7) return 'text-amber-500';
-    return 'text-emerald-500';
+    if (d < 3) return 'text-destructive';
+    if (d <= 7) return 'text-warning';
+    return 'text-success';
   };
 
   return (
@@ -169,8 +169,8 @@ export function AlteracoesTab({ data }: AlteracoesTabProps) {
             </div>
             {summaryMetrics.topProf ? (
               <div className="flex items-center gap-2">
-                <p className="text-lg font-bold text-red-500">{summaryMetrics.topProf.name}</p>
-                <Badge className="text-[10px] text-white bg-red-500">{summaryMetrics.topProf.count}</Badge>
+                <p className="text-lg font-bold text-destructive">{summaryMetrics.topProf.name}</p>
+                <Badge className="text-[10px] text-white bg-destructive">{summaryMetrics.topProf.count}</Badge>
               </div>
             ) : <p className="text-sm text-muted-foreground">-</p>}
           </CardHeader>

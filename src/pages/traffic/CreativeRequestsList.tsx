@@ -128,7 +128,7 @@ export default function CreativeRequestsList() {
           className="rounded-lg border bg-card p-3 text-left hover:bg-accent/50 transition-colors"
         >
           <p className="text-xs text-muted-foreground">Em aberto</p>
-          <p className="text-2xl font-bold text-blue-500">{stats.open}</p>
+          <p className="text-2xl font-bold text-primary">{stats.open}</p>
         </button>
         <button
           onClick={() => setFilterStatus('all')}
@@ -142,7 +142,7 @@ export default function CreativeRequestsList() {
           className="rounded-lg border bg-card p-3 text-left hover:bg-accent/50 transition-colors"
         >
           <p className="text-xs text-muted-foreground">Concluídas</p>
-          <p className="text-2xl font-bold text-emerald-500">{stats.done}</p>
+          <p className="text-2xl font-bold text-success">{stats.done}</p>
         </button>
       </div>
 

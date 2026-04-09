@@ -459,10 +459,10 @@ export default function CrmList() {
                           <div className="flex items-center gap-1.5">
                             <span className="text-sm font-semibold text-foreground truncate">{account.name}</span>
                             {missingAdAccount && (
-                              <TooltipProvider><Tooltip><TooltipTrigger asChild><AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" /></TooltipTrigger><TooltipContent><p>Conta de anúncios não vinculada</p></TooltipContent></Tooltip></TooltipProvider>
+                              <TooltipProvider><Tooltip><TooltipTrigger asChild><AlertTriangle className="h-3.5 w-3.5 text-warning shrink-0" /></TooltipTrigger><TooltipContent><p>Conta de anúncios não vinculada</p></TooltipContent></Tooltip></TooltipProvider>
                             )}
                             {!account.checkup_classificacao && (
-                              <TooltipProvider><Tooltip><TooltipTrigger asChild><div className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" /></TooltipTrigger><TooltipContent><p>Checkup não realizado</p></TooltipContent></Tooltip></TooltipProvider>
+                              <TooltipProvider><Tooltip><TooltipTrigger asChild><div className="h-1.5 w-1.5 rounded-full bg-warning shrink-0" /></TooltipTrigger><TooltipContent><p>Checkup não realizado</p></TooltipContent></Tooltip></TooltipProvider>
                             )}
                           </div>
                           {account.niche && <p className="text-[11px] text-muted-foreground truncate">{account.niche}</p>}

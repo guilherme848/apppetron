@@ -41,7 +41,7 @@ export function AccountTeamStatus({ account, showDetails = false, className }: A
           </>
         ) : (
           <>
-            <AlertTriangle className="h-4 w-4 text-amber-500" />
+            <AlertTriangle className="h-4 w-4 text-warning" />
             <Badge variant="attention" className="text-xs">
               <Users className="h-3 w-3 mr-1" />
               Time Incompleto ({status.defined}/{status.total})

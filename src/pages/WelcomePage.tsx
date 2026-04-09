@@ -248,8 +248,8 @@ function DirectorView({
             variation={contentPillar.variation}
             prevMonthName={prevMonthName}
             icon={Palette}
-            iconBg="bg-success/12"
-            iconColor="text-success"
+            iconBg="bg-primary/12"
+            iconColor="text-primary"
           />
         </div>
         <div className="card-enter" style={{ animationDelay: '80ms' }}>
@@ -260,8 +260,8 @@ function DirectorView({
             variation={mediaPillar.variation}
             prevMonthName={prevMonthName}
             icon={DollarSign}
-            iconBg="bg-info/12"
-            iconColor="text-info"
+            iconBg="bg-primary/12"
+            iconColor="text-primary"
             formatValue={formatCurrency}
           />
         </div>
@@ -318,7 +318,7 @@ function DirectorView({
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <Activity className="h-4 w-4 text-info" />
+            <Activity className="h-4 w-4 text-primary" />
             Atividade do Time
           </CardTitle>
         </CardHeader>
@@ -431,7 +431,7 @@ function ExecutionView({
         <CardContent className="pt-0">
           {myPosts.length === 0 ? (
             <div className="text-center py-8">
-              <CheckCircle className="h-8 w-8 text-success mx-auto mb-2 opacity-60" />
+              <CheckCircle className="h-8 w-8 text-primary mx-auto mb-2 opacity-60" />
               <p className="text-sm font-medium text-foreground">Nenhum post atribuído</p>
               <p className="text-xs text-muted-foreground">Bom momento pra organizar.</p>
             </div>

@@ -24,7 +24,7 @@ export default function MrrBaseConfig({ ticketMedio, clientesAtuais, mrrAtual, l
       value: fmt(ticketMedio),
       sub: 'valor médio por contrato ativo',
       icon: BarChart2,
-      iconColor: 'hsl(var(--info))',
+      iconColor: 'hsl(var(--primary))',
       skeletonW: 'w-32',
     },
     {
@@ -32,7 +32,7 @@ export default function MrrBaseConfig({ ticketMedio, clientesAtuais, mrrAtual, l
       value: String(clientesAtuais),
       sub: 'contas ativas na base',
       icon: Users,
-      iconColor: 'hsl(var(--success))',
+      iconColor: 'hsl(var(--primary))',
       skeletonW: 'w-20',
     },
     {
