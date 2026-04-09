@@ -87,11 +87,11 @@ export const contractStatusLabels: Record<ContractStatus, string> = {
 
 export const contractStatusColors: Record<ContractStatus, string> = {
   draft: "bg-muted text-muted-foreground",
-  generated: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  sent: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
-  signing: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-  signed: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-  refused: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+  generated: "bg-primary/10 text-primary",
+  sent: "bg-warning/10 text-warning",
+  signing: "bg-primary/10 text-primary",
+  signed: "bg-success/10 text-success",
+  refused: "bg-destructive/10 text-destructive",
   expired: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
   canceled: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
 };

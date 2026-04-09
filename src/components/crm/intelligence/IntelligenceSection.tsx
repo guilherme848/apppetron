@@ -67,7 +67,7 @@ function LinksSubsection({ clienteId }: { clienteId: string }) {
 
       {/* Instagram */}
       <div className="flex items-center gap-3">
-        <Instagram className="h-4 w-4 text-pink-500 shrink-0" />
+        <Instagram className="h-4 w-4 text-primary shrink-0" />
         <div className="flex-1">
           <Input
             value={instagram}

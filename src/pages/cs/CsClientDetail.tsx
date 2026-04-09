@@ -455,8 +455,8 @@ export default function CsClientDetail() {
                   {clientNps.map((nps) => (
                     <div key={nps.id} className="flex items-center gap-4 p-3 border rounded-lg">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
-                        nps.classification === 'promoter' ? 'bg-green-500' : 
-                        nps.classification === 'passive' ? 'bg-yellow-500' : 'bg-red-500'
+                        nps.classification === 'promoter' ? 'bg-success' :
+                        nps.classification === 'passive' ? 'bg-warning' : 'bg-destructive'
                       }`}>
                         {nps.score}
                       </div>

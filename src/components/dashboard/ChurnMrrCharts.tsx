@@ -125,7 +125,7 @@ export function ChurnMrrCharts() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${netMrrChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className={`text-2xl font-bold ${netMrrChange >= 0 ? 'text-success' : 'text-destructive'}`}>
               {netMrrChange >= 0 ? '+' : ''}{formatCurrency(netMrrChange)}
             </div>
             <p className="text-xs text-muted-foreground">

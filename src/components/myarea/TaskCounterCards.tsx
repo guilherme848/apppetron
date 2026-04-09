@@ -29,8 +29,8 @@ export function TaskCounterCards({ counts, loading }: TaskCounterCardsProps) {
       title: 'Para Hoje',
       value: counts.dueToday,
       icon: Calendar,
-      color: 'text-amber-600 dark:text-amber-400',
-      bgColor: 'bg-amber-500/10',
+      color: 'text-warning',
+      bgColor: 'bg-warning/10',
     },
   ];
 

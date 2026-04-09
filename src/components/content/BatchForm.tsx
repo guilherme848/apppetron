@@ -118,7 +118,7 @@ export function BatchForm({
             />
           </div>
           {hasDuplicate && (
-            <div className="flex items-center gap-2 rounded-md border border-yellow-500/50 bg-yellow-500/10 p-3 text-sm text-yellow-700 dark:text-yellow-400">
+            <div className="flex items-center gap-2 rounded-md border border-warning/50 bg-warning/10 p-3 text-sm text-warning">
               <AlertTriangle className="h-4 w-4 shrink-0" />
               <span>Já existe um planejamento para este cliente neste mês. Será criado um segundo pacote.</span>
             </div>

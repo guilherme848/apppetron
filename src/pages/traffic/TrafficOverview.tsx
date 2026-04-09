@@ -421,41 +421,41 @@ export default function TrafficOverview() {
 
       {/* Health Summary */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className={cn("border-l-4", "border-l-green-500")}>
+        <Card className={cn("border-l-4", "border-l-success")}>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
+              <CheckCircle2 className="h-4 w-4 text-success" />
               Contas Saudáveis
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{healthSummary.green}</div>
+            <div className="text-2xl font-bold text-success">{healthSummary.green}</div>
             <p className="text-xs text-muted-foreground">{healthSummary.greenPct}% do total</p>
           </CardContent>
         </Card>
 
-        <Card className={cn("border-l-4", "border-l-yellow-500")}>
+        <Card className={cn("border-l-4", "border-l-warning")}>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-yellow-500" />
+              <AlertTriangle className="h-4 w-4 text-warning" />
               Contas em Atenção
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{healthSummary.yellow}</div>
+            <div className="text-2xl font-bold text-warning">{healthSummary.yellow}</div>
             <p className="text-xs text-muted-foreground">{healthSummary.yellowPct}% do total</p>
           </CardContent>
         </Card>
 
-        <Card className={cn("border-l-4", "border-l-red-500")}>
+        <Card className={cn("border-l-4", "border-l-destructive")}>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <TrendingDown className="h-4 w-4 text-red-500" />
+              <TrendingDown className="h-4 w-4 text-destructive" />
               Contas Críticas
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{healthSummary.red}</div>
+            <div className="text-2xl font-bold text-destructive">{healthSummary.red}</div>
             <p className="text-xs text-muted-foreground">{healthSummary.redPct}% do total</p>
           </CardContent>
         </Card>
@@ -467,7 +467,7 @@ export default function TrafficOverview() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <TrendingDown className="h-4 w-4 text-red-500" />
+              <TrendingDown className="h-4 w-4 text-destructive" />
               Top 10 em Risco
             </CardTitle>
           </CardHeader>
@@ -501,7 +501,7 @@ export default function TrafficOverview() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-green-500" />
+              <TrendingUp className="h-4 w-4 text-success" />
               Top 10 Melhores
             </CardTitle>
           </CardHeader>
@@ -584,8 +584,8 @@ export default function TrafficOverview() {
                     <TableRow 
                       key={row.adAccountId}
                       className={cn(
-                        row.healthStatus === 'red' && 'bg-red-50 dark:bg-red-950/20',
-                        row.healthStatus === 'yellow' && 'bg-yellow-50 dark:bg-yellow-950/20'
+                        row.healthStatus === 'red' && 'bg-destructive/5',
+                        row.healthStatus === 'yellow' && 'bg-warning/5'
                       )}
                     >
                       <TableCell className="font-medium sticky left-0 bg-inherit">

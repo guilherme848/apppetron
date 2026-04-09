@@ -49,12 +49,12 @@
                      <span>Atrasadas: <strong className="text-destructive">{manager.overdueTasks}</strong></span>
                    </div>
                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                     <Clock className="h-3 w-3 text-yellow-600" />
-                     <span>Hoje: <strong className="text-yellow-600">{manager.todayTasks}</strong></span>
+                     <Clock className="h-3 w-3 text-warning" />
+                     <span>Hoje: <strong className="text-warning">{manager.todayTasks}</strong></span>
                    </div>
                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                     <Ban className="h-3 w-3 text-red-500" />
-                     <span>Bloqueadas: <strong className="text-red-500">{manager.blockedTasks}</strong></span>
+                     <Ban className="h-3 w-3 text-destructive" />
+                     <span>Bloqueadas: <strong className="text-destructive">{manager.blockedTasks}</strong></span>
                    </div>
                  </div>
                </div>

@@ -135,7 +135,7 @@ export function PetronTeamDialog({ open, onOpenChange }: PetronTeamDialogProps) 
             </DialogTitle>
             {!loading && (
               teamStatus.isComplete ? (
-                <Badge variant="secondary" className="text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                <Badge variant="secondary" className="text-xs bg-success/10 text-success">
                   <CheckCircle className="h-3 w-3 mr-1" />
                   Completo
                 </Badge>
@@ -167,7 +167,7 @@ export function PetronTeamDialog({ open, onOpenChange }: PetronTeamDialogProps) 
               
               return (
                 <div key={role.value} className="grid grid-cols-2 gap-3 items-center">
-                  <Label className={`text-sm ${isMissing ? 'text-amber-600 dark:text-amber-400' : ''}`}>
+                  <Label className={`text-sm ${isMissing ? 'text-warning' : ''}`}>
                     {role.label}
                     {isMissing && <span className="text-destructive ml-1">*</span>}
                   </Label>
@@ -177,7 +177,7 @@ export function PetronTeamDialog({ open, onOpenChange }: PetronTeamDialogProps) 
                       onValueChange={(v) => handleChange(role.value, v)}
                       disabled={isSaving}
                     >
-                      <SelectTrigger className={`h-9 text-sm ${isMissing ? 'border-amber-400' : ''}`}>
+                      <SelectTrigger className={`h-9 text-sm ${isMissing ? 'border-warning' : ''}`}>
                         {isSaving ? (
                           <Skeleton className="h-4 w-16 rounded" />
                         ) : (

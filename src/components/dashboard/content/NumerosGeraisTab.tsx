@@ -196,10 +196,10 @@ export function NumerosGeraisTab({ data }: NumerosGeraisTabProps) {
         alerts.push({ id: `${id}-overdue`, name: s.name, role: s.role, description: `${s.overdue} conteúdos atrasados`, severity: 'high', color: 'bg-destructive' });
       }
       if (s.inReview > 5) {
-        alerts.push({ id: `${id}-review`, name: s.name, role: s.role, description: `${s.inReview} em revisão — possível gargalo`, severity: 'medium', color: 'bg-yellow-500' });
+        alerts.push({ id: `${id}-review`, name: s.name, role: s.role, description: `${s.inReview} em revisão — possível gargalo`, severity: 'medium', color: 'bg-warning' });
       }
       if (s.todo > 10 && s.doing === 0) {
-        alerts.push({ id: `${id}-idle`, name: s.name, role: s.role, description: `${s.todo} a fazer e nenhum em produção`, severity: 'medium', color: 'bg-yellow-500' });
+        alerts.push({ id: `${id}-idle`, name: s.name, role: s.role, description: `${s.todo} a fazer e nenhum em produção`, severity: 'medium', color: 'bg-warning' });
       }
     });
 
@@ -214,7 +214,7 @@ export function NumerosGeraisTab({ data }: NumerosGeraisTabProps) {
         role: 'geral',
         description: 'sem responsável atribuído',
         severity: 'medium',
-        color: 'bg-yellow-500',
+        color: 'bg-warning',
       });
     }
 
@@ -307,7 +307,7 @@ export function NumerosGeraisTab({ data }: NumerosGeraisTabProps) {
           <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Situação Atual</span>
           <span className="flex items-center gap-1 text-[10px] font-semibold text-success">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-success" />
             </span>
             AO VIVO

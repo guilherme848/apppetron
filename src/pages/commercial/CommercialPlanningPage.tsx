@@ -80,8 +80,8 @@ function getProgressTextColor(p: number) {
 }
 
 function getDiffColor(v: number) {
-  if (v > 0) return 'text-emerald-600 dark:text-emerald-400';
-  if (v < 0) return 'text-red-600 dark:text-red-400';
+  if (v > 0) return 'text-success';
+  if (v < 0) return 'text-destructive';
   return 'text-foreground';
 }
 
@@ -441,7 +441,7 @@ export default function CommercialPlanningPage() {
                   <div className="flex items-center gap-2">
                     <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">BP ANUAL</p>
                     {bpLocked && (
-                      <Badge className="text-[10px] bg-success/12 text-emerald-600 dark:text-emerald-400 border-0 rounded px-1.5 py-0">
+                      <Badge className="text-[10px] bg-success/12 text-success border-0 rounded px-1.5 py-0">
                         Congelado
                       </Badge>
                     )}
@@ -653,7 +653,7 @@ export default function CommercialPlanningPage() {
                         </TableCell>
                         <TableCell className={cn(
                           'text-right text-[13px] font-mono font-medium',
-                          !isPastOrCurrent ? 'text-indigo-600 dark:text-indigo-400' : 'text-muted-foreground'
+                          !isPastOrCurrent ? 'text-primary' : 'text-muted-foreground'
                         )}>
                           {fmt(np)}
                         </TableCell>
@@ -672,7 +672,7 @@ export default function CommercialPlanningPage() {
                     <TableCell className={cn('text-right font-mono font-bold text-[13px]', getDiffColor(gapAcumulado))}>
                       {gapAcumulado >= 0 ? '+' : ''}{fmt(gapAcumulado)}
                     </TableCell>
-                    <TableCell className="text-right font-mono font-bold text-[13px] text-indigo-600 dark:text-indigo-400">{fmt(projecaoFechamento)}</TableCell>
+                    <TableCell className="text-right font-mono font-bold text-[13px] text-primary">{fmt(projecaoFechamento)}</TableCell>
                     <TableCell className={cn('text-right font-mono font-extrabold text-[13px]', getDiffColor(gapFechamento))}>
                       {gapFechamento >= 0 ? '+' : ''}{fmt(gapFechamento)}
                     </TableCell>
@@ -699,7 +699,7 @@ export default function CommercialPlanningPage() {
                   <div className="flex items-center gap-0 mb-4">
                     {[
                       { label: 'META ANUAL', value: fmt(ch.metaAno), color: 'text-foreground' },
-                      { label: 'REALIZADO', value: fmt(ch.realizadoAno), color: 'text-emerald-600 dark:text-emerald-400' },
+                      { label: 'REALIZADO', value: fmt(ch.realizadoAno), color: 'text-success' },
                       { label: 'CONTRIBUIÇÃO', value: `${ch.contribuicao}%`, color: 'text-primary' },
                     ].map((metric, mi) => (
                       <div key={metric.label} className={cn('flex-1 px-3', mi > 0 && 'border-l border-border/50')}>

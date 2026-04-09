@@ -90,7 +90,7 @@ export default function PetronOSHub() {
           className={cn(
             'px-3.5 py-1.5 rounded-md text-[13px] font-medium border transition-all duration-150',
             !activeCategory
-              ? 'bg-orange-500/12 border-orange-500/30 text-orange-500'
+              ? 'bg-primary/12 border-primary/30 text-primary'
               : 'bg-transparent border-border text-muted-foreground hover:text-foreground'
           )}
         >
@@ -155,7 +155,7 @@ export default function PetronOSHub() {
                       <span className={cn(
                         'text-[9px] font-semibold px-1.5 py-0.5 rounded',
                         f.tipo === 'rapida'
-                          ? 'bg-green-500/12 text-green-500'
+                          ? 'bg-success/12 text-success'
                           : 'bg-primary/12 text-primary'
                       )}>
                         {f.tipo === 'rapida' ? 'Rápida' : 'Documento'}
@@ -187,7 +187,7 @@ export default function PetronOSHub() {
           <div className="space-y-2">
             {recentes.map((g: any) => (
               <div key={g.id} className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg text-sm">
-                <Sparkles className="h-4 w-4 text-orange-500 shrink-0" />
+                <Sparkles className="h-4 w-4 text-primary shrink-0" />
                 <div className="flex-1 min-w-0">
                   <span className="font-medium text-foreground">{g.titulo || g.petron_os_ferramentas?.nome || 'Geração'}</span>
                   <span className="text-xs text-muted-foreground ml-2 font-mono">

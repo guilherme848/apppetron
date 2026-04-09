@@ -12,7 +12,7 @@ const TRAFFIC_MANAGER_ROLE_ID = '29521693-8a2e-46fe-81a5-8b78059ad879';
 
 const TASK_TYPE_MAP: Record<string, { label: string; color: string }> = {
   checkin: { label: 'Leve', color: 'bg-success/10 text-success' },
-  media: { label: 'Média', color: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400' },
+  media: { label: 'Média', color: 'bg-warning/10 text-warning' },
   alta: { label: 'Alta', color: 'bg-destructive/10 text-destructive' },
 };
 
@@ -220,7 +220,7 @@ export function OptimizationByClientTab({ optimizations, accounts, teamMembers }
             </Card>
             <Card className="border border-border rounded-xl">
               <CardContent className="pt-3 pb-2.5 text-center">
-                <p className="text-xl font-extrabold font-mono text-yellow-500">{summary.byType.media}</p>
+                <p className="text-xl font-extrabold font-mono text-warning">{summary.byType.media}</p>
                 <p className="text-[11px] text-muted-foreground">Média</p>
               </CardContent>
             </Card>

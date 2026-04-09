@@ -240,11 +240,11 @@ export function ContentJobModal({
 
                 {/* Pending tasks info */}
                 {job.pending_count > 0 && (
-                  <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                    <p className="text-sm font-medium text-orange-800 dark:text-orange-200">
+                  <div className="p-4 bg-warning/10 rounded-lg">
+                    <p className="text-sm font-medium text-warning">
                       {job.pending_count} tarefa{job.pending_count > 1 ? 's' : ''} pendente{job.pending_count > 1 ? 's' : ''}
                     </p>
-                    <p className="text-xs text-orange-600 dark:text-orange-300 mt-1">
+                    <p className="text-xs text-warning mt-1">
                       Posts e itens do cliente neste mês que ainda não foram concluídos.
                     </p>
                   </div>

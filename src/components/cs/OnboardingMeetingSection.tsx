@@ -141,8 +141,8 @@ export function OnboardingMeetingSection({ clientId, isLocked = false }: Onboard
                 <p className="text-xs text-muted-foreground">Score de Qualidade</p>
                 <p className="font-medium text-lg">
                   <span className={
-                    latestMeeting.overall_quality_score >= 75 ? 'text-green-600' :
-                    latestMeeting.overall_quality_score >= 50 ? 'text-yellow-600' : 'text-red-600'
+                    latestMeeting.overall_quality_score >= 75 ? 'text-success' :
+                    latestMeeting.overall_quality_score >= 50 ? 'text-warning' : 'text-destructive'
                   }>
                     {latestMeeting.overall_quality_score}
                   </span>

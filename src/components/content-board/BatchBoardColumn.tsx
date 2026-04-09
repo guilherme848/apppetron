@@ -35,13 +35,13 @@ interface BatchBoardColumnProps {
 }
 
 const STAGE_COLOR_MAP: Record<string, string> = {
-  blue: 'bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-800',
-  purple: 'bg-purple-50 border-purple-200 dark:bg-purple-950/30 dark:border-purple-800',
-  orange: 'bg-orange-50 border-orange-200 dark:bg-orange-950/30 dark:border-orange-800',
-  gray: 'bg-gray-50 border-gray-200 dark:bg-gray-950/30 dark:border-gray-700',
-  yellow: 'bg-yellow-50 border-yellow-200 dark:bg-yellow-950/30 dark:border-yellow-800',
-  green: 'bg-green-50 border-green-200 dark:bg-green-950/30 dark:border-green-800',
-  red: 'bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-800',
+  blue: 'bg-primary/5 border-primary/20',
+  purple: 'bg-primary/5 border-primary/20',
+  orange: 'bg-primary/5 border-primary/20',
+  gray: 'bg-muted border-border',
+  yellow: 'bg-warning/10 border-warning/20',
+  green: 'bg-success/10 border-success/20',
+  red: 'bg-destructive/10 border-destructive/20',
   teal: 'bg-teal-50 border-teal-200 dark:bg-teal-950/30 dark:border-teal-800',
 };
 

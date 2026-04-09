@@ -82,7 +82,7 @@ export default function MetaIntegrationPage() {
           {connection ? (
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <CheckCircle className="h-5 w-5 text-green-500" />
+                <CheckCircle className="h-5 w-5 text-success" />
                 <div>
                   <p className="font-medium">Conectado</p>
                   <p className="text-sm text-muted-foreground">
@@ -105,7 +105,7 @@ export default function MetaIntegrationPage() {
           ) : (
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <AlertCircle className="h-5 w-5 text-yellow-500" />
+                <AlertCircle className="h-5 w-5 text-warning" />
                 <div>
                   <p className="font-medium">Não conectado</p>
                   <p className="text-sm text-muted-foreground">
@@ -201,7 +201,7 @@ export default function MetaIntegrationPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           {hasSpendCap ? (
-                            <span className={isLowBalance ? 'text-destructive font-medium' : 'text-green-600'}>
+                            <span className={isLowBalance ? 'text-destructive font-medium' : 'text-success'}>
                               {formatCurrency(snapshot?.available_balance ?? null, account.currency)}
                             </span>
                           ) : (

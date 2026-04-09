@@ -258,22 +258,22 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
  
        {/* Metrics Cards */}
        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-         <Card className="border-l-4 border-l-red-500">
+         <Card className="border-l-4 border-l-destructive">
            <CardHeader className="pb-2">
              <CardDescription>Atrasadas</CardDescription>
-             <CardTitle className="text-2xl text-red-600">{overdueTasks.length}</CardTitle>
+             <CardTitle className="text-2xl text-destructive">{overdueTasks.length}</CardTitle>
            </CardHeader>
          </Card>
-         <Card className="border-l-4 border-l-yellow-500">
+         <Card className="border-l-4 border-l-warning">
            <CardHeader className="pb-2">
              <CardDescription>Para Hoje</CardDescription>
-             <CardTitle className="text-2xl text-yellow-600">{todayTasks.length}</CardTitle>
+             <CardTitle className="text-2xl text-warning">{todayTasks.length}</CardTitle>
            </CardHeader>
          </Card>
-         <Card className="border-l-4 border-l-blue-500">
+         <Card className="border-l-4 border-l-primary">
            <CardHeader className="pb-2">
              <CardDescription>Próximas</CardDescription>
-             <CardTitle className="text-2xl text-blue-600">{upcomingTasks.length}</CardTitle>
+             <CardTitle className="text-2xl text-primary">{upcomingTasks.length}</CardTitle>
            </CardHeader>
          </Card>
        </div>
@@ -397,17 +397,17 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
                            <div className="pt-0.5">
                              {task.status === 'done' ? (
                                <CheckCircle2 
-                                 className="h-5 w-5 text-green-600 cursor-pointer"
+                                 className="h-5 w-5 text-success cursor-pointer"
                                  onClick={() => handleStatusChange(task.id, 'todo')}
                                />
                              ) : task.status === 'doing' ? (
                                <Play 
-                                 className="h-5 w-5 text-blue-600 cursor-pointer"
+                                 className="h-5 w-5 text-primary cursor-pointer"
                                  onClick={() => handleStatusChange(task.id, 'done')}
                                />
                              ) : task.status === 'blocked' ? (
                                <AlertCircle 
-                                 className="h-5 w-5 text-red-600 cursor-pointer"
+                                 className="h-5 w-5 text-destructive cursor-pointer"
                                  onClick={() => handleStatusChange(task.id, 'doing')}
                                />
                              ) : (
@@ -429,7 +429,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
                                </Badge>
                                <Badge 
                                  variant="outline" 
-                                 className={`text-xs ${task.priority === 'high' ? 'border-red-500 text-red-700' : task.priority === 'low' ? 'border-gray-400 text-gray-600' : ''}`}
+                                 className={`text-xs ${task.priority === 'high' ? 'border-destructive text-destructive' : task.priority === 'low' ? 'border-gray-400 text-gray-600' : ''}`}
                                >
                                  {task.priority === 'high' ? 'Alta' : task.priority === 'low' ? 'Baixa' : 'Média'}
                                </Badge>

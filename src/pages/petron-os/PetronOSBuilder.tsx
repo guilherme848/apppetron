@@ -239,7 +239,7 @@ export default function PetronOSBuilder() {
               />
               <div className="flex gap-2 mt-1">
                 <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-primary/12 text-primary">Documento</span>
-                <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-green-500/12 text-green-500">
+                <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-success/12 text-success">
                   {isCompleted ? 'Concluído' : 'Em construção'}
                 </span>
               </div>
@@ -249,7 +249,7 @@ export default function PetronOSBuilder() {
             <Button variant="outline" size="sm" onClick={() => setEditorMode(false)} className="gap-1">
               <Sparkles className="h-3 w-3" /> Reabrir Chat
             </Button>
-            <Button size="sm" onClick={handleSave} className="gap-1 bg-gradient-to-r from-orange-500 to-pink-500 text-white">
+            <Button size="sm" onClick={handleSave} className="gap-1 bg-gradient-to-r from-primary to-primary/80 text-white">
               Salvar
             </Button>
           </div>
@@ -274,7 +274,7 @@ export default function PetronOSBuilder() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-orange-500" />
+              <Sparkles className="h-5 w-5 text-primary" />
               {ferramenta.nome}
             </DialogTitle>
           </DialogHeader>
@@ -301,7 +301,7 @@ export default function PetronOSBuilder() {
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={startChat} className="gap-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white">
+            <Button onClick={startChat} className="gap-2 bg-gradient-to-r from-primary to-primary/80 text-white">
               <Sparkles className="h-4 w-4" /> Iniciar com IA
             </Button>
           </DialogFooter>
@@ -323,7 +323,7 @@ export default function PetronOSBuilder() {
           <h1 className="text-xl font-bold text-foreground">{titulo || ferramenta.nome}</h1>
         </div>
         {isCompleted && (
-          <Button onClick={handleFinalize} className="gap-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white">
+          <Button onClick={handleFinalize} className="gap-2 bg-gradient-to-r from-primary to-primary/80 text-white">
             <Edit3 className="h-4 w-4" /> Finalizar e Editar
           </Button>
         )}
@@ -346,12 +346,12 @@ export default function PetronOSBuilder() {
                 <div className={cn(
                   'max-w-[85%] rounded-xl px-4 py-3 text-sm',
                   msg.role === 'user'
-                    ? 'bg-orange-500/12 text-foreground'
+                    ? 'bg-primary/12 text-foreground'
                     : 'bg-card border border-border text-foreground'
                 )}>
                   {msg.role === 'assistant' && (
                     <div className="flex items-center gap-2 mb-1">
-                      <div className="h-6 w-6 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 flex items-center justify-center">
+                      <div className="h-6 w-6 rounded-full bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center">
                         <Sparkles className="h-3 w-3 text-white" />
                       </div>
                       <span className="text-[10px] font-semibold text-muted-foreground">Petron OS</span>
@@ -365,7 +365,7 @@ export default function PetronOSBuilder() {
               <div className="flex justify-start">
                 <div className="bg-card border border-border rounded-xl px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-orange-500 animate-spin" style={{ animationDuration: '3s' }} />
+                    <Sparkles className="h-4 w-4 text-primary animate-spin" style={{ animationDuration: '3s' }} />
                     <span className="text-sm text-muted-foreground">Pensando...</span>
                   </div>
                 </div>
@@ -392,7 +392,7 @@ export default function PetronOSBuilder() {
               size="icon"
               onClick={sendMessage}
               disabled={!userInput.trim() || sending}
-              className="h-11 w-11 bg-gradient-to-r from-orange-500 to-pink-500 text-white shrink-0"
+              className="h-11 w-11 bg-gradient-to-r from-primary to-primary/80 text-white shrink-0"
             >
               <Send className="h-4 w-4" />
             </Button>

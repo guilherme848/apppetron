@@ -59,9 +59,9 @@ export default function TrafficClientDetail() {
 
   const getPriorityBadge = (priority: string) => {
     const variants: Record<string, string> = {
-      urgent: 'bg-red-500 text-white',
-      high: 'bg-orange-500 text-white',
-      medium: 'bg-yellow-500 text-black',
+      urgent: 'bg-destructive text-white',
+      high: 'bg-primary text-white',
+      medium: 'bg-warning text-black',
       low: 'bg-gray-400 text-white',
     };
     const labels: Record<string, string> = {
@@ -74,8 +74,8 @@ export default function TrafficClientDetail() {
   };
 
   const getStatusIcon = (status: TrafficTaskStatus) => {
-    if (status === 'done') return <CheckCircle className="h-4 w-4 text-green-500" />;
-    if (status === 'doing') return <PlayCircle className="h-4 w-4 text-yellow-500" />;
+    if (status === 'done') return <CheckCircle className="h-4 w-4 text-success" />;
+    if (status === 'doing') return <PlayCircle className="h-4 w-4 text-warning" />;
     return <Circle className="h-4 w-4 text-muted-foreground" />;
   };
 

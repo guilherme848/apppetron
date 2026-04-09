@@ -60,7 +60,7 @@ export function ContentBoardMobileList({
                         className={cn(
                           'cursor-pointer border-l-4',
                           isOverdue && 'border-l-destructive',
-                          isDueToday && 'border-l-orange-500',
+                          isDueToday && 'border-l-warning',
                           !isOverdue && !isDueToday && 'border-l-primary'
                         )}
                         onClick={() => onCardClick(job)}
@@ -83,7 +83,7 @@ export function ContentBoardMobileList({
                                     className={cn(
                                       'flex items-center gap-1 text-xs',
                                       isOverdue && 'text-destructive',
-                                      isDueToday && 'text-orange-600',
+                                      isDueToday && 'text-warning',
                                       !isOverdue && !isDueToday && 'text-muted-foreground'
                                     )}
                                   >
@@ -94,7 +94,7 @@ export function ContentBoardMobileList({
                                   </div>
                                 )}
                                 {job.pending_count > 0 && (
-                                  <div className="flex items-center gap-1 text-xs text-orange-600">
+                                  <div className="flex items-center gap-1 text-xs text-warning">
                                     <AlertCircle className="h-3 w-3" />
                                     <span>{job.pending_count}</span>
                                   </div>

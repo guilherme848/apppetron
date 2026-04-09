@@ -30,9 +30,9 @@ interface Props {
 }
 
 const TASK_TYPE_MAP: Record<string, { label: string; color: string }> = {
-  checkin: { label: 'Check-in', color: 'bg-emerald-100 text-emerald-800' },
-  media: { label: 'Média', color: 'bg-yellow-100 text-yellow-800' },
-  alta: { label: 'Alta', color: 'bg-red-100 text-red-800' },
+  checkin: { label: 'Check-in', color: 'bg-success/10 text-success' },
+  media: { label: 'Média', color: 'bg-warning/10 text-warning' },
+  alta: { label: 'Alta', color: 'bg-destructive/10 text-destructive' },
 };
 
 export function OptimizationLogTab({ optimizations, accounts, teamMembers, deleteOptimization }: Props) {

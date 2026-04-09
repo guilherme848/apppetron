@@ -276,7 +276,7 @@ export default function TrafficBalancesPage() {
                 );
               }
               return (
-                <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+                <div className="flex items-center gap-1.5 text-xs text-success">
                   <ShieldCheck className="h-3 w-3" />
                   <span>Token ativo — expira em {daysLeft} dia{daysLeft !== 1 ? 's' : ''}</span>
                 </div>
@@ -460,7 +460,7 @@ export default function TrafficBalancesPage() {
                           ) : row.isLowBalance ? (
                             <Badge variant="destructive">Saldo Baixo</Badge>
                           ) : row.displayedBalance !== null ? (
-                            <Badge variant="outline" className="text-emerald-600 border-emerald-300">
+                            <Badge variant="outline" className="text-success border-success">
                               OK
                             </Badge>
                           ) : (

@@ -90,25 +90,25 @@ export interface TrafficPlaybookTemplate {
  ];
  
  export const CAMPAIGN_STATUS_OPTIONS: { value: TrafficCampaignStatus; label: string; color: string }[] = [
-   { value: 'active', label: 'Ativo', color: 'bg-green-100 text-green-800' },
-   { value: 'paused', label: 'Pausado', color: 'bg-yellow-100 text-yellow-800' },
-   { value: 'no_budget', label: 'Sem verba', color: 'bg-red-100 text-red-800' },
-   { value: 'onboarding', label: 'Onboarding', color: 'bg-blue-100 text-blue-800' },
-   { value: 'waiting_creatives', label: 'Aguardando criativos', color: 'bg-purple-100 text-purple-800' },
+   { value: 'active', label: 'Ativo', color: 'bg-success/10 text-success' },
+   { value: 'paused', label: 'Pausado', color: 'bg-warning/10 text-warning' },
+   { value: 'no_budget', label: 'Sem verba', color: 'bg-destructive/10 text-destructive' },
+   { value: 'onboarding', label: 'Onboarding', color: 'bg-primary/10 text-primary' },
+   { value: 'waiting_creatives', label: 'Aguardando criativos', color: 'bg-primary/10 text-primary' },
  ];
  
  export const PRIORITY_OPTIONS: { value: string; label: string; color: string }[] = [
    { value: 'low', label: 'Baixa', color: 'bg-gray-100 text-gray-800' },
-   { value: 'medium', label: 'Média', color: 'bg-blue-100 text-blue-800' },
-   { value: 'high', label: 'Alta', color: 'bg-red-100 text-red-800' },
+   { value: 'medium', label: 'Média', color: 'bg-primary/10 text-primary' },
+   { value: 'high', label: 'Alta', color: 'bg-destructive/10 text-destructive' },
  ];
  
  export const TASK_STATUS_OPTIONS: { value: TrafficTaskStatus; label: string; color: string }[] = [
    { value: 'todo', label: 'A fazer', color: 'bg-gray-100 text-gray-800' },
-   { value: 'doing', label: 'Fazendo', color: 'bg-blue-100 text-blue-800' },
-   { value: 'blocked', label: 'Bloqueado', color: 'bg-red-100 text-red-800' },
-   { value: 'done', label: 'Concluído', color: 'bg-green-100 text-green-800' },
-   { value: 'skipped', label: 'Ignorado', color: 'bg-yellow-100 text-yellow-800' },
+   { value: 'doing', label: 'Fazendo', color: 'bg-primary/10 text-primary' },
+   { value: 'blocked', label: 'Bloqueado', color: 'bg-destructive/10 text-destructive' },
+   { value: 'done', label: 'Concluído', color: 'bg-success/10 text-success' },
+   { value: 'skipped', label: 'Ignorado', color: 'bg-warning/10 text-warning' },
  ];
  
 export const BLOCKED_REASON_OPTIONS: { value: TrafficBlockedReason; label: string }[] = [

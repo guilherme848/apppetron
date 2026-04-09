@@ -95,9 +95,9 @@ export function ChangeRequestsTab({
   const getStatusBadge = (status: ChangeRequestStatus) => {
     const option = CHANGE_REQUEST_STATUS_OPTIONS.find(s => s.value === status);
     const colors: Record<ChangeRequestStatus, string> = {
-      open: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-      in_progress: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-      done: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+      open: 'bg-warning/10 text-warning',
+      in_progress: 'bg-primary/10 text-primary',
+      done: 'bg-success/10 text-success',
       canceled: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
     };
     return (

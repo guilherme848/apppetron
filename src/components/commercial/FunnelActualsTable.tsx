@@ -362,11 +362,11 @@ export function FunnelActualsTable({
                   if (metric.hasBenchmark && value !== null) {
                     const level = getValueLevel(metric.key, value);
                     if (level === 'good') {
-                      valueColor = 'text-green-600 dark:text-green-400';
+                      valueColor = 'text-success';
                     } else if (level === 'regular') {
-                      valueColor = 'text-amber-600 dark:text-amber-400';
+                      valueColor = 'text-warning';
                     } else if (level === 'bad') {
-                      valueColor = 'text-red-600 dark:text-red-400';
+                      valueColor = 'text-destructive';
                     }
                   }
                   

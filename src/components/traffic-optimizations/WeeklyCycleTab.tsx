@@ -191,7 +191,7 @@ function DraggableClientCard({
   const circleClass = isOverdue
     ? 'bg-destructive'
     : weekOptInfo.optimizedThisWeek
-      ? 'bg-emerald-500'
+      ? 'bg-success'
       : 'bg-transparent border-[1.5px] border-muted-foreground/40';
 
   return (
@@ -201,7 +201,7 @@ function DraggableClientCard({
       className={cn(
         'group relative flex items-center gap-2 rounded-[10px] border bg-card px-3 py-2.5 mb-1.5 transition-all duration-200',
         isOverdue && 'border-l-[3px] border-l-destructive',
-        !isOverdue && weekOptInfo.optimizedThisWeek && 'border-l-2 border-l-emerald-500/40',
+        !isOverdue && weekOptInfo.optimizedThisWeek && 'border-l-2 border-l-success/40',
         isDragging
           ? 'opacity-40 scale-[1.02] shadow-lg'
           : 'hover:bg-muted/50 hover:border-border',
@@ -245,7 +245,7 @@ function DraggableClientCard({
         )}
         {/* Status line */}
         {statusLabel && (
-          <span className="block ml-3.5 mt-0.5 text-[11px] text-emerald-500 font-medium transition-opacity duration-200">
+          <span className="block ml-3.5 mt-0.5 text-[11px] text-success font-medium transition-opacity duration-200">
             {statusLabel}
           </span>
         )}
@@ -341,7 +341,7 @@ function DroppableDayColumn({
   const allOptimized = totalCount > 0 && optimizedCount === totalCount;
   const dayPassed = weekday < todayWeekday;
   const optCounterClass = allOptimized
-    ? 'text-emerald-500'
+    ? 'text-success'
     : dayPassed && optimizedCount < totalCount
       ? 'text-destructive'
       : 'text-muted-foreground';

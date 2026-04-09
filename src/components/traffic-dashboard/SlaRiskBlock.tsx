@@ -21,7 +21,7 @@
      <Card>
        <CardHeader className="pb-3">
          <div className="flex items-center gap-2">
-           <AlertTriangle className="h-5 w-5 text-yellow-600" />
+           <AlertTriangle className="h-5 w-5 text-warning" />
            <div>
              <CardTitle className="text-lg">SLA e Risco</CardTitle>
              <CardDescription>Tarefas em risco e cumprimento de prazos</CardDescription>
@@ -41,7 +41,7 @@
              <ScrollArea className="h-[120px]">
                {atRisk.length === 0 ? (
                  <p className="text-center text-muted-foreground py-4 flex items-center justify-center gap-2">
-                   <CheckCircle2 className="h-4 w-4 text-green-600" />
+                   <CheckCircle2 className="h-4 w-4 text-success" />
                    Nenhuma tarefa em risco
                  </p>
                ) : (
@@ -76,7 +76,7 @@
                      </div>
                      <Progress 
                        value={pct} 
-                       className={`h-2 ${pct >= 80 ? '[&>div]:bg-green-500' : pct >= 60 ? '[&>div]:bg-yellow-500' : '[&>div]:bg-red-500'}`}
+                       className={`h-2 ${pct >= 80 ? '[&>div]:bg-success' : pct >= 60 ? '[&>div]:bg-warning' : '[&>div]:bg-destructive'}`}
                      />
                    </div>
                  );

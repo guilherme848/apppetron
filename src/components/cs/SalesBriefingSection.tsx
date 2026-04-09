@@ -74,9 +74,9 @@ export function SalesBriefingSection({ clientId, onCompleteStep, stepCompleted, 
 
   const getRiskColor = (level: string | null) => {
     switch (level) {
-      case 'low': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      case 'high': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      case 'low': return 'bg-success/10 text-success';
+      case 'medium': return 'bg-warning/10 text-warning';
+      case 'high': return 'bg-destructive/10 text-destructive';
       default: return 'bg-muted text-muted-foreground';
     }
   };
@@ -251,8 +251,8 @@ export function SalesBriefingSection({ clientId, onCompleteStep, stepCompleted, 
                   </div>
                   {editedContent.escopo_vendido.riscos_desalinhamento.length > 0 && (
                     <div>
-                      <p className="font-medium mb-1 text-orange-600 dark:text-orange-400">Riscos de Desalinhamento:</p>
-                      <ul className="list-disc pl-5 space-y-1 text-orange-600 dark:text-orange-400">
+                      <p className="font-medium mb-1 text-primary">Riscos de Desalinhamento:</p>
+                      <ul className="list-disc pl-5 space-y-1 text-primary">
                         {editedContent.escopo_vendido.riscos_desalinhamento.map((item, idx) => (
                           <li key={idx}>{item}</li>
                         ))}
@@ -266,7 +266,7 @@ export function SalesBriefingSection({ clientId, onCompleteStep, stepCompleted, 
               <AccordionItem value="riscos" className="border rounded-lg px-4">
                 <AccordionTrigger className="hover:no-underline">
                   <span className="font-semibold flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                    <AlertTriangle className="h-4 w-4 text-warning" />
                     4. Pontos de Atenção e Riscos Operacionais
                   </span>
                 </AccordionTrigger>
@@ -283,7 +283,7 @@ export function SalesBriefingSection({ clientId, onCompleteStep, stepCompleted, 
               <AccordionItem value="checklist" className="border rounded-lg px-4">
                 <AccordionTrigger className="hover:no-underline">
                   <span className="font-semibold flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <CheckCircle className="h-4 w-4 text-success" />
                     5. Checklist de Validação no Onboarding
                   </span>
                 </AccordionTrigger>
@@ -335,9 +335,9 @@ export function SalesBriefingSection({ clientId, onCompleteStep, stepCompleted, 
                     <div className="flex items-center gap-3">
                       <div className={cn(
                         "text-3xl font-bold",
-                        briefing.risk_level === 'low' && 'text-green-600 dark:text-green-400',
-                        briefing.risk_level === 'medium' && 'text-yellow-600 dark:text-yellow-400',
-                        briefing.risk_level === 'high' && 'text-red-600 dark:text-red-400',
+                        briefing.risk_level === 'low' && 'text-success',
+                        briefing.risk_level === 'medium' && 'text-warning',
+                        briefing.risk_level === 'high' && 'text-destructive',
                       )}>
                         {briefing.risk_score}/100
                       </div>

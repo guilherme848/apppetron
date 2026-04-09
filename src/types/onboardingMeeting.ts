@@ -165,9 +165,9 @@ export const CS_RISK_LEVEL_LABELS: Record<CsOnboardingMeetingRiskLevel, string> 
 };
 
 export const CS_RISK_LEVEL_COLORS: Record<CsOnboardingMeetingRiskLevel, string> = {
-  low: 'text-green-600 bg-green-100',
-  medium: 'text-yellow-600 bg-yellow-100',
-  high: 'text-red-600 bg-red-100',
+  low: 'text-success bg-success/10',
+  medium: 'text-warning bg-warning/10',
+  high: 'text-destructive bg-destructive/10',
 };
 
 // ============ Score Calculation ============

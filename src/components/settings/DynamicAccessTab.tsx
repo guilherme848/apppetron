@@ -538,7 +538,7 @@ function PermissionMatrixWithOverrides({
                           <div key={perm.key} className="flex items-center justify-between py-2">
                             <div className="flex items-center gap-3">
                               {effectiveValue ? (
-                                <ShieldCheck className={`h-4 w-4 ${hasOverride ? 'text-green-500' : 'text-primary'}`} />
+                                <ShieldCheck className={`h-4 w-4 ${hasOverride ? 'text-success' : 'text-primary'}`} />
                               ) : (
                                 <ShieldX className={`h-4 w-4 ${hasOverride ? 'text-destructive' : 'text-destructive'}`} />
                               )}

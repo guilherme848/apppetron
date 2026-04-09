@@ -25,8 +25,8 @@ function loadChannelPlans(): Record<string, ChannelPlan> {
 }
 
 function getDiffColor(v: number) {
-  if (v > 0) return 'text-green-600 dark:text-green-400';
-  if (v < 0) return 'text-red-600 dark:text-red-400';
+  if (v > 0) return 'text-success';
+  if (v < 0) return 'text-destructive';
   return 'text-muted-foreground';
 }
 
@@ -127,7 +127,7 @@ export default function MonthDetailTab({ data, onDataChange, readOnly, bpAdicaoM
   // Column background per month
   const colBg = (i: number) => {
     if (i < currentMonth) return 'bg-muted/30';
-    if (i === currentMonth) return 'bg-orange-50/60 dark:bg-orange-950/10';
+    if (i === currentMonth) return 'bg-primary/5';
     return '';
   };
 
@@ -153,7 +153,7 @@ export default function MonthDetailTab({ data, onDataChange, readOnly, bpAdicaoM
                   <tr>
                     <th className={`${groupHeaderCls} min-w-[180px]`}></th>
                     {MONTHS.map((m, i) => (
-                      <th key={m} className={`text-center text-xs px-2 py-2 min-w-[72px] ${colBg(i)} ${i === currentMonth ? 'border-t-2 border-t-orange-400' : ''}`}>
+                      <th key={m} className={`text-center text-xs px-2 py-2 min-w-[72px] ${colBg(i)} ${i === currentMonth ? 'border-t-2 border-t-primary' : ''}`}>
                         <div className="flex flex-col items-center gap-0.5">
                           {i < currentMonth && (
                             <Tooltip>
@@ -165,7 +165,7 @@ export default function MonthDetailTab({ data, onDataChange, readOnly, bpAdicaoM
                           )}
                           <span className="font-semibold">{m}</span>
                           {i === currentMonth && (
-                            <Badge className="text-[8px] px-1 py-0 bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300 border-none leading-tight">Atual</Badge>
+                            <Badge className="text-[8px] px-1 py-0 bg-primary/10 text-primary border-none leading-tight">Atual</Badge>
                           )}
                         </div>
                       </th>
@@ -226,8 +226,8 @@ export default function MonthDetailTab({ data, onDataChange, readOnly, bpAdicaoM
                   <GroupRow label="MRR Gerado" months={MONTHS.map(() => bpAdicaoMensal * ticketMedio)} total={totals.bpMrr} colBg={colBg} currentMonth={currentMonth} isCurrency />
 
                   {/* ═══ GROUP 3: REALIZADO ═══ */}
-                  <tr className="bg-orange-50/40 dark:bg-orange-950/10">
-                    <td colSpan={14} className={`${groupHeaderCls} bg-orange-50/40 dark:bg-orange-950/10`}>Realizado</td>
+                  <tr className="bg-primary/5">
+                    <td colSpan={14} className={`${groupHeaderCls} bg-primary/5`}>Realizado</td>
                   </tr>
                   <RealRow label="Inbound" data={data} field="qtyInbound" currentMonth={currentMonth} colBg={colBg} />
                   <RealRow label="Indicação" data={data} field="qtyIndicacao" currentMonth={currentMonth} colBg={colBg} />

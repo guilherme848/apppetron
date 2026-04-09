@@ -134,14 +134,14 @@ export function ServicesTab() {
                     <TableCell className="font-medium">{service.name}</TableCell>
                     <TableCell className="text-center">
                       {service.has_content ? (
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">Sim</Badge>
+                        <Badge variant="secondary" className="bg-primary/10 text-primary">Sim</Badge>
                       ) : (
                         <span className="text-muted-foreground text-xs">—</span>
                       )}
                     </TableCell>
                     <TableCell className="text-center">
                       {service.has_traffic ? (
-                        <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">Sim</Badge>
+                        <Badge variant="secondary" className="bg-success/10 text-success">Sim</Badge>
                       ) : (
                         <span className="text-muted-foreground text-xs">—</span>
                       )}

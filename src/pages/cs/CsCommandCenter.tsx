@@ -374,8 +374,8 @@ function AlertsCard({ alerts, navigate }: { alerts: CsAlert[]; navigate: ReturnT
   };
   const colorMap: Record<CsAlert['type'], string> = {
     onboarding_delayed: 'bg-destructive',
-    meeting_overdue: 'bg-yellow-500',
-    traffic_no_checkin: 'bg-yellow-500',
+    meeting_overdue: 'bg-warning',
+    traffic_no_checkin: 'bg-warning',
     recent_churn: 'bg-destructive',
   };
 

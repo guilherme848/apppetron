@@ -33,8 +33,8 @@ export function AccountTeamStatus({ account, showDetails = false, className }: A
       <div className="flex items-center gap-2">
       {status.isComplete ? (
           <>
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            <Badge variant="secondary" className="text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+            <CheckCircle className="h-4 w-4 text-success" />
+            <Badge variant="secondary" className="text-xs bg-success/10 text-success">
               <Users className="h-3 w-3 mr-1" />
               Time Completo
             </Badge>

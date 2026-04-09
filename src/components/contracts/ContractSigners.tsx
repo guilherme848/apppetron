@@ -16,9 +16,9 @@ const statusIcons: Record<string, React.ElementType> = {
 };
 
 const statusColors: Record<string, string> = {
-  pending: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
-  signed: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-  refused: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+  pending: "bg-warning/10 text-warning",
+  signed: "bg-success/10 text-success",
+  refused: "bg-destructive/10 text-destructive",
 };
 
 const statusLabels: Record<string, string> = {

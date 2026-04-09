@@ -23,9 +23,9 @@ export const PETRON_TASK_STATUS_LABELS: Record<PetronTaskStatus, string> = {
 
 export const PETRON_TASK_STATUS_COLORS: Record<PetronTaskStatus, string> = {
   todo: 'bg-muted text-muted-foreground',
-  doing: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
-  blocked: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300',
-  done: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
+  doing: 'bg-primary/10 text-primary',
+  blocked: 'bg-destructive/10 text-destructive',
+  done: 'bg-success/10 text-success',
 };
 
 // ============ Plans ============

@@ -176,13 +176,13 @@ export function OptimizationMyDayTab({
     : progressPercent >= 80
       ? 'text-primary'
       : progressPercent >= 50
-        ? 'text-yellow-500'
+        ? 'text-warning'
         : 'text-destructive';
 
   const checkinColor = completedCheckins === totalCheckins && totalCheckins > 0
     ? 'text-success'
     : completedCheckins > 0
-      ? 'text-yellow-500'
+      ? 'text-warning'
       : 'text-destructive';
 
   // Open registration modal
@@ -332,10 +332,10 @@ export function OptimizationMyDayTab({
           <Card className="border border-border rounded-2xl animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: '40ms' }}>
             <CardContent className="p-5 space-y-4">
               <BlockHeader
-                icon={<Clock className="h-4 w-4 text-yellow-500" />}
+                icon={<Clock className="h-4 w-4 text-warning" />}
                 title="Check-ins Pendentes"
                 badge={`${pendingCheckins.length} pendentes · ~5min cada`}
-                badgeColor="bg-yellow-500/10 text-yellow-600 dark:text-yellow-400"
+                badgeColor="bg-warning/10 text-warning"
                 subtitle={pendingCheckins.length > 0 ? `~${pendingCheckins.length * 5}min restantes` : undefined}
               />
               {pendingCheckins.length === 0 ? (
@@ -793,7 +793,7 @@ function TeamPanel({ trafficManagers, accounts, optimizations, todayStr, todayHi
         {managerStats.map((ms) => {
           const pColor = ms.progress >= 100 ? 'text-success' : ms.progress >= 50 ? 'text-primary' : 'text-destructive';
           const cColor = ms.checkinsDone === ms.checkinsTotal && ms.checkinsTotal > 0
-            ? 'text-success' : ms.checkinsDone > 0 ? 'text-yellow-500' : 'text-destructive';
+            ? 'text-success' : ms.checkinsDone > 0 ? 'text-warning' : 'text-destructive';
           return (
             <Card key={ms.id} className="border border-border rounded-2xl">
               <CardContent className="p-5 space-y-4">

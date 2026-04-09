@@ -62,8 +62,8 @@
      if (isOverdue) return <AlertCircle className="h-4 w-4 text-destructive" />;
      if (task.status === 'blocked') return <Ban className="h-4 w-4 text-destructive" />;
      if (task.status === 'doing') return <Play className="h-4 w-4 text-primary" />;
-     if (task.status === 'done') return <CheckCircle2 className="h-4 w-4 text-green-600" />;
-     if (isToday(parseISO(task.due_date))) return <Clock className="h-4 w-4 text-yellow-600" />;
+     if (task.status === 'done') return <CheckCircle2 className="h-4 w-4 text-success" />;
+     if (isToday(parseISO(task.due_date))) return <Clock className="h-4 w-4 text-warning" />;
      return <Circle className="h-4 w-4 text-muted-foreground" />;
    };
  
@@ -73,7 +73,7 @@
      const isTodayDue = task.due_date === today;
  
      if (isOverdue) return <Badge variant="destructive">Atrasada</Badge>;
-     if (isTodayDue) return <Badge className="bg-yellow-500">Hoje</Badge>;
+     if (isTodayDue) return <Badge className="bg-warning">Hoje</Badge>;
      return <Badge variant="secondary">{format(parseISO(task.due_date), "dd/MM", { locale: ptBR })}</Badge>;
    };
  

@@ -210,7 +210,7 @@ export default function PetronOSQuickTool() {
             <div key={campo.nome} className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground">
                 {campo.label}
-                {campo.obrigatorio && <span className="text-orange-500 ml-0.5">*</span>}
+                {campo.obrigatorio && <span className="text-primary ml-0.5">*</span>}
               </Label>
 
               {campo.tipo === 'text' && (
@@ -312,7 +312,7 @@ export default function PetronOSQuickTool() {
             <Button
               onClick={handleGenerate}
               disabled={!allRequired || generating}
-              className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white gap-2"
+              className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white gap-2"
             >
               <Sparkles className="h-4 w-4" />
               {generating ? 'Gerando...' : quantidadeVal ? `Gerar ${quantidadeVal} textos` : 'Gerar'}
@@ -330,10 +330,10 @@ export default function PetronOSQuickTool() {
         <div className="lg:col-span-3 bg-muted/30 border border-border rounded-2xl min-h-[400px]">
           {generating && (
             <div className="flex flex-col items-center justify-center h-full py-20 gap-4">
-              <Sparkles className="h-10 w-10 text-orange-500 animate-spin" style={{ animationDuration: '3s' }} />
+              <Sparkles className="h-10 w-10 text-primary animate-spin" style={{ animationDuration: '3s' }} />
               <p className="text-sm text-foreground font-medium">Gerando conteúdo...</p>
               <div className="w-48 h-1.5 bg-border rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-orange-500 to-pink-500 rounded-full animate-pulse" style={{ width: '60%' }} />
+                <div className="h-full bg-gradient-to-r from-primary to-primary/80 rounded-full animate-pulse" style={{ width: '60%' }} />
               </div>
             </div>
           )}

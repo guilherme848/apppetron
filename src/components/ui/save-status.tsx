@@ -58,8 +58,8 @@ export function SaveStatus({
       
       {status === 'saved' && (
         <>
-          <Check className={cn(iconSize, 'text-green-600 dark:text-green-500')} />
-          <span className="text-green-600 dark:text-green-500">Salvo</span>
+          <Check className={cn(iconSize, 'text-success')} />
+          <span className="text-success">Salvo</span>
         </>
       )}
       
@@ -99,7 +99,7 @@ export function SaveStatusInline({ status, className }: SaveStatusInlineProps) {
         'inline-flex items-center gap-1 text-xs',
         status === 'pending' && 'text-warning',
         status === 'saving' && 'text-muted-foreground',
-        status === 'saved' && 'text-green-600 dark:text-green-500',
+        status === 'saved' && 'text-success',
         status === 'error' && 'text-destructive',
         className
       )}

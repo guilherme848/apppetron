@@ -197,7 +197,7 @@ export default function PetronOSSettings() {
                 {/* Prompt */}
                 <div className="bg-card border border-primary/30 rounded-2xl p-5 space-y-4">
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-orange-500" />
+                    <Sparkles className="h-4 w-4 text-primary" />
                     Prompt da IA
                   </h3>
                   <Textarea
@@ -209,11 +209,11 @@ export default function PetronOSSettings() {
                   <div className="bg-muted/50 rounded-lg p-3 space-y-2">
                     <span className="text-[11px] font-semibold text-muted-foreground">Variáveis disponíveis</span>
                     <div className="flex flex-wrap gap-1.5">
-                      <code className="text-[11px] font-mono bg-card px-2 py-0.5 rounded border text-orange-500">{`{{contexto_cliente}}`}</code>
-                      <code className="text-[11px] font-mono bg-card px-2 py-0.5 rounded border text-orange-500">{`{{nome_cliente}}`}</code>
-                      <code className="text-[11px] font-mono bg-card px-2 py-0.5 rounded border text-orange-500">{`{{nicho_cliente}}`}</code>
+                      <code className="text-[11px] font-mono bg-card px-2 py-0.5 rounded border text-primary">{`{{contexto_cliente}}`}</code>
+                      <code className="text-[11px] font-mono bg-card px-2 py-0.5 rounded border text-primary">{`{{nome_cliente}}`}</code>
+                      <code className="text-[11px] font-mono bg-card px-2 py-0.5 rounded border text-primary">{`{{nicho_cliente}}`}</code>
                       {campos.map(c => (
-                        <code key={c.nome} className="text-[11px] font-mono bg-card px-2 py-0.5 rounded border text-orange-500">
+                        <code key={c.nome} className="text-[11px] font-mono bg-card px-2 py-0.5 rounded border text-primary">
                           {`{{${c.nome}}}`}
                         </code>
                       ))}
@@ -336,7 +336,7 @@ export default function PetronOSSettings() {
                   <Button
                     onClick={handleSave}
                     disabled={saving}
-                    className="bg-gradient-to-r from-orange-500 to-pink-500 text-white gap-2"
+                    className="bg-gradient-to-r from-primary to-primary/80 text-white gap-2"
                   >
                     {saving ? 'Salvando...' : 'Salvar Configuração'}
                   </Button>
