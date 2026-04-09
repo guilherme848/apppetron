@@ -82,10 +82,10 @@ export function AppSidebar() {
                   onClick={toggleSidebar}
                   className={cn(
                     'h-7 w-7 shrink-0 rounded-full flex items-center justify-center',
-                    'bg-card border border-border',
-                    'text-sidebar-foreground/50',
-                    'hover:bg-accent hover:border-border hover:text-sidebar-foreground',
-                    'transition-all duration-150',
+                    'bg-primary/10 border border-primary/20',
+                    'text-primary/70',
+                    'hover:bg-primary/20 hover:border-primary/40 hover:text-primary hover:scale-110 hover:shadow-md hover:shadow-primary/10',
+                    'transition-all duration-200',
                   )}
                 >
                   {isExpanded ? (
@@ -155,10 +155,10 @@ export function AppSidebar() {
                                 {...(isActive ? { 'aria-current': 'page' as const } : {})}
                                 className={cn(
                                   'flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] relative',
-                                  'transition-all duration-150',
+                                  'transition-all duration-200',
                                   isActive
                                     ? 'text-sidebar-primary font-medium bg-primary/[0.08] sidebar-active-indicator'
-                                    : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50',
+                                    : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 hover:translate-x-0.5',
                                 )}
                               >
                                 <Icon className="h-4 w-4 shrink-0" />

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 @tailwind base;
@@ -13,7 +13,7 @@
 
 @layer base {
   :root {
-    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
     /* Background hierarchy — Light */
@@ -509,6 +509,74 @@
   background: var(--badge-muted-bg);
   color: hsl(var(--badge-muted-text));
   border-color: var(--badge-muted-border);
+}
+
+/* ─── Page transition ─── */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.page-enter {
+  animation: page-enter 0.3s ease-out;
+}
+
+/* ─── Card stagger entrance ─── */
+@keyframes card-enter {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.card-enter {
+  animation: card-enter 0.35s ease-out backwards;
+}
+
+/* ─── Gradient text utility ─── */
+.text-gradient-primary {
+  background: linear-gradient(135deg, #F97316, #f43f5e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── KPI card glow on hover ─── */
+.kpi-card {
+  transition: all 0.3s ease;
+}
+.kpi-card:hover {
+  box-shadow: 0 0 0 1px hsl(25 95% 53% / 0.15), 0 8px 24px hsl(25 95% 53% / 0.08);
+  transform: translateY(-2px);
+}
+.dark .kpi-card:hover {
+  box-shadow: 0 0 0 1px hsl(25 95% 53% / 0.25), 0 8px 32px hsl(25 95% 53% / 0.12);
+}
+
+/* ─── Stat number animation ─── */
+.stat-value {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* ─── Table row premium hover ─── */
+.table-row-premium:hover {
+  background: linear-gradient(90deg, hsl(25 95% 53% / 0.04), hsl(25 95% 53% / 0.01), transparent) !important;
+}
+.dark .table-row-premium:hover {
+  background: linear-gradient(90deg, hsl(25 95% 53% / 0.08), hsl(25 95% 53% / 0.03), transparent) !important;
+}
+
+/* ─── Section header with gradient underline ─── */
+.section-header {
+  position: relative;
+  padding-bottom: 0.75rem;
+}
+.section-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 48px;
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, #F97316, #f43f5e);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -163,10 +163,10 @@ export default function ContentDashboard() {
   const todayStr = format(now, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
 
   return (
-    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div className="space-y-5 page-enter animate-in fade-in slide-in-from-bottom-2 duration-300">
       {/* Header with month selector */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
+        <div className="section-header">
           <h1 className="text-2xl font-bold flex items-center gap-2 text-foreground">
             <BarChart3 className="h-6 w-6 text-primary" />
             Dashboard de Produção

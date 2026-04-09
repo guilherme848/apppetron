@@ -54,7 +54,7 @@ function KpiCard({
     <Card
       onClick={onClick}
       className={cn(
-        "transition-all duration-150 hover:border-border/80",
+        "kpi-card transition-all duration-150 hover:border-border/80",
         onClick && "cursor-pointer",
       )}
     >
@@ -68,7 +68,7 @@ function KpiCard({
           </div>
         </div>
         <div className={cn(
-          "text-2xl font-bold font-mono",
+          "text-2xl font-bold font-mono stat-value",
           danger && "text-destructive",
           warning && "text-warning",
           accent && "text-primary",
@@ -104,10 +104,10 @@ export default function CsCommandCenter() {
   const todayLabel = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-12 page-enter">
       {/* HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div>
+        <div className="section-header">
           <h1 className="text-2xl font-bold">Visão Geral</h1>
           <p className="text-sm text-muted-foreground">Customer Success · {todayLabel}</p>
         </div>
@@ -216,7 +216,7 @@ function FinancialSection({ metrics, monthLabel }: { metrics: FinancialMetrics; 
                 <Clock className="h-4 w-4 text-primary" />
               </div>
             </div>
-            <div className="text-2xl font-bold font-mono">{metrics.avgLT.toFixed(1)} meses</div>
+            <div className="text-2xl font-bold font-mono stat-value">{metrics.avgLT.toFixed(1)} meses</div>
             <p className="text-xs text-muted-foreground mt-1.5">tempo médio de permanência dos clientes ativos</p>
             <p className="text-[11px] text-muted-foreground font-mono mt-2">
               Cliente mais antigo: {metrics.maxLT} meses · Cliente mais recente: {metrics.minLT} meses
@@ -231,7 +231,7 @@ function FinancialSection({ metrics, monthLabel }: { metrics: FinancialMetrics; 
                 <TrendingUp className="h-4 w-4 text-primary" />
               </div>
             </div>
-            <div className="text-2xl font-bold font-mono text-primary">{formatCurrencyFull(metrics.avgLTV)}</div>
+            <div className="text-2xl font-bold font-mono text-primary stat-value">{formatCurrencyFull(metrics.avgLTV)}</div>
             <p className="text-xs text-muted-foreground mt-1.5">receita total acumulada média por cliente ativo</p>
             {metrics.maxLTV.name && (
               <p className="text-[11px] text-muted-foreground font-mono mt-2 truncate">
@@ -252,7 +252,7 @@ function FinancialSection({ metrics, monthLabel }: { metrics: FinancialMetrics; 
                 <Percent className="h-4 w-4 text-primary" />
               </div>
             </div>
-            <div className={cn("text-2xl font-bold font-mono", churnRateColor)}>
+            <div className={cn("text-2xl font-bold font-mono stat-value", churnRateColor)}>
               {metrics.churnRate.toFixed(1)}%
             </div>
             <p className="text-xs text-muted-foreground mt-1.5">{monthLabel}</p>
@@ -267,7 +267,7 @@ function FinancialSection({ metrics, monthLabel }: { metrics: FinancialMetrics; 
                 <UserMinus className="h-4 w-4 text-primary" />
               </div>
             </div>
-            <div className={cn("text-2xl font-bold font-mono", metrics.churnCount > 0 ? "text-destructive" : "text-foreground")}>
+            <div className={cn("text-2xl font-bold font-mono stat-value", metrics.churnCount > 0 ? "text-destructive" : "text-foreground")}>
               {metrics.churnCount}
             </div>
             <p className="text-xs text-muted-foreground mt-1.5">{monthLabel}</p>
@@ -284,7 +284,7 @@ function FinancialSection({ metrics, monthLabel }: { metrics: FinancialMetrics; 
                 <DollarSign className="h-4 w-4 text-primary" />
               </div>
             </div>
-            <div className={cn("text-2xl font-bold font-mono", metrics.revenueLost > 0 ? "text-destructive" : "text-muted-foreground")}>
+            <div className={cn("text-2xl font-bold font-mono stat-value", metrics.revenueLost > 0 ? "text-destructive" : "text-muted-foreground")}>
               {formatCurrencyFull(metrics.revenueLost)}
             </div>
             <p className="text-xs text-muted-foreground mt-1.5">em contratos cancelados no mês</p>
@@ -452,7 +452,7 @@ function HealthCard({ data, onClientClick }: { data: any; onClientClick: (id: st
   return (
     <Card>
       <CardHeader className="pb-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 section-header">
           <Activity className="h-4 w-4 text-muted-foreground" />
           <CardTitle className="text-sm font-semibold">Distribuição de Health</CardTitle>
         </div>

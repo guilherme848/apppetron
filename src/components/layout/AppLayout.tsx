@@ -57,7 +57,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <main className="flex-1 flex flex-col min-w-0 relative">
-          <header className="h-[60px] border-b border-border flex items-center justify-between px-5 bg-background/80 backdrop-blur-xl sticky top-0 z-30">
+          <header className="h-[60px] border-b border-border/50 flex items-center justify-between px-5 glass backdrop-blur-md bg-background/80 sticky top-0 z-30">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors md:hidden" />
               <div className="w-px h-5 bg-border md:hidden" />
@@ -68,7 +68,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               <UserSelector />
             </div>
           </header>
-          <div id="main-content" className="flex-1 p-4 md:p-6 animate-fade-in-up relative ambient-glow">
+          <div id="main-content" className="flex-1 p-4 md:p-6 animate-fade-in-up page-enter relative ambient-glow">
             {children}
           </div>
         </main>

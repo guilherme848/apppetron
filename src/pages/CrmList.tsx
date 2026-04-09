@@ -308,10 +308,10 @@ export default function CrmList() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 page-enter">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
+        <div className="section-header">
           <h1 className="text-2xl font-bold text-foreground">Clientes</h1>
           <p className="text-sm text-muted-foreground">Gerencie sua base de clientes ativos</p>
         </div>
@@ -447,7 +447,7 @@ export default function CrmList() {
                 return (
                   <TableRow
                     key={account.id}
-                    className="h-14 group cursor-pointer hover:bg-gradient-to-r hover:from-primary/[0.03] hover:to-transparent transition-all duration-150"
+                    className="h-14 group cursor-pointer table-row-premium transition-all duration-150"
                     onClick={() => navigate(`/crm/${account.id}`)}
                   >
                     <TableCell>
@@ -525,7 +525,7 @@ export default function CrmList() {
       {sortedAndFilteredAccounts.length > 0 && (
         <div className="flex items-center justify-between">
           <p className="text-xs text-muted-foreground">
-            Mostrando {Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, sortedAndFilteredAccounts.length)} a {Math.min(currentPage * ITEMS_PER_PAGE, sortedAndFilteredAccounts.length)} de {sortedAndFilteredAccounts.length} clientes
+            Mostrando <span className="stat-value">{Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, sortedAndFilteredAccounts.length)}</span> a <span className="stat-value">{Math.min(currentPage * ITEMS_PER_PAGE, sortedAndFilteredAccounts.length)}</span> de <span className="stat-value">{sortedAndFilteredAccounts.length}</span> clientes
           </p>
           {totalPages > 1 && (
             <div className="flex items-center gap-2">

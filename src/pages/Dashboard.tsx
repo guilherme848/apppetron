@@ -76,73 +76,89 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Dashboard Executivo</h1>
+        <h1 className="text-2xl font-bold text-gradient-primary">Dashboard Executivo</h1>
         <p className="text-muted-foreground">Visão estratégica de CS, retenção e performance financeira</p>
       </div>
 
 
       {/* Row 1: Health Score + KPIs de CS */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <BaseHealthScoreCard />
-        <StatsCard
-          title="Clientes Ativos"
-          value={activeClients}
-          icon={Users}
-          description="Total de clientes com status ativo"
-        />
-        <StatsCard
-          title="Churns (Período)"
-          value={churnedThisMonth}
-          icon={TrendingDown}
-          description="Cancelamentos no período selecionado"
-        />
+        <div className="card-enter" style={{ animationDelay: '0ms' }}><BaseHealthScoreCard /></div>
+        <div className="card-enter" style={{ animationDelay: '60ms' }}>
+          <StatsCard
+            title="Clientes Ativos"
+            value={activeClients}
+            icon={Users}
+            description="Total de clientes com status ativo"
+          />
+        </div>
+        <div className="card-enter" style={{ animationDelay: '120ms' }}>
+          <StatsCard
+            title="Churns (Período)"
+            value={churnedThisMonth}
+            icon={TrendingDown}
+            description="Cancelamentos no período selecionado"
+          />
+        </div>
         {canViewFinancial ? (
           <>
-            <StatsCard
-              title="Receita Mensal"
-              value={formatCurrency(totalMrr)}
-              icon={DollarSign}
-              description="Soma do valor mensal dos clientes ativos"
-            />
-            <StatsCard
-              title="Ticket Médio"
-              value={formatCurrency(avgTicket)}
-              icon={Receipt}
-              description="Média do valor mensal (ativos)"
-            />
+            <div className="card-enter" style={{ animationDelay: '180ms' }}>
+              <StatsCard
+                title="Receita Mensal"
+                value={formatCurrency(totalMrr)}
+                icon={DollarSign}
+                description="Soma do valor mensal dos clientes ativos"
+              />
+            </div>
+            <div className="card-enter" style={{ animationDelay: '240ms' }}>
+              <StatsCard
+                title="Ticket Médio"
+                value={formatCurrency(avgTicket)}
+                icon={Receipt}
+                description="Média do valor mensal (ativos)"
+              />
+            </div>
           </>
         ) : (
           <>
-            <StatsCard
-              title="Receita Mensal"
-              value={<Lock className="h-5 w-5" />}
-              icon={DollarSign}
-              description="Restrito ao administrador"
-            />
-            <StatsCard
-              title="Ticket Médio"
-              value={<Lock className="h-5 w-5" />}
-              icon={Receipt}
-              description="Restrito ao administrador"
-            />
+            <div className="card-enter" style={{ animationDelay: '180ms' }}>
+              <StatsCard
+                title="Receita Mensal"
+                value={<Lock className="h-5 w-5" />}
+                icon={DollarSign}
+                description="Restrito ao administrador"
+              />
+            </div>
+            <div className="card-enter" style={{ animationDelay: '240ms' }}>
+              <StatsCard
+                title="Ticket Médio"
+                value={<Lock className="h-5 w-5" />}
+                icon={Receipt}
+                description="Restrito ao administrador"
+              />
+            </div>
           </>
         )}
       </div>
 
       {/* Row 2: New Clients + Onboardings */}
       <div className="grid gap-4 md:grid-cols-2">
-        <StatsCard
-          title="Novos Clientes no Mês"
-          value={newClientsThisMonth}
-          icon={UserCheck}
-          description="Clientes que iniciaram neste mês"
-        />
-        <StatsCard
-          title="Onboardings Ativos"
-          value={activeOnboardings}
-          icon={Users}
-          description="Onboardings em andamento"
-        />
+        <div className="card-enter" style={{ animationDelay: '300ms' }}>
+          <StatsCard
+            title="Novos Clientes no Mês"
+            value={newClientsThisMonth}
+            icon={UserCheck}
+            description="Clientes que iniciaram neste mês"
+          />
+        </div>
+        <div className="card-enter" style={{ animationDelay: '360ms' }}>
+          <StatsCard
+            title="Onboardings Ativos"
+            value={activeOnboardings}
+            icon={Users}
+            description="Onboardings em andamento"
+          />
+        </div>
       </div>
 
       {/* Churn and MRR Charts (existing) */}

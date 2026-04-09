@@ -43,7 +43,7 @@ function KpiCard({
   badge?: string;
 }) {
   return (
-    <Card className="transition-all duration-150 hover:border-border/80">
+    <Card className="kpi-card transition-all duration-150 hover:border-border/80">
       <CardContent className="p-5">
         <div className="flex items-center justify-between mb-3">
           <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
@@ -54,7 +54,7 @@ function KpiCard({
           </div>
         </div>
         <div className={cn(
-          "text-2xl font-bold font-mono",
+          "text-2xl font-bold font-mono stat-value",
           danger && "text-destructive",
           warning && "text-warning",
           accent && "text-primary",

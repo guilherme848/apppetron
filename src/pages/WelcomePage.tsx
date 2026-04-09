@@ -42,7 +42,7 @@ function KpiCard({
     <Card
       onClick={onClick}
       className={cn(
-        "transition-all duration-150 hover:border-border/80",
+        "kpi-card transition-all duration-200 hover:border-border/80",
         onClick && "cursor-pointer",
       )}
     >
@@ -56,7 +56,7 @@ function KpiCard({
           </div>
         </div>
         <div className={cn(
-          "text-2xl font-bold font-mono",
+          "text-2xl font-bold font-mono stat-value",
           danger && "text-destructive",
           warning && "text-warning",
           accent && "text-primary",
@@ -93,7 +93,7 @@ function PillarCard({
   const isPositive = variation > 0;
 
   return (
-    <Card className="transition-all duration-150 hover:border-primary/40">
+    <Card className="kpi-card transition-all duration-200 hover:border-primary/40">
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
           <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center shrink-0", iconBg)}>
@@ -103,7 +103,7 @@ function PillarCard({
             <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               {label}
             </span>
-            <div className="text-[32px] font-extrabold font-mono text-foreground leading-tight mt-1">
+            <div className="text-[32px] font-extrabold font-mono stat-value text-foreground leading-tight mt-1">
               {displayValue}
             </div>
             <p className="text-[13px] text-muted-foreground mt-1">{sublabel}</p>
@@ -240,37 +240,43 @@ function DirectorView({
     <div className="space-y-6">
       {/* 3 Pillar Hero Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        <PillarCard
-          label="Conteúdos Criados"
-          value={contentPillar.value}
-          sublabel={`conteúdos entregues em ${currentMonth}`}
-          variation={contentPillar.variation}
-          prevMonthName={prevMonthName}
-          icon={Palette}
-          iconBg="bg-success/12"
-          iconColor="text-success"
-        />
-        <PillarCard
-          label="Investimento em Mídia"
-          value={mediaPillar.value}
-          sublabel="verba total gerenciada no mês"
-          variation={mediaPillar.variation}
-          prevMonthName={prevMonthName}
-          icon={DollarSign}
-          iconBg="bg-info/12"
-          iconColor="text-info"
-          formatValue={formatCurrency}
-        />
-        <PillarCard
-          label="Contratos Fechados"
-          value={contractsPillar.value}
-          sublabel={`novos contratos em ${currentMonth}`}
-          variation={contractsPillar.variation}
-          prevMonthName={prevMonthName}
-          icon={FileSignature}
-          iconBg="bg-primary/12"
-          iconColor="text-primary"
-        />
+        <div className="card-enter" style={{ animationDelay: '0ms' }}>
+          <PillarCard
+            label="Conteúdos Criados"
+            value={contentPillar.value}
+            sublabel={`conteúdos entregues em ${currentMonth}`}
+            variation={contentPillar.variation}
+            prevMonthName={prevMonthName}
+            icon={Palette}
+            iconBg="bg-success/12"
+            iconColor="text-success"
+          />
+        </div>
+        <div className="card-enter" style={{ animationDelay: '80ms' }}>
+          <PillarCard
+            label="Investimento em Mídia"
+            value={mediaPillar.value}
+            sublabel="verba total gerenciada no mês"
+            variation={mediaPillar.variation}
+            prevMonthName={prevMonthName}
+            icon={DollarSign}
+            iconBg="bg-info/12"
+            iconColor="text-info"
+            formatValue={formatCurrency}
+          />
+        </div>
+        <div className="card-enter" style={{ animationDelay: '160ms' }}>
+          <PillarCard
+            label="Contratos Fechados"
+            value={contractsPillar.value}
+            sublabel={`novos contratos em ${currentMonth}`}
+            variation={contractsPillar.variation}
+            prevMonthName={prevMonthName}
+            icon={FileSignature}
+            iconBg="bg-primary/12"
+            iconColor="text-primary"
+          />
+        </div>
       </div>
 
       {/* Alerts */}
@@ -370,10 +376,18 @@ function ExecutionView({
     <div className="space-y-6">
       {/* KPI Grid */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <KpiCard label="Para Hoje" value={myDayMetrics.forToday} icon={Target} accent={myDayMetrics.forToday > 0} />
-        <KpiCard label="Atrasados" value={myDayMetrics.overdue} icon={AlertTriangle} danger={myDayMetrics.overdue > 0} />
-        <KpiCard label="Em Andamento" value={myDayMetrics.inProgress} icon={Clock} />
-        <KpiCard label="Concluídos Hoje" value={myDayMetrics.completedToday} icon={CheckCircle} accent={myDayMetrics.completedToday > 0} />
+        <div className="card-enter" style={{ animationDelay: '0ms' }}>
+          <KpiCard label="Para Hoje" value={myDayMetrics.forToday} icon={Target} accent={myDayMetrics.forToday > 0} />
+        </div>
+        <div className="card-enter" style={{ animationDelay: '60ms' }}>
+          <KpiCard label="Atrasados" value={myDayMetrics.overdue} icon={AlertTriangle} danger={myDayMetrics.overdue > 0} />
+        </div>
+        <div className="card-enter" style={{ animationDelay: '120ms' }}>
+          <KpiCard label="Em Andamento" value={myDayMetrics.inProgress} icon={Clock} />
+        </div>
+        <div className="card-enter" style={{ animationDelay: '180ms' }}>
+          <KpiCard label="Concluídos Hoje" value={myDayMetrics.completedToday} icon={CheckCircle} accent={myDayMetrics.completedToday > 0} />
+        </div>
       </div>
 
       {/* Monthly Progress */}
@@ -539,7 +553,7 @@ export default function WelcomePage() {
         {/* HEADER */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold">
+            <h1 className="text-2xl font-bold text-gradient-primary">
               {isUserBirthdayToday ? `Feliz aniversário, ${userName} 🎂` : `${greeting}, ${userName}`}
             </h1>
             <p className="text-sm text-muted-foreground">Início · {capitalizedDate}</p>

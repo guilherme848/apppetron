@@ -145,7 +145,7 @@ export default function CrmDetail() {
   const checkupColor: Record<string, string> = { A: 'bg-[hsl(var(--success)/.12)] text-[hsl(var(--success))] border-[hsl(var(--success)/.25)]', B: 'bg-[hsl(var(--info)/.12)] text-[hsl(var(--info))] border-[hsl(var(--info)/.25)]', C: 'bg-[hsl(var(--warning)/.12)] text-[hsl(var(--warning))] border-[hsl(var(--warning)/.25)]', D: 'bg-destructive/12 text-destructive border-destructive/25' };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 page-enter">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -153,7 +153,7 @@ export default function CrmDetail() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">{account.name}</h1>
+            <h1 className="text-2xl font-bold text-gradient-primary">{account.name}</h1>
             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
               {/* Status badge */}
               <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-semibold rounded-md border ${
@@ -208,10 +208,12 @@ export default function CrmDetail() {
       {/* Cards Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {/* Time da Conta */}
-        <AccountTeamCard account={account} onUpdate={handleTeamUpdate} />
+        <div className="card-enter" style={{ animationDelay: '0ms' }}>
+          <AccountTeamCard account={account} onUpdate={handleTeamUpdate} />
+        </div>
 
         {/* Contrato */}
-        <Card className="rounded-2xl">
+        <Card className="rounded-2xl card-enter" style={{ animationDelay: '60ms' }}>
           <CardHeader className="pb-2">
             <CardTitle className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
               <FileText className="h-3.5 w-3.5" />Contrato
@@ -237,7 +239,7 @@ export default function CrmDetail() {
         </Card>
 
         {/* Contato */}
-        <Card className="rounded-2xl">
+        <Card className="rounded-2xl card-enter" style={{ animationDelay: '120ms' }}>
           <CardHeader className="pb-2">
             <CardTitle className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
               <Phone className="h-3.5 w-3.5" />Contato
@@ -278,7 +280,7 @@ export default function CrmDetail() {
         {serviceHasTraffic && <ClientTrafficSection account={account} onUpdate={handleTeamUpdate} />}
 
         {/* Endereço */}
-        <Card className="rounded-2xl">
+        <Card className="rounded-2xl card-enter" style={{ animationDelay: '180ms' }}>
           <CardHeader className="pb-2">
             <CardTitle className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
               <MapPin className="h-3.5 w-3.5" />Endereço

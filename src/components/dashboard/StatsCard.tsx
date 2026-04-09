@@ -11,7 +11,7 @@ interface StatsCardProps {
 
 export function StatsCard({ title, value, icon: Icon, description }: StatsCardProps) {
   return (
-    <Card>
+    <Card className="kpi-card card-enter">
       <CardContent className="p-5">
         <div className="flex items-center justify-between mb-3">
           <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
@@ -21,7 +21,7 @@ export function StatsCard({ title, value, icon: Icon, description }: StatsCardPr
             <Icon className="h-4 w-4 text-primary" />
           </div>
         </div>
-        <div className="text-2xl font-bold font-mono">{value}</div>
+        <div className="text-2xl font-bold font-mono stat-value">{value}</div>
         {description && (
           <p className="text-xs text-muted-foreground mt-1.5">{description}</p>
         )}

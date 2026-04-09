@@ -66,7 +66,7 @@ function KpiCard({ icon: Icon, label, value, sub, color, bgColor }: {
   icon: any; label: string; value: React.ReactNode; sub?: string; color: string; bgColor: string;
 }) {
   return (
-    <Card>
+    <Card className="kpi-card">
       <CardContent className="p-5">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg" style={{ backgroundColor: bgColor }}>
@@ -74,7 +74,7 @@ function KpiCard({ icon: Icon, label, value, sub, color, bgColor }: {
           </div>
           <div className="min-w-0">
             <p className="text-xs truncate text-muted-foreground">{label}</p>
-            <p className="text-xl font-bold truncate text-foreground">{value}</p>
+            <p className="text-xl font-bold truncate text-foreground stat-value">{value}</p>
             {sub && <p className="text-xs mt-0.5 text-muted-foreground">{sub}</p>}
           </div>
         </div>
@@ -357,9 +357,11 @@ export default function SalesDashboard() {
   const clearFilters = () => { setFilterFunnels([]); setFilterResponsible([]); };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 page-enter animate-fade-in">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-2xl font-bold text-foreground">Dashboard Comercial</h1>
+        <div className="section-header">
+          <h1 className="text-2xl font-bold text-foreground">Dashboard Comercial</h1>
+        </div>
       </div>
 
       {/* Global Filters */}
@@ -428,7 +430,7 @@ export default function SalesDashboard() {
       {/* ===== CHANNEL METRICS ===== */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold" style={{ color: DC.textPrimary }}>Métricas por Canal</h2>
+          <h2 className="text-lg font-semibold section-header" style={{ color: DC.textPrimary }}>Métricas por Canal</h2>
         </div>
 
         {/* Channel cards */}
@@ -549,7 +551,7 @@ export default function SalesDashboard() {
 
       {/* ===== MEETINGS SECTION ===== */}
       <div>
-        <h2 className="text-lg font-semibold mb-3" style={{ color: DC.textPrimary }}>Reuniões — Métricas Detalhadas</h2>
+        <h2 className="text-lg font-semibold mb-3 section-header" style={{ color: DC.textPrimary }}>Reuniões — Métricas Detalhadas</h2>
 
         {/* Meeting KPI cards */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">

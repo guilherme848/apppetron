@@ -225,11 +225,32 @@ export default function PetronOSSettings() {
                       <Select value={form.modelo_ia || 'google/gemini-2.5-flash'} onValueChange={v => updateForm(p => ({ ...p, modelo_ia: v }))}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="google/gemini-2.5-flash">Gemini 2.5 Flash</SelectItem>
-                          <SelectItem value="google/gemini-2.5-pro">Gemini 2.5 Pro</SelectItem>
-                          <SelectItem value="google/gemini-3-flash-preview">Gemini 3 Flash</SelectItem>
-                          <SelectItem value="openai/gpt-5-mini">GPT-5 Mini</SelectItem>
-                          <SelectItem value="openai/gpt-5">GPT-5</SelectItem>
+                          <div className="px-2 py-1.5">
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Google</span>
+                          </div>
+                          <SelectItem value="google/gemini-2.5-flash">Gemini 2.5 Flash — rapido, barato</SelectItem>
+                          <SelectItem value="google/gemini-2.5-pro">Gemini 2.5 Pro — qualidade alta</SelectItem>
+                          <SelectItem value="google/gemini-2.5-flash-lite-preview">Gemini 2.5 Flash Lite — ultrabarato</SelectItem>
+                          <Separator className="my-1" />
+                          <div className="px-2 py-1.5">
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Anthropic</span>
+                          </div>
+                          <SelectItem value="anthropic/claude-sonnet-4-5">Claude Sonnet 4.5 — melhor qualidade</SelectItem>
+                          <SelectItem value="anthropic/claude-haiku-3-5">Claude Haiku 3.5 — rapido e barato</SelectItem>
+                          <Separator className="my-1" />
+                          <div className="px-2 py-1.5">
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">OpenAI</span>
+                          </div>
+                          <SelectItem value="openai/gpt-4o">GPT-4o — versatil</SelectItem>
+                          <SelectItem value="openai/gpt-4o-mini">GPT-4o Mini — barato</SelectItem>
+                          <SelectItem value="openai/o3-mini">o3-mini — raciocinio avancado</SelectItem>
+                          <Separator className="my-1" />
+                          <div className="px-2 py-1.5">
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Open Source (via OpenRouter)</span>
+                          </div>
+                          <SelectItem value="meta-llama/llama-4-maverick">Llama 4 Maverick — gratis</SelectItem>
+                          <SelectItem value="deepseek/deepseek-chat-v3-0324">DeepSeek V3 — gratis, alta qualidade</SelectItem>
+                          <SelectItem value="mistralai/mistral-small-3.1-24b-instruct">Mistral Small 3.1 — gratis</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
