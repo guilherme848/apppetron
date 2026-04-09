@@ -89,6 +89,7 @@ export default function Dashboard() {
             title="Clientes Ativos"
             value={activeClients}
             icon={Users}
+            accent="info"
             description="Total de clientes com status ativo"
           />
         </div>
@@ -97,6 +98,7 @@ export default function Dashboard() {
             title="Churns (Período)"
             value={churnedThisMonth}
             icon={TrendingDown}
+            accent="destructive"
             description="Cancelamentos no período selecionado"
           />
         </div>
@@ -107,6 +109,7 @@ export default function Dashboard() {
                 title="Receita Mensal"
                 value={formatCurrency(totalMrr)}
                 icon={DollarSign}
+                accent="success"
                 description="Soma do valor mensal dos clientes ativos"
               />
             </div>
@@ -115,6 +118,7 @@ export default function Dashboard() {
                 title="Ticket Médio"
                 value={formatCurrency(avgTicket)}
                 icon={Receipt}
+                accent="purple"
                 description="Média do valor mensal (ativos)"
               />
             </div>
@@ -148,6 +152,7 @@ export default function Dashboard() {
             title="Novos Clientes no Mês"
             value={newClientsThisMonth}
             icon={UserCheck}
+            accent="success"
             description="Clientes que iniciaram neste mês"
           />
         </div>
@@ -156,6 +161,7 @@ export default function Dashboard() {
             title="Onboardings Ativos"
             value={activeOnboardings}
             icon={Users}
+            accent="warning"
             description="Onboardings em andamento"
           />
         </div>

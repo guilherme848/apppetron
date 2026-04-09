@@ -64,16 +64,24 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       {/* Header — logo + toggle button */}
-      <SidebarHeader className="border-b border-sidebar-border px-3 py-3">
+      <SidebarHeader className="px-4 py-4">
         <div className="flex items-center justify-between">
-          <img
-            src={petronLogo}
-            alt="Petron"
-            className={cn(
-              'shrink-0 transition-all duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)]',
-              isExpanded ? 'h-10 w-auto opacity-100' : 'h-8 w-auto opacity-80',
+          <div className="flex items-center gap-3">
+            <img
+              src={petronLogo}
+              alt="Petron"
+              className={cn(
+                'shrink-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
+                isExpanded ? 'h-9 w-auto opacity-100' : 'h-7 w-auto opacity-80',
+              )}
+            />
+            {isExpanded && (
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-gradient-primary leading-tight">Petron</span>
+                <span className="text-[10px] text-muted-foreground/60 font-medium">ERP Agência</span>
+              </div>
             )}
-          />
+          </div>
           <TooltipProvider delayDuration={0}>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -81,17 +89,16 @@ export function AppSidebar() {
                   aria-label={isExpanded ? "Recolher menu" : "Expandir menu"}
                   onClick={toggleSidebar}
                   className={cn(
-                    'h-7 w-7 shrink-0 rounded-full flex items-center justify-center',
-                    'bg-primary/10 border border-primary/20',
-                    'text-primary/70',
-                    'hover:bg-primary/20 hover:border-primary/40 hover:text-primary hover:scale-110 hover:shadow-md hover:shadow-primary/10',
+                    'h-7 w-7 shrink-0 rounded-lg flex items-center justify-center',
+                    'text-muted-foreground/50',
+                    'hover:bg-muted hover:text-foreground',
                     'transition-all duration-200',
                   )}
                 >
                   {isExpanded ? (
-                    <ChevronsLeft className="h-3.5 w-3.5 transition-transform duration-300 ease-out" />
+                    <ChevronsLeft className="h-3.5 w-3.5" />
                   ) : (
-                    <ChevronsRight className="h-3.5 w-3.5 transition-transform duration-300 ease-out" />
+                    <ChevronsRight className="h-3.5 w-3.5" />
                   )}
                 </button>
               </TooltipTrigger>
@@ -101,7 +108,7 @@ export function AppSidebar() {
             </Tooltip>
           </TooltipProvider>
         </div>
-        <div className="mt-2 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+        <div className="mt-3 h-px bg-gradient-to-r from-primary/20 via-primary/10 to-transparent" />
       </SidebarHeader>
 
       {/* Navigation */}
@@ -119,12 +126,12 @@ export function AppSidebar() {
                 {label && (
                   <div
                     className={cn(
-                      'px-3 py-2 select-none',
-                      'text-xs font-semibold uppercase tracking-[0.12em]',
+                      'px-4 pt-4 pb-1 select-none',
+                      'text-[10px] font-bold uppercase tracking-[0.15em]',
                       'transition-colors duration-200',
                       moduleActive
-                        ? 'text-sidebar-primary'
-                        : 'text-sidebar-foreground/35',
+                        ? 'text-primary'
+                        : 'text-muted-foreground/40',
                     )}
                   >
                     {label}
@@ -154,14 +161,14 @@ export function AppSidebar() {
                                 end
                                 {...(isActive ? { 'aria-current': 'page' as const } : {})}
                                 className={cn(
-                                  'flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] relative',
+                                  'flex items-center gap-3 px-3 py-1.5 mx-2 rounded-lg text-[13px] relative',
                                   'transition-all duration-200',
                                   isActive
-                                    ? 'text-sidebar-primary font-medium bg-primary/[0.08] sidebar-active-indicator'
-                                    : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 hover:translate-x-0.5',
+                                    ? 'text-primary font-semibold bg-primary/[0.08] shadow-[0_0_0_1px_hsl(25_95%_53%/0.15)] sidebar-active-indicator'
+                                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/60',
                                 )}
                               >
-                                <Icon className="h-4 w-4 shrink-0" />
+                                <Icon className={cn('h-4 w-4 shrink-0', isActive && 'text-primary')} />
                                 <span className="truncate">{route.label}</span>
                               </RouterNavLink>
                             </SidebarMenuButton>

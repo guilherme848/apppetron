@@ -57,14 +57,15 @@ export function AppLayout({ children }: AppLayoutProps) {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <main className="flex-1 flex flex-col min-w-0 relative">
-          <header className="h-[60px] border-b border-border/50 flex items-center justify-between px-5 glass backdrop-blur-md bg-background/80 sticky top-0 z-30">
+          <header className="h-14 border-b border-border/40 flex items-center justify-between px-5 backdrop-blur-xl bg-background/70 sticky top-0 z-30">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors md:hidden" />
-              <div className="w-px h-5 bg-border md:hidden" />
+              <div className="w-px h-5 bg-border/50 md:hidden" />
               <Breadcrumb />
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <ThemeToggle />
+              <div className="w-px h-5 bg-border/40" />
               <UserSelector />
             </div>
           </header>
