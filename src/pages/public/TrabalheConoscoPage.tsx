@@ -15,13 +15,13 @@ import {
   Upload,
   Briefcase,
   Clock,
-  Sparkles,
   ArrowRight,
   ArrowLeft,
   MapPin,
-  Users,
   Zap,
   ChevronDown,
+  TrendingUp,
+  Flame,
 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
@@ -334,7 +334,7 @@ export default function TrabalheConoscoPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen relative overflow-hidden bg-[#0A0A0A] flex items-center justify-center p-6">
+      <div className="min-h-screen relative overflow-hidden bg-[#0A0A0A] flex items-center justify-center p-5 md:p-6">
         <BackgroundOrbs />
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
@@ -342,20 +342,20 @@ export default function TrabalheConoscoPage() {
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="relative z-10 max-w-lg w-full"
         >
-          <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-3xl p-10 text-center">
+          <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-3xl p-7 md:p-10 text-center">
             <motion.div
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ delay: 0.2, duration: 0.6, type: 'spring' }}
-              className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#F97316] to-[#EA580C] flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-[#F97316]/30"
+              className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-[#F97316] to-[#EA580C] flex items-center justify-center mx-auto mb-5 md:mb-6 shadow-2xl shadow-[#F97316]/30"
             >
-              <CheckCircle2 className="h-10 w-10 text-white" />
+              <CheckCircle2 className="h-8 w-8 md:h-10 md:w-10 text-white" />
             </motion.div>
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="text-4xl font-bold mb-3 text-white tracking-tight"
+              className="text-3xl md:text-4xl font-bold mb-3 text-white tracking-tight"
               style={{ fontFamily: 'Space Grotesk, Inter, sans-serif' }}
             >
               Inscrição recebida.
@@ -364,7 +364,7 @@ export default function TrabalheConoscoPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="text-white/60 mb-8 leading-relaxed"
+              className="text-sm md:text-base text-white/60 mb-6 md:mb-8 leading-relaxed"
             >
               Recebemos seu cadastro para a vaga de{' '}
               <span className="text-[#F97316] font-semibold">
@@ -413,21 +413,21 @@ export default function TrabalheConoscoPage() {
       />
 
       {/* ─── Header ─── */}
-      <header className="relative z-30 border-b border-white/5 backdrop-blur-xl bg-black/20 sticky top-0">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <header className="relative z-30 border-b border-white/5 backdrop-blur-xl bg-black/40 sticky top-0">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between gap-3">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
-            className="flex items-center gap-3"
+            className="flex items-center gap-2.5 min-w-0"
           >
-            <div className="relative">
+            <div className="relative flex-shrink-0">
               <div className="absolute inset-0 bg-[#F97316] blur-xl opacity-30" />
-              <img src={petronLogo} alt="Petron" className="relative h-8 w-auto" />
+              <img src={petronLogo} alt="Petron" className="relative h-7 md:h-8 w-auto" />
             </div>
-            <div>
-              <div className="font-bold text-sm text-white">Agência Petron</div>
-              <div className="text-[10px] uppercase tracking-widest text-white/40">
+            <div className="min-w-0">
+              <div className="font-bold text-xs md:text-sm text-white">Agência Petron</div>
+              <div className="text-[9px] md:text-[10px] uppercase tracking-widest text-white/40 truncate">
                 Trabalhe conosco
               </div>
             </div>
@@ -437,7 +437,7 @@ export default function TrabalheConoscoPage() {
       </header>
 
       {/* ─── Main ─── */}
-      <main className="relative z-10 max-w-6xl mx-auto px-6 py-12 md:py-20">
+      <main className="relative z-10 max-w-6xl mx-auto px-5 md:px-6 py-6 md:py-20">
         {loading ? (
           <div className="flex items-center justify-center py-32">
             <motion.div
@@ -458,7 +458,7 @@ export default function TrabalheConoscoPage() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -40 }}
                 transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="space-y-20"
+                className="space-y-12 md:space-y-20"
               >
                 <HeroSection count={profiles.length} />
                 <JobsSection profiles={profiles} onSelect={handleSelectProfile} />
@@ -496,12 +496,12 @@ export default function TrabalheConoscoPage() {
       </main>
 
       {/* ─── Footer ─── */}
-      <footer className="relative z-10 border-t border-white/5 mt-20 py-8">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="text-xs text-white/40">
+      <footer className="relative z-10 border-t border-white/5 mt-16 md:mt-20 py-6 md:py-8">
+        <div className="max-w-6xl mx-auto px-5 md:px-6 flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4">
+          <div className="text-[11px] md:text-xs text-white/40">
             © {new Date().getFullYear()} Agência Petron · Içara - SC
           </div>
-          <div className="text-xs text-white/40">
+          <div className="text-[11px] md:text-xs text-white/40">
             Seus dados estão protegidos pela LGPD
           </div>
         </div>
@@ -535,9 +535,9 @@ function BackgroundOrbs({
           opacity: [0.3, 0.5, 0.3],
         }}
         transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] rounded-full"
+        className="absolute top-[-15%] left-[-20%] w-[400px] h-[400px] md:w-[600px] md:h-[600px] rounded-full"
       >
-        <div className="w-full h-full bg-[#F97316] blur-[120px] opacity-40" />
+        <div className="w-full h-full bg-[#F97316] blur-[90px] md:blur-[120px] opacity-40" />
       </motion.div>
 
       {/* Orb 2 — warm orange */}
@@ -548,19 +548,19 @@ function BackgroundOrbs({
           opacity: [0.2, 0.4, 0.2],
         }}
         transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-        className="absolute bottom-[-10%] right-[-5%] w-[700px] h-[700px] rounded-full"
+        className="absolute bottom-[-15%] right-[-20%] w-[450px] h-[450px] md:w-[700px] md:h-[700px] rounded-full"
       >
-        <div className="w-full h-full bg-[#EA580C] blur-[130px] opacity-30" />
+        <div className="w-full h-full bg-[#EA580C] blur-[100px] md:blur-[130px] opacity-30" />
       </motion.div>
 
-      {/* Orb 3 — subtle center */}
+      {/* Orb 3 — subtle center (desktop only) */}
       <motion.div
         animate={{
           scale: [1, 1.2, 1],
           opacity: [0.1, 0.2, 0.1],
         }}
         transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
-        className="absolute top-[40%] left-[40%] w-[500px] h-[500px] rounded-full"
+        className="hidden md:block absolute top-[40%] left-[40%] w-[500px] h-[500px] rounded-full"
       >
         <div className="w-full h-full bg-[#FB923C] blur-[100px] opacity-20" />
       </motion.div>
@@ -673,19 +673,19 @@ function HeroSection({ count }: { count: number }) {
       initial="hidden"
       animate="visible"
       variants={stagger}
-      className="pt-4 md:pt-10 pb-4"
+      className="pt-2 md:pt-10 pb-2 md:pb-4"
     >
       {/* Badge */}
-      <motion.div variants={fadeUp} className="flex items-center justify-center mb-10">
+      <motion.div variants={fadeUp} className="flex items-center justify-center mb-6 md:mb-10">
         <div className="relative">
           <div className="absolute inset-0 bg-[#F97316] blur-lg opacity-50 animate-pulse" />
-          <div className="relative inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#F97316]/40 bg-[#F97316]/10 backdrop-blur">
+          <div className="relative inline-flex items-center gap-2 px-3 py-1.5 md:px-4 rounded-full border border-[#F97316]/40 bg-[#F97316]/10 backdrop-blur">
             <motion.span
               animate={{ scale: [1, 1.3, 1] }}
               transition={{ duration: 1.5, repeat: Infinity }}
               className="w-1.5 h-1.5 rounded-full bg-[#F97316]"
             />
-            <span className="text-[11px] font-semibold text-[#F97316] uppercase tracking-widest">
+            <span className="text-[10px] md:text-[11px] font-semibold text-[#F97316] uppercase tracking-widest">
               {displayCount} {displayCount === 1 ? 'vaga aberta' : 'vagas abertas'}
             </span>
           </div>
@@ -695,11 +695,11 @@ function HeroSection({ count }: { count: number }) {
       {/* Title — editorial bold */}
       <motion.h1
         variants={fadeUp}
-        className="text-center font-bold tracking-tight leading-[0.85] mb-6 text-white"
+        className="text-center font-bold tracking-tight leading-[0.88] md:leading-[0.85] mb-5 md:mb-6 text-white px-2"
         style={{
           fontFamily: 'Space Grotesk, Inter, sans-serif',
-          fontSize: 'clamp(3rem, 10vw, 8rem)',
-          letterSpacing: '-0.04em',
+          fontSize: 'clamp(2.75rem, 13vw, 8rem)',
+          letterSpacing: '-0.035em',
         }}
       >
         Vem crescer
@@ -721,7 +721,7 @@ function HeroSection({ count }: { count: number }) {
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
             transition={{ delay: 1, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-[#F97316] via-[#FB923C] to-[#EA580C] origin-left"
+            className="absolute -bottom-1 md:-bottom-2 left-0 right-0 h-[3px] md:h-1 bg-gradient-to-r from-[#F97316] via-[#FB923C] to-[#EA580C] origin-left"
           />
         </span>
       </motion.h1>
@@ -729,7 +729,7 @@ function HeroSection({ count }: { count: number }) {
       {/* Subtitle */}
       <motion.p
         variants={fadeUp}
-        className="text-center text-base md:text-xl text-white/60 leading-relaxed max-w-2xl mx-auto mb-8"
+        className="text-center text-sm md:text-xl text-white/60 leading-relaxed max-w-2xl mx-auto mb-6 md:mb-8 px-2"
       >
         A Petron é um time que vive de entregar resultado de verdade. Se você quer aprender rápido, ser dono do que faz e fazer parte de algo que tá crescendo todo mês — escolhe a vaga ali embaixo e bora trocar uma ideia.
       </motion.p>
@@ -737,9 +737,9 @@ function HeroSection({ count }: { count: number }) {
       {/* Scroll hint */}
       <motion.div
         variants={fadeUp}
-        className="flex flex-col items-center gap-2 text-white/30"
+        className="flex flex-col items-center gap-1.5 text-white/30"
       >
-        <span className="text-[10px] uppercase tracking-widest">Conheça as vagas</span>
+        <span className="text-[9px] md:text-[10px] uppercase tracking-widest">Conheça as vagas</span>
         <motion.div
           animate={{ y: [0, 6, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
@@ -769,13 +769,13 @@ function JobsSection({
       viewport={{ once: true, margin: '-100px' }}
       variants={stagger}
     >
-      <motion.div variants={fadeUp} className="flex items-end justify-between mb-8">
+      <motion.div variants={fadeUp} className="flex items-end justify-between mb-6 md:mb-8">
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-[#F97316] font-semibold mb-2">
+          <div className="text-[9px] md:text-[10px] uppercase tracking-widest text-[#F97316] font-semibold mb-1.5 md:mb-2">
             Passo 1 de 2
           </div>
           <h2
-            className="text-4xl md:text-5xl font-bold tracking-tight text-white"
+            className="text-[2rem] md:text-5xl font-bold tracking-tight text-white leading-[0.95]"
             style={{
               fontFamily: 'Space Grotesk, Inter, sans-serif',
               letterSpacing: '-0.03em',
@@ -786,7 +786,7 @@ function JobsSection({
         </div>
       </motion.div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-3 md:gap-4 md:grid-cols-2">
         {profiles.map((p, i) => (
           <JobCard key={p.id} profile={p} index={i} onClick={() => onSelect(p)} />
         ))}
@@ -820,8 +820,8 @@ function JobCard({
       onMouseMove={handleMouseMove}
       onClick={onClick}
       whileHover={{ y: -4 }}
-      whileTap={{ scale: 0.98 }}
-      className="group relative text-left p-6 rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-xl cursor-pointer overflow-hidden transition-colors hover:border-[#F97316]/50"
+      whileTap={{ scale: 0.97 }}
+      className="group relative text-left p-5 md:p-6 rounded-2xl md:rounded-3xl border border-white/10 active:border-[#F97316]/60 bg-white/[0.02] backdrop-blur-xl cursor-pointer overflow-hidden transition-colors hover:border-[#F97316]/50"
     >
       {/* Glow effect on hover */}
       <motion.div
@@ -842,9 +842,9 @@ function JobCard({
 
       {/* Content */}
       <div className="relative">
-        <div className="flex items-start justify-between gap-2 mb-3">
+        <div className="flex items-start justify-between gap-2 mb-2.5 md:mb-3">
           <h3
-            className="text-xl md:text-2xl font-bold leading-tight text-white group-hover:text-[#FB923C] transition-colors"
+            className="text-lg md:text-2xl font-bold leading-tight text-white group-hover:text-[#FB923C] transition-colors"
             style={{
               fontFamily: 'Space Grotesk, Inter, sans-serif',
               letterSpacing: '-0.01em',
@@ -853,43 +853,43 @@ function JobCard({
             {profile.title_public}
           </h3>
           {profile.requires_experience && (
-            <div className="flex-shrink-0 text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full border border-white/20 text-white/60">
+            <div className="flex-shrink-0 text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 md:py-1 rounded-full border border-white/20 text-white/60">
               Exp.
             </div>
           )}
         </div>
 
         {profile.short_pitch && (
-          <p className="text-sm text-white/50 mb-5 line-clamp-2 leading-relaxed">
+          <p className="text-xs md:text-sm text-white/50 mb-4 md:mb-5 line-clamp-2 leading-relaxed">
             {profile.short_pitch}
           </p>
         )}
 
-        <div className="flex flex-wrap gap-2 mb-5">
+        <div className="flex flex-wrap gap-1.5 md:gap-2 mb-4 md:mb-5">
           {profile.department && (
-            <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-md bg-white/5 text-white/60">
+            <span className="text-[9px] md:text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 md:py-1 rounded-md bg-white/5 text-white/60">
               {profile.department}
             </span>
           )}
-          <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-md bg-white/5 text-white/60">
+          <span className="text-[9px] md:text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 md:py-1 rounded-md bg-white/5 text-white/60">
             {SENIORITY_LABEL[profile.seniority]}
           </span>
-          <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-md bg-white/5 text-white/60 inline-flex items-center gap-1">
+          <span className="text-[9px] md:text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 md:py-1 rounded-md bg-white/5 text-white/60 inline-flex items-center gap-1">
             <MapPin className="h-2.5 w-2.5" />
             {MODALITY_LABEL[profile.modality]}
           </span>
-          <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-md bg-white/5 text-white/60">
+          <span className="text-[9px] md:text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 md:py-1 rounded-md bg-white/5 text-white/60">
             {CONTRACT_LABEL[profile.contract_type]}
           </span>
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t border-white/5">
+        <div className="flex items-center justify-between pt-3 md:pt-4 border-t border-white/5">
           {profile.salary_range ? (
-            <div className="text-xs text-white/40 font-mono">{profile.salary_range}</div>
+            <div className="text-[10px] md:text-xs text-white/40 font-mono truncate pr-2">{profile.salary_range}</div>
           ) : (
             <div />
           )}
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#F97316] group-hover:gap-3 transition-all">
+          <div className="flex items-center gap-1.5 text-[11px] md:text-xs font-semibold text-[#F97316] group-hover:gap-3 transition-all flex-shrink-0">
             Me inscrever
             <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
           </div>
@@ -906,19 +906,19 @@ function JobCard({
 function ValuesSection() {
   const values = [
     {
+      icon: TrendingUp,
+      title: 'Vontade de crescer',
+      desc: 'A gente valoriza quem não se contenta com o básico. Se você quer evoluir de verdade e ir longe, esse é seu lugar.',
+    },
+    {
       icon: Zap,
-      title: 'Ritmo alto',
-      desc: 'A gente entrega semana a semana. Você vai aprender na velocidade de quem faz, não de quem estuda.',
+      title: 'Proatividade',
+      desc: 'Buscar sempre mais. Não esperar ordens, não entregar no mínimo — antecipar problemas e propor soluções.',
     },
     {
-      icon: Users,
-      title: 'Time que puxa junto',
-      desc: 'Aqui ninguém trabalha sozinho. Tráfego, Design, Conteúdo e CS são um time só.',
-    },
-    {
-      icon: Sparkles,
-      title: 'Autonomia real',
-      desc: 'Se você mostra que dá conta, você decide. Dono do seu trabalho desde o dia 1.',
+      icon: Flame,
+      title: 'Sangue no olho',
+      desc: 'Aqui a gente entra pra ganhar. Fome de resultado, disposição pra ralar e compromisso com cada entrega.',
     },
   ];
 
@@ -930,12 +930,12 @@ function ValuesSection() {
       variants={stagger}
       className="pt-10"
     >
-      <motion.div variants={fadeUp} className="text-center mb-12">
-        <div className="text-[10px] uppercase tracking-widest text-[#F97316] font-semibold mb-2">
+      <motion.div variants={fadeUp} className="text-center mb-8 md:mb-12">
+        <div className="text-[9px] md:text-[10px] uppercase tracking-widest text-[#F97316] font-semibold mb-1.5 md:mb-2">
           Por que Petron
         </div>
         <h2
-          className="text-3xl md:text-5xl font-bold tracking-tight text-white"
+          className="text-[1.75rem] md:text-5xl font-bold tracking-tight text-white leading-[0.95]"
           style={{
             fontFamily: 'Space Grotesk, Inter, sans-serif',
             letterSpacing: '-0.03em',
@@ -945,12 +945,12 @@ function ValuesSection() {
         </h2>
       </motion.div>
 
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-3 gap-3 md:gap-6">
         {values.map((v) => (
           <motion.div
             key={v.title}
             variants={cardReveal}
-            className="relative p-6 rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-xl overflow-hidden group"
+            className="relative p-5 md:p-6 rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-xl overflow-hidden group"
           >
             <div className="absolute top-0 left-0 w-20 h-20 bg-[#F97316]/10 blur-3xl rounded-full group-hover:bg-[#F97316]/20 transition-colors" />
             <div className="relative">
@@ -1035,12 +1035,12 @@ function FormSection({
       >
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-sm text-white/60 hover:text-white transition-colors group"
+          className="flex items-center gap-2 text-xs md:text-sm text-white/60 hover:text-white active:text-white transition-colors group py-2 -ml-1 pl-1 pr-2 rounded-lg active:bg-white/5"
         >
           <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
           Trocar de vaga
         </button>
-        <div className="text-[10px] uppercase tracking-widest text-white/40">
+        <div className="text-[9px] md:text-[10px] uppercase tracking-widest text-white/40">
           Passo 2 de 2
         </div>
       </motion.div>
@@ -1050,15 +1050,15 @@ function FormSection({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="relative rounded-3xl border border-[#F97316]/30 bg-gradient-to-br from-[#F97316]/10 via-[#F97316]/5 to-transparent backdrop-blur-xl p-6 md:p-8 overflow-hidden"
+        className="relative rounded-2xl md:rounded-3xl border border-[#F97316]/30 bg-gradient-to-br from-[#F97316]/10 via-[#F97316]/5 to-transparent backdrop-blur-xl p-5 md:p-8 overflow-hidden"
       >
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#F97316]/20 blur-3xl rounded-full" />
         <div className="relative">
-          <div className="text-[10px] font-bold text-[#F97316] uppercase tracking-widest mb-2">
+          <div className="text-[9px] md:text-[10px] font-bold text-[#F97316] uppercase tracking-widest mb-2">
             Você está se inscrevendo para
           </div>
           <h2
-            className="text-3xl md:text-4xl font-bold text-white mb-3 leading-tight"
+            className="text-2xl md:text-4xl font-bold text-white mb-3 leading-tight"
             style={{
               fontFamily: 'Space Grotesk, Inter, sans-serif',
               letterSpacing: '-0.02em',
@@ -1067,7 +1067,7 @@ function FormSection({
             {profile.title_public}
           </h2>
           {profile.short_pitch && (
-            <p className="text-white/60 mb-4 max-w-2xl">{profile.short_pitch}</p>
+            <p className="text-sm md:text-base text-white/60 mb-4 max-w-2xl">{profile.short_pitch}</p>
           )}
           <div className="flex flex-wrap gap-2">
             {profile.department && (
@@ -1095,11 +1095,11 @@ function FormSection({
           transition={{ delay: 0.2 }}
           className="group rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-xl overflow-hidden"
         >
-          <summary className="cursor-pointer px-6 py-4 text-sm font-medium text-white/60 hover:text-white flex items-center gap-3 transition-colors">
-            <ChevronDown className="h-4 w-4 -rotate-90 group-open:rotate-0 transition-transform" />
-            Ver detalhes da vaga (missão, entregáveis, requisitos)
+          <summary className="cursor-pointer px-5 md:px-6 py-4 text-xs md:text-sm font-medium text-white/60 hover:text-white active:bg-white/5 flex items-center gap-3 transition-colors">
+            <ChevronDown className="h-4 w-4 -rotate-90 group-open:rotate-0 transition-transform flex-shrink-0" />
+            <span>Ver detalhes da vaga (missão, entregáveis, requisitos)</span>
           </summary>
-          <div className="px-6 pb-6 space-y-5">
+          <div className="px-5 md:px-6 pb-5 md:pb-6 space-y-5">
             {profile.mission && (
               <div>
                 <div className="text-[10px] font-bold text-[#F97316] uppercase tracking-widest mb-2">
@@ -1149,14 +1149,14 @@ function FormSection({
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-xl p-6 md:p-10"
+        className="rounded-2xl md:rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-xl p-5 md:p-10"
       >
-        <div className="mb-8">
-          <div className="text-[10px] font-bold text-[#F97316] uppercase tracking-widest mb-2">
+        <div className="mb-6 md:mb-8">
+          <div className="text-[9px] md:text-[10px] font-bold text-[#F97316] uppercase tracking-widest mb-1.5 md:mb-2">
             Quase lá
           </div>
           <h2
-            className="text-3xl font-bold text-white mb-2"
+            className="text-2xl md:text-3xl font-bold text-white mb-1.5 md:mb-2"
             style={{
               fontFamily: 'Space Grotesk, Inter, sans-serif',
               letterSpacing: '-0.02em',
@@ -1164,12 +1164,12 @@ function FormSection({
           >
             Seus dados.
           </h2>
-          <p className="text-sm text-white/50">
+          <p className="text-xs md:text-sm text-white/50">
             Leva uns 3 minutos. Quanto mais completo, melhor a gente te entende.
           </p>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-8">
+        <form onSubmit={onSubmit} className="space-y-7 md:space-y-8">
           <input
             type="text"
             name="website_url"
@@ -1303,7 +1303,7 @@ function FormSection({
               title="Ferramentas que você sabe usar"
               subtitle="Marque as que você já utilizou, mesmo que seja só pra estudos."
             >
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                 {toolsForSelected.map((tool) => {
                   const checked = form.tools_known.includes(tool);
                   return (
@@ -1311,10 +1311,10 @@ function FormSection({
                       key={tool}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className={`flex items-center gap-2 p-3 rounded-xl border cursor-pointer transition-all ${
+                      className={`flex items-center gap-2.5 px-3 py-3 rounded-xl border cursor-pointer transition-all min-h-[48px] ${
                         checked
                           ? 'border-[#F97316]/50 bg-[#F97316]/10'
-                          : 'border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]'
+                          : 'border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04] active:bg-white/[0.06]'
                       }`}
                     >
                       <Checkbox
@@ -1323,9 +1323,9 @@ function FormSection({
                           if (c) patch({ tools_known: [...form.tools_known, tool] });
                           else patch({ tools_known: form.tools_known.filter((t) => t !== tool) });
                         }}
-                        className={checked ? 'border-[#F97316] data-[state=checked]:bg-[#F97316]' : 'border-white/30'}
+                        className={`flex-shrink-0 ${checked ? 'border-[#F97316] data-[state=checked]:bg-[#F97316]' : 'border-white/30'}`}
                       />
-                      <span className={`text-sm ${checked ? 'text-white' : 'text-white/70'}`}>
+                      <span className={`text-sm truncate ${checked ? 'text-white' : 'text-white/70'}`}>
                         {tool}
                       </span>
                     </motion.label>
@@ -1359,14 +1359,14 @@ function FormSection({
 
           {/* Currículo */}
           <FormGroup title="Currículo">
-            <label className="flex items-center gap-4 border-2 border-dashed border-white/15 hover:border-[#F97316]/50 rounded-2xl p-5 cursor-pointer transition-all bg-white/[0.02] hover:bg-white/[0.04] group">
-              <div className="w-12 h-12 rounded-xl bg-white/5 group-hover:bg-[#F97316]/10 flex items-center justify-center transition-colors">
+            <label className="flex items-center gap-3 md:gap-4 border-2 border-dashed border-white/15 hover:border-[#F97316]/50 active:border-[#F97316]/60 rounded-2xl p-4 md:p-5 cursor-pointer transition-all bg-white/[0.02] hover:bg-white/[0.04] active:bg-white/[0.06] group">
+              <div className="w-11 h-11 md:w-12 md:h-12 rounded-xl bg-white/5 group-hover:bg-[#F97316]/10 flex items-center justify-center transition-colors flex-shrink-0">
                 <Upload className="h-5 w-5 text-white/60 group-hover:text-[#F97316] transition-colors" />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 {resumeFile ? (
                   <>
-                    <div className="text-sm font-medium text-white">{resumeFile.name}</div>
+                    <div className="text-sm font-medium text-white truncate">{resumeFile.name}</div>
                     <div className="text-xs text-white/40">
                       {(resumeFile.size / 1024 / 1024).toFixed(1)} MB
                     </div>
@@ -1379,7 +1379,7 @@ function FormSection({
                         <span className="text-[#F97316]">(obrigatório)</span>
                       )}
                     </div>
-                    <div className="text-xs text-white/40">PDF, DOC, PNG ou JPG (máx 10MB)</div>
+                    <div className="text-[11px] md:text-xs text-white/40">PDF, DOC, PNG ou JPG (máx 10MB)</div>
                   </>
                 )}
               </div>
@@ -1422,14 +1422,14 @@ function FormSection({
           </AnimatePresence>
 
           {/* Buttons */}
-          <div className="flex gap-3 pt-2">
+          <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
             <motion.button
               type="button"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={onBack}
               disabled={submitting}
-              className="px-6 py-3 rounded-xl border border-white/20 text-white/80 hover:bg-white/5 hover:border-white/30 transition-colors text-sm font-medium flex items-center gap-2 disabled:opacity-50"
+              className="px-6 py-3.5 sm:py-3 rounded-xl border border-white/20 text-white/80 hover:bg-white/5 hover:border-white/30 active:bg-white/10 transition-colors text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50"
             >
               <ArrowLeft className="h-4 w-4" />
               Voltar
@@ -1439,14 +1439,14 @@ function FormSection({
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
               disabled={submitting}
-              className="relative flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-[#F97316] to-[#EA580C] text-white font-semibold text-sm shadow-2xl shadow-[#F97316]/30 transition-all hover:shadow-[#F97316]/50 disabled:opacity-70 overflow-hidden group"
+              className="relative flex-1 px-6 py-3.5 sm:py-3 rounded-xl bg-gradient-to-r from-[#F97316] to-[#EA580C] text-white font-semibold text-sm shadow-2xl shadow-[#F97316]/30 transition-all hover:shadow-[#F97316]/50 disabled:opacity-70 overflow-hidden group"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <span className="relative flex items-center justify-center gap-2">
                 {submitting ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Enviando inscrição...
+                    Enviando...
                   </>
                 ) : (
                   <>
@@ -1518,7 +1518,7 @@ function DarkInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <Input
       {...props}
-      className="bg-white/[0.03] border-white/10 text-white placeholder:text-white/30 focus-visible:ring-[#F97316]/40 focus-visible:border-[#F97316]/50 rounded-xl h-11"
+      className="bg-white/[0.03] border-white/10 text-white placeholder:text-white/30 focus-visible:ring-[#F97316]/40 focus-visible:border-[#F97316]/50 rounded-xl h-12 md:h-11 text-base md:text-sm"
     />
   );
 }
@@ -1527,7 +1527,7 @@ function DarkTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) 
   return (
     <Textarea
       {...props}
-      className="bg-white/[0.03] border-white/10 text-white placeholder:text-white/30 focus-visible:ring-[#F97316]/40 focus-visible:border-[#F97316]/50 rounded-xl resize-none"
+      className="bg-white/[0.03] border-white/10 text-white placeholder:text-white/30 focus-visible:ring-[#F97316]/40 focus-visible:border-[#F97316]/50 rounded-xl resize-none text-base md:text-sm"
     />
   );
 }
@@ -1545,7 +1545,7 @@ function DarkSelect({
 }) {
   return (
     <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger className="bg-white/[0.03] border-white/10 text-white focus:ring-[#F97316]/40 focus:border-[#F97316]/50 rounded-xl h-11 data-[placeholder]:text-white/30">
+      <SelectTrigger className="bg-white/[0.03] border-white/10 text-white focus:ring-[#F97316]/40 focus:border-[#F97316]/50 rounded-xl h-12 md:h-11 data-[placeholder]:text-white/30 text-base md:text-sm">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent className="bg-[#0F0F0F] border-white/10 text-white">
@@ -1571,7 +1571,7 @@ function Chip({
   icon?: React.ReactNode;
 }) {
   return (
-    <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full border border-white/10 bg-white/5 text-white/80">
+    <span className="inline-flex items-center gap-1 text-[9px] md:text-[10px] font-semibold uppercase tracking-wider px-2 md:px-2.5 py-1 rounded-full border border-white/10 bg-white/5 text-white/80">
       {icon}
       {children}
     </span>
