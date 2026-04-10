@@ -8,8 +8,177 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version",
 };
 
-const MODEL = "claude-sonnet-4-5-20250929";
 const PROMPT_VERSION = "v1";
+
+// ─── Provider Configuration ──────────────────────────────────────
+// Ordem de preferência: Anthropic → OpenAI → Google Gemini
+// O primeiro provider com API key configurada é usado.
+
+type Provider = "anthropic" | "openai" | "google";
+
+interface ProviderResult {
+  provider: Provider;
+  model: string;
+  content: string;
+  tokens_input?: number;
+  tokens_output?: number;
+}
+
+async function callAnthropic(
+  systemPrompt: string,
+  userPrompt: string
+): Promise<ProviderResult | null> {
+  const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+  if (!apiKey) return null;
+
+  const model = "claude-sonnet-4-5-20250929";
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 2000,
+      system: systemPrompt,
+      messages: [{ role: "user", content: userPrompt }],
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Anthropic error: ${errText}`);
+  }
+
+  const data = await res.json();
+  const content = (data.content || [])
+    .map((b: any) => b.text || "")
+    .join("")
+    .trim();
+  return {
+    provider: "anthropic",
+    model,
+    content,
+    tokens_input: data.usage?.input_tokens,
+    tokens_output: data.usage?.output_tokens,
+  };
+}
+
+async function callOpenAI(
+  systemPrompt: string,
+  userPrompt: string
+): Promise<ProviderResult | null> {
+  const apiKey = Deno.env.get("OPENAI_API_KEY");
+  if (!apiKey) return null;
+
+  const model = "gpt-4o-mini";
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      temperature: 0.3,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`OpenAI error: ${errText}`);
+  }
+
+  const data = await res.json();
+  return {
+    provider: "openai",
+    model,
+    content: data.choices?.[0]?.message?.content || "",
+    tokens_input: data.usage?.prompt_tokens,
+    tokens_output: data.usage?.completion_tokens,
+  };
+}
+
+async function callGoogle(
+  systemPrompt: string,
+  userPrompt: string
+): Promise<ProviderResult | null> {
+  const apiKey = Deno.env.get("GOOGLE_AI_API_KEY");
+  if (!apiKey) return null;
+
+  const model = "gemini-2.0-flash-exp";
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+        generationConfig: {
+          temperature: 0.3,
+          responseMimeType: "application/json",
+          maxOutputTokens: 2000,
+        },
+      }),
+    }
+  );
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Google error: ${errText}`);
+  }
+
+  const data = await res.json();
+  const content = (data.candidates?.[0]?.content?.parts || [])
+    .map((p: any) => p.text || "")
+    .join("");
+  return {
+    provider: "google",
+    model,
+    content,
+    tokens_input: data.usageMetadata?.promptTokenCount,
+    tokens_output: data.usageMetadata?.candidatesTokenCount,
+  };
+}
+
+async function callLlm(
+  systemPrompt: string,
+  userPrompt: string
+): Promise<ProviderResult> {
+  const providers: Array<() => Promise<ProviderResult | null>> = [
+    () => callAnthropic(systemPrompt, userPrompt),
+    () => callOpenAI(systemPrompt, userPrompt),
+    () => callGoogle(systemPrompt, userPrompt),
+  ];
+
+  const errors: string[] = [];
+  for (const provider of providers) {
+    try {
+      const result = await provider();
+      if (result && result.content) return result;
+    } catch (e: any) {
+      errors.push(e.message || String(e));
+      console.warn("[rh-analyze] provider failed:", e.message);
+      continue;
+    }
+  }
+
+  throw new Error(
+    `Nenhum provider LLM respondeu. Configure ANTHROPIC_API_KEY, OPENAI_API_KEY ou GOOGLE_AI_API_KEY nas secrets do Supabase. Erros: ${errors.join(
+      " | "
+    )}`
+  );
+}
+
+// ─── Main handler ────────────────────────────────────────────────
 
 interface AnalysisResult {
   score_overall: number;
@@ -35,17 +204,6 @@ serve(async (req) => {
       return json({ error: "application_id é obrigatório" }, 400);
     }
 
-    const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!anthropicKey) {
-      return json(
-        {
-          error:
-            "ANTHROPIC_API_KEY não configurada nas secrets do Supabase. Configure via Dashboard → Edge Functions → Secrets.",
-        },
-        500
-      );
-    }
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
@@ -68,16 +226,18 @@ serve(async (req) => {
       .eq("application_id", application_id)
       .order("created_at");
 
-    // 3. Montar contexto do candidato
+    // 3. Montar contexto
+    const candidate = (app as any).candidate;
+    const job = (app as any).job;
+    const snap = job?.snapshot_profile || {};
+
     const candidateInfo = `
-NOME: ${app.candidate.full_name}
-EMAIL: ${app.candidate.email}
-TELEFONE: ${app.candidate.phone || "não informado"}
-CIDADE: ${app.candidate.city || ""}${
-      app.candidate.state ? " - " + app.candidate.state : ""
-    }
-LINKEDIN: ${app.candidate.linkedin_url || "não informado"}
-PORTFÓLIO: ${app.candidate.portfolio_url || "não informado"}
+NOME: ${candidate.full_name}
+EMAIL: ${candidate.email}
+TELEFONE: ${candidate.phone || "não informado"}
+CIDADE: ${candidate.city || ""}${candidate.state ? " - " + candidate.state : ""}
+LINKEDIN: ${candidate.linkedin_url || "não informado"}
+PORTFÓLIO: ${candidate.portfolio_url || "não informado"}
 `.trim();
 
     const responsesText = (responses || [])
@@ -87,10 +247,8 @@ PORTFÓLIO: ${app.candidate.portfolio_url || "não informado"}
       })
       .join("\n\n");
 
-    // 4. Montar contexto da função/vaga
-    const snap = app.job.snapshot_profile || {};
     const jobInfo = `
-TÍTULO DA VAGA: ${app.job.title}
+TÍTULO DA VAGA: ${job.title}
 DEPARTAMENTO: ${snap.department || "—"}
 SENIORIDADE: ${snap.seniority || "—"}
 MODALIDADE: ${snap.modality || "—"}
@@ -99,23 +257,40 @@ MISSÃO DA FUNÇÃO:
 ${snap.mission || "Não informada"}
 
 ENTREGÁVEIS ESPERADOS:
-${(snap.deliverables || []).map((d: string) => `• ${d}`).join("\n") || "Não informados"}
+${
+  (snap.deliverables || []).length
+    ? (snap.deliverables || []).map((d: string) => `• ${d}`).join("\n")
+    : "Não informados"
+}
 
 SKILLS NECESSÁRIAS:
 ${
-  (snap.skills || [])
-    .map((s: any) => `• ${s.name}${s.level ? " (" + s.level + ")" : ""}${s.required ? " [OBRIGATÓRIO]" : ""}`)
-    .join("\n") || "Não informadas"
+  (snap.skills || []).length
+    ? (snap.skills || [])
+        .map(
+          (s: any) =>
+            `• ${s.name}${s.level ? " (" + s.level + ")" : ""}${s.required ? " [OBRIGATÓRIO]" : ""}`
+        )
+        .join("\n")
+    : "Não informadas"
 }
 
 FERRAMENTAS:
-${(snap.tools || []).map((t: any) => `• ${t.name}`).join("\n") || "Não informadas"}
+${
+  (snap.tools || []).length
+    ? (snap.tools || []).map((t: any) => `• ${t.name}`).join("\n")
+    : "Não informadas"
+}
 
 REQUISITOS:
-${(snap.requirements || []).map((r: string) => `• ${r}`).join("\n") || "Não informados"}
+${
+  (snap.requirements || []).length
+    ? (snap.requirements || []).map((r: string) => `• ${r}`).join("\n")
+    : "Não informados"
+}
 `.trim();
 
-    // 5. System prompt
+    // 4. Prompts
     const systemPrompt = `Você é um recrutador sênior especialista em análise de candidatos para agências de marketing digital brasileiras (especialmente o setor de materiais de construção / MatCon).
 
 Sua tarefa é analisar objetivamente um candidato em relação ao perfil da função desejada, identificando pontos fortes, gaps e red flags.
@@ -168,53 +343,25 @@ ${responsesText || "Nenhuma resposta disponível"}
 
 Analise agora e retorne apenas o JSON conforme especificado.`;
 
-    // 6. Chamar Claude
-    const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": anthropicKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 2000,
-        system: systemPrompt,
-        messages: [{ role: "user", content: userPrompt }],
-      }),
-    });
+    // 5. Chamar LLM com fallback
+    const llmResult = await callLlm(systemPrompt, userPrompt);
 
-    if (!anthropicRes.ok) {
-      const errText = await anthropicRes.text();
-      console.error("[rh-analyze] Anthropic error:", errText);
-      return json({ error: "Erro na API Anthropic", details: errText }, 500);
-    }
-
-    const anthropicData = await anthropicRes.json();
-    const rawText = anthropicData.content
-      ?.map((b: any) => b.text || "")
-      .join("")
-      .trim();
-
-    if (!rawText) {
-      return json({ error: "Resposta vazia da IA" }, 500);
-    }
-
-    // Tenta parsear JSON (às vezes vem com markdown fences)
+    // 6. Parsear JSON
     let analysis: AnalysisResult;
     try {
-      const cleaned = rawText
+      const cleaned = llmResult.content
         .replace(/^```json\s*/, "")
         .replace(/^```\s*/, "")
         .replace(/\s*```$/, "")
         .trim();
       analysis = JSON.parse(cleaned);
     } catch (e) {
-      console.error("[rh-analyze] JSON parse error:", rawText);
+      console.error("[rh-analyze] JSON parse error:", llmResult.content);
       return json(
         {
           error: "IA retornou formato inválido",
-          raw: rawText.slice(0, 500),
+          raw: llmResult.content.slice(0, 500),
+          provider: llmResult.provider,
         },
         500
       );
@@ -225,8 +372,8 @@ Analise agora e retorne apenas o JSON conforme especificado.`;
       .from("hr_ai_analyses")
       .insert({
         application_id,
-        provider: "anthropic",
-        model: MODEL,
+        provider: llmResult.provider,
+        model: llmResult.model,
         prompt_version: PROMPT_VERSION,
         score_overall: Math.round(analysis.score_overall),
         score_skills: Math.round(analysis.score_skills || 0),
@@ -239,8 +386,8 @@ Analise agora e retorne apenas o JSON conforme especificado.`;
         recommendation: analysis.recommendation,
         summary: analysis.summary || null,
         full_response: analysis as any,
-        tokens_input: anthropicData.usage?.input_tokens || null,
-        tokens_output: anthropicData.usage?.output_tokens || null,
+        tokens_input: llmResult.tokens_input || null,
+        tokens_output: llmResult.tokens_output || null,
       })
       .select()
       .single();
@@ -250,7 +397,7 @@ Analise agora e retorne apenas o JSON conforme especificado.`;
       return json({ error: "Erro ao salvar análise", details: saveErr.message }, 500);
     }
 
-    // 8. Atualizar application com score cached
+    // 8. Atualizar application
     await supabase
       .from("hr_applications")
       .update({
@@ -264,11 +411,13 @@ Analise agora e retorne apenas o JSON conforme especificado.`;
     await supabase.from("hr_application_events").insert({
       application_id,
       event_type: "ai_analyzed",
-      description: `Análise IA executada — score ${Math.round(analysis.score_overall)}`,
-      metadata: { analysis_id: savedAnalysis.id },
+      description: `Análise IA executada (${llmResult.provider}) — score ${Math.round(
+        analysis.score_overall
+      )}`,
+      metadata: { analysis_id: savedAnalysis.id, provider: llmResult.provider },
     });
 
-    return json({ success: true, analysis: savedAnalysis });
+    return json({ success: true, analysis: savedAnalysis, provider: llmResult.provider });
   } catch (error: any) {
     console.error("[rh-analyze] Uncaught error:", error);
     return json({ error: error.message || "Erro inesperado" }, 500);
