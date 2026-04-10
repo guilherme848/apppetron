@@ -29,7 +29,8 @@ export type HrApplicationStatus =
   | 'hired'
   | 'rejected'
   | 'withdrawn'
-  | 'on_hold';
+  | 'on_hold'
+  | 'talent_pool';
 
 export type HrQuestionType =
   | 'text'
@@ -347,6 +348,7 @@ export const APPLICATION_STATUS_LABEL: Record<HrApplicationStatus, string> = {
   rejected: 'Recusado',
   withdrawn: 'Desistiu',
   on_hold: 'Em espera',
+  talent_pool: 'Banco de talentos',
 };
 
 export const AI_RECOMMENDATION_LABEL: Record<HrAiRecommendation, string> = {

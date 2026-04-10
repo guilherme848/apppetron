@@ -17,6 +17,8 @@ import {
   ResponsiveContainer,
   CartesianGrid,
   Cell,
+  AreaChart,
+  Area,
 } from 'recharts';
 
 export default function RhDashboard() {
@@ -61,6 +63,34 @@ export default function RhDashboard() {
       .sort((a, b) => b.count - a.count)
       .slice(0, 8);
   }, [jobs, applications]);
+
+  // Candidaturas por dia nos últimos 30 dias
+  const applicationsByDay = useMemo(() => {
+    const days: { date: string; label: string; count: number; isoDate: string }[] = [];
+    const now = new Date();
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      d.setHours(0, 0, 0, 0);
+      const iso = d.toISOString().slice(0, 10);
+      days.push({
+        isoDate: iso,
+        date: iso,
+        label: d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+        count: 0,
+      });
+    }
+    const map = new Map(days.map((d) => [d.isoDate, d]));
+    applications.forEach((a) => {
+      const iso = a.applied_at.slice(0, 10);
+      const entry = map.get(iso);
+      if (entry) entry.count += 1;
+    });
+    return days;
+  }, [applications]);
+
+  const applicationsByDayTotal = applicationsByDay.reduce((acc, d) => acc + d.count, 0);
+  const applicationsByDayPeak = Math.max(...applicationsByDay.map((d) => d.count), 0);
 
   const recentJobs = useMemo(() => jobs.slice(0, 5), [jobs]);
 
@@ -186,6 +216,90 @@ export default function RhDashboard() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Candidaturas por dia — últimos 30 dias */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div>
+                  <CardTitle>Candidaturas por dia</CardTitle>
+                  <CardDescription>Últimos 30 dias</CardDescription>
+                </div>
+                <div className="flex gap-4 text-right">
+                  <div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide">
+                      Total 30d
+                    </div>
+                    <div className="text-2xl font-bold text-primary font-mono">
+                      {applicationsByDayTotal}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide">
+                      Pico no dia
+                    </div>
+                    <div className="text-2xl font-bold text-foreground font-mono">
+                      {applicationsByDayPeak}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {applicationsByDayTotal === 0 ? (
+                <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">
+                  Nenhuma candidatura nos últimos 30 dias.
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={220}>
+                  <AreaChart data={applicationsByDay} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorApps" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                    <XAxis
+                      dataKey="label"
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={11}
+                      tickLine={false}
+                      axisLine={false}
+                      interval="preserveStartEnd"
+                    />
+                    <YAxis
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={11}
+                      tickLine={false}
+                      axisLine={false}
+                      allowDecimals={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: 12,
+                        fontSize: 12,
+                      }}
+                      labelFormatter={(label) => `Dia ${label}`}
+                      formatter={(value: number) => [
+                        `${value} ${value === 1 ? 'candidatura' : 'candidaturas'}`,
+                        '',
+                      ]}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="count"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      fill="url(#colorApps)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Resumo rápido */}
           <div className="grid gap-4 md:grid-cols-4">

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Mail, Phone, User } from 'lucide-react';
+import { Search, Mail, Phone, User, BookmarkPlus } from 'lucide-react';
 import { RhLayout } from '@/components/rh/RhLayout';
 import { useRh } from '@/contexts/RhContext';
 import { Input } from '@/components/ui/input';
@@ -21,13 +21,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { APPLICATION_STATUS_LABEL } from '@/types/rh';
+import { APPLICATION_STATUS_LABEL, type HrApplicationStatus } from '@/types/rh';
+
+type StatusFilter = HrApplicationStatus | 'all';
 
 export default function RhCandidatesList() {
   const navigate = useNavigate();
   const { candidates, applications, jobs, loading } = useRh();
   const [search, setSearch] = useState('');
   const [jobFilter, setJobFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
   // Mapa email -> candidate (ids únicos)
   const candidatesWithApps = useMemo(() => {
@@ -45,6 +48,9 @@ export default function RhCandidatesList() {
       if (jobFilter !== 'all' && !applications.some((a) => a.job_id === jobFilter)) {
         return false;
       }
+      if (statusFilter !== 'all' && !applications.some((a) => a.status === statusFilter)) {
+        return false;
+      }
       if (!search) return true;
       const q = search.toLowerCase();
       return (
@@ -53,7 +59,24 @@ export default function RhCandidatesList() {
         (candidate.phone || '').includes(q)
       );
     });
-  }, [candidatesWithApps, search, jobFilter]);
+  }, [candidatesWithApps, search, jobFilter, statusFilter]);
+
+  const statusCounts = useMemo(() => {
+    const counts = {
+      all: candidatesWithApps.length,
+      active: 0,
+      hired: 0,
+      talent_pool: 0,
+      rejected: 0,
+    };
+    candidatesWithApps.forEach(({ applications: apps }) => {
+      if (apps.some((a) => a.status === 'active')) counts.active++;
+      if (apps.some((a) => a.status === 'hired')) counts.hired++;
+      if (apps.some((a) => a.status === 'talent_pool')) counts.talent_pool++;
+      if (apps.some((a) => a.status === 'rejected')) counts.rejected++;
+    });
+    return counts;
+  }, [candidatesWithApps]);
 
   const getJobTitle = (jobId: string) => jobs.find((j) => j.id === jobId)?.title || '—';
 
@@ -63,8 +86,47 @@ export default function RhCandidatesList() {
       description={`${candidates.length} candidatos no banco`}
     >
       <div className="space-y-4">
-        <div className="flex gap-3">
-          <div className="relative flex-1 max-w-md">
+        {/* Status filter tabs */}
+        <div className="flex flex-wrap gap-2">
+          <StatusPill
+            label="Todos"
+            count={statusCounts.all}
+            active={statusFilter === 'all'}
+            onClick={() => setStatusFilter('all')}
+          />
+          <StatusPill
+            label="Em processo"
+            count={statusCounts.active}
+            active={statusFilter === 'active'}
+            color="primary"
+            onClick={() => setStatusFilter('active')}
+          />
+          <StatusPill
+            label="Banco de talentos"
+            count={statusCounts.talent_pool}
+            active={statusFilter === 'talent_pool'}
+            color="amber"
+            icon={<BookmarkPlus className="h-3 w-3" />}
+            onClick={() => setStatusFilter('talent_pool')}
+          />
+          <StatusPill
+            label="Contratados"
+            count={statusCounts.hired}
+            active={statusFilter === 'hired'}
+            color="green"
+            onClick={() => setStatusFilter('hired')}
+          />
+          <StatusPill
+            label="Recusados"
+            count={statusCounts.rejected}
+            active={statusFilter === 'rejected'}
+            color="red"
+            onClick={() => setStatusFilter('rejected')}
+          />
+        </div>
+
+        <div className="flex gap-3 flex-wrap">
+          <div className="relative flex-1 max-w-md min-w-[240px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar por nome, email, telefone..."
@@ -196,5 +258,45 @@ export default function RhCandidatesList() {
         </Card>
       </div>
     </RhLayout>
+  );
+}
+
+// ─── Status pill ───────────────────────────────────────────────
+
+function StatusPill({
+  label,
+  count,
+  active,
+  color,
+  icon,
+  onClick,
+}: {
+  label: string;
+  count: number;
+  active: boolean;
+  color?: 'primary' | 'green' | 'amber' | 'red';
+  icon?: React.ReactNode;
+  onClick: () => void;
+}) {
+  const colorClasses = {
+    primary: 'data-[active=true]:border-primary data-[active=true]:bg-primary/10 data-[active=true]:text-primary',
+    green: 'data-[active=true]:border-green-500/50 data-[active=true]:bg-green-500/10 data-[active=true]:text-green-600 dark:data-[active=true]:text-green-400',
+    amber: 'data-[active=true]:border-amber-500/50 data-[active=true]:bg-amber-500/10 data-[active=true]:text-amber-600 dark:data-[active=true]:text-amber-400',
+    red: 'data-[active=true]:border-destructive/50 data-[active=true]:bg-destructive/10 data-[active=true]:text-destructive',
+  };
+  const defaultActive = 'data-[active=true]:border-foreground/40 data-[active=true]:bg-muted data-[active=true]:text-foreground';
+
+  return (
+    <button
+      data-active={active}
+      onClick={onClick}
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all border-border bg-card text-muted-foreground hover:bg-muted/50 ${
+        color ? colorClasses[color] : defaultActive
+      }`}
+    >
+      {icon}
+      {label}
+      <span className="text-[10px] opacity-70">{count}</span>
+    </button>
   );
 }

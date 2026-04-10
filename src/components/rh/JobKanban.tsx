@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Copy, Sparkles, Star } from 'lucide-react';
+import { Users, Copy, Sparkles, Star, BookmarkPlus } from 'lucide-react';
 import {
   DndContext,
   DragEndEvent,
@@ -119,6 +119,7 @@ export function JobKanban({ profileId }: JobKanbanProps) {
     active: applications.filter((a) => a.status === 'active').length,
     hired: applications.filter((a) => a.status === 'hired').length,
     rejected: applications.filter((a) => a.status === 'rejected').length,
+    talent_pool: applications.filter((a) => a.status === 'talent_pool').length,
     all: applications.length,
   };
 
@@ -153,7 +154,7 @@ export function JobKanban({ profileId }: JobKanbanProps) {
   return (
     <div className="space-y-4">
       {/* Stats bar */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <StatChip
           label="Em processo"
           value={totalByStatus.active}
@@ -166,17 +167,24 @@ export function JobKanban({ profileId }: JobKanbanProps) {
           value={totalByStatus.hired}
           color="green"
           active={false}
-          onClick={() => setStatusFilter('active')}
+          onClick={() => setStatusFilter('all')}
+        />
+        <StatChip
+          label="Banco de talentos"
+          value={totalByStatus.talent_pool}
+          color="amber"
+          active={false}
+          onClick={() => setStatusFilter('all')}
         />
         <StatChip
           label="Recusados"
           value={totalByStatus.rejected}
           color="red"
           active={false}
-          onClick={() => setStatusFilter('active')}
+          onClick={() => setStatusFilter('all')}
         />
         <StatChip
-          label="Total geral"
+          label="Total"
           value={totalByStatus.all}
           color="muted"
           active={statusFilter === 'all'}
@@ -222,7 +230,7 @@ function StatChip({
 }: {
   label: string;
   value: number;
-  color: 'primary' | 'green' | 'red' | 'muted';
+  color: 'primary' | 'green' | 'red' | 'amber' | 'muted';
   active: boolean;
   onClick: () => void;
 }) {
@@ -230,12 +238,14 @@ function StatChip({
     primary: 'border-primary/40 bg-primary/5',
     green: 'border-green-500/30 bg-green-500/5',
     red: 'border-destructive/30 bg-destructive/5',
+    amber: 'border-amber-500/30 bg-amber-500/5',
     muted: 'border-border bg-muted/30',
   };
   const textMap = {
     primary: 'text-primary',
     green: 'text-green-600 dark:text-green-400',
     red: 'text-destructive',
+    amber: 'text-amber-600 dark:text-amber-400',
     muted: 'text-foreground',
   };
 
@@ -387,9 +397,14 @@ function CandidateCard({
                   className={`h-5 text-[9px] ${
                     application.status === 'hired'
                       ? 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20'
+                      : application.status === 'talent_pool'
+                      ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
                       : 'bg-destructive/10 text-destructive border-destructive/20'
                   }`}
                 >
+                  {application.status === 'talent_pool' && (
+                    <BookmarkPlus className="h-2.5 w-2.5 mr-0.5" />
+                  )}
                   {APPLICATION_STATUS_LABEL[application.status]}
                 </Badge>
               )}

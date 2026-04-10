@@ -450,6 +450,26 @@ export function useRhData() {
     []
   );
 
+  const deleteApplication = useCallback(
+    async (applicationId: string) => {
+      // Cascade remove via FK: form_responses, events, ai_analyses
+      const { error } = await sb.from('hr_applications').delete().eq('id', applicationId);
+      if (error) throw error;
+      await Promise.all([fetchApplications(), fetchCandidates(), fetchJobs()]);
+    },
+    [fetchApplications, fetchCandidates, fetchJobs]
+  );
+
+  const deleteCandidate = useCallback(
+    async (candidateId: string) => {
+      // Remove candidato (cascade remove TODAS as applications + respostas + eventos)
+      const { error } = await sb.from('hr_candidates').delete().eq('id', candidateId);
+      if (error) throw error;
+      await Promise.all([fetchApplications(), fetchCandidates(), fetchJobs()]);
+    },
+    [fetchApplications, fetchCandidates, fetchJobs]
+  );
+
   const getApplicationDetails = useCallback(
     async (
       applicationId: string

@@ -13,6 +13,9 @@ import {
   Phone,
   ExternalLink,
   ChevronRight,
+  BookmarkPlus,
+  Trash2,
+  MoreVertical,
 } from 'lucide-react';
 import { RhLayout } from '@/components/rh/RhLayout';
 import { useRh } from '@/contexts/RhContext';
@@ -28,6 +31,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import type {
   HrApplication,
@@ -57,6 +75,7 @@ export default function RhApplicationDetail() {
     getApplicationDetails,
     moveApplicationToStage,
     setApplicationStatus,
+    deleteApplication,
     addApplicationNote,
     runAiAnalysis,
     uploadResume,
@@ -66,6 +85,7 @@ export default function RhApplicationDetail() {
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState('');
   const [runningAi, setRunningAi] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -94,10 +114,27 @@ export default function RhApplicationDetail() {
     if (!details) return;
     try {
       await setApplicationStatus(details.application.id, status);
-      toast.success('Status atualizado');
+      const labels: Record<string, string> = {
+        hired: 'Candidato contratado',
+        rejected: 'Candidato recusado',
+        talent_pool: 'Adicionado ao banco de talentos',
+        active: 'Candidato reativado',
+      };
+      toast.success(labels[status] || 'Status atualizado');
       load();
     } catch (e: any) {
       toast.error(e.message || 'Erro ao atualizar');
+    }
+  };
+
+  const handleDeleteApplication = async () => {
+    if (!details) return;
+    try {
+      await deleteApplication(details.application.id);
+      toast.success('Candidatura excluída');
+      navigate(`/rh/vagas/${details.job.job_profile_id}?view=kanban`);
+    } catch (e: any) {
+      toast.error(e.message || 'Erro ao excluir');
     }
   };
 
@@ -153,12 +190,24 @@ export default function RhApplicationDetail() {
   return (
     <RhLayout>
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Button variant="ghost" onClick={() => navigate(`/rh/vagas/${job.id}`)}>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <Button
+            variant="ghost"
+            onClick={() => navigate(`/rh/vagas/${job.job_profile_id}?view=kanban`)}
+          >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar para vaga
           </Button>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              onClick={() => handleStatusChange('talent_pool')}
+              disabled={application.status === 'talent_pool'}
+              className="text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/5"
+            >
+              <BookmarkPlus className="h-4 w-4 mr-2" />
+              Banco de talentos
+            </Button>
             <Button
               variant="outline"
               onClick={() => handleStatusChange('rejected')}
@@ -174,6 +223,31 @@ export default function RhApplicationDetail() {
               <CheckCircle2 className="h-4 w-4 mr-2" />
               Contratar
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {application.status !== 'active' && (
+                  <>
+                    <DropdownMenuItem onClick={() => handleStatusChange('active')}>
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Voltar pra "em processo"
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
+                <DropdownMenuItem
+                  onClick={() => setConfirmDelete(true)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Excluir candidatura
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -222,7 +296,7 @@ export default function RhApplicationDetail() {
                       </a>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
                     <Badge variant="outline">Vaga: {job.title}</Badge>
                     <Badge
                       variant={
@@ -232,7 +306,15 @@ export default function RhApplicationDetail() {
                           ? 'destructive'
                           : 'secondary'
                       }
+                      className={
+                        application.status === 'talent_pool'
+                          ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                          : ''
+                      }
                     >
+                      {application.status === 'talent_pool' && (
+                        <BookmarkPlus className="h-3 w-3 mr-1" />
+                      )}
                       {APPLICATION_STATUS_LABEL[application.status]}
                     </Badge>
                   </div>
@@ -472,6 +554,29 @@ export default function RhApplicationDetail() {
           </div>
         </div>
       </div>
+
+      {/* Dialog de confirmação de exclusão */}
+      <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir candidatura?</DialogTitle>
+            <DialogDescription>
+              Todos os dados desta candidatura serão removidos permanentemente, incluindo respostas do
+              formulário, currículo, análises de IA e histórico. O candidato continua no banco, mas
+              sem vínculo com essa vaga. Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setConfirmDelete(false)}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteApplication}>
+              <Trash2 className="h-4 w-4 mr-2" />
+              Excluir definitivamente
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </RhLayout>
   );
 }
