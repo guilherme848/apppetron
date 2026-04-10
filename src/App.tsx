@@ -11,6 +11,7 @@ import { ContentProvider } from "@/contexts/ContentContext";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { ContentProductionProvider } from "@/contexts/ContentProductionContext";
 import { TrafficProvider } from "@/contexts/TrafficContext";
+import { RhProvider } from "@/contexts/RhContext";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProfileGuard } from "@/components/common/ProfileGuard";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
@@ -118,6 +119,18 @@ const PetronOSQuickTool = lazy(() => import("./pages/petron-os/PetronOSQuickTool
 const PetronOSBuilder = lazy(() => import("./pages/petron-os/PetronOSBuilder"));
 const PetronOSSettings = lazy(() => import("./pages/petron-os/PetronOSSettings"));
 
+// RH module (Recrutamento & Seleção)
+const RhDashboard = lazy(() => import("./pages/rh/RhDashboard"));
+const RhJobProfilesList = lazy(() => import("./pages/rh/RhJobProfilesList"));
+const RhJobProfileDetail = lazy(() => import("./pages/rh/RhJobProfileDetail"));
+const RhJobsList = lazy(() => import("./pages/rh/RhJobsList"));
+const RhJobDetail = lazy(() => import("./pages/rh/RhJobDetail"));
+const RhCandidatesList = lazy(() => import("./pages/rh/RhCandidatesList"));
+const RhApplicationDetail = lazy(() => import("./pages/rh/RhApplicationDetail"));
+const RhFormsList = lazy(() => import("./pages/rh/RhFormsList"));
+const RhFormEditor = lazy(() => import("./pages/rh/RhFormEditor"));
+const PublicJobFormPage = lazy(() => import("./pages/public/PublicJobFormPage"));
+
 // Sales CRM module
 const SalesDashboard = lazy(() => import("./pages/sales/SalesDashboard"));
 const SalesFunnelsPage = lazy(() => import("./pages/sales/SalesFunnelsPage"));
@@ -178,11 +191,13 @@ const App = () => (
               <SettingsProvider>
                 <ContentProductionProvider>
                   <TrafficProvider>
+                    <RhProvider>
                     <ErrorBoundary>
                     <Suspense fallback={<LoadingSpinner />}>
                     <Routes>
                       {/* Public routes */}
                       <Route path="/login" element={<LoginPage />} />
+                      <Route path="/vagas/:slug" element={<PublicJobFormPage />} />
 
                       {/* Auth-only routes (no AppShell) */}
                       <Route element={<AuthOnlyLayout />}>
@@ -262,6 +277,17 @@ const App = () => (
                         <Route path="/petron-os/builder/:slug/:id" element={<PetronOSBuilder />} />
                         <Route path="/petron-os/settings" element={<PetronOSSettings />} />
 
+                        {/* RH routes */}
+                        <Route path="/rh" element={<RhDashboard />} />
+                        <Route path="/rh/funcoes" element={<RhJobProfilesList />} />
+                        <Route path="/rh/funcoes/:id" element={<RhJobProfileDetail />} />
+                        <Route path="/rh/vagas" element={<RhJobsList />} />
+                        <Route path="/rh/vagas/:id" element={<RhJobDetail />} />
+                        <Route path="/rh/candidatos" element={<RhCandidatesList />} />
+                        <Route path="/rh/candidatos/:id" element={<RhApplicationDetail />} />
+                        <Route path="/rh/formularios" element={<RhFormsList />} />
+                        <Route path="/rh/formularios/:id" element={<RhFormEditor />} />
+
                         {/* Sales CRM routes */}
                         <Route path="/sales" element={<SalesDashboard />} />
                         <Route path="/sales/funnels" element={<SalesFunnelsPage />} />
@@ -306,6 +332,7 @@ const App = () => (
                     </Routes>
                     </Suspense>
                     </ErrorBoundary>
+                    </RhProvider>
                   </TrafficProvider>
                 </ContentProductionProvider>
               </SettingsProvider>

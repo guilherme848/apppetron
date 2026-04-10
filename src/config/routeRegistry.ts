@@ -41,6 +41,9 @@ import {
   Wrench,
   Calculator,
   MessageCircle,
+  UsersRound,
+  BriefcaseBusiness,
+  Sparkles,
 } from 'lucide-react';
 
 // Action types for permissions
@@ -69,6 +72,7 @@ export const MODULES = {
   CONTENT: 'Conteúdo',
   TRAFFIC: 'Tráfego',
   CS: 'Customer Success',
+  RH: 'Recrutamento & Seleção',
   PETRON_OS: 'Petron OS',
   SETTINGS: 'Configurações',
 } as const;
@@ -763,6 +767,104 @@ export const routeRegistry: RouteDefinition[] = [
   },
 
   // ============================================
+  // RH MODULE (Recrutamento & Seleção)
+  // ============================================
+  {
+    id: 'rh.dashboard',
+    path: '/rh',
+    label: 'Dashboard',
+    category: CATEGORIES.DASHBOARD,
+    module: MODULES.RH,
+    permissions: ['view'],
+    icon: UsersRound,
+    order: 0,
+  },
+  {
+    id: 'rh.jobs',
+    path: '/rh/vagas',
+    label: 'Vagas',
+    category: CATEGORIES.PRODUCTION,
+    module: MODULES.RH,
+    permissions: ['view', 'edit'],
+    icon: BriefcaseBusiness,
+    order: 1,
+  },
+  {
+    id: 'rh.job_detail',
+    path: '/rh/vagas/:id',
+    label: 'Detalhes da Vaga',
+    category: CATEGORIES.PRODUCTION,
+    module: MODULES.RH,
+    permissions: ['view', 'edit'],
+    hideInMenu: true,
+    parentId: 'rh.jobs',
+    order: 2,
+  },
+  {
+    id: 'rh.candidates',
+    path: '/rh/candidatos',
+    label: 'Candidatos',
+    category: CATEGORIES.CONTACTS,
+    module: MODULES.RH,
+    permissions: ['view', 'edit'],
+    icon: Users,
+    order: 3,
+  },
+  {
+    id: 'rh.application_detail',
+    path: '/rh/candidatos/:id',
+    label: 'Detalhes do Candidato',
+    category: CATEGORIES.CONTACTS,
+    module: MODULES.RH,
+    permissions: ['view', 'edit'],
+    hideInMenu: true,
+    parentId: 'rh.candidates',
+    order: 4,
+  },
+  {
+    id: 'rh.profiles',
+    path: '/rh/funcoes',
+    label: 'Funções',
+    category: CATEGORIES.PIPELINE,
+    module: MODULES.RH,
+    permissions: ['view', 'edit', 'manage'],
+    icon: Layers,
+    order: 5,
+  },
+  {
+    id: 'rh.profile_detail',
+    path: '/rh/funcoes/:id',
+    label: 'Editor de Função',
+    category: CATEGORIES.PIPELINE,
+    module: MODULES.RH,
+    permissions: ['view', 'edit', 'manage'],
+    hideInMenu: true,
+    parentId: 'rh.profiles',
+    order: 6,
+  },
+  {
+    id: 'rh.forms',
+    path: '/rh/formularios',
+    label: 'Formulários',
+    category: CATEGORIES.INTEGRATIONS,
+    module: MODULES.RH,
+    permissions: ['view', 'edit', 'manage'],
+    icon: FileText,
+    order: 7,
+  },
+  {
+    id: 'rh.form_detail',
+    path: '/rh/formularios/:id',
+    label: 'Editor de Formulário',
+    category: CATEGORIES.INTEGRATIONS,
+    module: MODULES.RH,
+    permissions: ['view', 'edit', 'manage'],
+    hideInMenu: true,
+    parentId: 'rh.forms',
+    order: 8,
+  },
+
+  // ============================================
   // PETRON OS MODULE
   // ============================================
   {
@@ -1120,6 +1222,7 @@ export const MODULE_ORDER: string[] = [
   MODULES.CONTENT,
   MODULES.TRAFFIC,
   MODULES.CS,
+  MODULES.RH,
   MODULES.PETRON_OS,
   MODULES.SETTINGS,
 ];
