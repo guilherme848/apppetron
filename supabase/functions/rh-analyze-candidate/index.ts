@@ -113,7 +113,7 @@ async function callGoogle(
   const apiKey = Deno.env.get("GOOGLE_AI_API_KEY");
   if (!apiKey) return null;
 
-  const model = "gemini-2.0-flash-exp";
+  const model = "gemini-2.5-flash";
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
     {
@@ -125,7 +125,7 @@ async function callGoogle(
         generationConfig: {
           temperature: 0.3,
           responseMimeType: "application/json",
-          maxOutputTokens: 2000,
+          maxOutputTokens: 8192,
         },
       }),
     }
