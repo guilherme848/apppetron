@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Plus, Trash2, Copy } from 'lucide-react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import {
+  ArrowLeft,
+  Save,
+  Plus,
+  Trash2,
+  Copy,
+  Pencil,
+  KanbanSquare,
+} from 'lucide-react';
 import { RhLayout } from '@/components/rh/RhLayout';
+import { JobKanban } from '@/components/rh/JobKanban';
 import { useRh } from '@/contexts/RhContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,7 +48,10 @@ const DEPARTMENTS = [
 export default function RhJobProfileDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { profiles, updateProfile } = useRh();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { profiles, updateProfile, applications, jobs } = useRh();
+
+  const view = (searchParams.get('view') as 'edit' | 'kanban') || 'kanban';
 
   const [profile, setProfile] = useState<HrJobProfile | null>(null);
   const [saving, setSaving] = useState(false);
@@ -49,6 +61,19 @@ export default function RhJobProfileDetail() {
     const found = profiles.find((p) => p.id === id);
     if (found) setProfile(found);
   }, [id, profiles]);
+
+  // Contar candidatos desta vaga via jobs → applications
+  const candidatesCount = (() => {
+    const job = jobs.find((j) => j.job_profile_id === id);
+    if (!job) return 0;
+    return applications.filter((a) => a.job_id === job.id).length;
+  })();
+
+  const setView = (v: 'edit' | 'kanban') => {
+    const params = new URLSearchParams(searchParams);
+    params.set('view', v);
+    setSearchParams(params, { replace: true });
+  };
 
   const patch = (patch: Partial<HrJobProfile>) => {
     if (!profile) return;
@@ -103,12 +128,13 @@ export default function RhJobProfileDetail() {
   return (
     <RhLayout>
       <div className="space-y-4">
-        <div className="flex items-center justify-between gap-3">
+        {/* Top actions */}
+        <div className="flex items-center justify-between gap-3 flex-wrap">
           <Button variant="ghost" onClick={() => navigate('/rh/vagas')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar
           </Button>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button
               variant="outline"
               onClick={() => {
@@ -119,33 +145,40 @@ export default function RhJobProfileDetail() {
               <Copy className="h-4 w-4 mr-2" />
               Copiar link público
             </Button>
-            <Button onClick={handleSave} disabled={saving || !dirty}>
-              <Save className="h-4 w-4 mr-2" />
-              {saving ? 'Salvando...' : 'Salvar'}
-            </Button>
+            {view === 'edit' && (
+              <Button onClick={handleSave} disabled={saving || !dirty}>
+                <Save className="h-4 w-4 mr-2" />
+                {saving ? 'Salvando...' : 'Salvar'}
+              </Button>
+            )}
           </div>
         </div>
 
+        {/* Header da vaga + view switcher + status toggle */}
         <Card>
           <CardContent className="p-6">
-            <div className="mb-6 flex items-start justify-between gap-4">
-              <div>
-                <h1 className="text-2xl font-semibold">{profile.title_internal}</h1>
+            <div className="mb-5 flex items-start justify-between gap-4 flex-wrap">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-2xl font-semibold truncate">{profile.title_internal}</h1>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Preencha os 3 blocos — quando ativar o toggle, esta vaga aparece publicamente em{' '}
-                  <code className="text-primary">/trabalhe-conosco</code>
+                  {profile.department || 'Vaga'} ·{' '}
+                  {candidatesCount === 0
+                    ? 'Sem candidatos ainda'
+                    : candidatesCount === 1
+                    ? '1 candidato inscrito'
+                    : `${candidatesCount} candidatos inscritos`}
                 </p>
               </div>
 
               {/* Toggle destacado: recebendo inscrições */}
-              <div className="flex items-center gap-3 bg-muted/50 rounded-xl p-3 min-w-[260px]">
+              <div className="flex items-center gap-3 bg-muted/50 rounded-xl p-3 min-w-[240px]">
                 <div className="flex-1">
                   <div className="text-xs text-muted-foreground">Processo seletivo</div>
                   <div className="text-sm font-semibold flex items-center gap-2">
                     {profile.accepting_applications ? (
                       <>
                         <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                        Recebendo inscrições
+                        Recebendo
                       </>
                     ) : (
                       <>
@@ -157,10 +190,63 @@ export default function RhJobProfileDetail() {
                 </div>
                 <Switch
                   checked={profile.accepting_applications}
-                  onCheckedChange={(v) => patch({ accepting_applications: v })}
+                  onCheckedChange={async (v) => {
+                    patch({ accepting_applications: v });
+                    // Auto-save quando o toggle muda (UX melhor)
+                    try {
+                      await updateProfile(profile.id, { accepting_applications: v });
+                      toast.success(v ? 'Processo aberto' : 'Processo fechado');
+                    } catch (e: any) {
+                      toast.error(e.message || 'Erro');
+                    }
+                  }}
                 />
               </div>
             </div>
+
+            {/* View Switcher — Kanban / Editar */}
+            <div className="inline-flex items-center gap-1 p-1 bg-muted/50 rounded-xl border border-border">
+              <button
+                onClick={() => setView('kanban')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  view === 'kanban'
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <KanbanSquare className="h-4 w-4" />
+                Candidatos
+                {candidatesCount > 0 && (
+                  <Badge variant="secondary" className="h-5 ml-0.5 text-[10px]">
+                    {candidatesCount}
+                  </Badge>
+                )}
+              </button>
+              <button
+                onClick={() => setView('edit')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  view === 'edit'
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Pencil className="h-4 w-4" />
+                Editar vaga
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Conteúdo: Kanban ou Editor */}
+        {view === 'kanban' ? (
+          <Card>
+            <CardContent className="p-6">
+              <JobKanban profileId={profile.id} />
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="p-6">
 
             <Tabs defaultValue="basico">
               <TabsList className="grid grid-cols-3 mb-6">
@@ -353,8 +439,9 @@ export default function RhJobProfileDetail() {
                 />
               </TabsContent>
             </Tabs>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </RhLayout>
   );

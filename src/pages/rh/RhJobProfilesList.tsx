@@ -217,21 +217,19 @@ export default function RhJobProfilesList() {
                             className="flex justify-end gap-1"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            {candidates > 0 && (
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                title="Ver kanban"
-                                onClick={() => navigate(`/rh/vagas/${p.id}/kanban`)}
-                              >
-                                <KanbanSquare className="h-4 w-4" />
-                              </Button>
-                            )}
                             <Button
                               size="icon"
                               variant="ghost"
-                              title="Editar"
-                              onClick={() => navigate(`/rh/vagas/${p.id}`)}
+                              title="Ver candidatos (kanban)"
+                              onClick={() => navigate(`/rh/vagas/${p.id}?view=kanban`)}
+                            >
+                              <KanbanSquare className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              title="Editar vaga"
+                              onClick={() => navigate(`/rh/vagas/${p.id}?view=edit`)}
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
