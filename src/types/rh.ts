@@ -107,6 +107,7 @@ export interface HrJobProfile {
   manager_member_id: string | null;
   synonyms: string[];
   mission: string | null;
+  short_pitch: string | null;
   deliverables: string[];
   skills: HrJobProfileSkill[];
   tools: HrJobProfileTool[];
@@ -116,6 +117,9 @@ export interface HrJobProfile {
   notes: string | null;
   default_stages: HrDefaultStage[];
   status: HrProfileStatus;
+  accepting_applications: boolean;
+  requires_experience: boolean;
+  salary_range: string | null;
   created_by_member_id: string | null;
   created_at: string;
   updated_at: string;

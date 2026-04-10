@@ -123,13 +123,10 @@ const PetronOSSettings = lazy(() => import("./pages/petron-os/PetronOSSettings")
 const RhDashboard = lazy(() => import("./pages/rh/RhDashboard"));
 const RhJobProfilesList = lazy(() => import("./pages/rh/RhJobProfilesList"));
 const RhJobProfileDetail = lazy(() => import("./pages/rh/RhJobProfileDetail"));
-const RhJobsList = lazy(() => import("./pages/rh/RhJobsList"));
-const RhJobDetail = lazy(() => import("./pages/rh/RhJobDetail"));
+const RhProfileKanban = lazy(() => import("./pages/rh/RhProfileKanban"));
 const RhCandidatesList = lazy(() => import("./pages/rh/RhCandidatesList"));
 const RhApplicationDetail = lazy(() => import("./pages/rh/RhApplicationDetail"));
-const RhFormsList = lazy(() => import("./pages/rh/RhFormsList"));
-const RhFormEditor = lazy(() => import("./pages/rh/RhFormEditor"));
-const PublicJobFormPage = lazy(() => import("./pages/public/PublicJobFormPage"));
+const TrabalheConoscoPage = lazy(() => import("./pages/public/TrabalheConoscoPage"));
 
 // Sales CRM module
 const SalesDashboard = lazy(() => import("./pages/sales/SalesDashboard"));
@@ -197,7 +194,7 @@ const App = () => (
                     <Routes>
                       {/* Public routes */}
                       <Route path="/login" element={<LoginPage />} />
-                      <Route path="/vagas/:slug" element={<PublicJobFormPage />} />
+                      <Route path="/trabalhe-conosco" element={<TrabalheConoscoPage />} />
 
                       {/* Auth-only routes (no AppShell) */}
                       <Route element={<AuthOnlyLayout />}>
@@ -279,14 +276,11 @@ const App = () => (
 
                         {/* RH routes */}
                         <Route path="/rh" element={<RhDashboard />} />
-                        <Route path="/rh/funcoes" element={<RhJobProfilesList />} />
-                        <Route path="/rh/funcoes/:id" element={<RhJobProfileDetail />} />
-                        <Route path="/rh/vagas" element={<RhJobsList />} />
-                        <Route path="/rh/vagas/:id" element={<RhJobDetail />} />
+                        <Route path="/rh/vagas" element={<RhJobProfilesList />} />
+                        <Route path="/rh/vagas/:id" element={<RhJobProfileDetail />} />
+                        <Route path="/rh/vagas/:id/kanban" element={<RhProfileKanban />} />
                         <Route path="/rh/candidatos" element={<RhCandidatesList />} />
                         <Route path="/rh/candidatos/:id" element={<RhApplicationDetail />} />
-                        <Route path="/rh/formularios" element={<RhFormsList />} />
-                        <Route path="/rh/formularios/:id" element={<RhFormEditor />} />
 
                         {/* Sales CRM routes */}
                         <Route path="/sales" element={<SalesDashboard />} />

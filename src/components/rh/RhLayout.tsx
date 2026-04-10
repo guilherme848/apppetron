@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Briefcase, Users, FileText, Layers } from 'lucide-react';
+import { LayoutDashboard, Briefcase, Users, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface RhLayoutProps {
@@ -14,8 +14,6 @@ const navItems = [
   { path: '/rh', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { path: '/rh/vagas', label: 'Vagas', icon: Briefcase },
   { path: '/rh/candidatos', label: 'Candidatos', icon: Users },
-  { path: '/rh/funcoes', label: 'Funções', icon: Layers },
-  { path: '/rh/formularios', label: 'Formulários', icon: FileText },
 ];
 
 export function RhLayout({ children, title, description, actions }: RhLayoutProps) {
@@ -47,6 +45,17 @@ export function RhLayout({ children, title, description, actions }: RhLayoutProp
               </NavLink>
             );
           })}
+          <div className="ml-auto flex items-center gap-2">
+            <a
+              href="/trabalhe-conosco"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-primary transition-colors"
+            >
+              <ExternalLink className="h-3 w-3" />
+              Página pública
+            </a>
+          </div>
         </div>
       </div>
 
