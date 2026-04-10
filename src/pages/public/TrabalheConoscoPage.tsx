@@ -9,6 +9,8 @@ import {
   DollarSign,
   Sparkles,
   ArrowRight,
+  ArrowLeft,
+  Users,
 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
@@ -72,6 +74,8 @@ const CONTRACT_LABEL: Record<string, string> = {
   temporario: 'Temporário',
 };
 
+type Step = 'choose' | 'form';
+
 type FormState = {
   full_name: string;
   email: string;
@@ -111,6 +115,7 @@ const INITIAL_STATE: FormState = {
 export default function TrabalheConoscoPage() {
   const [profiles, setProfiles] = useState<PublicProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [step, setStep] = useState<Step>('choose');
   const [selectedProfile, setSelectedProfile] = useState<PublicProfile | null>(null);
   const [form, setForm] = useState<FormState>(INITIAL_STATE);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
@@ -133,25 +138,25 @@ export default function TrabalheConoscoPage() {
     })();
   }, []);
 
-  // Agregar todas as ferramentas de todos os profiles (pra multiselect dinâmico)
-  const allTools = Array.from(
-    new Set(
-      profiles
-        .flatMap((p) => p.tools || [])
-        .map((t) => t.name)
-        .filter(Boolean)
-    )
-  ).sort();
+  // Ferramentas agregadas da vaga selecionada (ou de todas, se nenhuma selecionada)
+  const toolsForSelected = selectedProfile
+    ? (selectedProfile.tools || []).map((t) => t.name).filter(Boolean)
+    : [];
 
   const patch = (p: Partial<FormState>) => setForm((f) => ({ ...f, ...p }));
 
   const handleSelectProfile = (profile: PublicProfile) => {
     setSelectedProfile(profile);
     setError(null);
-    // Scroll suave até o formulário
-    setTimeout(() => {
-      document.getElementById('form-inscricao')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
+    setStep('form');
+    // Scroll pro topo da etapa 2
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleBackToChoose = () => {
+    setStep('choose');
+    setError(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -161,7 +166,6 @@ export default function TrabalheConoscoPage() {
       return;
     }
 
-    // Validações
     if (!form.full_name || form.full_name.length < 3) {
       setError('Preencha seu nome completo');
       return;
@@ -195,7 +199,6 @@ export default function TrabalheConoscoPage() {
     setError(null);
 
     try {
-      // Upload currículo se houver
       let resumeUrl: string | null = null;
       let resumeFilename: string | null = null;
       if (resumeFile) {
@@ -219,7 +222,6 @@ export default function TrabalheConoscoPage() {
         resumeFilename = resumeFile.name;
       }
 
-      // Monta responses
       const responses = [
         {
           field_key: 'presential_availability',
@@ -312,6 +314,7 @@ export default function TrabalheConoscoPage() {
               onClick={() => {
                 setSubmitted(false);
                 setSelectedProfile(null);
+                setStep('choose');
                 setForm(INITIAL_STATE);
                 setResumeFile(null);
               }}
@@ -337,25 +340,11 @@ export default function TrabalheConoscoPage() {
               <div className="text-xs text-muted-foreground">Trabalhe conosco</div>
             </div>
           </div>
-          <Badge variant="outline" className="hidden sm:flex">
-            <Sparkles className="h-3 w-3 mr-1" />
-            {profiles.length} {profiles.length === 1 ? 'vaga aberta' : 'vagas abertas'}
-          </Badge>
+          <StepIndicator currentStep={step} />
         </div>
       </header>
 
-      <div className="max-w-5xl mx-auto px-6 py-10 space-y-10">
-        {/* Hero */}
-        <div className="text-center max-w-2xl mx-auto">
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
-            Venha construir a maior agência de MatCon do Brasil
-          </h1>
-          <p className="text-muted-foreground">
-            Somos uma agência especializada em lojas de materiais de construção. Buscamos pessoas
-            que querem aprender, crescer e fazer parte de um time que vive de resultados reais.
-          </p>
-        </div>
-
+      <div className="max-w-5xl mx-auto px-6 py-10">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -370,94 +359,213 @@ export default function TrabalheConoscoPage() {
               </p>
             </CardContent>
           </Card>
-        ) : (
-          <>
-            {/* Lista de vagas */}
-            <section>
-              <h2 className="text-xl font-semibold mb-4">
-                Vagas abertas
-              </h2>
-              <div className="grid gap-3 md:grid-cols-2">
-                {profiles.map((p) => {
-                  const selected = selectedProfile?.id === p.id;
-                  return (
-                    <button
-                      key={p.id}
-                      onClick={() => handleSelectProfile(p)}
-                      className={`text-left p-5 rounded-2xl border-2 transition-all ${
-                        selected
-                          ? 'border-primary bg-primary/5 shadow-lg shadow-primary/10'
-                          : 'border-border bg-card hover:border-primary/40'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <h3 className="font-semibold text-base leading-tight">
-                          {p.title_public}
-                        </h3>
-                        {p.requires_experience && (
-                          <Badge variant="outline" className="text-[10px] flex-shrink-0">
-                            Exp. obrigatória
-                          </Badge>
-                        )}
-                      </div>
-
-                      {p.short_pitch && (
-                        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                          {p.short_pitch}
-                        </p>
-                      )}
-
-                      <div className="flex flex-wrap gap-2 text-xs">
-                        {p.department && (
-                          <Badge variant="secondary">
-                            {p.department}
-                          </Badge>
-                        )}
-                        <Badge variant="secondary">{SENIORITY_LABEL[p.seniority]}</Badge>
-                        <Badge variant="secondary">
-                          <MapPin className="h-2.5 w-2.5 mr-1" />
-                          {MODALITY_LABEL[p.modality]}
-                        </Badge>
-                        <Badge variant="secondary">{CONTRACT_LABEL[p.contract_type]}</Badge>
-                      </div>
-
-                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
-                        {p.salary_range ? (
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <DollarSign className="h-3 w-3" />
-                            {p.salary_range}
-                          </div>
-                        ) : (
-                          <div />
-                        )}
-                        <div className="flex items-center gap-1 text-xs font-medium text-primary">
-                          {selected ? 'Selecionada' : 'Selecionar'}
-                          <ArrowRight className="h-3 w-3" />
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
+        ) : step === 'choose' ? (
+          // ═════════════════════ ETAPA 1: ESCOLHER VAGA ═════════════════════
+          <div className="space-y-10">
+            <div className="text-center max-w-2xl mx-auto">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/12 text-primary text-xs font-semibold mb-4">
+                <Sparkles className="h-3 w-3" />
+                {profiles.length} {profiles.length === 1 ? 'vaga aberta' : 'vagas abertas'}
               </div>
-            </section>
+              <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
+                Vem crescer com a gente.
+              </h1>
+              <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+                A Petron é um time que vive de entregar resultado de verdade. Se você quer aprender rápido, ser dono do que faz e fazer parte de algo que tá crescendo todo mês — escolhe a vaga ali embaixo e bora trocar uma ideia.
+              </p>
+            </div>
 
-            {/* Formulário */}
-            <section id="form-inscricao">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold">
+                  Escolha a vaga que combina com você
+                </h2>
+                <span className="text-xs text-muted-foreground hidden md:block">
+                  Passo 1 de 2
+                </span>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                {profiles.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => handleSelectProfile(p)}
+                    className="text-left p-5 rounded-2xl border-2 border-border bg-card hover:border-primary hover:shadow-lg hover:shadow-primary/5 transition-all group"
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <h3 className="font-semibold text-base leading-tight group-hover:text-primary transition-colors">
+                        {p.title_public}
+                      </h3>
+                      {p.requires_experience && (
+                        <Badge variant="outline" className="text-[10px] flex-shrink-0">
+                          Exp. obrigatória
+                        </Badge>
+                      )}
+                    </div>
+
+                    {p.short_pitch && (
+                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                        {p.short_pitch}
+                      </p>
+                    )}
+
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      {p.department && <Badge variant="secondary">{p.department}</Badge>}
+                      <Badge variant="secondary">{SENIORITY_LABEL[p.seniority]}</Badge>
+                      <Badge variant="secondary">
+                        <MapPin className="h-2.5 w-2.5 mr-1" />
+                        {MODALITY_LABEL[p.modality]}
+                      </Badge>
+                      <Badge variant="secondary">{CONTRACT_LABEL[p.contract_type]}</Badge>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/50">
+                      {p.salary_range ? (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <DollarSign className="h-3 w-3" />
+                          {p.salary_range}
+                        </div>
+                      ) : (
+                        <div />
+                      )}
+                      <div className="flex items-center gap-1 text-xs font-semibold text-primary group-hover:gap-2 transition-all">
+                        Me inscrever
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          // ═════════════════════ ETAPA 2: FORMULÁRIO ═════════════════════
+          selectedProfile && (
+            <div className="space-y-6">
+              {/* Breadcrumb + botão voltar */}
+              <div className="flex items-center justify-between">
+                <Button variant="ghost" size="sm" onClick={handleBackToChoose}>
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Trocar de vaga
+                </Button>
+                <span className="text-xs text-muted-foreground">Passo 2 de 2</span>
+              </div>
+
+              {/* Resumo da vaga selecionada */}
+              <Card className="border-primary/30 bg-primary/5">
+                <CardContent className="p-5 md:p-6">
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div>
+                      <div className="text-xs font-semibold uppercase text-primary mb-1">
+                        Você está se inscrevendo para
+                      </div>
+                      <h2 className="text-xl font-bold leading-tight">
+                        {selectedProfile.title_public}
+                      </h2>
+                    </div>
+                    {selectedProfile.requires_experience && (
+                      <Badge variant="outline" className="flex-shrink-0">
+                        Exige experiência
+                      </Badge>
+                    )}
+                  </div>
+
+                  {selectedProfile.short_pitch && (
+                    <p className="text-sm text-muted-foreground mb-3">
+                      {selectedProfile.short_pitch}
+                    </p>
+                  )}
+
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    {selectedProfile.department && (
+                      <Badge variant="secondary">{selectedProfile.department}</Badge>
+                    )}
+                    <Badge variant="secondary">
+                      {SENIORITY_LABEL[selectedProfile.seniority]}
+                    </Badge>
+                    <Badge variant="secondary">
+                      <MapPin className="h-2.5 w-2.5 mr-1" />
+                      {MODALITY_LABEL[selectedProfile.modality]}
+                      {selectedProfile.base_city ? ` · ${selectedProfile.base_city}` : ''}
+                    </Badge>
+                    <Badge variant="secondary">
+                      {CONTRACT_LABEL[selectedProfile.contract_type]}
+                    </Badge>
+                    {selectedProfile.salary_range && (
+                      <Badge variant="secondary">
+                        <DollarSign className="h-2.5 w-2.5 mr-1" />
+                        {selectedProfile.salary_range}
+                      </Badge>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Detalhes da vaga (expansível/colapsado — aqui sempre aberto) */}
+              {(selectedProfile.mission ||
+                (selectedProfile.deliverables && selectedProfile.deliverables.length > 0) ||
+                (selectedProfile.requirements && selectedProfile.requirements.length > 0)) && (
+                <details className="group">
+                  <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-2">
+                    <span className="group-open:rotate-90 transition-transform">▶</span>
+                    Ver detalhes da vaga (missão, entregáveis, requisitos)
+                  </summary>
+                  <Card className="mt-3">
+                    <CardContent className="p-5 md:p-6 space-y-5">
+                      {selectedProfile.mission && (
+                        <div>
+                          <h3 className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+                            Missão
+                          </h3>
+                          <p className="text-sm leading-relaxed">
+                            {selectedProfile.mission}
+                          </p>
+                        </div>
+                      )}
+                      {selectedProfile.deliverables &&
+                        selectedProfile.deliverables.length > 0 && (
+                          <div>
+                            <h3 className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+                              O que você vai entregar
+                            </h3>
+                            <ul className="space-y-1">
+                              {selectedProfile.deliverables.map((d, i) => (
+                                <li key={i} className="flex gap-2 text-sm">
+                                  <Clock className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                                  <span>{d}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      {selectedProfile.requirements &&
+                        selectedProfile.requirements.length > 0 && (
+                          <div>
+                            <h3 className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+                              Requisitos
+                            </h3>
+                            <ul className="space-y-1">
+                              {selectedProfile.requirements.map((r, i) => (
+                                <li key={i} className="flex gap-2 text-sm">
+                                  <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
+                                  <span>{r}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                    </CardContent>
+                  </Card>
+                </details>
+              )}
+
+              {/* Formulário */}
               <Card>
                 <CardContent className="p-6 md:p-8">
                   <div className="mb-6">
-                    <h2 className="text-xl font-semibold mb-1">Preencha seus dados</h2>
+                    <h2 className="text-xl font-semibold mb-1">Seus dados</h2>
                     <p className="text-sm text-muted-foreground">
-                      {selectedProfile ? (
-                        <>
-                          Você está se inscrevendo para:{' '}
-                          <span className="font-semibold text-foreground">
-                            {selectedProfile.title_public}
-                          </span>
-                        </>
-                      ) : (
-                        'Selecione uma vaga acima para começar'
-                      )}
+                      Leva uns 3 minutos. Quanto mais completo, melhor a gente te entende.
                     </p>
                   </div>
 
@@ -524,7 +632,9 @@ export default function TrabalheConoscoPage() {
                             <Label>UF</Label>
                             <Input
                               value={form.state}
-                              onChange={(e) => patch({ state: e.target.value.toUpperCase().slice(0, 2) })}
+                              onChange={(e) =>
+                                patch({ state: e.target.value.toUpperCase().slice(0, 2) })
+                              }
                               placeholder="SC"
                               maxLength={2}
                             />
@@ -541,7 +651,7 @@ export default function TrabalheConoscoPage() {
                         <div>
                           <Label>
                             Portfólio{' '}
-                            {selectedProfile?.requires_experience && (
+                            {selectedProfile.requires_experience && (
                               <span className="text-destructive">*</span>
                             )}
                           </Label>
@@ -615,7 +725,7 @@ export default function TrabalheConoscoPage() {
                             onChange={(e) => patch({ salary_expectation: e.target.value })}
                             placeholder="Ex: R$ 2.500 - R$ 3.000"
                           />
-                          {selectedProfile?.salary_range && (
+                          {selectedProfile.salary_range && (
                             <p className="text-[11px] text-muted-foreground mt-1">
                               Faixa da vaga: {selectedProfile.salary_range}
                             </p>
@@ -644,14 +754,17 @@ export default function TrabalheConoscoPage() {
                       </div>
                     </div>
 
-                    {/* Ferramentas */}
-                    {allTools.length > 0 && (
+                    {/* Ferramentas da vaga */}
+                    {toolsForSelected.length > 0 && (
                       <div className="space-y-3">
                         <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                           Ferramentas que você sabe usar
                         </div>
+                        <p className="text-xs text-muted-foreground -mt-1">
+                          Marque as que você já utilizou, mesmo que seja só pra estudos.
+                        </p>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {allTools.map((tool) => {
+                          {toolsForSelected.map((tool) => {
                             const checked = form.tools_known.includes(tool);
                             return (
                               <label
@@ -709,7 +822,7 @@ export default function TrabalheConoscoPage() {
                     <div className="space-y-2">
                       <Label>
                         Anexe seu currículo{' '}
-                        {selectedProfile?.requires_experience && (
+                        {selectedProfile.requires_experience && (
                           <span className="text-destructive">*</span>
                         )}
                       </Label>
@@ -748,10 +861,11 @@ export default function TrabalheConoscoPage() {
                         checked={form.accept_lgpd}
                         onCheckedChange={(v) => patch({ accept_lgpd: !!v })}
                       />
-                      <Label htmlFor="lgpd" className="text-xs font-normal cursor-pointer leading-relaxed">
-                        Autorizo a Agência Petron a tratar meus dados pessoais para fins de recrutamento e
-                        seleção, conforme a LGPD. Meus dados serão usados apenas no processo seletivo e
-                        podem ser mantidos por até 1 ano para processos futuros.
+                      <Label
+                        htmlFor="lgpd"
+                        className="text-xs font-normal cursor-pointer leading-relaxed"
+                      >
+                        Autorizo a Agência Petron a tratar meus dados pessoais para fins de recrutamento e seleção, conforme a LGPD. Meus dados serão usados apenas no processo seletivo e podem ser mantidos por até 1 ano para processos futuros.
                       </Label>
                     </div>
 
@@ -761,83 +875,35 @@ export default function TrabalheConoscoPage() {
                       </div>
                     )}
 
-                    <Button
-                      type="submit"
-                      size="lg"
-                      className="w-full"
-                      disabled={submitting || !selectedProfile}
-                    >
-                      {submitting ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Enviando inscrição...
-                        </>
-                      ) : (
-                        <>
-                          Enviar inscrição
-                          <ArrowRight className="h-4 w-4 ml-2" />
-                        </>
-                      )}
-                    </Button>
+                    <div className="flex gap-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleBackToChoose}
+                        disabled={submitting}
+                      >
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        Voltar
+                      </Button>
+                      <Button type="submit" size="lg" className="flex-1" disabled={submitting}>
+                        {submitting ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Enviando...
+                          </>
+                        ) : (
+                          <>
+                            Enviar inscrição
+                            <ArrowRight className="h-4 w-4 ml-2" />
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </form>
                 </CardContent>
               </Card>
-            </section>
-
-            {/* Detalhes da vaga selecionada */}
-            {selectedProfile && (
-              <section>
-                <Card>
-                  <CardContent className="p-6 md:p-8">
-                    <h2 className="text-xl font-semibold mb-4">
-                      Mais sobre: {selectedProfile.title_public}
-                    </h2>
-
-                    {selectedProfile.mission && (
-                      <div className="mb-5">
-                        <h3 className="text-xs font-semibold uppercase text-muted-foreground mb-2">
-                          Missão
-                        </h3>
-                        <p className="text-sm leading-relaxed">{selectedProfile.mission}</p>
-                      </div>
-                    )}
-
-                    {selectedProfile.deliverables && selectedProfile.deliverables.length > 0 && (
-                      <div className="mb-5">
-                        <h3 className="text-xs font-semibold uppercase text-muted-foreground mb-2">
-                          O que você vai entregar
-                        </h3>
-                        <ul className="space-y-1">
-                          {selectedProfile.deliverables.map((d, i) => (
-                            <li key={i} className="flex gap-2 text-sm">
-                              <Clock className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                              <span>{d}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {selectedProfile.requirements && selectedProfile.requirements.length > 0 && (
-                      <div>
-                        <h3 className="text-xs font-semibold uppercase text-muted-foreground mb-2">
-                          Requisitos
-                        </h3>
-                        <ul className="space-y-1">
-                          {selectedProfile.requirements.map((r, i) => (
-                            <li key={i} className="flex gap-2 text-sm">
-                              <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
-                              <span>{r}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </section>
-            )}
-          </>
+            </div>
+          )
         )}
       </div>
 
@@ -847,6 +913,54 @@ export default function TrabalheConoscoPage() {
           © {new Date().getFullYear()} Agência Petron · Içara - SC · Seus dados estão protegidos pela LGPD
         </div>
       </footer>
+    </div>
+  );
+}
+
+// ─── Step indicator ─────────────────────────────────────────────
+
+function StepIndicator({ currentStep }: { currentStep: Step }) {
+  const steps = [
+    { key: 'choose' as Step, label: 'Escolher vaga', icon: Briefcase },
+    { key: 'form' as Step, label: 'Se inscrever', icon: Users },
+  ];
+
+  return (
+    <div className="hidden sm:flex items-center gap-2">
+      {steps.map((s, i) => {
+        const isActive = currentStep === s.key;
+        const isDone =
+          (currentStep === 'form' && s.key === 'choose');
+        return (
+          <div key={s.key} className="flex items-center gap-2">
+            <div
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${
+                isActive
+                  ? 'bg-primary/12 text-primary'
+                  : isDone
+                  ? 'text-muted-foreground'
+                  : 'text-muted-foreground/50'
+              }`}
+            >
+              <div
+                className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
+                  isActive
+                    ? 'bg-primary text-primary-foreground'
+                    : isDone
+                    ? 'bg-green-500 text-white'
+                    : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                {isDone ? <CheckCircle2 className="h-3 w-3" /> : i + 1}
+              </div>
+              {s.label}
+            </div>
+            {i < steps.length - 1 && (
+              <div className="w-4 h-px bg-border" />
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
