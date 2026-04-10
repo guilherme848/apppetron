@@ -82,7 +82,6 @@ type FormState = {
   phone: string;
   city: string;
   state: string;
-  linkedin_url: string;
   portfolio_url: string;
   presential_availability: string;
   tools_known: string[];
@@ -100,7 +99,6 @@ const INITIAL_STATE: FormState = {
   phone: '',
   city: '',
   state: '',
-  linkedin_url: '',
   portfolio_url: '',
   presential_availability: '',
   tools_known: [],
@@ -111,6 +109,10 @@ const INITIAL_STATE: FormState = {
   why_petron: '',
   accept_lgpd: false,
 };
+
+// Detecta se a vaga selecionada é Designer (pra exibir campo Behance opcional)
+const isDesignerRole = (profile: PublicProfile | null): boolean =>
+  !!profile && profile.title_public.toLowerCase().includes('designer');
 
 export default function TrabalheConoscoPage() {
   const [profiles, setProfiles] = useState<PublicProfile[]>([]);
@@ -270,7 +272,6 @@ export default function TrabalheConoscoPage() {
             phone: form.phone,
             city: form.city,
             state: form.state,
-            linkedin_url: form.linkedin_url,
             portfolio_url: form.portfolio_url,
           },
           p_responses: responses,
@@ -640,27 +641,21 @@ export default function TrabalheConoscoPage() {
                             />
                           </div>
                         </div>
-                        <div>
-                          <Label>LinkedIn</Label>
-                          <Input
-                            value={form.linkedin_url}
-                            onChange={(e) => patch({ linkedin_url: e.target.value })}
-                            placeholder="https://linkedin.com/in/seunome"
-                          />
-                        </div>
-                        <div>
-                          <Label>
-                            Portfólio{' '}
-                            {selectedProfile.requires_experience && (
-                              <span className="text-destructive">*</span>
-                            )}
-                          </Label>
-                          <Input
-                            value={form.portfolio_url}
-                            onChange={(e) => patch({ portfolio_url: e.target.value })}
-                            placeholder="https://behance.net/..."
-                          />
-                        </div>
+                        {isDesignerRole(selectedProfile) && (
+                          <div className="md:col-span-2">
+                            <Label>
+                              Behance <span className="text-muted-foreground">(opcional)</span>
+                            </Label>
+                            <Input
+                              value={form.portfolio_url}
+                              onChange={(e) => patch({ portfolio_url: e.target.value })}
+                              placeholder="https://behance.net/seunome"
+                            />
+                            <p className="text-[11px] text-muted-foreground mt-1">
+                              Se preferir, pode anexar o portfólio direto no currículo abaixo.
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -719,17 +714,11 @@ export default function TrabalheConoscoPage() {
                           </Select>
                         </div>
                         <div>
-                          <Label>Expectativa salarial (R$)</Label>
+                          <Label>Expectativa salarial</Label>
                           <Input
                             value={form.salary_expectation}
                             onChange={(e) => patch({ salary_expectation: e.target.value })}
-                            placeholder="Ex: R$ 2.500 - R$ 3.000"
                           />
-                          {selectedProfile.salary_range && (
-                            <p className="text-[11px] text-muted-foreground mt-1">
-                              Faixa da vaga: {selectedProfile.salary_range}
-                            </p>
-                          )}
                         </div>
                         <div>
                           <Label>Anos de experiência na área</Label>
