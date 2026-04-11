@@ -75,7 +75,7 @@ export default function RhApplicationDetail() {
     getApplicationDetails,
     moveApplicationToStage,
     setApplicationStatus,
-    deleteApplication,
+    deleteCandidate,
     addApplicationNote,
     runAiAnalysis,
     uploadResume,
@@ -127,11 +127,11 @@ export default function RhApplicationDetail() {
     }
   };
 
-  const handleDeleteApplication = async () => {
+  const handleDeleteCandidate = async () => {
     if (!details) return;
     try {
-      await deleteApplication(details.application.id);
-      toast.success('Candidatura excluída');
+      await deleteCandidate(details.candidate.id);
+      toast.success('Candidato excluído');
       navigate(`/rh/vagas/${details.job.job_profile_id}?view=kanban`);
     } catch (e: any) {
       toast.error(e.message || 'Erro ao excluir');
@@ -244,7 +244,7 @@ export default function RhApplicationDetail() {
                   className="text-destructive focus:text-destructive"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Excluir candidatura
+                  Excluir candidato
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -559,18 +559,18 @@ export default function RhApplicationDetail() {
       <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Excluir candidatura?</DialogTitle>
+            <DialogTitle>Excluir candidato?</DialogTitle>
             <DialogDescription>
-              Todos os dados desta candidatura serão removidos permanentemente, incluindo respostas do
-              formulário, currículo, análises de IA e histórico. O candidato continua no banco, mas
-              sem vínculo com essa vaga. Esta ação não pode ser desfeita.
+              O candidato será removido permanentemente do banco, junto com TODAS as candidaturas
+              dele (em qualquer vaga), respostas de formulário, currículo, análises de IA e
+              histórico. Esta ação não pode ser desfeita.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setConfirmDelete(false)}>
               Cancelar
             </Button>
-            <Button variant="destructive" onClick={handleDeleteApplication}>
+            <Button variant="destructive" onClick={handleDeleteCandidate}>
               <Trash2 className="h-4 w-4 mr-2" />
               Excluir definitivamente
             </Button>
