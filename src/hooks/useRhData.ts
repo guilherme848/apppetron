@@ -680,6 +680,8 @@ export function useRhData() {
     setApplicationStatus,
     updateApplicationRating,
     addApplicationNote,
+    deleteApplication,
+    deleteCandidate,
     getApplicationDetails,
     uploadResume,
     // forms
