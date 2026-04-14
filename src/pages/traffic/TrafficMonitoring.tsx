@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { RefreshCw, TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle2, Search, ChevronRight } from 'lucide-react';
+import { RefreshCw, TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle2, Search, ChevronRight, Wallet } from 'lucide-react';
+import { Sparkline } from '@/components/traffic/Sparkline';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -51,7 +52,30 @@ function HealthDot({ health }: { health: 'green' | 'yellow' | 'red' }) {
   return <span className={cn('h-2.5 w-2.5 rounded-full', cls)} />;
 }
 
+function RunwayBadge({ balance }: { balance: ClientMonitoringRow['balance'] }) {
+  const days = balance.runway_days;
+  if (days === null) return null;
+  const level = days <= 7 ? 'critical' : days <= 14 ? 'warn' : 'ok';
+  const cls =
+    level === 'critical' ? 'bg-red-500/10 text-red-600 border-red-500/30' :
+    level === 'warn' ? 'bg-amber-500/10 text-amber-600 border-amber-500/30' :
+    'bg-muted text-muted-foreground border-border';
+  return (
+    <span
+      className={cn('inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-medium', cls)}
+      title={`Saldo ${balance.available_balance != null ? fmtBRL(balance.available_balance) : '—'} / gasto médio ${fmtBRL(balance.daily_spend_avg)}/dia`}
+    >
+      <Wallet className="h-3 w-3" />
+      {days < 1 ? '<1d' : `${Math.round(days)}d`}
+    </span>
+  );
+}
+
 function ClientCard({ row, onClick }: { row: ClientMonitoringRow; onClick: () => void }) {
+  const conversationsSeries = row.sparkline.map(p => p.conversations);
+  const totalSparkConvs = conversationsSeries.reduce((a, b) => a + b, 0);
+  const sparkColor = row.health === 'red' ? '#dc2626' : row.health === 'yellow' ? '#d97706' : '#16a34a';
+
   return (
     <Card
       className={cn(
@@ -67,11 +91,14 @@ function ClientCard({ row, onClick }: { row: ClientMonitoringRow; onClick: () =>
             <HealthDot health={row.health} />
             <CardTitle className="text-sm font-semibold truncate">{row.client_name}</CardTitle>
           </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <RunwayBadge balance={row.balance} />
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </div>
         </div>
         <p className="text-xs text-muted-foreground truncate">{row.ad_account_name || row.ad_account_id}</p>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="space-y-3">
         <div className="grid grid-cols-3 gap-2 text-xs">
           <div>
             <p className="text-muted-foreground">Conversas</p>
@@ -89,8 +116,17 @@ function ClientCard({ row, onClick }: { row: ClientMonitoringRow; onClick: () =>
             <DeltaBadge value={row.delta.spend} />
           </div>
         </div>
+
+        <div className="flex items-center justify-between gap-2 pt-1 border-t">
+          <div className="text-[10px] text-muted-foreground leading-tight">
+            <p>14d conversas</p>
+            <p className="text-foreground font-medium">{fmtInt(totalSparkConvs)}</p>
+          </div>
+          <Sparkline values={conversationsSeries} width={90} height={24} color={sparkColor} fillColor={sparkColor} />
+        </div>
+
         {row.current.leads > 0 && (
-          <p className="text-xs text-muted-foreground pt-1 border-t">
+          <p className="text-[10px] text-muted-foreground pt-1 border-t">
             {fmtInt(row.current.leads)} leads · CPL {fmtBRL(row.current.cpl)}
           </p>
         )}
@@ -228,8 +264,10 @@ export default function TrafficMonitoring() {
       acc.red += r.health === 'red' ? 1 : 0;
       acc.yellow += r.health === 'yellow' ? 1 : 0;
       acc.total += 1;
+      acc.lowRunway += r.balance.runway_days !== null && r.balance.runway_days <= 7 ? 1 : 0;
+      if (r.balance.available_balance != null) acc.totalBalance += r.balance.available_balance;
       return acc;
-    }, { spend: 0, conversations: 0, leads: 0, red: 0, yellow: 0, total: 0 });
+    }, { spend: 0, conversations: 0, leads: 0, red: 0, yellow: 0, total: 0, lowRunway: 0, totalBalance: 0 });
     return {
       ...t,
       cost_per_conversation: t.conversations > 0 ? t.spend / t.conversations : 0,
@@ -263,7 +301,7 @@ export default function TrafficMonitoring() {
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
         <Card>
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground">Conversas WhatsApp</p>
@@ -280,6 +318,17 @@ export default function TrafficMonitoring() {
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground">Gasto ({periodLabel})</p>
             <p className="text-xl font-bold">{fmtBRL(totals.spend)}</p>
+          </CardContent>
+        </Card>
+        <Card className={cn(totals.lowRunway > 0 && 'border-red-500/50')}>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <Wallet className="h-3 w-3" />Saldo total
+            </p>
+            <p className="text-xl font-bold">{fmtBRL(totals.totalBalance)}</p>
+            {totals.lowRunway > 0 && (
+              <p className="text-[10px] text-red-600 mt-0.5">{totals.lowRunway} conta{totals.lowRunway > 1 ? 's' : ''} c/ runway ≤7d</p>
+            )}
           </CardContent>
         </Card>
         <Card>

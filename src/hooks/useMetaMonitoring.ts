@@ -25,6 +25,20 @@ export interface CampaignMetrics {
   cost_per_conversation: number;
 }
 
+export interface DailyPoint {
+  date: string;
+  spend: number;
+  conversations: number;
+}
+
+export interface BalanceInfo {
+  amount_spent: number | null;
+  spend_cap: number | null;
+  available_balance: number | null;
+  runway_days: number | null; // days until balance runs out at 7d avg spend
+  daily_spend_avg: number;
+}
+
 export interface ClientMonitoringRow {
   client_id: string;
   client_name: string;
@@ -33,7 +47,11 @@ export interface ClientMonitoringRow {
   niche: string | null;
   current: CampaignMetrics;
   previous: CampaignMetrics;
+  baseline: CampaignMetrics; // 14-day trailing average (normalized to period length)
   delta: { spend: number; leads: number; cpl: number; conversations: number; cost_per_conversation: number };
+  deltaBaseline: { spend: number; conversations: number; cost_per_conversation: number };
+  sparkline: DailyPoint[]; // last 14 days
+  balance: BalanceInfo;
   health: 'green' | 'yellow' | 'red';
   last_sync_at: string | null;
 }
@@ -78,21 +96,34 @@ function pctDelta(curr: number, prev: number): number {
   return ((curr - prev) / prev) * 100;
 }
 
-function scoreHealth(curr: CampaignMetrics, prev: CampaignMetrics): 'green' | 'yellow' | 'red' {
-  // no activity at all
+function scoreHealth(
+  curr: CampaignMetrics,
+  baseline: CampaignMetrics,
+  balance: BalanceInfo,
+): 'green' | 'yellow' | 'red' {
+  // Runway crítico (7 dias ou menos) sempre marca vermelho
+  if (balance.runway_days !== null && balance.runway_days <= 7) return 'red';
+  // No activity at all
   if (curr.spend === 0 && curr.whatsapp_conversations === 0) return 'red';
-  // spending without generating conversations
+  // Spending sem gerar conversas
   if (curr.spend > 0 && curr.whatsapp_conversations === 0) return 'red';
-  // cost per conversation spiked 50%+
-  if (prev.cost_per_conversation > 0 && curr.cost_per_conversation > prev.cost_per_conversation * 1.5) return 'red';
-  // cost per conversation up 25% or conversations down 30%
-  if (prev.cost_per_conversation > 0 && curr.cost_per_conversation > prev.cost_per_conversation * 1.25) return 'yellow';
-  if (prev.whatsapp_conversations > 0 && curr.whatsapp_conversations < prev.whatsapp_conversations * 0.7) return 'yellow';
+  // Custo/conversa subiu 50%+ vs baseline 14d
+  if (baseline.cost_per_conversation > 0 && curr.cost_per_conversation > baseline.cost_per_conversation * 1.5) return 'red';
+  // Runway baixo (7-14 dias)
+  if (balance.runway_days !== null && balance.runway_days <= 14) return 'yellow';
+  // Custo/conversa +25% ou conversas -30% vs baseline
+  if (baseline.cost_per_conversation > 0 && curr.cost_per_conversation > baseline.cost_per_conversation * 1.25) return 'yellow';
+  if (baseline.whatsapp_conversations > 0 && curr.whatsapp_conversations < baseline.whatsapp_conversations * 0.7) return 'yellow';
   return 'green';
 }
 
 function isoDate(d: Date): string {
   return d.toISOString().split('T')[0];
+}
+
+function daysBetween(from: string, to: string): number {
+  const ms = new Date(to).getTime() - new Date(from).getTime();
+  return Math.max(1, Math.round(ms / 86400000) + 1);
 }
 
 function dateRange(period: Period) {
@@ -148,59 +179,112 @@ export function useMetaMonitoring(period: Period = '7d', autoRefreshMs = 5 * 60 
   const load = useCallback(async () => {
     setError(null);
     try {
-      // 1) linked accounts with client info
-      const { data: links, error: linksErr } = await supabase
-        .from('client_meta_ad_accounts')
-        .select('ad_account_id, client_id, accounts(name, niche, niches(name))')
-        .eq('active', true);
-      if (linksErr) throw linksErr;
+      // Baseline/sparkline always look 14 days back
+      const today = new Date();
+      const trailing14From = isoDate(new Date(today.getTime() - 14 * 86400000));
+      const trailing14To = isoDate(today);
 
-      // 2) ad account names (fallback)
-      const { data: bmAccounts } = await supabase
-        .from('meta_bm_ad_accounts')
-        .select('ad_account_id, name');
-      const bmNameMap = new Map<string, string>(bmAccounts?.map(a => [a.ad_account_id, a.name]) || []);
+      // Range wide enough to cover all needs in a single query
+      const minFrom = [currFrom, prevFrom, trailing14From].sort()[0];
+      const maxTo = [currTo, prevTo, trailing14To].sort().slice(-1)[0];
 
-      // 3) metrics current + previous
-      const [{ data: currData }, { data: prevData }] = await Promise.all([
+      const [linksRes, bmRes, metricsRes, snapshotsRes] = await Promise.all([
+        supabase
+          .from('client_meta_ad_accounts')
+          .select('ad_account_id, client_id, accounts(name, niche, niches(name))')
+          .eq('active', true),
+        supabase.from('meta_bm_ad_accounts').select('ad_account_id, name'),
         supabase
           .from('ad_account_metrics_daily')
           .select('ad_account_id, date, metrics_json')
-          .gte('date', currFrom).lte('date', currTo)
+          .gte('date', minFrom).lte('date', maxTo)
           .eq('platform', 'meta'),
         supabase
-          .from('ad_account_metrics_daily')
-          .select('ad_account_id, date, metrics_json')
-          .gte('date', prevFrom).lte('date', prevTo)
-          .eq('platform', 'meta'),
+          .from('meta_ad_account_snapshots')
+          .select('ad_account_id, fetched_at, amount_spent, spend_cap, available_balance')
+          .order('fetched_at', { ascending: false })
+          .limit(2000),
       ]);
 
-      // 4) latest snapshot per account (for last_sync_at)
-      const { data: snapshots } = await supabase
-        .from('meta_ad_account_snapshots')
-        .select('ad_account_id, fetched_at')
-        .order('fetched_at', { ascending: false })
-        .limit(500);
-      const lastSyncMap = new Map<string, string>();
-      for (const s of snapshots || []) {
-        if (!lastSyncMap.has(s.ad_account_id)) lastSyncMap.set(s.ad_account_id, s.fetched_at);
+      if (linksRes.error) throw linksRes.error;
+      const links = linksRes.data || [];
+      const bmAccounts = bmRes.data || [];
+      const metrics = metricsRes.data || [];
+      const snapshots = snapshotsRes.data || [];
+
+      const bmNameMap = new Map<string, string>(bmAccounts.map(a => [a.ad_account_id, a.name]));
+
+      // Index metrics: ad_account_id -> date -> row
+      const metricsByAcc = new Map<string, Map<string, any>>();
+      for (const r of metrics) {
+        if (!metricsByAcc.has(r.ad_account_id)) metricsByAcc.set(r.ad_account_id, new Map());
+        metricsByAcc.get(r.ad_account_id)!.set(r.date, r);
       }
 
-      // Group metrics by account
-      const currByAcc = new Map<string, any[]>();
-      for (const r of currData || []) {
-        const arr = currByAcc.get(r.ad_account_id) || [];
-        arr.push(r); currByAcc.set(r.ad_account_id, arr);
-      }
-      const prevByAcc = new Map<string, any[]>();
-      for (const r of prevData || []) {
-        const arr = prevByAcc.get(r.ad_account_id) || [];
-        arr.push(r); prevByAcc.set(r.ad_account_id, arr);
+      // Latest snapshot per account
+      const snapByAcc = new Map<string, any>();
+      for (const s of snapshots) {
+        if (!snapByAcc.has(s.ad_account_id)) snapByAcc.set(s.ad_account_id, s);
       }
 
-      const result: ClientMonitoringRow[] = (links || []).map((l: any) => {
-        const current = sumMetrics(currByAcc.get(l.ad_account_id) || []);
-        const previous = sumMetrics(prevByAcc.get(l.ad_account_id) || []);
+      const currDays = daysBetween(currFrom, currTo);
+      const baselineDays = 14;
+
+      const result: ClientMonitoringRow[] = links.map((l: any) => {
+        const accMetrics = metricsByAcc.get(l.ad_account_id) || new Map();
+        const rowsInRange = (from: string, to: string) => {
+          const out: any[] = [];
+          for (const [date, r] of accMetrics.entries()) {
+            if (date >= from && date <= to) out.push(r);
+          }
+          return out;
+        };
+        const current = sumMetrics(rowsInRange(currFrom, currTo));
+        const previous = sumMetrics(rowsInRange(prevFrom, prevTo));
+
+        // Baseline: 14 dias terminando 1 dia antes do início do período atual
+        const baselineEnd = isoDate(new Date(new Date(currFrom).getTime() - 86400000));
+        const baselineStart = isoDate(new Date(new Date(baselineEnd).getTime() - (baselineDays - 1) * 86400000));
+        const baselineRaw = sumMetrics(rowsInRange(baselineStart, baselineEnd));
+        // Normaliza pra janela do período atual (mesmo tamanho)
+        const scale = currDays / baselineDays;
+        const baseline: CampaignMetrics = {
+          spend: baselineRaw.spend * scale,
+          leads: baselineRaw.leads * scale,
+          impressions: baselineRaw.impressions * scale,
+          clicks: baselineRaw.clicks * scale,
+          whatsapp_conversations: baselineRaw.whatsapp_conversations * scale,
+          messaging_replies: baselineRaw.messaging_replies * scale,
+          ctr: baselineRaw.ctr,
+          cpl: baselineRaw.cpl,
+          cost_per_conversation: baselineRaw.cost_per_conversation,
+        };
+
+        // Sparkline: últimos 14 dias
+        const sparkline: DailyPoint[] = [];
+        for (let i = 13; i >= 0; i--) {
+          const d = isoDate(new Date(today.getTime() - i * 86400000));
+          const r = accMetrics.get(d);
+          const j = r?.metrics_json || {};
+          sparkline.push({
+            date: d,
+            spend: Number(j.spend) || 0,
+            conversations: Number(j.whatsapp_conversations) || 0,
+          });
+        }
+
+        // Balance + runway
+        const snap = snapByAcc.get(l.ad_account_id);
+        const last7SpendAvg = sparkline.slice(-7).reduce((a, p) => a + p.spend, 0) / 7;
+        const available = snap?.available_balance;
+        const balance: BalanceInfo = {
+          amount_spent: snap?.amount_spent ?? null,
+          spend_cap: snap?.spend_cap ?? null,
+          available_balance: available ?? null,
+          daily_spend_avg: last7SpendAvg,
+          runway_days: available != null && last7SpendAvg > 0 ? available / last7SpendAvg : null,
+        };
+
         const niche = l.accounts?.niches?.name || l.accounts?.niche || null;
         return {
           client_id: l.client_id,
@@ -208,8 +292,7 @@ export function useMetaMonitoring(period: Period = '7d', autoRefreshMs = 5 * 60 
           ad_account_id: l.ad_account_id,
           ad_account_name: bmNameMap.get(l.ad_account_id) || null,
           niche,
-          current,
-          previous,
+          current, previous, baseline,
           delta: {
             spend: pctDelta(current.spend, previous.spend),
             leads: pctDelta(current.leads, previous.leads),
@@ -217,8 +300,15 @@ export function useMetaMonitoring(period: Period = '7d', autoRefreshMs = 5 * 60 
             conversations: pctDelta(current.whatsapp_conversations, previous.whatsapp_conversations),
             cost_per_conversation: pctDelta(current.cost_per_conversation, previous.cost_per_conversation),
           },
-          health: scoreHealth(current, previous),
-          last_sync_at: lastSyncMap.get(l.ad_account_id) || null,
+          deltaBaseline: {
+            spend: pctDelta(current.spend, baseline.spend),
+            conversations: pctDelta(current.whatsapp_conversations, baseline.whatsapp_conversations),
+            cost_per_conversation: pctDelta(current.cost_per_conversation, baseline.cost_per_conversation),
+          },
+          sparkline,
+          balance,
+          health: scoreHealth(current, baseline, balance),
+          last_sync_at: snap?.fetched_at ?? null,
         };
       });
 
