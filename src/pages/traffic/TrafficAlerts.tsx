@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { AlertTriangle, Bell, Plus, Pencil, Trash2, Clock, Check, Play, Pause, Settings } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouteAccess } from '@/hooks/useRouteAccess';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -219,8 +222,25 @@ export default function TrafficAlerts() {
   const [editingRule, setEditingRule] = useState<AlertRule | null>(null);
   const [newRuleOpen, setNewRuleOpen] = useState(false);
 
-  const critical = alerts.filter(a => a.severity === 'critical').length;
-  const attention = alerts.filter(a => a.severity === 'attention').length;
+  const { member } = useAuth();
+  const { roleKey } = useRouteAccess();
+  const { trafficManagers } = useTeamMembers();
+  const isTrafficManager = roleKey === 'gestor de tráfego';
+  const [trafficManagerFilter, setTrafficManagerFilter] = useState<string>('__pending__');
+
+  useEffect(() => {
+    if (trafficManagerFilter !== '__pending__') return;
+    if (isTrafficManager && member?.id) setTrafficManagerFilter(member.id);
+    else if (roleKey) setTrafficManagerFilter('all');
+  }, [isTrafficManager, member?.id, roleKey, trafficManagerFilter]);
+
+  const filteredAlerts = useMemo(() => {
+    if (trafficManagerFilter === 'all' || trafficManagerFilter === '__pending__') return alerts;
+    return alerts.filter(a => a.traffic_member_id === trafficManagerFilter);
+  }, [alerts, trafficManagerFilter]);
+
+  const critical = filteredAlerts.filter(a => a.severity === 'critical').length;
+  const attention = filteredAlerts.filter(a => a.severity === 'attention').length;
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -232,11 +252,29 @@ export default function TrafficAlerts() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Alertas ativos</p><p className="text-xl font-bold">{alerts.length}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Alertas ativos</p><p className="text-xl font-bold">{filteredAlerts.length}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground flex items-center gap-1"><AlertTriangle className="h-3 w-3 text-red-500" />Críticos</p><p className="text-xl font-bold text-red-600">{critical}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Atenção</p><p className="text-xl font-bold text-amber-600">{attention}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Regras ativas</p><p className="text-xl font-bold">{rules.filter(r => r.is_active).length}/{rules.length}</p></CardContent></Card>
       </div>
+
+      {!isTrafficManager && (
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">Gestor:</span>
+          <Select
+            value={trafficManagerFilter === '__pending__' ? 'all' : trafficManagerFilter}
+            onValueChange={setTrafficManagerFilter}
+          >
+            <SelectTrigger className="w-[240px] h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os gestores</SelectItem>
+              {trafficManagers.map(m => (
+                <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <Tabs defaultValue="feed">
         <TabsList>
@@ -245,9 +283,9 @@ export default function TrafficAlerts() {
         </TabsList>
 
         <TabsContent value="feed" className="space-y-2">
-          {alertsLoading && alerts.length === 0 ? (
+          {alertsLoading && filteredAlerts.length === 0 ? (
             [...Array(4)].map((_, i) => <Skeleton key={i} className="h-20 w-full" />)
-          ) : alerts.length === 0 ? (
+          ) : filteredAlerts.length === 0 ? (
             <Card className="border-green-500/30 bg-green-500/5">
               <CardContent className="py-8 text-center">
                 <Check className="h-6 w-6 text-green-600 mx-auto mb-2" />
@@ -256,7 +294,7 @@ export default function TrafficAlerts() {
               </CardContent>
             </Card>
           ) : (
-            alerts.map(a => (
+            filteredAlerts.map(a => (
               <Card key={a.id} className={cn(
                 a.severity === 'critical' && 'border-red-500/50',
                 a.severity === 'attention' && 'border-amber-500/50',

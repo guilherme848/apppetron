@@ -16,6 +16,7 @@ export interface TrafficAlert {
   resolved_at: string | null;
   acknowledged_at: string | null;
   client_name?: string;
+  traffic_member_id?: string | null;
 }
 
 export function useTrafficAlerts(autoRefreshMs = 60_000) {
@@ -35,17 +36,28 @@ export function useTrafficAlerts(autoRefreshMs = 60_000) {
       setLoading(false);
       return;
     }
-    // Enrich with client name via join
+    // Enrich with client name + traffic_member_id via join
     const clientIds = [...new Set((alertRows || []).map(a => a.client_id).filter(Boolean) as string[])];
     let nameMap = new Map<string, string>();
+    let trafficMap = new Map<string, string | null>();
     if (clientIds.length > 0) {
       const { data: accs } = await supabase
         .from('accounts')
-        .select('id, name')
+        .select('id, name, traffic_member_id, status')
         .in('id', clientIds);
-      nameMap = new Map((accs || []).map(a => [a.id, a.name]));
+      // Filtrar apenas active pra manter consistência com Central
+      const active = (accs || []).filter(a => a.status === 'active');
+      nameMap = new Map(active.map(a => [a.id, a.name]));
+      trafficMap = new Map(active.map(a => [a.id, a.traffic_member_id]));
     }
-    setAlerts((alertRows || []).map(a => ({ ...a, client_name: a.client_id ? nameMap.get(a.client_id) : undefined })));
+    const filteredAlerts = (alertRows || []).filter(a =>
+      !a.client_id || nameMap.has(a.client_id)  // mantém sem client_id e exclui churned
+    );
+    setAlerts(filteredAlerts.map(a => ({
+      ...a,
+      client_name: a.client_id ? nameMap.get(a.client_id) : undefined,
+      traffic_member_id: a.client_id ? trafficMap.get(a.client_id) ?? null : null,
+    })));
     setLoading(false);
   }, []);
 
