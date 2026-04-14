@@ -337,29 +337,43 @@ export function useMetaMonitoring(period: Period = '7d', autoRefreshMs = 5 * 60 
 
 export function useMetaMonitoringCampaigns(adAccountId: string | null, period: Period = '7d') {
   const [rows, setRows] = useState<CampaignMonitoringRow[]>([]);
-  const [loading, setLoading] = useState(false);
+  // Comeca em true quando temos adAccountId — evita flash de "vazio" antes do fetch
+  const [loading, setLoading] = useState(!!adAccountId);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { currFrom, currTo, prevFrom, prevTo } = useMemo(() => dateRange(period), [period]);
 
   const load = useCallback(async () => {
-    if (!adAccountId) { setRows([]); return; }
+    if (!adAccountId) { setRows([]); setHasLoaded(false); return; }
     setLoading(true); setError(null);
     try {
-      const { data: campaigns } = await supabase
+      const { data: campaigns, error: campErr } = await supabase
         .from('meta_campaigns')
         .select('campaign_id, name, effective_status, daily_budget')
-        .eq('ad_account_id', adAccountId);
+        .eq('ad_account_id', adAccountId)
+        .limit(1000);
 
-      const [{ data: curr }, { data: prev }] = await Promise.all([
+      if (campErr) {
+        console.error('[useMetaMonitoringCampaigns] campaigns fetch:', campErr);
+        throw campErr;
+      }
+
+      const [currRes, prevRes] = await Promise.all([
         supabase.from('meta_campaign_metrics_daily')
           .select('campaign_id, metrics_json')
           .eq('ad_account_id', adAccountId)
-          .gte('date', currFrom).lte('date', currTo),
+          .gte('date', currFrom).lte('date', currTo)
+          .limit(5000),
         supabase.from('meta_campaign_metrics_daily')
           .select('campaign_id, metrics_json')
           .eq('ad_account_id', adAccountId)
-          .gte('date', prevFrom).lte('date', prevTo),
+          .gte('date', prevFrom).lte('date', prevTo)
+          .limit(5000),
       ]);
+      if (currRes.error) console.error('[useMetaMonitoringCampaigns] curr metrics:', currRes.error);
+      if (prevRes.error) console.error('[useMetaMonitoringCampaigns] prev metrics:', prevRes.error);
+      const curr = currRes.data;
+      const prev = prevRes.data;
 
       const currBy = new Map<string, any[]>();
       for (const r of curr || []) {
@@ -400,6 +414,7 @@ export function useMetaMonitoringCampaigns(adAccountId: string | null, period: P
       });
 
       setRows(result);
+      setHasLoaded(true);
     } catch (e: any) {
       setError(e?.message || 'Erro ao carregar campanhas');
     } finally {
@@ -409,5 +424,5 @@ export function useMetaMonitoringCampaigns(adAccountId: string | null, period: P
 
   useEffect(() => { load(); }, [load]);
 
-  return { rows, loading, error, refresh: load };
+  return { rows, loading, error, hasLoaded, refresh: load };
 }

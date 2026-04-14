@@ -136,7 +136,7 @@ function ClientCard({ row, onClick }: { row: ClientMonitoringRow; onClick: () =>
 }
 
 function CampaignDrawer({ client, period, onClose }: { client: ClientMonitoringRow | null; period: Period; onClose: () => void }) {
-  const { rows, loading } = useMetaMonitoringCampaigns(client?.ad_account_id || null, period);
+  const { rows, loading, hasLoaded, error } = useMetaMonitoringCampaigns(client?.ad_account_id || null, period);
 
   if (!client) return null;
   return (
@@ -150,9 +150,13 @@ function CampaignDrawer({ client, period, onClose }: { client: ClientMonitoringR
           </DialogTitle>
         </DialogHeader>
         <div className="flex-1 overflow-auto">
-          {loading ? (
+          {loading || !hasLoaded ? (
             <div className="space-y-2 p-4">
               {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}
+            </div>
+          ) : error ? (
+            <div className="p-8 text-center text-red-600 text-sm">
+              Erro ao buscar campanhas: {error}
             </div>
           ) : rows.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground text-sm">
