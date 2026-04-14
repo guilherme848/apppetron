@@ -109,6 +109,8 @@ function ClientsTable({
             <SortHead label="Custo/conv" active={sortKey === 'cost_per_conversation'} dir={sortDir} onClick={() => onSort('cost_per_conversation')} />
             <SortHead label="Conversas" active={sortKey === 'conversations'} dir={sortDir} onClick={() => onSort('conversations')} />
             <SortHead label="Conv. clique→msg" active={sortKey === 'conversion_rate'} dir={sortDir} onClick={() => onSort('conversion_rate')} />
+            <SortHead label="Visitas perfil" active={sortKey === 'profile_visits'} dir={sortDir} onClick={() => onSort('profile_visits')} />
+            <SortHead label="Novos seguidores" active={sortKey === 'new_followers'} dir={sortDir} onClick={() => onSort('new_followers')} />
             <SortHead label="Impressões" active={sortKey === 'impressions'} dir={sortDir} onClick={() => onSort('impressions')} />
             <SortHead label="Alcance" active={sortKey === 'reach'} dir={sortDir} onClick={() => onSort('reach')} />
             <SortHead label="CPM" active={sortKey === 'cpm'} dir={sortDir} onClick={() => onSort('cpm')} />
@@ -147,6 +149,8 @@ function ClientsTable({
               <TableCell className="text-right">
                 <div className="font-medium">{fmtPct(r.current.conversion_rate)}</div>
               </TableCell>
+              <TableCell className="text-right text-sm">{fmtInt(r.current.profile_visits)}</TableCell>
+              <TableCell className="text-right text-sm">{fmtInt(r.current.new_followers)}</TableCell>
               <TableCell className="text-right text-sm">{fmtInt(r.current.impressions)}</TableCell>
               <TableCell className="text-right text-sm">{fmtInt(r.current.reach)}</TableCell>
               <TableCell className="text-right text-sm">{fmtBRL(r.current.cpm)}</TableCell>
@@ -485,7 +489,7 @@ function CampaignRow({ c }: { c: CampaignMonitoringRow }) {
   );
 }
 
-type SortKey = 'client' | 'health' | 'cost_per_conversation' | 'conversations' | 'conversion_rate' | 'spend' | 'unique_ctr' | 'cpm' | 'reach' | 'impressions';
+type SortKey = 'client' | 'health' | 'cost_per_conversation' | 'conversations' | 'conversion_rate' | 'spend' | 'unique_ctr' | 'cpm' | 'reach' | 'impressions' | 'profile_visits' | 'new_followers';
 type SortDir = 'asc' | 'desc';
 
 export default function TrafficMonitoring() {
@@ -542,6 +546,8 @@ export default function TrafficMonitoring() {
         case 'cpm': va = a.current.cpm; vb = b.current.cpm; break;
         case 'reach': va = a.current.reach; vb = b.current.reach; break;
         case 'impressions': va = a.current.impressions; vb = b.current.impressions; break;
+        case 'profile_visits': va = a.current.profile_visits; vb = b.current.profile_visits; break;
+        case 'new_followers': va = a.current.new_followers; vb = b.current.new_followers; break;
       }
       if (typeof va === 'string') return va.localeCompare(vb as string) * mult;
       return ((va as number) - (vb as number)) * mult;

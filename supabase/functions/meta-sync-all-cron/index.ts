@@ -217,7 +217,8 @@ serve(async (req) => {
           const totalWhatsappConversations = whatsappConversations + messagingReplies;
           
           const pageEngagement = findActionValue(dayData.actions, ['page_engagement', 'post_engagement']);
-          const profileVisits = findActionValue(dayData.actions, ['landing_page_view', 'link_click']);
+          const profileVisits = findActionValue(dayData.actions, ['onsite_conversion.profile_view', 'profile_view', 'landing_page_view', 'link_click']);
+          const newFollowers = findActionValue(dayData.actions, ['onsite_conversion.follow', 'follow', 'page_follow']);
           const leads = findActionValue(dayData.actions, ['lead', 'lead.fb', 'onsite_conversion.lead_grouped']);
           const conversions = findActionValue(dayData.actions, ['omni_purchase', 'purchase', 'complete_registration']);
           const costPerLead = findCostPerAction(dayData.cost_per_action_type, ['lead', 'lead.fb', 'onsite_conversion.lead_grouped']);
@@ -247,6 +248,7 @@ serve(async (req) => {
               : 0,
             page_engagement: pageEngagement,
             profile_visits: profileVisits,
+            new_followers: newFollowers,
             engagement: engagement || pageEngagement,
             cost_per_lead: costPerLead,
           };

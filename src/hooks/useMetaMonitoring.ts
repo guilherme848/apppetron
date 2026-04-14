@@ -28,6 +28,8 @@ export interface CampaignMetrics {
   cost_per_conversation: number;
   conversion_rate: number; // conversas / cliques
   frequency: number;
+  profile_visits: number;
+  new_followers: number;
 }
 
 export interface FunnelDecomposition {
@@ -99,7 +101,7 @@ export interface CampaignMonitoringRow {
 const FIXED_DAYS: Partial<Record<Period, number>> = { '1d': 1, '7d': 7, '30d': 30, '90d': 90 };
 
 function emptyMetrics(): CampaignMetrics {
-  return { spend: 0, leads: 0, impressions: 0, reach: 0, clicks: 0, ctr: 0, unique_ctr: 0, cpl: 0, cpm: 0, whatsapp_conversations: 0, messaging_replies: 0, cost_per_conversation: 0, conversion_rate: 0, frequency: 0 };
+  return { spend: 0, leads: 0, impressions: 0, reach: 0, clicks: 0, ctr: 0, unique_ctr: 0, cpl: 0, cpm: 0, whatsapp_conversations: 0, messaging_replies: 0, cost_per_conversation: 0, conversion_rate: 0, frequency: 0, profile_visits: 0, new_followers: 0 };
 }
 
 function sumMetrics(rows: Array<{ metrics_json: any }>): CampaignMetrics {
@@ -115,6 +117,8 @@ function sumMetrics(rows: Array<{ metrics_json: any }>): CampaignMetrics {
     m.clicks += Number(j.clicks) || 0;
     m.whatsapp_conversations += Number(j.whatsapp_conversations) || 0;
     m.messaging_replies += Number(j.messaging_replies) || 0;
+    m.profile_visits += Number(j.profile_visits) || 0;
+    m.new_followers += Number(j.new_followers) || 0;
     const f = Number(j.frequency) || 0;
     if (f > 0) { freqSum += f; freqCount += 1; }
   }
@@ -304,6 +308,8 @@ export function useMetaMonitoring(period: Period = '7d', autoRefreshMs = 5 * 60 
           cost_per_conversation: baselineRaw.cost_per_conversation,
           conversion_rate: baselineRaw.conversion_rate,
           frequency: baselineRaw.frequency,
+          profile_visits: baselineRaw.profile_visits * scale,
+          new_followers: baselineRaw.new_followers * scale,
         };
 
         // Sparkline: últimos 14 dias
@@ -477,6 +483,8 @@ export function useCampaignMonitoringPrefetch(period: Period = '7d') {
           cost_per_conversation: currConvs > 0 ? currSpend / currConvs : 0,
           conversion_rate: currClicks > 0 ? (currConvs / currClicks) * 100 : 0,
           frequency: Number(r.curr_frequency_avg) || 0,
+          profile_visits: 0,
+          new_followers: 0,
         };
         const previous: CampaignMetrics = {
           spend: prevSpend,
