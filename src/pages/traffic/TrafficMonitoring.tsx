@@ -14,12 +14,13 @@ import { ptBR } from 'date-fns/locale';
 import {
   useMetaMonitoring,
   useMetaMonitoringCampaigns,
+  PERIOD_OPTIONS,
   type Period,
   type ClientMonitoringRow,
   type CampaignMonitoringRow,
 } from '@/hooks/useMetaMonitoring';
 
-const PERIOD_LABEL: Record<Period, string> = { '1d': 'Hoje', '7d': 'Últimos 7 dias', '30d': 'Últimos 30 dias' };
+const DEFAULT_NICHE = 'Material de Construção';
 
 function fmtBRL(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
@@ -181,12 +182,22 @@ export default function TrafficMonitoring() {
   const [period, setPeriod] = useState<Period>('7d');
   const [search, setSearch] = useState('');
   const [healthFilter, setHealthFilter] = useState<'all' | 'red' | 'yellow' | 'green'>('all');
+  const [nicheFilter, setNicheFilter] = useState<string>(DEFAULT_NICHE);
   const [selected, setSelected] = useState<ClientMonitoringRow | null>(null);
 
   const { rows, loading, error, lastRefresh, refresh } = useMetaMonitoring(period);
 
+  const availableNiches = useMemo(() => {
+    const set = new Set<string>();
+    rows.forEach(r => { if (r.niche) set.add(r.niche); });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }, [rows]);
+
   const filtered = useMemo(() => {
     let r = rows;
+    if (nicheFilter !== 'all') {
+      r = r.filter(x => x.niche === nicheFilter);
+    }
     if (search.trim()) {
       const q = search.toLowerCase();
       r = r.filter(x => x.client_name.toLowerCase().includes(q) || (x.ad_account_name || '').toLowerCase().includes(q));
@@ -204,14 +215,18 @@ export default function TrafficMonitoring() {
   }, [rows, search, healthFilter]);
 
   const totals = useMemo(() => {
-    return rows.reduce((acc, r) => {
+    const base = nicheFilter === 'all' ? rows : rows.filter(r => r.niche === nicheFilter);
+    return base.reduce((acc, r) => {
       acc.spend += r.current.spend;
       acc.leads += r.current.leads;
       acc.red += r.health === 'red' ? 1 : 0;
       acc.yellow += r.health === 'yellow' ? 1 : 0;
+      acc.total += 1;
       return acc;
-    }, { spend: 0, leads: 0, red: 0, yellow: 0 });
-  }, [rows]);
+    }, { spend: 0, leads: 0, red: 0, yellow: 0, total: 0 });
+  }, [rows, nicheFilter]);
+
+  const periodLabel = PERIOD_OPTIONS.find(o => o.value === period)?.label || '';
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -224,11 +239,11 @@ export default function TrafficMonitoring() {
         </div>
         <div className="flex items-center gap-2">
           <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
-            <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="1d">{PERIOD_LABEL['1d']}</SelectItem>
-              <SelectItem value="7d">{PERIOD_LABEL['7d']}</SelectItem>
-              <SelectItem value="30d">{PERIOD_LABEL['30d']}</SelectItem>
+              {PERIOD_OPTIONS.map(o => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Button variant="outline" size="icon" onClick={refresh} disabled={loading} title="Atualizar agora">
@@ -241,7 +256,7 @@ export default function TrafficMonitoring() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Gasto total ({PERIOD_LABEL[period]})</p>
+            <p className="text-xs text-muted-foreground">Gasto total ({periodLabel})</p>
             <p className="text-xl font-bold">{fmtBRL(totals.spend)}</p>
           </CardContent>
         </Card>
@@ -264,7 +279,7 @@ export default function TrafficMonitoring() {
             <p className="text-xs text-muted-foreground flex items-center gap-1">
               <CheckCircle2 className="h-3 w-3 text-green-500" />Saudáveis
             </p>
-            <p className="text-xl font-bold text-green-600">{rows.length - totals.red - totals.yellow}</p>
+            <p className="text-xl font-bold text-green-600">{totals.total - totals.red - totals.yellow}</p>
           </CardContent>
         </Card>
       </div>
@@ -280,8 +295,17 @@ export default function TrafficMonitoring() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+        <Select value={nicheFilter} onValueChange={setNicheFilter}>
+          <SelectTrigger className="w-full md:w-[220px]"><SelectValue placeholder="Nicho" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os nichos</SelectItem>
+            {availableNiches.map(n => (
+              <SelectItem key={n} value={n}>{n}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Select value={healthFilter} onValueChange={(v) => setHealthFilter(v as any)}>
-          <SelectTrigger className="w-full md:w-[200px]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-full md:w-[180px]"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos os status</SelectItem>
             <SelectItem value="red">Críticos</SelectItem>

@@ -1,7 +1,17 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-export type Period = '1d' | '7d' | '30d';
+export type Period = '1d' | '7d' | '30d' | 'mtd' | 'last_month' | '90d' | 'ytd';
+
+export const PERIOD_OPTIONS: { value: Period; label: string }[] = [
+  { value: '1d', label: 'Hoje' },
+  { value: '7d', label: 'Últimos 7 dias' },
+  { value: '30d', label: 'Últimos 30 dias' },
+  { value: 'mtd', label: 'Este mês' },
+  { value: 'last_month', label: 'Mês passado' },
+  { value: '90d', label: 'Últimos 90 dias' },
+  { value: 'ytd', label: 'Este ano' },
+];
 
 export interface CampaignMetrics {
   spend: number;
@@ -19,6 +29,7 @@ export interface ClientMonitoringRow {
   client_name: string;
   ad_account_id: string;
   ad_account_name: string | null;
+  niche: string | null;
   current: CampaignMetrics;
   previous: CampaignMetrics;
   delta: { spend: number; leads: number; cpl: number }; // percentage change
@@ -38,7 +49,7 @@ export interface CampaignMonitoringRow {
   health: 'green' | 'yellow' | 'red';
 }
 
-const PERIOD_DAYS: Record<Period, number> = { '1d': 1, '7d': 7, '30d': 30 };
+const FIXED_DAYS: Partial<Record<Period, number>> = { '1d': 1, '7d': 7, '30d': 30, '90d': 90 };
 
 function emptyMetrics(): CampaignMetrics {
   return { spend: 0, leads: 0, impressions: 0, clicks: 0, ctr: 0, cpl: 0, whatsapp_conversations: 0, messaging_replies: 0 };
@@ -83,17 +94,44 @@ function isoDate(d: Date): string {
 }
 
 function dateRange(period: Period) {
-  const days = PERIOD_DAYS[period];
-  const end = new Date();
-  const start = new Date();
-  start.setDate(start.getDate() - (days - 1));
-  const prevEnd = new Date(start);
-  prevEnd.setDate(prevEnd.getDate() - 1);
-  const prevStart = new Date(prevEnd);
-  prevStart.setDate(prevStart.getDate() - (days - 1));
+  const today = new Date();
+  let currFrom: Date, currTo: Date, prevFrom: Date, prevTo: Date;
+
+  const fixedDays = FIXED_DAYS[period];
+  if (fixedDays) {
+    currTo = new Date(today);
+    currFrom = new Date(today);
+    currFrom.setDate(currFrom.getDate() - (fixedDays - 1));
+    prevTo = new Date(currFrom);
+    prevTo.setDate(prevTo.getDate() - 1);
+    prevFrom = new Date(prevTo);
+    prevFrom.setDate(prevFrom.getDate() - (fixedDays - 1));
+  } else if (period === 'mtd') {
+    currFrom = new Date(today.getFullYear(), today.getMonth(), 1);
+    currTo = new Date(today);
+    // previous = same day-range last month
+    prevFrom = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    prevTo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+  } else if (period === 'last_month') {
+    currFrom = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    currTo = new Date(today.getFullYear(), today.getMonth(), 0); // last day of prev month
+    prevFrom = new Date(today.getFullYear(), today.getMonth() - 2, 1);
+    prevTo = new Date(today.getFullYear(), today.getMonth() - 1, 0);
+  } else if (period === 'ytd') {
+    currFrom = new Date(today.getFullYear(), 0, 1);
+    currTo = new Date(today);
+    prevFrom = new Date(today.getFullYear() - 1, 0, 1);
+    prevTo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+  } else {
+    currTo = new Date(today);
+    currFrom = new Date(today);
+    prevTo = new Date(today);
+    prevFrom = new Date(today);
+  }
+
   return {
-    currFrom: isoDate(start), currTo: isoDate(end),
-    prevFrom: isoDate(prevStart), prevTo: isoDate(prevEnd),
+    currFrom: isoDate(currFrom), currTo: isoDate(currTo),
+    prevFrom: isoDate(prevFrom), prevTo: isoDate(prevTo),
   };
 }
 
@@ -111,7 +149,7 @@ export function useMetaMonitoring(period: Period = '7d', autoRefreshMs = 5 * 60 
       // 1) linked accounts with client info
       const { data: links, error: linksErr } = await supabase
         .from('client_meta_ad_accounts')
-        .select('ad_account_id, client_id, accounts(name)')
+        .select('ad_account_id, client_id, accounts(name, niche, niches(name))')
         .eq('active', true);
       if (linksErr) throw linksErr;
 
@@ -161,11 +199,13 @@ export function useMetaMonitoring(period: Period = '7d', autoRefreshMs = 5 * 60 
       const result: ClientMonitoringRow[] = (links || []).map((l: any) => {
         const current = sumMetrics(currByAcc.get(l.ad_account_id) || []);
         const previous = sumMetrics(prevByAcc.get(l.ad_account_id) || []);
+        const niche = l.accounts?.niches?.name || l.accounts?.niche || null;
         return {
           client_id: l.client_id,
           client_name: l.accounts?.name || 'Cliente sem nome',
           ad_account_id: l.ad_account_id,
           ad_account_name: bmNameMap.get(l.ad_account_id) || null,
+          niche,
           current,
           previous,
           delta: {
