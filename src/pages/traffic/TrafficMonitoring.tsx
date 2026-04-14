@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { RefreshCw, TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle2, Search, ChevronRight, Wallet } from 'lucide-react';
 import { Sparkline } from '@/components/traffic/Sparkline';
+import { AlertsFeed } from '@/components/traffic/AlertsFeed';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -479,6 +480,9 @@ export default function TrafficMonitoring() {
           </Button>
         </div>
       </div>
+
+      {/* Feed de alertas */}
+      <AlertsFeed />
 
       {/* Summary */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
