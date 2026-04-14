@@ -109,6 +109,7 @@ export default function CrmList() {
   const [filterNiche, setFilterNiche] = useState('all');
   const [filterEntryMonth, setFilterEntryMonth] = useState('all');
   const [filterSource, setFilterSource] = useState('all');
+  const [filterTraffic, setFilterTraffic] = useState<'all' | 'has_plan' | 'has_account' | 'no_account' | 'plan_without_account'>('all');
   const [currentPage, setCurrentPage] = useState(1);
 
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
@@ -139,7 +140,18 @@ export default function CrmList() {
     }));
   };
 
-  const hasActiveFilters = search || filterPlan !== 'all' || filterTrafficManager !== 'all' || filterCs !== 'all' || filterNiche !== 'all' || filterEntryMonth !== 'all' || filterSource !== 'all' || showChurned;
+  const hasActiveFilters = search || filterPlan !== 'all' || filterTrafficManager !== 'all' || filterCs !== 'all' || filterNiche !== 'all' || filterEntryMonth !== 'all' || filterSource !== 'all' || filterTraffic !== 'all' || showChurned;
+
+  // Set de client_ids com conta Meta ativa (precomputado para filtro)
+  const clientsWithAdAccount = useMemo(
+    () => new Set(clientLinks.filter(l => l.active).map(l => l.client_id)),
+    [clientLinks]
+  );
+  // Set de service_ids com has_traffic
+  const trafficServiceIds = useMemo(
+    () => new Set(services.filter((s: any) => s.has_traffic).map((s: any) => s.id)),
+    [services]
+  );
 
   const clearFilters = () => {
     setSearch('');
@@ -149,6 +161,7 @@ export default function CrmList() {
     setFilterNiche('all');
     setFilterEntryMonth('all');
     setFilterSource('all');
+    setFilterTraffic('all');
     setShowChurned(false);
     setCurrentPage(1);
   };
@@ -199,6 +212,14 @@ export default function CrmList() {
       if (filterCs !== 'all' && account.cs_member_id !== filterCs) return false;
       if (filterNiche !== 'all' && account.niche !== filterNiche) return false;
       if (filterEntryMonth !== 'all' && (!account.start_date || !account.start_date.startsWith(filterEntryMonth))) return false;
+      if (filterTraffic !== 'all') {
+        const hasAccount = clientsWithAdAccount.has(account.id);
+        const planHasTraffic = account.service_id ? trafficServiceIds.has(account.service_id) : false;
+        if (filterTraffic === 'has_plan' && !planHasTraffic) return false;
+        if (filterTraffic === 'has_account' && !hasAccount) return false;
+        if (filterTraffic === 'no_account' && hasAccount) return false;
+        if (filterTraffic === 'plan_without_account' && (!planHasTraffic || hasAccount)) return false;
+      }
       if (filterSource !== 'all') {
         if (filterSource === '__none__') {
           if (account.origin) return false;
@@ -233,12 +254,12 @@ export default function CrmList() {
         default: return 0;
       }
     });
-  }, [accounts, search, sortConfig, showChurned, filterPlan, filterTrafficManager, filterCs, filterNiche, filterEntryMonth, filterSource]);
+  }, [accounts, search, sortConfig, showChurned, filterPlan, filterTrafficManager, filterCs, filterNiche, filterEntryMonth, filterSource, filterTraffic, clientsWithAdAccount, trafficServiceIds]);
 
   const totalPages = Math.max(1, Math.ceil(sortedAndFilteredAccounts.length / ITEMS_PER_PAGE));
   const paginatedAccounts = sortedAndFilteredAccounts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
-  useEffect(() => { setCurrentPage(1); }, [search, showChurned, filterPlan, filterTrafficManager, filterCs, filterNiche, filterEntryMonth, filterSource]);
+  useEffect(() => { setCurrentPage(1); }, [search, showChurned, filterPlan, filterTrafficManager, filterCs, filterNiche, filterEntryMonth, filterSource, filterTraffic]);
 
   const handleSubmit = async (data: Partial<Account>) => {
     if (editingAccount) {
@@ -381,6 +402,17 @@ export default function CrmList() {
             <SelectItem value="outbound">Outbound</SelectItem>
             <SelectItem value="indicacao">Indicação</SelectItem>
             <SelectItem value="__none__">Sem fonte</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={filterTraffic} onValueChange={(v) => setFilterTraffic(v as any)}>
+          <SelectTrigger className="w-[200px] h-10"><SelectValue placeholder="Tráfego" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos (tráfego)</SelectItem>
+            <SelectItem value="has_plan">Com tráfego no plano</SelectItem>
+            <SelectItem value="has_account">Com conta Meta vinculada</SelectItem>
+            <SelectItem value="no_account">Sem conta Meta vinculada</SelectItem>
+            <SelectItem value="plan_without_account">Tráfego no plano, sem conta</SelectItem>
           </SelectContent>
         </Select>
 
