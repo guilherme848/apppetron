@@ -18,10 +18,12 @@ import { ptBR } from 'date-fns/locale';
 import {
   useMetaMonitoring,
   useCampaignMonitoringPrefetch,
+  useAdsForCampaign,
   PERIOD_OPTIONS,
   type Period,
   type ClientMonitoringRow,
   type CampaignMonitoringRow,
+  type AdMonitoringRow,
 } from '@/hooks/useMetaMonitoring';
 
 const DEFAULT_NICHE = 'Material de Construção';
@@ -380,11 +382,12 @@ function diagnoseFunnel(f: NonNullable<ClientMonitoringRow['funnel']>): string {
 }
 
 function CampaignDrawer({
-  client, rows, loading, onClose,
+  client, rows, loading, period, onClose,
 }: {
   client: ClientMonitoringRow | null;
   rows: CampaignMonitoringRow[];
   loading: boolean;
+  period: Period;
   onClose: () => void;
 }) {
   if (!client) return null;
@@ -438,7 +441,7 @@ function CampaignDrawer({
               </TableHeader>
               <TableBody>
                 {rows.map((c) => (
-                  <CampaignRow key={c.campaign_id} c={c} />
+                  <CampaignRow key={c.campaign_id} c={c} period={period} />
                 ))}
               </TableBody>
             </Table>
@@ -449,41 +452,143 @@ function CampaignDrawer({
   );
 }
 
-function CampaignRow({ c }: { c: CampaignMonitoringRow }) {
+function AdCreativeCard({ ad }: { ad: AdMonitoringRow }) {
+  const fatigueCls =
+    ad.fatigue_level === 'saturated' ? 'bg-red-500/10 border-red-500/40' :
+    ad.fatigue_level === 'warning' ? 'bg-amber-500/10 border-amber-500/40' :
+    'bg-card border-border';
   return (
-    <TableRow className={cn(c.effective_status !== 'ACTIVE' && 'opacity-60')}>
-      <TableCell className="max-w-xs">
+    <div className={cn('flex gap-3 p-3 rounded-md border', fatigueCls)}>
+      <div className="flex-shrink-0 w-20 h-20 rounded overflow-hidden bg-muted flex items-center justify-center">
+        {ad.thumbnail_url ? (
+          <img src={ad.thumbnail_url} alt={ad.name} className="w-full h-full object-cover" loading="lazy" />
+        ) : (
+          <span className="text-[10px] text-muted-foreground text-center px-1">Sem thumb</span>
+        )}
+      </div>
+      <div className="flex-1 min-w-0 space-y-1">
         <div className="flex items-center gap-2">
-          <HealthDot health={c.health} />
-          <span className="truncate font-medium text-sm">{c.campaign_name}</span>
+          <HealthDot health={ad.health} />
+          <p className="font-medium text-sm truncate" title={ad.name}>{ad.name}</p>
+          <Badge variant={ad.effective_status === 'ACTIVE' ? 'default' : 'secondary'} className="text-[9px] ml-auto">
+            {ad.effective_status || '—'}
+          </Badge>
         </div>
-      </TableCell>
-      <TableCell className="text-right">
-        <div className="font-medium">{fmtInt(c.current.whatsapp_conversations)}</div>
-        <DeltaBadge value={c.delta.conversations} />
-      </TableCell>
-      <TableCell className="text-right">
-        <div className="font-medium">{c.current.whatsapp_conversations > 0 ? fmtBRL(c.current.cost_per_conversation) : '—'}</div>
-        <DeltaBadge value={c.delta.cost_per_conversation} invert />
-      </TableCell>
-      <TableCell className="text-right">
-        <div className="font-medium">{fmtBRL(c.current.spend)}</div>
-        <DeltaBadge value={c.delta.spend} />
-      </TableCell>
-      <TableCell className="text-right text-sm">
-        {fmtInt(c.current.leads)}
-        {c.current.leads > 0 && <div className="text-xs text-muted-foreground">{fmtBRL(c.current.cpl)} CPL</div>}
-      </TableCell>
-      <TableCell className="text-right text-sm">{fmtPct(c.current.ctr)}</TableCell>
-      <TableCell className="text-right text-sm">
-        {c.current.frequency > 0 ? <FrequencyBadge freq={c.current.frequency} /> : '—'}
-      </TableCell>
-      <TableCell>
-        <Badge variant={c.effective_status === 'ACTIVE' ? 'default' : 'secondary'} className="text-xs">
-          {c.effective_status || '—'}
-        </Badge>
-      </TableCell>
-    </TableRow>
+        <div className="grid grid-cols-4 gap-2 text-xs">
+          <div>
+            <p className="text-[10px] text-muted-foreground">Conversas</p>
+            <p className="font-semibold">{fmtInt(ad.current.conversations)}</p>
+            <DeltaBadge value={ad.delta.conversations} />
+          </div>
+          <div>
+            <p className="text-[10px] text-muted-foreground">Custo/conv</p>
+            <p className="font-semibold">{ad.current.conversations > 0 ? fmtBRL(ad.current.cost_per_conversation) : '—'}</p>
+            <DeltaBadge value={ad.delta.cost_per_conversation} invert />
+          </div>
+          <div>
+            <p className="text-[10px] text-muted-foreground">Gasto</p>
+            <p className="font-semibold">{fmtBRL(ad.current.spend)}</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-muted-foreground">Freq</p>
+            <p className={cn('font-semibold',
+              ad.fatigue_level === 'saturated' && 'text-red-600',
+              ad.fatigue_level === 'warning' && 'text-amber-600'
+            )}>
+              {ad.current.frequency > 0 ? ad.current.frequency.toFixed(1) : '—'}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CampaignAdsInline({ campaignId, period }: { campaignId: string; period: Period }) {
+  const { rows, loading, hasLoaded } = useAdsForCampaign(campaignId, period);
+  if (loading || !hasLoaded) {
+    return (
+      <div className="p-4 space-y-2">
+        {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
+      </div>
+    );
+  }
+  if (rows.length === 0) {
+    return <div className="p-4 text-center text-xs text-muted-foreground">Nenhum anúncio indexado ainda. A sincronização nível-ad roda 2x ao dia.</div>;
+  }
+  const top = rows.slice(0, 5);
+  const bottom = [...rows].filter(r => r.current.spend > 0).sort((a, b) =>
+    (b.current.cost_per_conversation || 0) - (a.current.cost_per_conversation || 0)
+  ).slice(0, 3);
+  return (
+    <div className="p-3 space-y-4 bg-muted/20">
+      <div>
+        <p className="text-xs font-semibold mb-2">🏆 Melhores criativos (por investimento)</p>
+        <div className="space-y-2">
+          {top.map(ad => <AdCreativeCard key={ad.ad_id} ad={ad} />)}
+        </div>
+      </div>
+      {bottom.length > 0 && bottom[0].current.cost_per_conversation > 0 && (
+        <div>
+          <p className="text-xs font-semibold mb-2">⚠️ Candidatos a pausar (custo/conv mais alto)</p>
+          <div className="space-y-2">
+            {bottom.map(ad => <AdCreativeCard key={ad.ad_id} ad={ad} />)}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CampaignRow({ c, period }: { c: CampaignMonitoringRow; period: Period }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <>
+      <TableRow
+        className={cn('cursor-pointer hover:bg-muted/30', c.effective_status !== 'ACTIVE' && 'opacity-60')}
+        onClick={() => setExpanded(v => !v)}
+      >
+        <TableCell className="max-w-xs">
+          <div className="flex items-center gap-2">
+            <ChevronRight className={cn('h-3 w-3 text-muted-foreground transition-transform', expanded && 'rotate-90')} />
+            <HealthDot health={c.health} />
+            <span className="truncate font-medium text-sm">{c.campaign_name}</span>
+          </div>
+        </TableCell>
+        <TableCell className="text-right">
+          <div className="font-medium">{fmtInt(c.current.whatsapp_conversations)}</div>
+          <DeltaBadge value={c.delta.conversations} />
+        </TableCell>
+        <TableCell className="text-right">
+          <div className="font-medium">{c.current.whatsapp_conversations > 0 ? fmtBRL(c.current.cost_per_conversation) : '—'}</div>
+          <DeltaBadge value={c.delta.cost_per_conversation} invert />
+        </TableCell>
+        <TableCell className="text-right">
+          <div className="font-medium">{fmtBRL(c.current.spend)}</div>
+          <DeltaBadge value={c.delta.spend} />
+        </TableCell>
+        <TableCell className="text-right text-sm">
+          {fmtInt(c.current.leads)}
+          {c.current.leads > 0 && <div className="text-xs text-muted-foreground">{fmtBRL(c.current.cpl)} CPL</div>}
+        </TableCell>
+        <TableCell className="text-right text-sm">{fmtPct(c.current.ctr)}</TableCell>
+        <TableCell className="text-right text-sm">
+          {c.current.frequency > 0 ? <FrequencyBadge freq={c.current.frequency} /> : '—'}
+        </TableCell>
+        <TableCell>
+          <Badge variant={c.effective_status === 'ACTIVE' ? 'default' : 'secondary'} className="text-xs">
+            {c.effective_status || '—'}
+          </Badge>
+        </TableCell>
+      </TableRow>
+      {expanded && (
+        <TableRow>
+          <TableCell colSpan={8} className="p-0">
+            <CampaignAdsInline campaignId={c.campaign_id} period={period} />
+          </TableCell>
+        </TableRow>
+      )}
+    </>
   );
 }
 
@@ -749,6 +854,7 @@ export default function TrafficMonitoring() {
         client={selected}
         rows={selected ? (campaignsByAccount.get(selected.ad_account_id) || []) : []}
         loading={campaignsLoading}
+        period={period}
         onClose={() => setSelected(null)}
       />
     </div>

@@ -652,3 +652,129 @@ export function useMetaMonitoringCampaigns(adAccountId: string | null, period: P
 
   return { rows, loading, error, hasLoaded, refresh: load };
 }
+
+export interface AdMonitoringRow {
+  ad_id: string;
+  campaign_id: string;
+  ad_account_id: string;
+  name: string;
+  effective_status: string | null;
+  creative_id: string | null;
+  thumbnail_url: string | null;
+  image_url: string | null;
+  creative_title: string | null;
+  creative_body: string | null;
+  current: {
+    spend: number;
+    conversations: number;
+    impressions: number;
+    clicks: number;
+    reach: number;
+    ctr: number;
+    unique_ctr: number;
+    cpm: number;
+    cost_per_conversation: number;
+    conversion_rate: number;
+    frequency: number;
+  };
+  delta: {
+    conversations: number;
+    cost_per_conversation: number;
+    spend: number;
+  };
+  health: 'green' | 'yellow' | 'red';
+  fatigue_level: 'ok' | 'warning' | 'saturated';
+}
+
+export function useAdsForCampaign(campaignId: string | null, period: Period = '7d') {
+  const [rows, setRows] = useState<AdMonitoringRow[]>([]);
+  const [loading, setLoading] = useState(!!campaignId);
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const { currFrom, currTo, prevFrom, prevTo } = useMemo(() => dateRange(period), [period]);
+
+  const load = useCallback(async () => {
+    if (!campaignId) { setRows([]); setHasLoaded(false); return; }
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.rpc('get_ad_monitoring', {
+        p_campaign_id: campaignId,
+        p_curr_from: currFrom, p_curr_to: currTo,
+        p_prev_from: prevFrom, p_prev_to: prevTo,
+      });
+      if (error) {
+        console.error('[useAdsForCampaign] rpc:', error);
+        setHasLoaded(true);
+        return;
+      }
+      const mapped: AdMonitoringRow[] = ((data as any[]) || []).map((r: any) => {
+        const currSpend = Number(r.curr_spend) || 0;
+        const currConvs = Number(r.curr_conversations) || 0;
+        const currImpr = Number(r.curr_impressions) || 0;
+        const currClicks = Number(r.curr_clicks) || 0;
+        const currReach = Number(r.curr_reach) || 0;
+        const freq = Number(r.curr_frequency_avg) || 0;
+        const prevSpend = Number(r.prev_spend) || 0;
+        const prevConvs = Number(r.prev_conversations) || 0;
+        const cpc = currConvs > 0 ? currSpend / currConvs : 0;
+        const prevCpc = prevConvs > 0 ? prevSpend / prevConvs : 0;
+
+        let fatigue_level: AdMonitoringRow['fatigue_level'] = 'ok';
+        if (freq >= 5) fatigue_level = 'saturated';
+        else if (freq >= 3.5) fatigue_level = 'warning';
+
+        let health: AdMonitoringRow['health'] = 'green';
+        if (currSpend > 0 && currConvs === 0) health = 'red';
+        else if (fatigue_level === 'saturated') health = 'red';
+        else if (fatigue_level === 'warning') health = 'yellow';
+        else if (prevCpc > 0 && cpc > prevCpc * 1.5) health = 'red';
+        else if (prevCpc > 0 && cpc > prevCpc * 1.25) health = 'yellow';
+
+        return {
+          ad_id: r.ad_id,
+          campaign_id: r.campaign_id,
+          ad_account_id: r.ad_account_id,
+          name: r.name,
+          effective_status: r.effective_status,
+          creative_id: r.creative_id,
+          thumbnail_url: r.thumbnail_url,
+          image_url: r.image_url,
+          creative_title: r.creative_title,
+          creative_body: r.creative_body,
+          current: {
+            spend: currSpend,
+            conversations: currConvs,
+            impressions: currImpr,
+            clicks: currClicks,
+            reach: currReach,
+            ctr: currImpr > 0 ? (currClicks / currImpr) * 100 : 0,
+            unique_ctr: currReach > 0 ? (currClicks / currReach) * 100 : 0,
+            cpm: currImpr > 0 ? (currSpend / currImpr) * 1000 : 0,
+            cost_per_conversation: cpc,
+            conversion_rate: currClicks > 0 ? (currConvs / currClicks) * 100 : 0,
+            frequency: freq,
+          },
+          delta: {
+            conversations: pctDelta(currConvs, prevConvs),
+            cost_per_conversation: pctDelta(cpc, prevCpc),
+            spend: pctDelta(currSpend, prevSpend),
+          },
+          health,
+          fatigue_level,
+        };
+      });
+      mapped.sort((a, b) => {
+        const aa = a.effective_status === 'ACTIVE' ? 0 : 1;
+        const bb = b.effective_status === 'ACTIVE' ? 0 : 1;
+        if (aa !== bb) return aa - bb;
+        return b.current.spend - a.current.spend;
+      });
+      setRows(mapped);
+      setHasLoaded(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [campaignId, currFrom, currTo, prevFrom, prevTo]);
+
+  useEffect(() => { load(); }, [load]);
+  return { rows, loading, hasLoaded };
+}
