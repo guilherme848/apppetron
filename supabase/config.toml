@@ -15,6 +15,9 @@ verify_jwt = false
 [functions.generate-matcon-report]
 verify_jwt = false
 
+[functions.matcon-report-weekly-cron]
+verify_jwt = false
+
 [functions.meta-sync-all-cron]
 verify_jwt = false
 

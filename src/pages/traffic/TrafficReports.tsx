@@ -1,5 +1,8 @@
-import { useState } from 'react';
-import { FileText, Send, Eye, RefreshCw, Sparkles, Clock, Check, Link as LinkIcon, MessageCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { FileText, Send, Eye, RefreshCw, Sparkles, Clock, Check, Link as LinkIcon, MessageCircle, Settings, History, Power, PowerOff } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +12,7 @@ import { toast } from 'sonner';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { useMatconReports, type MatconClientReportRow, type MatconReport } from '@/hooks/useMatconReports';
+import { useMatconReports, type MatconClientReportRow, type MatconReport, type MatconReportConfig } from '@/hooks/useMatconReports';
 
 function getReportUrl(token: string) {
   return `${window.location.origin}/r/${token}`;
@@ -217,26 +220,183 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ClientReportCard({ row, onGenerate, onPreview, generating, onSendWhatsApp }: {
+function ConfigDialog({ row, open, onOpenChange, onSaved }: {
+  row: MatconClientReportRow | null;
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  onSaved: (client_id: string, patch: Partial<MatconReportConfig>) => Promise<void>;
+}) {
+  const [enabled, setEnabled] = useState(row?.config?.enabled ?? true);
+  const [whatsappTo, setWhatsappTo] = useState(row?.config?.whatsapp_to ?? '');
+  const [emailTo, setEmailTo] = useState(row?.config?.email_to ?? '');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (row) {
+      setEnabled(row.config?.enabled ?? true);
+      setWhatsappTo(row.config?.whatsapp_to ?? '');
+      setEmailTo(row.config?.email_to ?? '');
+    }
+  }, [row]);
+
+  if (!row) return null;
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await onSaved(row.client_id, {
+        enabled,
+        frequency: enabled ? 'weekly' : 'off',
+        whatsapp_to: whatsappTo.trim() || null,
+        email_to: emailTo.trim() || null,
+      });
+      toast.success('Configuração salva');
+      onOpenChange(false);
+    } catch (e: any) {
+      toast.error(`Erro: ${e?.message || 'falha ao salvar'}`);
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Configurar relatório — {row.client_name}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <div className="flex items-center justify-between p-3 bg-muted/30 rounded-md">
+            <div>
+              <Label className="text-sm font-medium">Relatório semanal automático</Label>
+              <p className="text-xs text-muted-foreground mt-1">
+                Gerado todo domingo às 8h. Envio manual via WhatsApp.
+              </p>
+            </div>
+            <Switch checked={enabled} onCheckedChange={setEnabled} />
+          </div>
+
+          <div>
+            <Label className="text-xs">WhatsApp (sobrescreve o cadastrado)</Label>
+            <Input
+              className="mt-1"
+              placeholder={row.contact_phone || 'ex: 48999999999'}
+              value={whatsappTo}
+              onChange={(e) => setWhatsappTo(e.target.value)}
+            />
+            <p className="text-[10px] text-muted-foreground mt-1">Deixe vazio pra usar o telefone cadastrado do cliente.</p>
+          </div>
+
+          <div>
+            <Label className="text-xs">Email (fallback, opcional)</Label>
+            <Input
+              className="mt-1" type="email" placeholder="diretor@lojamatcon.com.br"
+              value={emailTo}
+              onChange={(e) => setEmailTo(e.target.value)}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
+          <Button onClick={save} disabled={saving}>Salvar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function HistoryDialog({ row, open, onOpenChange, loadHistory }: {
+  row: MatconClientReportRow | null;
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  loadHistory: (client_id: string) => Promise<MatconReport[]>;
+}) {
+  const [reports, setReports] = useState<MatconReport[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (row && open) {
+      setLoading(true);
+      loadHistory(row.client_id).then((rs) => { setReports(rs); setLoading(false); });
+    }
+  }, [row, open, loadHistory]);
+
+  if (!row) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
+        <DialogHeader>
+          <DialogTitle>Histórico — {row.client_name}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2">
+          {loading ? (
+            [...Array(4)].map((_, i) => <Skeleton key={i} className="h-16 w-full" />)
+          ) : reports.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">Nenhum relatório gerado ainda.</p>
+          ) : reports.map(r => {
+            const url = getReportUrl(r.share_token);
+            return (
+              <div key={r.id} className="flex items-center gap-3 p-3 border rounded-md hover:bg-muted/30 transition">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <StatusBadge report={r} />
+                    <span className="text-sm font-medium">
+                      {format(new Date(r.period_start), 'dd/MM')} – {format(new Date(r.period_end), 'dd/MM/yyyy')}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    Criado {formatDistanceToNow(new Date(r.created_at), { addSuffix: true, locale: ptBR })}
+                    {r.sent_at && ` · Enviado ${formatDistanceToNow(new Date(r.sent_at), { addSuffix: true, locale: ptBR })}`}
+                    {r.viewed_at && ' · ✓ Visualizado pelo cliente'}
+                  </p>
+                </div>
+                <Button size="sm" variant="outline" className="h-8" asChild>
+                  <a href={url} target="_blank" rel="noreferrer">
+                    <Eye className="h-3 w-3 mr-1" />Abrir
+                  </a>
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ClientReportCard({ row, onGenerate, onPreview, generating, onSendWhatsApp, onOpenConfig, onOpenHistory }: {
   row: MatconClientReportRow;
   onGenerate: () => void;
   onPreview: () => void;
   generating: boolean;
   onSendWhatsApp: () => void;
+  onOpenConfig: () => void;
+  onOpenHistory: () => void;
 }) {
   const r = row.last_report;
-  const phone = onlyDigits(row.contact_phone);
+  const phone = onlyDigits(row.config?.whatsapp_to || row.contact_phone);
+  const isDisabled = row.config?.enabled === false;
   return (
-    <Card>
+    <Card className={cn(isDisabled && 'opacity-60')}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <CardTitle className="text-sm truncate">{row.client_name}</CardTitle>
+            <div className="flex items-center gap-1">
+              <CardTitle className="text-sm truncate">{row.client_name}</CardTitle>
+              {isDisabled && <PowerOff className="h-3 w-3 text-muted-foreground flex-shrink-0" />}
+            </div>
             {row.ad_monthly_budget != null && (
               <p className="text-[10px] text-muted-foreground">Verba: {fmtBRL(row.ad_monthly_budget)}/mês</p>
             )}
           </div>
-          <StatusBadge report={r} />
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={onOpenHistory} title="Histórico">
+              <History className="h-3 w-3" />
+            </Button>
+            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={onOpenConfig} title="Configurar">
+              <Settings className="h-3 w-3" />
+            </Button>
+            <StatusBadge report={r} />
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-2">
@@ -282,9 +442,11 @@ function ClientReportCard({ row, onGenerate, onPreview, generating, onSendWhatsA
 }
 
 export default function TrafficReports() {
-  const { rows, loading, generate, markAsSent } = useMatconReports();
+  const { rows, loading, generate, markAsSent, saveConfig, listHistory } = useMatconReports();
   const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [previewing, setPreviewing] = useState<MatconClientReportRow | null>(null);
+  const [configuringRow, setConfiguringRow] = useState<MatconClientReportRow | null>(null);
+  const [historyRow, setHistoryRow] = useState<MatconClientReportRow | null>(null);
 
   const handleGenerate = async (row: MatconClientReportRow) => {
     setGeneratingId(row.client_id);
@@ -299,8 +461,9 @@ export default function TrafficReports() {
   };
 
   const handleSendWhatsApp = async (row: MatconClientReportRow) => {
-    if (!row.last_report || !row.contact_phone) return;
-    const phone = onlyDigits(row.contact_phone);
+    if (!row.last_report) return;
+    const raw = row.config?.whatsapp_to || row.contact_phone;
+    const phone = onlyDigits(raw);
     if (!phone) { toast.error('Cliente sem telefone válido'); return; }
     const msg = buildWhatsAppMessage(row, row.last_report);
     const url = `https://wa.me/${phone.length === 11 ? '55' + phone : phone}?text=${encodeURIComponent(msg)}`;
@@ -320,12 +483,16 @@ export default function TrafficReports() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Clientes MatCon</p><p className="text-xl font-bold">{rows.length}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Com relatório gerado</p><p className="text-xl font-bold">{withReport}</p></CardContent></Card>
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Clientes ativos</p><p className="text-xl font-bold">{rows.length}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Com relatório</p><p className="text-xl font-bold">{withReport}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Pendentes</p><p className="text-xl font-bold">{rows.length - withReport}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Enviados</p><p className="text-xl font-bold">{rows.filter(r => r.last_report?.status === 'sent' || r.last_report?.status === 'viewed').length}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Visualizados</p><p className="text-xl font-bold">{rows.filter(r => r.last_report?.viewed_at).length}</p></CardContent></Card>
       </div>
+      <p className="text-[10px] text-muted-foreground -mt-3">
+        💡 Relatórios são gerados automaticamente todo domingo às 8h. Envio manual via botão WhatsApp.
+      </p>
 
       {loading && rows.length === 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
@@ -347,6 +514,8 @@ export default function TrafficReports() {
               onGenerate={() => handleGenerate(row)}
               onPreview={() => setPreviewing(row)}
               onSendWhatsApp={() => handleSendWhatsApp(row)}
+              onOpenConfig={() => setConfiguringRow(row)}
+              onOpenHistory={() => setHistoryRow(row)}
             />
           ))}
         </div>
@@ -358,6 +527,20 @@ export default function TrafficReports() {
         open={!!previewing}
         onOpenChange={(o) => !o && setPreviewing(null)}
         onSendWhatsApp={() => previewing && handleSendWhatsApp(previewing)}
+      />
+
+      <ConfigDialog
+        row={configuringRow}
+        open={!!configuringRow}
+        onOpenChange={(o) => !o && setConfiguringRow(null)}
+        onSaved={saveConfig}
+      />
+
+      <HistoryDialog
+        row={historyRow}
+        open={!!historyRow}
+        onOpenChange={(o) => !o && setHistoryRow(null)}
+        loadHistory={listHistory}
       />
     </div>
   );

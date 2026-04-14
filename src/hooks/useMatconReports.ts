@@ -53,6 +53,14 @@ export interface MatconReport {
   created_at: string;
 }
 
+export interface MatconReportConfig {
+  client_id: string;
+  enabled: boolean;
+  frequency: 'weekly' | 'monthly' | 'off';
+  whatsapp_to: string | null;
+  email_to: string | null;
+}
+
 export interface MatconClientReportRow {
   client_id: string;
   client_name: string;
@@ -60,6 +68,7 @@ export interface MatconClientReportRow {
   ad_account_id: string | null;
   ad_monthly_budget: number | null;
   last_report: MatconReport | null;
+  config: MatconReportConfig | null;
 }
 
 export function useMatconReports(onlyMatCon = true) {
@@ -84,17 +93,20 @@ export function useMatconReports(onlyMatCon = true) {
       });
 
       const clientIds = filtered.map((l: any) => l.accounts.id);
-      const { data: reports } = clientIds.length
-        ? await supabase
-            .from('matcon_reports')
-            .select('*')
-            .in('client_id', clientIds)
-            .order('period_start', { ascending: false })
-        : { data: [] as any[] };
+      const [reportsRes, configsRes] = await Promise.all([
+        clientIds.length
+          ? supabase.from('matcon_reports').select('*').in('client_id', clientIds).order('period_start', { ascending: false })
+          : Promise.resolve({ data: [] as any[] }),
+        clientIds.length
+          ? supabase.from('matcon_report_config').select('*').in('client_id', clientIds)
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
       const latestByClient = new Map<string, MatconReport>();
-      for (const r of reports || []) {
+      for (const r of reportsRes.data || []) {
         if (!latestByClient.has(r.client_id)) latestByClient.set(r.client_id, r as MatconReport);
       }
+      const configByClient = new Map<string, MatconReportConfig>();
+      for (const c of configsRes.data || []) configByClient.set(c.client_id, c as MatconReportConfig);
 
       setRows(filtered.map((l: any) => ({
         client_id: l.accounts.id,
@@ -103,6 +115,7 @@ export function useMatconReports(onlyMatCon = true) {
         ad_account_id: l.ad_account_id,
         ad_monthly_budget: l.accounts.ad_monthly_budget,
         last_report: latestByClient.get(l.accounts.id) || null,
+        config: configByClient.get(l.accounts.id) || null,
       })));
     } finally {
       setLoading(false);
@@ -126,7 +139,25 @@ export function useMatconReports(onlyMatCon = true) {
     await load();
   }, [load]);
 
+  const saveConfig = useCallback(async (client_id: string, patch: Partial<MatconReportConfig>) => {
+    const { error } = await supabase
+      .from('matcon_report_config')
+      .upsert({ client_id, ...patch, updated_at: new Date().toISOString() }, { onConflict: 'client_id' });
+    if (error) throw error;
+    await load();
+  }, [load]);
+
+  const listHistory = useCallback(async (client_id: string): Promise<MatconReport[]> => {
+    const { data } = await supabase
+      .from('matcon_reports')
+      .select('*')
+      .eq('client_id', client_id)
+      .order('period_start', { ascending: false })
+      .limit(50);
+    return (data || []) as MatconReport[];
+  }, []);
+
   useEffect(() => { load(); }, [load]);
 
-  return { rows, loading, refresh: load, generate, markAsSent };
+  return { rows, loading, refresh: load, generate, markAsSent, saveConfig, listHistory };
 }
