@@ -22,6 +22,7 @@ export interface CampaignMetrics {
   cpl: number;
   whatsapp_conversations: number;
   messaging_replies: number;
+  cost_per_conversation: number;
 }
 
 export interface ClientMonitoringRow {
@@ -32,7 +33,7 @@ export interface ClientMonitoringRow {
   niche: string | null;
   current: CampaignMetrics;
   previous: CampaignMetrics;
-  delta: { spend: number; leads: number; cpl: number }; // percentage change
+  delta: { spend: number; leads: number; cpl: number; conversations: number; cost_per_conversation: number };
   health: 'green' | 'yellow' | 'red';
   last_sync_at: string | null;
 }
@@ -45,14 +46,14 @@ export interface CampaignMonitoringRow {
   daily_budget: number | null;
   current: CampaignMetrics;
   previous: CampaignMetrics;
-  delta: { spend: number; leads: number; cpl: number };
+  delta: { spend: number; leads: number; cpl: number; conversations: number; cost_per_conversation: number };
   health: 'green' | 'yellow' | 'red';
 }
 
 const FIXED_DAYS: Partial<Record<Period, number>> = { '1d': 1, '7d': 7, '30d': 30, '90d': 90 };
 
 function emptyMetrics(): CampaignMetrics {
-  return { spend: 0, leads: 0, impressions: 0, clicks: 0, ctr: 0, cpl: 0, whatsapp_conversations: 0, messaging_replies: 0 };
+  return { spend: 0, leads: 0, impressions: 0, clicks: 0, ctr: 0, cpl: 0, whatsapp_conversations: 0, messaging_replies: 0, cost_per_conversation: 0 };
 }
 
 function sumMetrics(rows: Array<{ metrics_json: any }>): CampaignMetrics {
@@ -68,6 +69,7 @@ function sumMetrics(rows: Array<{ metrics_json: any }>): CampaignMetrics {
   }
   m.ctr = m.impressions > 0 ? (m.clicks / m.impressions) * 100 : 0;
   m.cpl = m.leads > 0 ? m.spend / m.leads : 0;
+  m.cost_per_conversation = m.whatsapp_conversations > 0 ? m.spend / m.whatsapp_conversations : 0;
   return m;
 }
 
@@ -78,14 +80,14 @@ function pctDelta(curr: number, prev: number): number {
 
 function scoreHealth(curr: CampaignMetrics, prev: CampaignMetrics): 'green' | 'yellow' | 'red' {
   // no activity at all
-  if (curr.spend === 0 && curr.leads === 0) return 'red';
-  // no leads but spending
-  if (curr.spend > 0 && curr.leads === 0) return 'red';
-  // CPL spiked 50%+ vs previous period
-  if (prev.cpl > 0 && curr.cpl > prev.cpl * 1.5) return 'red';
-  // CPL up 25% or leads down 30%
-  if (prev.cpl > 0 && curr.cpl > prev.cpl * 1.25) return 'yellow';
-  if (prev.leads > 0 && curr.leads < prev.leads * 0.7) return 'yellow';
+  if (curr.spend === 0 && curr.whatsapp_conversations === 0) return 'red';
+  // spending without generating conversations
+  if (curr.spend > 0 && curr.whatsapp_conversations === 0) return 'red';
+  // cost per conversation spiked 50%+
+  if (prev.cost_per_conversation > 0 && curr.cost_per_conversation > prev.cost_per_conversation * 1.5) return 'red';
+  // cost per conversation up 25% or conversations down 30%
+  if (prev.cost_per_conversation > 0 && curr.cost_per_conversation > prev.cost_per_conversation * 1.25) return 'yellow';
+  if (prev.whatsapp_conversations > 0 && curr.whatsapp_conversations < prev.whatsapp_conversations * 0.7) return 'yellow';
   return 'green';
 }
 
@@ -212,6 +214,8 @@ export function useMetaMonitoring(period: Period = '7d', autoRefreshMs = 5 * 60 
             spend: pctDelta(current.spend, previous.spend),
             leads: pctDelta(current.leads, previous.leads),
             cpl: pctDelta(current.cpl, previous.cpl),
+            conversations: pctDelta(current.whatsapp_conversations, previous.whatsapp_conversations),
+            cost_per_conversation: pctDelta(current.cost_per_conversation, previous.cost_per_conversation),
           },
           health: scoreHealth(current, previous),
           last_sync_at: lastSyncMap.get(l.ad_account_id) || null,
@@ -290,6 +294,8 @@ export function useMetaMonitoringCampaigns(adAccountId: string | null, period: P
             spend: pctDelta(current.spend, previous.spend),
             leads: pctDelta(current.leads, previous.leads),
             cpl: pctDelta(current.cpl, previous.cpl),
+            conversations: pctDelta(current.whatsapp_conversations, previous.whatsapp_conversations),
+            cost_per_conversation: pctDelta(current.cost_per_conversation, previous.cost_per_conversation),
           },
           health: scoreHealth(current, previous),
         };

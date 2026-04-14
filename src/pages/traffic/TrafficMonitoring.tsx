@@ -74,24 +74,24 @@ function ClientCard({ row, onClick }: { row: ClientMonitoringRow; onClick: () =>
       <CardContent className="space-y-2">
         <div className="grid grid-cols-3 gap-2 text-xs">
           <div>
+            <p className="text-muted-foreground">Conversas</p>
+            <p className="font-semibold text-sm">{fmtInt(row.current.whatsapp_conversations)}</p>
+            <DeltaBadge value={row.delta.conversations} />
+          </div>
+          <div>
+            <p className="text-muted-foreground">Custo/conv</p>
+            <p className="font-semibold text-sm">{row.current.whatsapp_conversations > 0 ? fmtBRL(row.current.cost_per_conversation) : '—'}</p>
+            <DeltaBadge value={row.delta.cost_per_conversation} invert />
+          </div>
+          <div>
             <p className="text-muted-foreground">Gasto</p>
             <p className="font-semibold text-sm">{fmtBRL(row.current.spend)}</p>
             <DeltaBadge value={row.delta.spend} />
           </div>
-          <div>
-            <p className="text-muted-foreground">Leads</p>
-            <p className="font-semibold text-sm">{fmtInt(row.current.leads)}</p>
-            <DeltaBadge value={row.delta.leads} />
-          </div>
-          <div>
-            <p className="text-muted-foreground">CPL</p>
-            <p className="font-semibold text-sm">{row.current.leads > 0 ? fmtBRL(row.current.cpl) : '—'}</p>
-            <DeltaBadge value={row.delta.cpl} invert />
-          </div>
         </div>
-        {row.current.whatsapp_conversations > 0 && (
+        {row.current.leads > 0 && (
           <p className="text-xs text-muted-foreground pt-1 border-t">
-            {fmtInt(row.current.whatsapp_conversations)} conversas WhatsApp
+            {fmtInt(row.current.leads)} leads · CPL {fmtBRL(row.current.cpl)}
           </p>
         )}
       </CardContent>
@@ -127,9 +127,10 @@ function CampaignDrawer({ client, period, onClose }: { client: ClientMonitoringR
               <TableHeader>
                 <TableRow>
                   <TableHead>Campanha</TableHead>
+                  <TableHead className="text-right">Conversas</TableHead>
+                  <TableHead className="text-right">Custo/conv</TableHead>
                   <TableHead className="text-right">Gasto</TableHead>
                   <TableHead className="text-right">Leads</TableHead>
-                  <TableHead className="text-right">CPL</TableHead>
                   <TableHead className="text-right">CTR</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
@@ -157,16 +158,20 @@ function CampaignRow({ c }: { c: CampaignMonitoringRow }) {
         </div>
       </TableCell>
       <TableCell className="text-right">
+        <div className="font-medium">{fmtInt(c.current.whatsapp_conversations)}</div>
+        <DeltaBadge value={c.delta.conversations} />
+      </TableCell>
+      <TableCell className="text-right">
+        <div className="font-medium">{c.current.whatsapp_conversations > 0 ? fmtBRL(c.current.cost_per_conversation) : '—'}</div>
+        <DeltaBadge value={c.delta.cost_per_conversation} invert />
+      </TableCell>
+      <TableCell className="text-right">
         <div className="font-medium">{fmtBRL(c.current.spend)}</div>
         <DeltaBadge value={c.delta.spend} />
       </TableCell>
-      <TableCell className="text-right">
-        <div className="font-medium">{fmtInt(c.current.leads)}</div>
-        <DeltaBadge value={c.delta.leads} />
-      </TableCell>
-      <TableCell className="text-right">
-        <div className="font-medium">{c.current.leads > 0 ? fmtBRL(c.current.cpl) : '—'}</div>
-        <DeltaBadge value={c.delta.cpl} invert />
+      <TableCell className="text-right text-sm">
+        {fmtInt(c.current.leads)}
+        {c.current.leads > 0 && <div className="text-xs text-muted-foreground">{fmtBRL(c.current.cpl)} CPL</div>}
       </TableCell>
       <TableCell className="text-right text-sm">{fmtPct(c.current.ctr)}</TableCell>
       <TableCell>
@@ -216,14 +221,19 @@ export default function TrafficMonitoring() {
 
   const totals = useMemo(() => {
     const base = nicheFilter === 'all' ? rows : rows.filter(r => r.niche === nicheFilter);
-    return base.reduce((acc, r) => {
+    const t = base.reduce((acc, r) => {
       acc.spend += r.current.spend;
+      acc.conversations += r.current.whatsapp_conversations;
       acc.leads += r.current.leads;
       acc.red += r.health === 'red' ? 1 : 0;
       acc.yellow += r.health === 'yellow' ? 1 : 0;
       acc.total += 1;
       return acc;
-    }, { spend: 0, leads: 0, red: 0, yellow: 0, total: 0 });
+    }, { spend: 0, conversations: 0, leads: 0, red: 0, yellow: 0, total: 0 });
+    return {
+      ...t,
+      cost_per_conversation: t.conversations > 0 ? t.spend / t.conversations : 0,
+    };
   }, [rows, nicheFilter]);
 
   const periodLabel = PERIOD_OPTIONS.find(o => o.value === period)?.label || '';
@@ -253,23 +263,29 @@ export default function TrafficMonitoring() {
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Gasto total ({periodLabel})</p>
+            <p className="text-xs text-muted-foreground">Conversas WhatsApp</p>
+            <p className="text-xl font-bold">{fmtInt(totals.conversations)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground">Custo/conversa</p>
+            <p className="text-xl font-bold">{totals.conversations > 0 ? fmtBRL(totals.cost_per_conversation) : '—'}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground">Gasto ({periodLabel})</p>
             <p className="text-xl font-bold">{fmtBRL(totals.spend)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Leads gerados</p>
-            <p className="text-xl font-bold">{fmtInt(totals.leads)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <AlertTriangle className="h-3 w-3 text-red-500" />Clientes críticos
+              <AlertTriangle className="h-3 w-3 text-red-500" />Críticos
             </p>
             <p className="text-xl font-bold text-red-600">{totals.red}</p>
           </CardContent>
