@@ -243,7 +243,8 @@ export function useMetaMonitoring(period: Period = '7d', autoRefreshMs = 5 * 60 
           .from('ad_account_metrics_daily')
           .select('ad_account_id, date, metrics_json')
           .gte('date', minFrom).lte('date', maxTo)
-          .eq('platform', 'meta'),
+          .eq('platform', 'meta')
+          .limit(100000),
         supabase
           .from('meta_ad_account_snapshots')
           .select('ad_account_id, fetched_at, amount_spent, spend_cap, available_balance')
