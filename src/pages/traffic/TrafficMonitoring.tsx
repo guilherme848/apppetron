@@ -264,13 +264,12 @@ export default function TrafficMonitoring() {
       acc.red += r.health === 'red' ? 1 : 0;
       acc.yellow += r.health === 'yellow' ? 1 : 0;
       acc.total += 1;
-      acc.lowRunway += r.balance.runway_days !== null && r.balance.runway_days <= 7 ? 1 : 0;
-      if (r.balance.available_balance != null && r.balance.available_balance > 0) {
-        acc.totalBalance += r.balance.available_balance;
-        acc.accountsWithBalance += 1;
+      if (r.balance.runway_days !== null) {
+        if (r.balance.runway_days <= 7) acc.runwayCritical += 1;
+        else if (r.balance.runway_days <= 14) acc.runwayLow += 1;
       }
       return acc;
-    }, { spend: 0, conversations: 0, leads: 0, red: 0, yellow: 0, total: 0, lowRunway: 0, totalBalance: 0, accountsWithBalance: 0 });
+    }, { spend: 0, conversations: 0, leads: 0, red: 0, yellow: 0, total: 0, runwayCritical: 0, runwayLow: 0 });
     return {
       ...t,
       cost_per_conversation: t.conversations > 0 ? t.spend / t.conversations : 0,
@@ -323,20 +322,18 @@ export default function TrafficMonitoring() {
             <p className="text-xl font-bold">{fmtBRL(totals.spend)}</p>
           </CardContent>
         </Card>
-        <Card className={cn(totals.lowRunway > 0 && 'border-red-500/50')}>
+        <Card className={cn(totals.runwayCritical > 0 && 'border-red-500/50')}>
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <Wallet className="h-3 w-3" />Saldo pré-pago
+              <Wallet className="h-3 w-3" />Saldo crítico
             </p>
-            <p className="text-xl font-bold">
-              {totals.accountsWithBalance > 0 ? fmtBRL(totals.totalBalance) : '—'}
+            <p className={cn('text-xl font-bold', totals.runwayCritical > 0 && 'text-red-600')}>
+              {totals.runwayCritical}
             </p>
             <p className="text-[10px] text-muted-foreground mt-0.5">
-              {totals.accountsWithBalance}/{totals.total} conta{totals.total === 1 ? '' : 's'}
+              {totals.runwayCritical > 0 ? 'conta(s) com runway ≤7d' : 'Nenhuma conta em risco'}
+              {totals.runwayLow > 0 && ` · +${totals.runwayLow} c/ ≤14d`}
             </p>
-            {totals.lowRunway > 0 && (
-              <p className="text-[10px] text-red-600 mt-0.5">{totals.lowRunway} c/ runway ≤7d</p>
-            )}
           </CardContent>
         </Card>
         <Card>
