@@ -550,7 +550,7 @@ export default function TrafficMonitoring() {
       if (typeof va === 'string') return va.localeCompare(vb as string) * mult;
       return ((va as number) - (vb as number)) * mult;
     });
-  }, [rows, search, healthFilter, viewMode, sortKey, sortDir]);
+  }, [rows, search, healthFilter, nicheFilter, viewMode, sortKey, sortDir]);
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
