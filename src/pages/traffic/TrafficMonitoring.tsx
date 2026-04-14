@@ -109,11 +109,11 @@ function ClientsTable({
             <SortHead label="Custo/conv" active={sortKey === 'cost_per_conversation'} dir={sortDir} onClick={() => onSort('cost_per_conversation')} />
             <SortHead label="Conversas" active={sortKey === 'conversations'} dir={sortDir} onClick={() => onSort('conversations')} />
             <SortHead label="Conv. clique→msg" active={sortKey === 'conversion_rate'} dir={sortDir} onClick={() => onSort('conversion_rate')} />
-            <SortHead label="Investido" active={sortKey === 'spend'} dir={sortDir} onClick={() => onSort('spend')} />
-            <SortHead label="CTR Único" active={sortKey === 'unique_ctr'} dir={sortDir} onClick={() => onSort('unique_ctr')} />
-            <SortHead label="CPM" active={sortKey === 'cpm'} dir={sortDir} onClick={() => onSort('cpm')} />
-            <SortHead label="Alcance" active={sortKey === 'reach'} dir={sortDir} onClick={() => onSort('reach')} />
             <SortHead label="Impressões" active={sortKey === 'impressions'} dir={sortDir} onClick={() => onSort('impressions')} />
+            <SortHead label="Alcance" active={sortKey === 'reach'} dir={sortDir} onClick={() => onSort('reach')} />
+            <SortHead label="CPM" active={sortKey === 'cpm'} dir={sortDir} onClick={() => onSort('cpm')} />
+            <SortHead label="CTR Único" active={sortKey === 'unique_ctr'} dir={sortDir} onClick={() => onSort('unique_ctr')} />
+            <SortHead label="Investido" active={sortKey === 'spend'} dir={sortDir} onClick={() => onSort('spend')} />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -147,14 +147,14 @@ function ClientsTable({
               <TableCell className="text-right">
                 <div className="font-medium">{fmtPct(r.current.conversion_rate)}</div>
               </TableCell>
+              <TableCell className="text-right text-sm">{fmtInt(r.current.impressions)}</TableCell>
+              <TableCell className="text-right text-sm">{fmtInt(r.current.reach)}</TableCell>
+              <TableCell className="text-right text-sm">{fmtBRL(r.current.cpm)}</TableCell>
+              <TableCell className="text-right text-sm">{fmtPct(r.current.unique_ctr)}</TableCell>
               <TableCell className="text-right">
                 <div className="font-medium">{fmtBRL(r.current.spend)}</div>
                 <DeltaBadge value={r.delta.spend} />
               </TableCell>
-              <TableCell className="text-right text-sm">{fmtPct(r.current.unique_ctr)}</TableCell>
-              <TableCell className="text-right text-sm">{fmtBRL(r.current.cpm)}</TableCell>
-              <TableCell className="text-right text-sm">{fmtInt(r.current.reach)}</TableCell>
-              <TableCell className="text-right text-sm">{fmtInt(r.current.impressions)}</TableCell>
             </TableRow>
           ))}
         </TableBody>
