@@ -38,6 +38,7 @@ import {
   Contact,
   Activity,
   Bell,
+  ExternalLink,
   Trophy,
   Wrench,
   Calculator,
@@ -192,14 +193,25 @@ export const routeRegistry: RouteDefinition[] = [
   // SALES MODULE (CRM de Vendas)
   // ============================================
   {
-    id: 'sales.dashboard',
+    id: 'sales.crm',
     path: '/sales',
+    label: 'CRM',
+    category: CATEGORIES.DASHBOARD,
+    module: MODULES.SALES,
+    permissions: ['view'],
+    icon: ExternalLink,
+    order: 0,
+  },
+  {
+    id: 'sales.dashboard',
+    path: '/sales/dashboard',
     label: 'Dashboard',
     category: CATEGORIES.DASHBOARD,
     module: MODULES.SALES,
     permissions: ['view'],
     icon: BarChart3,
-    order: 0,
+    order: 1,
+    hideInMenu: true,
   },
   {
     id: 'sales.funnels',
@@ -209,7 +221,8 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.SALES,
     permissions: ['view', 'edit'],
     icon: GitMerge,
-    order: 1,
+    order: 2,
+    hideInMenu: true,
   },
   {
     id: 'sales.activities',
@@ -219,7 +232,8 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.SALES,
     permissions: ['view', 'edit'],
     icon: Activity,
-    order: 2,
+    order: 3,
+    hideInMenu: true,
   },
   {
     id: 'sales.contacts',
@@ -229,7 +243,8 @@ export const routeRegistry: RouteDefinition[] = [
     module: MODULES.SALES,
     permissions: ['view', 'edit'],
     icon: Contact,
-    order: 3,
+    order: 4,
+    hideInMenu: true,
   },
   {
     id: 'sales.scoring',
@@ -273,6 +288,7 @@ export const routeRegistry: RouteDefinition[] = [
     permissions: ['view', 'edit'],
     icon: Trophy,
     order: 8,
+    hideInMenu: true,
   },
   {
     id: 'sales.settings',

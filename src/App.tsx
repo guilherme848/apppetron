@@ -135,6 +135,7 @@ const ReportPublicView = lazy(() => import("./pages/public/ReportPublicView"));
 
 // Sales CRM module
 const SalesDashboard = lazy(() => import("./pages/sales/SalesDashboard"));
+const SalesCrmRedirect = lazy(() => import("./pages/sales/SalesCrmRedirect"));
 const SalesFunnelsPage = lazy(() => import("./pages/sales/SalesFunnelsPage"));
 const SalesActivities = lazy(() => import("./pages/sales/SalesActivities"));
 const SalesContacts = lazy(() => import("./pages/sales/SalesContacts"));
@@ -292,7 +293,8 @@ const App = () => (
                         <Route path="/rh/candidatos/:id" element={<RhApplicationDetail />} />
 
                         {/* Sales CRM routes */}
-                        <Route path="/sales" element={<SalesDashboard />} />
+                        <Route path="/sales" element={<SalesCrmRedirect />} />
+                        <Route path="/sales/dashboard" element={<SalesDashboard />} />
                         <Route path="/sales/funnels" element={<SalesFunnelsPage />} />
                         <Route path="/sales/activities" element={<SalesActivities />} />
                         <Route path="/sales/contacts" element={<SalesContacts />} />
