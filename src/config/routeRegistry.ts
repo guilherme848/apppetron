@@ -502,6 +502,16 @@ export const routeRegistry: RouteDefinition[] = [
     order: 0.6,
   },
   {
+    id: 'traffic.multi_contas',
+    path: '/traffic/multi-contas',
+    label: 'Painel Multi-Contas',
+    category: CATEGORIES.ANALYTICS,
+    module: MODULES.TRAFFIC,
+    permissions: ['view'],
+    icon: Activity,
+    order: 0.8,
+  },
+  {
     id: 'traffic.overview',
     path: '/traffic/overview',
     label: 'Dashboard Multi-Contas',

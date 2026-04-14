@@ -23,85 +23,151 @@ interface SettingsCategory {
 
 const SETTINGS_CATEGORIES: SettingsCategory[] = [
   {
+    id: 'empresa',
+    label: 'Empresa',
+    description: 'Identidade visual, dados da agência e configurações gerais.',
+    icon: Settings,
+    items: [
+      { id: 'identidade', label: 'Identidade Visual', path: '/settings/empresa/identidade' },
+      { id: 'dados-empresa', label: 'Dados da Empresa', path: '/settings/empresa/dados' },
+      { id: 'config-geral', label: 'Configurações Gerais', path: '/settings/empresa/geral' },
+    ],
+  },
+  {
     id: 'access',
     label: 'Gestão e Acessos',
-    description: 'Gerencie pessoas, funções e o que cada um pode ver e fazer no sistema.',
+    description: 'Pessoas, cargos e permissões.',
     icon: Users,
     items: [
       { id: 'roles', label: 'Cargos', path: '/settings/access/roles' },
       { id: 'users', label: 'Usuários', path: '/settings/access/users' },
-      { id: 'permissions', label: 'Acessos', path: '/settings/access/permissions' },
+      { id: 'permissions', label: 'Acessos & Permissões', path: '/settings/access/permissions' },
     ],
   },
   {
     id: 'plans',
     label: 'Planos e Serviços',
-    description: 'Defina os planos e tudo que cada plano inclui (entregáveis e quantidades).',
+    description: 'Planos comerciais, entregáveis, nichos e pipeline.',
     icon: Layers,
     items: [
-      { id: 'services', label: 'Serviços/Planos', path: '/settings/plans/services' },
-      { id: 'deliverables', label: 'Entregas do Plano', path: '/settings/plans/deliverables' },
-    ],
-  },
-  {
-    id: 'general',
-    label: 'Cadastros Gerais',
-    description: 'Cadastros base usados em todo o sistema.',
-    icon: Settings,
-    items: [
-      { id: 'pipeline', label: 'Pipeline', path: '/settings/general/pipeline' },
+      { id: 'services', label: 'Planos', path: '/settings/plans/services' },
+      { id: 'deliverables', label: 'Entregáveis', path: '/settings/plans/deliverables' },
       { id: 'niches', label: 'Nichos', path: '/settings/general/niches' },
-      { id: 'traffic-playbook', label: 'Playbook de Tráfego', path: '/settings/traffic/playbook' },
+      { id: 'pipeline', label: 'Pipeline de planos', path: '/settings/general/pipeline' },
     ],
   },
   {
-    id: 'integrations',
-    label: 'Integrações',
-    description: 'Conecte com serviços externos como Meta Ads.',
-    icon: Settings,
-    items: [
-      { id: 'meta-ads', label: 'Meta Ads', path: '/settings/integrations/meta' },
-      { id: 'traffic-analytics', label: 'Painel Multi-Contas', path: '/settings/traffic/analytics' },
-    ],
-  },
-  {
-    id: 'sales',
-    label: 'Vendas (CRM)',
-    description: 'Configure funis, scoring, templates e automações de vendas.',
+    id: 'crm',
+    label: 'CRM e Vendas',
+    description: 'Funis, scoring, templates, cadências e motivos de perda.',
     icon: TrendingUp,
     items: [
       { id: 'sales-funnels', label: 'Funis e Etapas', path: '/settings/sales/funnels' },
       { id: 'sales-scoring', label: 'Lead Scoring', path: '/settings/sales/scoring' },
       { id: 'sales-templates', label: 'Templates', path: '/settings/sales/templates' },
       { id: 'sales-automations', label: 'Automações', path: '/settings/sales/automations' },
+      { id: 'crm-loss-reasons', label: 'Motivos de perda', path: '/settings/crm/loss-reasons' },
+      { id: 'crm-cadences', label: 'Cadências', path: '/settings/crm/cadences' },
+    ],
+  },
+  {
+    id: 'trafego',
+    label: 'Tráfego Pago',
+    description: 'Playbook, rotinas, ciclos, metas e regras de alertas.',
+    icon: TrendingUp,
+    items: [
+      { id: 'traffic-playbook', label: 'Playbook', path: '/settings/traffic/playbook' },
+      { id: 'traffic-routines', label: 'Rotinas', path: '/settings/traffic/routines' },
+      { id: 'traffic-cycles', label: 'Ciclos', path: '/settings/traffic/cycles' },
+      { id: 'traffic-metas', label: 'Metas por nicho', path: '/settings/trafego/metas' },
+      { id: 'traffic-rules-link', label: 'Regras de alertas', path: '/traffic/alerts' },
+      { id: 'traffic-catalog', label: 'Catálogo de métricas', path: '/settings/trafego/catalogo' },
+    ],
+  },
+  {
+    id: 'conteudo',
+    label: 'Conteúdo',
+    description: 'Etapas de produção, responsabilidades e templates.',
+    icon: FilePen,
+    items: [
+      { id: 'content-stages', label: 'Etapas e responsabilidades', path: '/settings/conteudo/etapas' },
+      { id: 'content-templates', label: 'Templates de briefing', path: '/settings/conteudo/templates' },
     ],
   },
   {
     id: 'cs',
     label: 'Customer Success',
-    description: 'Configure os processos de onboarding e atendimento.',
+    description: 'Onboarding, saúde do cliente, churn e NPS.',
     icon: HeartHandshake,
     items: [
       { id: 'onboarding', label: 'Onboarding', path: '', isGroup: true },
       { id: 'petron-sequences', label: 'Sequências', path: '/settings/cs/onboarding/sequences', parent: 'onboarding' },
       { id: 'petron-activities', label: 'Atividades', path: '/settings/cs/onboarding/activities', parent: 'onboarding' },
       { id: 'onboarding-questions', label: 'Perguntas', path: '/settings/cs/onboarding/questions', parent: 'onboarding' },
+      { id: 'cs-health', label: 'Saúde do cliente', path: '/settings/cs/saude' },
+      { id: 'cs-churn', label: 'Motivos de churn', path: '/settings/cs/motivos-churn' },
+      { id: 'cs-nps', label: 'Configuração de NPS', path: '/settings/cs/nps' },
+      { id: 'cs-playbook', label: 'Playbook CS', path: '/settings/cs/playbook' },
+    ],
+  },
+  {
+    id: 'rh',
+    label: 'Recrutamento (RH)',
+    description: 'Vagas, pipeline de candidatos e formulários.',
+    icon: Briefcase,
+    items: [
+      { id: 'rh-cargos', label: 'Job profiles', path: '/settings/rh/cargos' },
+      { id: 'rh-pipeline', label: 'Pipeline de candidatos', path: '/settings/rh/pipeline' },
+      { id: 'rh-formularios', label: 'Formulários', path: '/settings/rh/formularios' },
+    ],
+  },
+  {
+    id: 'integrations',
+    label: 'Integrações',
+    description: 'Meta Ads, contratos, IA e demais conexões.',
+    icon: GitMerge,
+    items: [
+      { id: 'meta-ads', label: 'Meta Ads', path: '/settings/integrations/meta' },
+      { id: 'contracts', label: 'Contratos (Autentique/ClickSign)', path: '/settings/integracoes/contratos' },
+      { id: 'ai', label: 'Anthropic / IA', path: '/settings/integracoes/ia' },
+      { id: 'matflow', label: 'MatFlow', path: '/settings/integracoes/matflow' },
+    ],
+  },
+  {
+    id: 'sistema',
+    label: 'Sistema',
+    description: 'Auditoria, backup e logs.',
+    icon: Shield,
+    items: [
+      { id: 'audit', label: 'Auditoria', path: '/settings/sistema/auditoria' },
+      { id: 'backup', label: 'Backup', path: '/settings/sistema/backup' },
+      { id: 'logs', label: 'Logs', path: '/settings/sistema/logs' },
     ],
   },
 ];
 
 function getCategoryIcon(categoryId: string) {
   switch (categoryId) {
+    case 'empresa':
+      return Settings;
     case 'access':
       return Users;
     case 'plans':
       return Layers;
-    case 'general':
-      return Settings;
-    case 'sales':
+    case 'crm':
       return TrendingUp;
+    case 'trafego':
+      return Zap;
+    case 'conteudo':
+      return FilePen;
     case 'cs':
       return HeartHandshake;
+    case 'rh':
+      return Briefcase;
+    case 'integrations':
+      return GitMerge;
+    case 'sistema':
+      return Shield;
     default:
       return Settings;
   }

@@ -98,6 +98,7 @@ const OnboardingQuestionsPage = lazy(() => import("./pages/settings/OnboardingQu
 const OnboardingActivitiesConfigPage = lazy(() => import("./pages/settings/OnboardingActivitiesConfigPage"));
 const PetronOnboardingActivitiesPage = lazy(() => import("./pages/settings/PetronOnboardingActivitiesPage"));
 const PetronOnboardingSequencesPage = lazy(() => import("./pages/settings/PetronOnboardingSequencesPage"));
+const SettingsComingSoon = lazy(() => import("./pages/settings/SettingsComingSoon"));
 const SalesSettingsPage = lazy(() => import("./pages/sales/SalesSettingsPage"));
 const LeadScoringPage = lazy(() => import("./pages/sales/LeadScoringPage"));
 const SalesTemplatesPage = lazy(() => import("./pages/sales/SalesTemplatesPage"));
@@ -241,6 +242,7 @@ const App = () => (
                         <Route path="/traffic/monitoring" element={<TrafficMonitoring />} />
                         <Route path="/traffic/reports" element={<TrafficReports />} />
                         <Route path="/traffic/alerts" element={<TrafficAlerts />} />
+                        <Route path="/traffic/multi-contas" element={<TrafficAnalyticsSettingsTab />} />
                         <Route path="/traffic/accounts/:id" element={<TrafficAccountDetail />} />
                         <Route path="/traffic/benchmarks" element={<TrafficBenchmarks />} />
                         <Route path="/traffic/optimizations" element={<TrafficOptimizationsPage />} />
@@ -327,6 +329,44 @@ const App = () => (
                           <Route path="cs/onboarding/activities" element={<OnboardingActivitiesConfigPage />} />
                           <Route path="cs/onboarding/sequences" element={<PetronOnboardingSequencesPage />} />
                           <Route path="cs/onboarding/questions" element={<OnboardingQuestionsPage />} />
+
+                          {/* Empresa */}
+                          <Route path="empresa/identidade" element={<SettingsComingSoon title="Identidade Visual" description="Configure a marca da Petron exibida em relatórios e materiais para clientes." features={["Logo principal e variações","Paleta de cores oficial","Tipografia padrão","Aplicação em PDFs e relatórios"]} />} />
+                          <Route path="empresa/dados" element={<SettingsComingSoon title="Dados da Empresa" description="Razão social, CNPJ, endereço e dados de contato usados em contratos." features={["Razão social e nome fantasia","CNPJ, IE, IM","Endereço completo","Telefones e emails oficiais"]} />} />
+                          <Route path="empresa/geral" element={<SettingsComingSoon title="Configurações Gerais" description="Preferências gerais da agência: fuso horário, idioma, formato de data e moeda." />} />
+
+                          {/* CRM */}
+                          <Route path="crm/loss-reasons" element={<SettingsComingSoon title="Motivos de Perda" description="Cadastre e categorize os motivos de perda de oportunidades no CRM." features={["Cadastro de motivos","Agrupamento por categoria","Estatísticas de uso","Sugestões via IA"]} tableName="crm_loss_reasons" />} />
+                          <Route path="crm/cadences" element={<SettingsComingSoon title="Cadências de CRM" description="Configure sequências automáticas de follow-up para leads no funil." features={["Templates de cadência","Disparos por etapa","WhatsApp + Email + Tarefa","Métricas de conversão"]} tableName="crm_cadences" />} />
+
+                          {/* Tráfego Pago */}
+                          <Route path="trafego/metas" element={<SettingsComingSoon title="Metas por Nicho" description="Defina alvos de CPM, CTR, CPL e custo por conversa por nicho. Usados nos semáforos e benchmarks." tableName="traffic_metric_targets" />} />
+                          <Route path="trafego/catalogo" element={<SettingsComingSoon title="Catálogo de Métricas" description="Métricas suportadas no sistema de tráfego, com fórmula e disponibilidade por plataforma." tableName="traffic_metric_catalog" />} />
+
+                          {/* Conteúdo */}
+                          <Route path="conteudo/etapas" element={<SettingsComingSoon title="Etapas e Responsabilidades" description="Configure as etapas do fluxo de produção de conteúdo e quem é responsável em cada uma." tableName="content_stage_responsibilities" />} />
+                          <Route path="conteudo/templates" element={<SettingsComingSoon title="Templates de Briefing" description="Templates pré-configurados para iniciar briefings de posts e materiais." />} />
+
+                          {/* CS extras */}
+                          <Route path="cs/saude" element={<SettingsComingSoon title="Saúde do Cliente" description="Pesos dos componentes do health score (engajamento, NPS, atraso de pagamento etc)." tableName="cs_health_weights" />} />
+                          <Route path="cs/motivos-churn" element={<SettingsComingSoon title="Motivos de Churn" description="Cadastre e categorize os motivos de cancelamento. Usados em relatórios de retenção." tableName="cs_cancellation_reasons" />} />
+                          <Route path="cs/nps" element={<SettingsComingSoon title="Configuração de NPS" description="Defina periodicidade, copy do convite, tags de classificação e canais de envio." tableName="cs_nps_surveys" />} />
+                          <Route path="cs/playbook" element={<SettingsComingSoon title="Playbook CS" description="Tarefas recorrentes do Customer Success com gatilhos automáticos." tableName="cs_playbooks" />} />
+
+                          {/* RH */}
+                          <Route path="rh/cargos" element={<SettingsComingSoon title="Job Profiles" description="Perfis de cargo usados como template para abertura de vagas." tableName="hr_job_profiles" />} />
+                          <Route path="rh/pipeline" element={<SettingsComingSoon title="Pipeline de Candidatos" description="Etapas customizadas do funil de recrutamento." tableName="hr_pipeline_stages" />} />
+                          <Route path="rh/formularios" element={<SettingsComingSoon title="Formulários" description="Templates de formulários enviados aos candidatos." tableName="hr_forms" />} />
+
+                          {/* Integrações extras */}
+                          <Route path="integracoes/contratos" element={<SettingsComingSoon title="Contratos (Autentique / ClickSign)" description="Conecte os provedores de assinatura digital usados nos contratos da Petron." features={["Conta Autentique","Conta ClickSign","Templates padrão","Webhooks de status"]} />} />
+                          <Route path="integracoes/ia" element={<SettingsComingSoon title="Anthropic / IA" description="Configure chave de API, modelo padrão e limites de uso da Anthropic (Claude)." features={["API Key","Modelo padrão","Limite de tokens/mês","Logs de uso"]} />} />
+                          <Route path="integracoes/matflow" element={<SettingsComingSoon title="MatFlow" description="Conexão com o SaaS MatFlow para sincronizar leads e fechamentos com o CRM da Petron." features={["Webhook bidirecional","Mapeamento de campos","Sincronização de status","Atribuição de receita"]} />} />
+
+                          {/* Sistema */}
+                          <Route path="sistema/auditoria" element={<SettingsComingSoon title="Auditoria" description="Trilha de quem fez o quê e quando no sistema." />} />
+                          <Route path="sistema/backup" element={<SettingsComingSoon title="Backup" description="Política de backup automático e exportação manual de dados." />} />
+                          <Route path="sistema/logs" element={<SettingsComingSoon title="Logs" description="Logs técnicos do sistema para debug e suporte." />} />
                         </Route>
 
                         <Route path="*" element={<NotFound />} />
