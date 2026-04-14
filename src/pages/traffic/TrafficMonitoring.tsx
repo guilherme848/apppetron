@@ -1,7 +1,10 @@
 import { useState, useMemo } from 'react';
-import { RefreshCw, TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle2, Search, ChevronRight, Wallet, LayoutGrid, Table as TableIcon, ArrowUp, ArrowDown } from 'lucide-react';
+import { RefreshCw, TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle2, Search, ChevronRight, Wallet, LayoutGrid, Table as TableIcon, ArrowUp, ArrowDown, Scan, BarChart3, Bookmark, BookmarkPlus, X as XIcon } from 'lucide-react';
 import { Sparkline } from '@/components/traffic/Sparkline';
 import { AlertsFeed } from '@/components/traffic/AlertsFeed';
+import { BenchmarkScatter } from '@/components/traffic/BenchmarkScatter';
+import { TriageMode } from '@/components/traffic/TriageMode';
+import { useSavedViews } from '@/hooks/useSavedViews';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -604,6 +607,11 @@ export default function TrafficMonitoring() {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [sortKey, setSortKey] = useState<SortKey>('health');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const [triageOpen, setTriageOpen] = useState(false);
+  const [benchmarkOpen, setBenchmarkOpen] = useState(false);
+  const [saveViewOpen, setSaveViewOpen] = useState(false);
+  const [newViewName, setNewViewName] = useState('');
+  const { views, saveView, deleteView } = useSavedViews();
 
   const { rows, loading, error, lastRefresh, refresh } = useMetaMonitoring(period);
   const { byAccount: campaignsByAccount, loading: campaignsLoading } = useCampaignMonitoringPrefetch(period);
@@ -703,6 +711,18 @@ export default function TrafficMonitoring() {
               ))}
             </SelectContent>
           </Select>
+          <Button
+            variant="outline" size="sm" onClick={() => setTriageOpen(true)}
+            title="Modo triagem matinal — só vermelhos/amarelos"
+          >
+            <Scan className="h-4 w-4 mr-1" />Triagem
+          </Button>
+          <Button
+            variant="outline" size="sm" onClick={() => setBenchmarkOpen(true)}
+            title="Benchmark interno"
+          >
+            <BarChart3 className="h-4 w-4 mr-1" />Benchmark
+          </Button>
           <div className="inline-flex rounded-md border bg-muted/20">
             <Button
               variant={viewMode === 'grid' ? 'secondary' : 'ghost'} size="sm"
@@ -811,6 +831,49 @@ export default function TrafficMonitoring() {
         </Select>
       </div>
 
+      {/* Saved views */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-xs text-muted-foreground flex items-center gap-1">
+          <Bookmark className="h-3 w-3" />Visões salvas:
+        </span>
+        {views.length === 0 && <span className="text-xs text-muted-foreground italic">nenhuma</span>}
+        {views.map(v => (
+          <div key={v.id} className="inline-flex items-center gap-0.5 bg-muted/40 rounded-full pl-3 pr-1 py-0.5 text-xs">
+            <button
+              onClick={() => {
+                const f = v.filters_json;
+                if (f.period) setPeriod(f.period);
+                if (f.nicheFilter !== undefined) setNicheFilter(f.nicheFilter);
+                if (f.healthFilter) setHealthFilter(f.healthFilter);
+                if (f.search !== undefined) setSearch(f.search);
+                if (f.viewMode) setViewMode(f.viewMode);
+                toast.success(`Visão "${v.name}" aplicada`);
+              }}
+              className="hover:text-primary font-medium"
+            >
+              {v.name}
+            </button>
+            <Button
+              size="icon" variant="ghost" className="h-4 w-4 hover:text-destructive"
+              onClick={async () => {
+                if (confirm(`Excluir visão "${v.name}"?`)) {
+                  await deleteView(v.id);
+                  toast.success('Visão removida');
+                }
+              }}
+            >
+              <XIcon className="h-2.5 w-2.5" />
+            </Button>
+          </div>
+        ))}
+        <Button
+          size="sm" variant="ghost" className="h-7 text-xs"
+          onClick={() => setSaveViewOpen(true)}
+        >
+          <BookmarkPlus className="h-3 w-3 mr-1" />Salvar visão
+        </Button>
+      </div>
+
       {lastRefresh && (
         <p className="text-xs text-muted-foreground">
           Atualizado {formatDistanceToNow(lastRefresh, { addSuffix: true, locale: ptBR })}. Dados sincronizados do Meta a cada 15 minutos.
@@ -857,6 +920,63 @@ export default function TrafficMonitoring() {
         period={period}
         onClose={() => setSelected(null)}
       />
+
+      <TriageMode
+        open={triageOpen}
+        onOpenChange={setTriageOpen}
+        rows={rows.filter(r => nicheFilter === 'all' || r.niche === nicheFilter)}
+        onOpenDetails={(r) => { setTriageOpen(false); setSelected(r); }}
+      />
+
+      <Dialog open={benchmarkOpen} onOpenChange={setBenchmarkOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Benchmark interno
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground">
+              Distribuição de clientes por volume × custo/conversa. Quadrante ideal: muitas conversas, baixo custo.
+            </p>
+          </DialogHeader>
+          <BenchmarkScatter
+            rows={filtered}
+            onClientClick={(r) => { setBenchmarkOpen(false); setSelected(r); }}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={saveViewOpen} onOpenChange={setSaveViewOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Salvar visão atual</DialogTitle>
+            <p className="text-xs text-muted-foreground">
+              Captura: período, nicho, status, busca, modo de visualização.
+            </p>
+          </DialogHeader>
+          <Input
+            placeholder="Ex: Meus MatCon críticos"
+            value={newViewName}
+            onChange={e => setNewViewName(e.target.value)}
+          />
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setSaveViewOpen(false)}>Cancelar</Button>
+            <Button
+              disabled={!newViewName.trim()}
+              onClick={async () => {
+                try {
+                  await saveView(newViewName.trim(), { period, nicheFilter, healthFilter, search, viewMode });
+                  toast.success('Visão salva');
+                  setNewViewName('');
+                  setSaveViewOpen(false);
+                } catch (e: any) { toast.error(`Erro: ${e?.message}`); }
+              }}
+            >
+              Salvar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
