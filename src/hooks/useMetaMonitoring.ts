@@ -228,7 +228,7 @@ export function useMetaMonitoring(period: Period = '7d', autoRefreshMs = 5 * 60 
       const [linksRes, bmRes, metricsRes, snapshotsRes] = await Promise.all([
         supabase
           .from('client_meta_ad_accounts')
-          .select('ad_account_id, client_id, monthly_ad_budget, accounts(name, niche, niches(name))')
+          .select('ad_account_id, client_id, accounts(name, niche, ad_monthly_budget, niches(name))')
           .eq('active', true),
         supabase.from('meta_bm_ad_accounts').select('ad_account_id, name'),
         supabase
@@ -328,7 +328,7 @@ export function useMetaMonitoring(period: Period = '7d', autoRefreshMs = 5 * 60 
         const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
         const daysElapsed = today.getDate();
         const projection = daysElapsed > 0 ? (monthSpend / daysElapsed) * daysInMonth : 0;
-        const monthlyBudget = l.monthly_ad_budget != null ? Number(l.monthly_ad_budget) : null;
+        const monthlyBudget = l.accounts?.ad_monthly_budget != null ? Number(l.accounts.ad_monthly_budget) : null;
         let pacingStatus: PacingInfo['status'] = 'no_budget';
         if (monthlyBudget != null && monthlyBudget > 0) {
           const pct = projection / monthlyBudget;

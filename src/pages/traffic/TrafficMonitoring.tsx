@@ -190,10 +190,9 @@ function BudgetDialog({ row, open, onOpenChange, onSaved }: {
       return;
     }
     const { error } = await supabase
-      .from('client_meta_ad_accounts')
-      .update({ monthly_ad_budget: num })
-      .eq('client_id', row.client_id)
-      .eq('ad_account_id', row.ad_account_id);
+      .from('accounts')
+      .update({ ad_monthly_budget: num })
+      .eq('id', row.client_id);
     setSaving(false);
     if (error) {
       toast.error(`Erro: ${error.message}`);
