@@ -242,7 +242,6 @@ const App = () => (
                         <Route path="/traffic/monitoring" element={<TrafficMonitoring />} />
                         <Route path="/traffic/reports" element={<TrafficReports />} />
                         <Route path="/traffic/alerts" element={<TrafficAlerts />} />
-                        <Route path="/traffic/multi-contas" element={<TrafficAnalyticsSettingsTab />} />
                         <Route path="/traffic/accounts/:id" element={<TrafficAccountDetail />} />
                         <Route path="/traffic/benchmarks" element={<TrafficBenchmarks />} />
                         <Route path="/traffic/optimizations" element={<TrafficOptimizationsPage />} />
