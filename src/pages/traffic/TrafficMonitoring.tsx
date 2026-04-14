@@ -14,7 +14,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   useMetaMonitoring,
-  useMetaMonitoringCampaigns,
+  useCampaignMonitoringPrefetch,
   PERIOD_OPTIONS,
   type Period,
   type ClientMonitoringRow,
@@ -135,9 +135,14 @@ function ClientCard({ row, onClick }: { row: ClientMonitoringRow; onClick: () =>
   );
 }
 
-function CampaignDrawer({ client, period, onClose }: { client: ClientMonitoringRow | null; period: Period; onClose: () => void }) {
-  const { rows, loading, hasLoaded, error } = useMetaMonitoringCampaigns(client?.ad_account_id || null, period);
-
+function CampaignDrawer({
+  client, rows, loading, onClose,
+}: {
+  client: ClientMonitoringRow | null;
+  rows: CampaignMonitoringRow[];
+  loading: boolean;
+  onClose: () => void;
+}) {
   if (!client) return null;
   return (
     <Dialog open={!!client} onOpenChange={(o) => !o && onClose()}>
@@ -150,13 +155,9 @@ function CampaignDrawer({ client, period, onClose }: { client: ClientMonitoringR
           </DialogTitle>
         </DialogHeader>
         <div className="flex-1 overflow-auto">
-          {loading || !hasLoaded ? (
+          {loading && rows.length === 0 ? (
             <div className="space-y-2 p-4">
               {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}
-            </div>
-          ) : error ? (
-            <div className="p-8 text-center text-red-600 text-sm">
-              Erro ao buscar campanhas: {error}
             </div>
           ) : rows.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground text-sm">
@@ -231,6 +232,7 @@ export default function TrafficMonitoring() {
   const [selected, setSelected] = useState<ClientMonitoringRow | null>(null);
 
   const { rows, loading, error, lastRefresh, refresh } = useMetaMonitoring(period);
+  const { byAccount: campaignsByAccount, loading: campaignsLoading } = useCampaignMonitoringPrefetch(period);
 
   const availableNiches = useMemo(() => {
     const set = new Set<string>();
@@ -420,7 +422,12 @@ export default function TrafficMonitoring() {
         </div>
       )}
 
-      <CampaignDrawer client={selected} period={period} onClose={() => setSelected(null)} />
+      <CampaignDrawer
+        client={selected}
+        rows={selected ? (campaignsByAccount.get(selected.ad_account_id) || []) : []}
+        loading={campaignsLoading}
+        onClose={() => setSelected(null)}
+      />
     </div>
   );
 }

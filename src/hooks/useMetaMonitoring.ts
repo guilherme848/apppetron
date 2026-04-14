@@ -335,6 +335,113 @@ export function useMetaMonitoring(period: Period = '7d', autoRefreshMs = 5 * 60 
   return { rows, loading, error, lastRefresh, refresh: load };
 }
 
+/**
+ * Prefetch de todas as campanhas em UMA chamada RPC. Feito na página principal
+ * pra drawer ficar instantâneo. Payload ~10KB pra 25 contas × 10 campanhas.
+ */
+export function useCampaignMonitoringPrefetch(period: Period = '7d') {
+  const [byAccount, setByAccount] = useState<Map<string, CampaignMonitoringRow[]>>(new Map());
+  const [loading, setLoading] = useState(true);
+  const { currFrom, currTo, prevFrom, prevTo } = useMemo(() => dateRange(period), [period]);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data: links } = await supabase
+        .from('client_meta_ad_accounts')
+        .select('ad_account_id')
+        .eq('active', true);
+      const ids = [...new Set((links || []).map(l => l.ad_account_id))];
+      if (ids.length === 0) { setByAccount(new Map()); return; }
+
+      const { data, error } = await supabase.rpc('get_campaign_monitoring', {
+        p_ad_account_ids: ids,
+        p_curr_from: currFrom,
+        p_curr_to: currTo,
+        p_prev_from: prevFrom,
+        p_prev_to: prevTo,
+      });
+      if (error) {
+        console.error('[useCampaignMonitoringPrefetch] rpc:', error);
+        return;
+      }
+
+      const map = new Map<string, CampaignMonitoringRow[]>();
+      for (const r of data || []) {
+        const currConvs = Number(r.curr_conversations) || 0;
+        const currSpend = Number(r.curr_spend) || 0;
+        const prevConvs = Number(r.prev_conversations) || 0;
+        const prevSpend = Number(r.prev_spend) || 0;
+        const currLeads = Number(r.curr_leads) || 0;
+        const prevLeads = Number(r.prev_leads) || 0;
+        const currImpr = Number(r.curr_impressions) || 0;
+        const currClicks = Number(r.curr_clicks) || 0;
+        const prevImpr = Number(r.prev_impressions) || 0;
+        const prevClicks = Number(r.prev_clicks) || 0;
+
+        const current: CampaignMetrics = {
+          spend: currSpend,
+          leads: currLeads,
+          impressions: currImpr,
+          clicks: currClicks,
+          ctr: currImpr > 0 ? (currClicks / currImpr) * 100 : 0,
+          cpl: currLeads > 0 ? currSpend / currLeads : 0,
+          whatsapp_conversations: currConvs,
+          messaging_replies: Number(r.curr_messaging_replies) || 0,
+          cost_per_conversation: currConvs > 0 ? currSpend / currConvs : 0,
+        };
+        const previous: CampaignMetrics = {
+          spend: prevSpend,
+          leads: prevLeads,
+          impressions: prevImpr,
+          clicks: prevClicks,
+          ctr: prevImpr > 0 ? (prevClicks / prevImpr) * 100 : 0,
+          cpl: prevLeads > 0 ? prevSpend / prevLeads : 0,
+          whatsapp_conversations: prevConvs,
+          messaging_replies: 0,
+          cost_per_conversation: prevConvs > 0 ? prevSpend / prevConvs : 0,
+        };
+        const row: CampaignMonitoringRow = {
+          campaign_id: r.campaign_id,
+          campaign_name: r.name,
+          ad_account_id: r.ad_account_id,
+          effective_status: r.effective_status,
+          daily_budget: r.daily_budget,
+          current, previous,
+          delta: {
+            spend: pctDelta(current.spend, previous.spend),
+            leads: pctDelta(current.leads, previous.leads),
+            cpl: pctDelta(current.cpl, previous.cpl),
+            conversations: pctDelta(current.whatsapp_conversations, previous.whatsapp_conversations),
+            cost_per_conversation: pctDelta(current.cost_per_conversation, previous.cost_per_conversation),
+          },
+          health: scoreHealth(current, previous, { amount_spent: null, spend_cap: null, available_balance: null, runway_days: null, daily_spend_avg: 0 }),
+        };
+        const arr = map.get(r.ad_account_id) || [];
+        arr.push(row);
+        map.set(r.ad_account_id, arr);
+      }
+
+      // Ordena: ACTIVE primeiro, depois por spend desc
+      for (const arr of map.values()) {
+        arr.sort((a, b) => {
+          const aa = a.effective_status === 'ACTIVE' ? 0 : 1;
+          const bb = b.effective_status === 'ACTIVE' ? 0 : 1;
+          if (aa !== bb) return aa - bb;
+          return b.current.spend - a.current.spend;
+        });
+      }
+
+      setByAccount(map);
+    } finally {
+      setLoading(false);
+    }
+  }, [currFrom, currTo, prevFrom, prevTo]);
+
+  useEffect(() => { load(); }, [load]);
+  return { byAccount, loading, refresh: load };
+}
+
 export function useMetaMonitoringCampaigns(adAccountId: string | null, period: Period = '7d') {
   const [rows, setRows] = useState<CampaignMonitoringRow[]>([]);
   // Comeca em true quando temos adAccountId — evita flash de "vazio" antes do fetch
