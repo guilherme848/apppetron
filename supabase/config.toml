@@ -24,6 +24,9 @@ verify_jwt = false
 [functions.meta-ad-metrics-cron]
 verify_jwt = false
 
+[functions.meta-fetch-ad-accounts]
+verify_jwt = false
+
 [functions.meta-sync-all-cron]
 verify_jwt = false
 
