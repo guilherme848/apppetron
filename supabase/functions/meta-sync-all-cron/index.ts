@@ -126,7 +126,7 @@ serve(async (req) => {
     for (const adAccountId of uniqueAccountIds) {
       // ===== 1. FETCH BALANCE =====
       try {
-        const balanceUrl = `https://graph.facebook.com/v19.0/${adAccountId}?fields=name,currency,amount_spent,spend_cap&access_token=${accessToken}`;
+        const balanceUrl = `https://graph.facebook.com/v19.0/${adAccountId}?fields=name,currency,amount_spent,spend_cap,balance&access_token=${accessToken}`;
         const balanceResponse = await fetch(balanceUrl);
         const balanceData = await balanceResponse.json();
 
@@ -135,10 +135,18 @@ serve(async (req) => {
           balanceErrorCount++;
         } else {
           const amountSpent = balanceData.amount_spent ? parseFloat(balanceData.amount_spent) / 100 : null;
-          const spendCap = balanceData.spend_cap ? parseFloat(balanceData.spend_cap) / 100 : null;
-          const availableBalance = spendCap !== null && amountSpent !== null 
-            ? spendCap - amountSpent 
-            : null;
+          // spend_cap "0" from Meta = sem teto (ilimitado), não zero real
+          const spendCapRaw = parseFloat(balanceData.spend_cap ?? '0');
+          const spendCap = spendCapRaw > 0 ? spendCapRaw / 100 : null;
+          // balance só vem em contas pré-pagas; é o saldo real disponível
+          const prepaidBalance = balanceData.balance != null ? parseFloat(balanceData.balance) / 100 : null;
+
+          let availableBalance: number | null = null;
+          if (prepaidBalance != null && prepaidBalance > 0) {
+            availableBalance = prepaidBalance;
+          } else if (spendCap != null && amountSpent != null && spendCap > amountSpent) {
+            availableBalance = spendCap - amountSpent;
+          }
 
           const { error: insertError } = await supabase
             .from('meta_ad_account_snapshots')

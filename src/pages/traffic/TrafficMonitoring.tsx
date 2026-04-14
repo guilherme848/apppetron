@@ -265,9 +265,12 @@ export default function TrafficMonitoring() {
       acc.yellow += r.health === 'yellow' ? 1 : 0;
       acc.total += 1;
       acc.lowRunway += r.balance.runway_days !== null && r.balance.runway_days <= 7 ? 1 : 0;
-      if (r.balance.available_balance != null) acc.totalBalance += r.balance.available_balance;
+      if (r.balance.available_balance != null && r.balance.available_balance > 0) {
+        acc.totalBalance += r.balance.available_balance;
+        acc.accountsWithBalance += 1;
+      }
       return acc;
-    }, { spend: 0, conversations: 0, leads: 0, red: 0, yellow: 0, total: 0, lowRunway: 0, totalBalance: 0 });
+    }, { spend: 0, conversations: 0, leads: 0, red: 0, yellow: 0, total: 0, lowRunway: 0, totalBalance: 0, accountsWithBalance: 0 });
     return {
       ...t,
       cost_per_conversation: t.conversations > 0 ? t.spend / t.conversations : 0,
@@ -323,11 +326,16 @@ export default function TrafficMonitoring() {
         <Card className={cn(totals.lowRunway > 0 && 'border-red-500/50')}>
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <Wallet className="h-3 w-3" />Saldo total
+              <Wallet className="h-3 w-3" />Saldo pré-pago
             </p>
-            <p className="text-xl font-bold">{fmtBRL(totals.totalBalance)}</p>
+            <p className="text-xl font-bold">
+              {totals.accountsWithBalance > 0 ? fmtBRL(totals.totalBalance) : '—'}
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              {totals.accountsWithBalance}/{totals.total} conta{totals.total === 1 ? '' : 's'}
+            </p>
             {totals.lowRunway > 0 && (
-              <p className="text-[10px] text-red-600 mt-0.5">{totals.lowRunway} conta{totals.lowRunway > 1 ? 's' : ''} c/ runway ≤7d</p>
+              <p className="text-[10px] text-red-600 mt-0.5">{totals.lowRunway} c/ runway ≤7d</p>
             )}
           </CardContent>
         </Card>
