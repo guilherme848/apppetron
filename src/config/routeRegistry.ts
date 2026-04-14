@@ -471,6 +471,16 @@ export const routeRegistry: RouteDefinition[] = [
     order: 3,
   },
   {
+    id: 'traffic.monitoring',
+    path: '/traffic/monitoring',
+    label: 'Central de Monitoramento',
+    category: CATEGORIES.DASHBOARD,
+    module: MODULES.TRAFFIC,
+    permissions: ['view'],
+    icon: Activity,
+    order: 0.5,
+  },
+  {
     id: 'traffic.overview',
     path: '/traffic/overview',
     label: 'Dashboard Multi-Contas',

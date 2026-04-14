@@ -58,6 +58,7 @@ const TrafficAccountDetail = lazy(() => import("./pages/traffic/TrafficAccountDe
 const TrafficBenchmarks = lazy(() => import("./pages/traffic/TrafficBenchmarks"));
 const TrafficOptimizationsPage = lazy(() => import("./pages/traffic/TrafficOptimizationsPage"));
 const TrafficOperationalDashboard = lazy(() => import("./pages/traffic/TrafficOperationalDashboard"));
+const TrafficMonitoring = lazy(() => import("./pages/traffic/TrafficMonitoring"));
 const TrafficContacts = lazy(() => import("./pages/traffic/TrafficContacts"));
 const TrafficBalancesPage = lazy(() => import("./pages/traffic/TrafficBalancesPage"));
 const TrafficPlaybookTasksPage = lazy(() => import("./pages/traffic/TrafficPlaybookTasksPage"));
@@ -233,6 +234,7 @@ const App = () => (
                         <Route path="/traffic/clients/:id" element={<TrafficClientDetail />} />
                         <Route path="/traffic/balances" element={<TrafficBalancesPage />} />
                         <Route path="/traffic/overview" element={<TrafficOverview />} />
+                        <Route path="/traffic/monitoring" element={<TrafficMonitoring />} />
                         <Route path="/traffic/accounts/:id" element={<TrafficAccountDetail />} />
                         <Route path="/traffic/benchmarks" element={<TrafficBenchmarks />} />
                         <Route path="/traffic/optimizations" element={<TrafficOptimizationsPage />} />

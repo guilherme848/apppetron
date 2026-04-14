@@ -1,8 +1,14 @@
 import { useState, useRef, useCallback } from 'react';
 import { Upload, X, FileIcon, Eye, Download, AlertCircle, RotateCcw, FolderArchive } from 'lucide-react';
+import * as tus from 'tus-js-client';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+// Supabase TUS requires exactly 6 MiB chunks
+const TUS_CHUNK_SIZE = 6 * 1024 * 1024;
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ConfirmDeleteDialog } from '@/components/common/ConfirmDeleteDialog';
@@ -57,7 +63,7 @@ export function MultiFileUpload({
   context, 
   onFileUploaded, 
   onFileDeleted,
-  maxFileSizeMb = 20,
+  maxFileSizeMb = 500,
   clientName,
 }: MultiFileUploadProps) {
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
@@ -91,9 +97,8 @@ export function MultiFileUpload({
 
   const uploadSingleFile = useCallback(async (uploadingFile: UploadingFile): Promise<void> => {
     const { id, file } = uploadingFile;
-    
-    // Update status to uploading
-    setUploadingFiles(prev => prev.map(f => 
+
+    setUploadingFiles(prev => prev.map(f =>
       f.id === id ? { ...f, status: 'uploading' as const, progress: 0 } : f
     ));
 
@@ -101,13 +106,44 @@ export function MultiFileUpload({
     const storagePath = `posts/${postId}/${context}/${Date.now()}-${safeName}`;
 
     try {
-      const { error: uploadError } = await supabase.storage
-        .from('content-production')
-        .upload(storagePath, file);
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token ?? SUPABASE_ANON_KEY;
 
-      if (uploadError) {
-        throw uploadError;
-      }
+      await new Promise<void>((resolve, reject) => {
+        const upload = new tus.Upload(file, {
+          endpoint: `${SUPABASE_URL}/storage/v1/upload/resumable`,
+          retryDelays: [0, 3000, 5000, 10000, 20000],
+          headers: {
+            authorization: `Bearer ${accessToken}`,
+            apikey: SUPABASE_ANON_KEY,
+            'x-upsert': 'false',
+          },
+          uploadDataDuringCreation: true,
+          removeFingerprintOnSuccess: true,
+          chunkSize: TUS_CHUNK_SIZE,
+          metadata: {
+            bucketName: 'content-production',
+            objectName: storagePath,
+            contentType: file.type || 'application/octet-stream',
+            cacheControl: '3600',
+          },
+          onError: (error) => reject(error),
+          onProgress: (bytesUploaded, bytesTotal) => {
+            const progress = bytesTotal > 0 ? Math.round((bytesUploaded / bytesTotal) * 100) : 0;
+            setUploadingFiles(prev => prev.map(f =>
+              f.id === id ? { ...f, progress } : f
+            ));
+          },
+          onSuccess: () => resolve(),
+        });
+
+        upload.findPreviousUploads().then((previousUploads) => {
+          if (previousUploads.length) {
+            upload.resumeFromPreviousUpload(previousUploads[0]);
+          }
+          upload.start();
+        }).catch(reject);
+      });
 
       const { data: urlData } = supabase.storage
         .from('content-production')
@@ -121,20 +157,19 @@ export function MultiFileUpload({
         public_url: urlData.publicUrl,
       });
 
-      // Update status to success
-      setUploadingFiles(prev => prev.map(f => 
+      setUploadingFiles(prev => prev.map(f =>
         f.id === id ? { ...f, status: 'success' as const, progress: 100 } : f
       ));
 
-      // Remove from uploading list after a short delay
       setTimeout(() => {
         setUploadingFiles(prev => prev.filter(f => f.id !== id));
       }, 1500);
 
     } catch (error: any) {
       console.error('Upload error:', error);
-      setUploadingFiles(prev => prev.map(f => 
-        f.id === id ? { ...f, status: 'error' as const, error: error.message || 'Erro ao enviar' } : f
+      const message = error?.originalResponse?.getBody?.() || error?.message || 'Erro ao enviar';
+      setUploadingFiles(prev => prev.map(f =>
+        f.id === id ? { ...f, status: 'error' as const, error: message } : f
       ));
     }
   }, [postId, context, onFileUploaded]);
@@ -150,15 +185,18 @@ export function MultiFileUpload({
     ];
 
     const newUploadingFiles: UploadingFile[] = [];
+    const oversized: string[] = [];
 
     for (const file of fileArray) {
+      if (file.size > maxFileSize) {
+        oversized.push(file.name);
+        continue;
+      }
 
-      // Generate unique name if duplicate
       const uniqueName = generateUniqueFileName(file.name, existingNames);
       existingNames.push(uniqueName);
 
-      // Create a new file with the unique name if needed
-      const finalFile = uniqueName !== file.name 
+      const finalFile = uniqueName !== file.name
         ? new File([file], uniqueName, { type: file.type })
         : file;
 
@@ -168,6 +206,10 @@ export function MultiFileUpload({
         progress: 0,
         status: 'pending',
       });
+    }
+
+    if (oversized.length > 0) {
+      toast.error(`Arquivo${oversized.length > 1 ? 's' : ''} acima de ${maxFileSizeMb}MB: ${oversized.join(', ')}`);
     }
 
 
@@ -344,7 +386,7 @@ export function MultiFileUpload({
               )}
             >
               {uf.status === 'uploading' || uf.status === 'pending' ? (
-                <Skeleton className="h-4 w-16 rounded" />
+                <FileIcon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
               ) : uf.status === 'success' ? (
                 <FileIcon className="h-5 w-5 text-primary flex-shrink-0" />
               ) : (
@@ -354,6 +396,9 @@ export function MultiFileUpload({
                 <p className="font-medium text-sm truncate">{uf.file.name}</p>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span>{formatFileSize(uf.file.size)}</span>
+                  {(uf.status === 'uploading' || uf.status === 'pending') && (
+                    <span className="text-primary">• Enviando {uf.progress}%</span>
+                  )}
                   {uf.status === 'error' && uf.error && (
                     <span className="text-destructive">• {uf.error}</span>
                   )}
@@ -361,6 +406,11 @@ export function MultiFileUpload({
                     <span className="text-primary">• Enviado</span>
                   )}
                 </div>
+                {(uf.status === 'uploading' || uf.status === 'pending') && (
+                  <div className="mt-1 h-1 w-full bg-muted rounded overflow-hidden">
+                    <div className="h-full bg-primary transition-all" style={{ width: `${uf.progress}%` }} />
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-1">
                 {uf.status === 'error' && (

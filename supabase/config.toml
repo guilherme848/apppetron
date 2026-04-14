@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.meta-fetch-metrics]
 verify_jwt = false
 
+[functions.meta-fetch-campaign-metrics]
+verify_jwt = false
+
 [functions.meta-sync-all-cron]
 verify_jwt = false
 

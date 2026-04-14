@@ -1,0 +1,328 @@
+import { useState, useMemo } from 'react';
+import { RefreshCw, TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle2, Search, ChevronRight } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { cn } from '@/lib/utils';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import {
+  useMetaMonitoring,
+  useMetaMonitoringCampaigns,
+  type Period,
+  type ClientMonitoringRow,
+  type CampaignMonitoringRow,
+} from '@/hooks/useMetaMonitoring';
+
+const PERIOD_LABEL: Record<Period, string> = { '1d': 'Hoje', '7d': 'Últimos 7 dias', '30d': 'Últimos 30 dias' };
+
+function fmtBRL(v: number) {
+  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+}
+function fmtInt(v: number) {
+  return v.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
+}
+function fmtPct(v: number) {
+  return `${v.toFixed(1)}%`;
+}
+
+function DeltaBadge({ value, invert = false }: { value: number; invert?: boolean }) {
+  if (!isFinite(value) || Math.abs(value) < 0.5) {
+    return <span className="inline-flex items-center gap-1 text-muted-foreground text-xs"><Minus className="h-3 w-3" />0%</span>;
+  }
+  const good = invert ? value < 0 : value > 0;
+  const Icon = value > 0 ? TrendingUp : TrendingDown;
+  return (
+    <span className={cn('inline-flex items-center gap-1 text-xs font-medium', good ? 'text-green-600' : 'text-red-600')}>
+      <Icon className="h-3 w-3" />
+      {value > 0 ? '+' : ''}{fmtPct(value)}
+    </span>
+  );
+}
+
+function HealthDot({ health }: { health: 'green' | 'yellow' | 'red' }) {
+  const cls = health === 'green' ? 'bg-green-500' : health === 'yellow' ? 'bg-amber-500' : 'bg-red-500';
+  return <span className={cn('h-2.5 w-2.5 rounded-full', cls)} />;
+}
+
+function ClientCard({ row, onClick }: { row: ClientMonitoringRow; onClick: () => void }) {
+  return (
+    <Card
+      className={cn(
+        'cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5',
+        row.health === 'red' && 'border-red-500/50',
+        row.health === 'yellow' && 'border-amber-500/50',
+      )}
+      onClick={onClick}
+    >
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <HealthDot health={row.health} />
+            <CardTitle className="text-sm font-semibold truncate">{row.client_name}</CardTitle>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+        </div>
+        <p className="text-xs text-muted-foreground truncate">{row.ad_account_name || row.ad_account_id}</p>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <div className="grid grid-cols-3 gap-2 text-xs">
+          <div>
+            <p className="text-muted-foreground">Gasto</p>
+            <p className="font-semibold text-sm">{fmtBRL(row.current.spend)}</p>
+            <DeltaBadge value={row.delta.spend} />
+          </div>
+          <div>
+            <p className="text-muted-foreground">Leads</p>
+            <p className="font-semibold text-sm">{fmtInt(row.current.leads)}</p>
+            <DeltaBadge value={row.delta.leads} />
+          </div>
+          <div>
+            <p className="text-muted-foreground">CPL</p>
+            <p className="font-semibold text-sm">{row.current.leads > 0 ? fmtBRL(row.current.cpl) : '—'}</p>
+            <DeltaBadge value={row.delta.cpl} invert />
+          </div>
+        </div>
+        {row.current.whatsapp_conversations > 0 && (
+          <p className="text-xs text-muted-foreground pt-1 border-t">
+            {fmtInt(row.current.whatsapp_conversations)} conversas WhatsApp
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function CampaignDrawer({ client, period, onClose }: { client: ClientMonitoringRow | null; period: Period; onClose: () => void }) {
+  const { rows, loading } = useMetaMonitoringCampaigns(client?.ad_account_id || null, period);
+
+  if (!client) return null;
+  return (
+    <Dialog open={!!client} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <HealthDot health={client.health} />
+            {client.client_name}
+            <Badge variant="outline" className="ml-2">{client.ad_account_name || client.ad_account_id}</Badge>
+          </DialogTitle>
+        </DialogHeader>
+        <div className="flex-1 overflow-auto">
+          {loading ? (
+            <div className="space-y-2 p-4">
+              {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}
+            </div>
+          ) : rows.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground text-sm">
+              Nenhuma campanha encontrada no Meta.
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Campanha</TableHead>
+                  <TableHead className="text-right">Gasto</TableHead>
+                  <TableHead className="text-right">Leads</TableHead>
+                  <TableHead className="text-right">CPL</TableHead>
+                  <TableHead className="text-right">CTR</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((c) => (
+                  <CampaignRow key={c.campaign_id} c={c} />
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function CampaignRow({ c }: { c: CampaignMonitoringRow }) {
+  return (
+    <TableRow className={cn(c.effective_status !== 'ACTIVE' && 'opacity-60')}>
+      <TableCell className="max-w-xs">
+        <div className="flex items-center gap-2">
+          <HealthDot health={c.health} />
+          <span className="truncate font-medium text-sm">{c.campaign_name}</span>
+        </div>
+      </TableCell>
+      <TableCell className="text-right">
+        <div className="font-medium">{fmtBRL(c.current.spend)}</div>
+        <DeltaBadge value={c.delta.spend} />
+      </TableCell>
+      <TableCell className="text-right">
+        <div className="font-medium">{fmtInt(c.current.leads)}</div>
+        <DeltaBadge value={c.delta.leads} />
+      </TableCell>
+      <TableCell className="text-right">
+        <div className="font-medium">{c.current.leads > 0 ? fmtBRL(c.current.cpl) : '—'}</div>
+        <DeltaBadge value={c.delta.cpl} invert />
+      </TableCell>
+      <TableCell className="text-right text-sm">{fmtPct(c.current.ctr)}</TableCell>
+      <TableCell>
+        <Badge variant={c.effective_status === 'ACTIVE' ? 'default' : 'secondary'} className="text-xs">
+          {c.effective_status || '—'}
+        </Badge>
+      </TableCell>
+    </TableRow>
+  );
+}
+
+export default function TrafficMonitoring() {
+  const [period, setPeriod] = useState<Period>('7d');
+  const [search, setSearch] = useState('');
+  const [healthFilter, setHealthFilter] = useState<'all' | 'red' | 'yellow' | 'green'>('all');
+  const [selected, setSelected] = useState<ClientMonitoringRow | null>(null);
+
+  const { rows, loading, error, lastRefresh, refresh } = useMetaMonitoring(period);
+
+  const filtered = useMemo(() => {
+    let r = rows;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      r = r.filter(x => x.client_name.toLowerCase().includes(q) || (x.ad_account_name || '').toLowerCase().includes(q));
+    }
+    if (healthFilter !== 'all') {
+      r = r.filter(x => x.health === healthFilter);
+    }
+    // sort: critical first, then by spend desc
+    return [...r].sort((a, b) => {
+      const hOrder = { red: 0, yellow: 1, green: 2 };
+      const h = hOrder[a.health] - hOrder[b.health];
+      if (h !== 0) return h;
+      return b.current.spend - a.current.spend;
+    });
+  }, [rows, search, healthFilter]);
+
+  const totals = useMemo(() => {
+    return rows.reduce((acc, r) => {
+      acc.spend += r.current.spend;
+      acc.leads += r.current.leads;
+      acc.red += r.health === 'red' ? 1 : 0;
+      acc.yellow += r.health === 'yellow' ? 1 : 0;
+      return acc;
+    }, { spend: 0, leads: 0, red: 0, yellow: 0 });
+  }, [rows]);
+
+  return (
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Central de Monitoramento</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Visão em tempo real das campanhas Meta de todos os clientes MatCon.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
+            <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1d">{PERIOD_LABEL['1d']}</SelectItem>
+              <SelectItem value="7d">{PERIOD_LABEL['7d']}</SelectItem>
+              <SelectItem value="30d">{PERIOD_LABEL['30d']}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="icon" onClick={refresh} disabled={loading} title="Atualizar agora">
+            <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
+          </Button>
+        </div>
+      </div>
+
+      {/* Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground">Gasto total ({PERIOD_LABEL[period]})</p>
+            <p className="text-xl font-bold">{fmtBRL(totals.spend)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground">Leads gerados</p>
+            <p className="text-xl font-bold">{fmtInt(totals.leads)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3 text-red-500" />Clientes críticos
+            </p>
+            <p className="text-xl font-bold text-red-600">{totals.red}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <CheckCircle2 className="h-3 w-3 text-green-500" />Saudáveis
+            </p>
+            <p className="text-xl font-bold text-green-600">{rows.length - totals.red - totals.yellow}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col md:flex-row gap-2">
+        <div className="relative flex-1">
+          <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Buscar cliente ou conta..."
+            className="pl-9"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <Select value={healthFilter} onValueChange={(v) => setHealthFilter(v as any)}>
+          <SelectTrigger className="w-full md:w-[200px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os status</SelectItem>
+            <SelectItem value="red">Críticos</SelectItem>
+            <SelectItem value="yellow">Atenção</SelectItem>
+            <SelectItem value="green">Saudáveis</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {lastRefresh && (
+        <p className="text-xs text-muted-foreground">
+          Atualizado {formatDistanceToNow(lastRefresh, { addSuffix: true, locale: ptBR })}. Dados sincronizados do Meta a cada 15 minutos.
+        </p>
+      )}
+
+      {error && (
+        <Card className="border-red-500/50">
+          <CardContent className="p-4 text-sm text-red-600">Erro: {error}</CardContent>
+        </Card>
+      )}
+
+      {/* Grid */}
+      {loading && rows.length === 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          {[...Array(8)].map((_, i) => <Skeleton key={i} className="h-40 w-full" />)}
+        </div>
+      ) : filtered.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center text-muted-foreground">
+            Nenhum cliente encontrado com os filtros atuais.
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          {filtered.map((row) => (
+            <ClientCard key={row.client_id + row.ad_account_id} row={row} onClick={() => setSelected(row)} />
+          ))}
+        </div>
+      )}
+
+      <CampaignDrawer client={selected} period={period} onClose={() => setSelected(null)} />
+    </div>
+  );
+}
