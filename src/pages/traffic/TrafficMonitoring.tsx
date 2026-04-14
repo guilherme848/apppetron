@@ -1,10 +1,13 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { RefreshCw, TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle2, Search, ChevronRight, Wallet, LayoutGrid, Table as TableIcon, ArrowUp, ArrowDown, Scan, BarChart3, Bookmark, BookmarkPlus, X as XIcon } from 'lucide-react';
 import { Sparkline } from '@/components/traffic/Sparkline';
 import { AlertsFeed } from '@/components/traffic/AlertsFeed';
 import { BenchmarkScatter } from '@/components/traffic/BenchmarkScatter';
 import { TriageMode } from '@/components/traffic/TriageMode';
 import { useSavedViews } from '@/hooks/useSavedViews';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouteAccess } from '@/hooks/useRouteAccess';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -607,6 +610,19 @@ export default function TrafficMonitoring() {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [sortKey, setSortKey] = useState<SortKey>('health');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const { member, isAdmin } = useAuth();
+  const { roleKey } = useRouteAccess();
+  const { trafficManagers } = useTeamMembers();
+  const isTrafficManager = roleKey === 'gestor de tráfego';
+  const [trafficManagerFilter, setTrafficManagerFilter] = useState<string>('__pending__');
+
+  // Ajusta default assim que soubermos o role
+  useEffect(() => {
+    if (trafficManagerFilter !== '__pending__') return;
+    if (isTrafficManager && member?.id) setTrafficManagerFilter(member.id);
+    else if (roleKey) setTrafficManagerFilter('all');
+  }, [isAdmin, isTrafficManager, member?.id, roleKey, trafficManagerFilter]);
+
   const [triageOpen, setTriageOpen] = useState(false);
   const [benchmarkOpen, setBenchmarkOpen] = useState(false);
   const [saveViewOpen, setSaveViewOpen] = useState(false);
@@ -626,6 +642,9 @@ export default function TrafficMonitoring() {
     let r = rows;
     if (nicheFilter !== 'all') {
       r = r.filter(x => x.niche === nicheFilter);
+    }
+    if (trafficManagerFilter !== 'all' && trafficManagerFilter !== '__pending__') {
+      r = r.filter(x => x.traffic_member_id === trafficManagerFilter);
     }
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -663,7 +682,7 @@ export default function TrafficMonitoring() {
       if (typeof va === 'string') return va.localeCompare(vb as string) * mult;
       return ((va as number) - (vb as number)) * mult;
     });
-  }, [rows, search, healthFilter, nicheFilter, viewMode, sortKey, sortDir]);
+  }, [rows, search, healthFilter, nicheFilter, trafficManagerFilter, viewMode, sortKey, sortDir]);
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -671,7 +690,11 @@ export default function TrafficMonitoring() {
   };
 
   const totals = useMemo(() => {
-    const base = nicheFilter === 'all' ? rows : rows.filter(r => r.niche === nicheFilter);
+    let base = rows;
+    if (nicheFilter !== 'all') base = base.filter(r => r.niche === nicheFilter);
+    if (trafficManagerFilter !== 'all' && trafficManagerFilter !== '__pending__') {
+      base = base.filter(r => r.traffic_member_id === trafficManagerFilter);
+    }
     const t = base.reduce((acc, r) => {
       acc.spend += r.current.spend;
       acc.conversations += r.current.whatsapp_conversations;
@@ -689,7 +712,7 @@ export default function TrafficMonitoring() {
       ...t,
       cost_per_conversation: t.conversations > 0 ? t.spend / t.conversations : 0,
     };
-  }, [rows, nicheFilter]);
+  }, [rows, nicheFilter, trafficManagerFilter]);
 
   const periodLabel = PERIOD_OPTIONS.find(o => o.value === period)?.label || '';
 
@@ -820,6 +843,21 @@ export default function TrafficMonitoring() {
             ))}
           </SelectContent>
         </Select>
+
+        {!isTrafficManager && (
+          <Select
+            value={trafficManagerFilter === '__pending__' ? 'all' : trafficManagerFilter}
+            onValueChange={setTrafficManagerFilter}
+          >
+            <SelectTrigger className="w-full md:w-[220px]"><SelectValue placeholder="Gestor" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os gestores</SelectItem>
+              {trafficManagers.map(m => (
+                <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
         <Select value={healthFilter} onValueChange={(v) => setHealthFilter(v as any)}>
           <SelectTrigger className="w-full md:w-[180px]"><SelectValue /></SelectTrigger>
           <SelectContent>

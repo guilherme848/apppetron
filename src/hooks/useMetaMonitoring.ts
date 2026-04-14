@@ -73,6 +73,7 @@ export interface ClientMonitoringRow {
   ad_account_id: string;
   ad_account_name: string | null;
   niche: string | null;
+  traffic_member_id: string | null;
   current: CampaignMetrics;
   previous: CampaignMetrics;
   baseline: CampaignMetrics; // 14-day trailing average (normalized to period length)
@@ -236,7 +237,7 @@ export function useMetaMonitoring(period: Period = '7d', autoRefreshMs = 5 * 60 
       const [linksRes, bmRes, metricsRes, snapshotsRes] = await Promise.all([
         supabase
           .from('client_meta_ad_accounts')
-          .select('ad_account_id, client_id, accounts(name, niche, ad_monthly_budget, niches(name))')
+          .select('ad_account_id, client_id, accounts(name, niche, ad_monthly_budget, traffic_member_id, niches(name))')
           .eq('active', true),
         supabase.from('meta_bm_ad_accounts').select('ad_account_id, name'),
         supabase
@@ -381,6 +382,7 @@ export function useMetaMonitoring(period: Period = '7d', autoRefreshMs = 5 * 60 
           ad_account_id: l.ad_account_id,
           ad_account_name: bmNameMap.get(l.ad_account_id) || null,
           niche,
+          traffic_member_id: l.accounts?.traffic_member_id || null,
           current, previous, baseline,
           funnel, pacing,
           delta: {
