@@ -347,33 +347,50 @@ export function useMetaMonitoringCampaigns(adAccountId: string | null, period: P
     if (!adAccountId) { setRows([]); setHasLoaded(false); return; }
     setLoading(true); setError(null);
     try {
-      const { data: campaigns, error: campErr } = await supabase
-        .from('meta_campaigns')
-        .select('campaign_id, name, effective_status, daily_budget')
+      // 1) Uma query só pra metrics, cobrindo período atual + anterior
+      const minDate = currFrom <= prevFrom ? currFrom : prevFrom;
+      const maxDate = currTo >= prevTo ? currTo : prevTo;
+
+      const metricsRes = await supabase
+        .from('meta_campaign_metrics_daily')
+        .select('campaign_id, date, metrics_json')
         .eq('ad_account_id', adAccountId)
-        .limit(1000);
-
-      if (campErr) {
-        console.error('[useMetaMonitoringCampaigns] campaigns fetch:', campErr);
-        throw campErr;
+        .gte('date', minDate).lte('date', maxDate)
+        .limit(10000);
+      if (metricsRes.error) {
+        console.error('[useMetaMonitoringCampaigns] metrics:', metricsRes.error);
+        throw metricsRes.error;
       }
+      const allMetrics = metricsRes.data || [];
 
-      const [currRes, prevRes] = await Promise.all([
-        supabase.from('meta_campaign_metrics_daily')
-          .select('campaign_id, metrics_json')
+      // Separa em curr/prev em JS
+      const curr = allMetrics.filter(m => m.date >= currFrom && m.date <= currTo);
+      const prev = allMetrics.filter(m => m.date >= prevFrom && m.date <= prevTo);
+
+      // 2) Só campanhas relevantes: com atividade no período OU ACTIVE (podem ter acabado de começar)
+      const activeIds = Array.from(new Set(allMetrics.map(m => m.campaign_id)));
+      const [withActivityRes, activeStatusRes] = await Promise.all([
+        activeIds.length > 0
+          ? supabase
+              .from('meta_campaigns')
+              .select('campaign_id, name, effective_status, daily_budget')
+              .in('campaign_id', activeIds)
+          : Promise.resolve({ data: [], error: null }),
+        supabase
+          .from('meta_campaigns')
+          .select('campaign_id, name, effective_status, daily_budget')
           .eq('ad_account_id', adAccountId)
-          .gte('date', currFrom).lte('date', currTo)
-          .limit(5000),
-        supabase.from('meta_campaign_metrics_daily')
-          .select('campaign_id, metrics_json')
-          .eq('ad_account_id', adAccountId)
-          .gte('date', prevFrom).lte('date', prevTo)
-          .limit(5000),
+          .eq('effective_status', 'ACTIVE')
+          .limit(200),
       ]);
-      if (currRes.error) console.error('[useMetaMonitoringCampaigns] curr metrics:', currRes.error);
-      if (prevRes.error) console.error('[useMetaMonitoringCampaigns] prev metrics:', prevRes.error);
-      const curr = currRes.data;
-      const prev = prevRes.data;
+
+      if (withActivityRes.error) console.error('[useMetaMonitoringCampaigns] campaigns w/activity:', withActivityRes.error);
+      if (activeStatusRes.error) console.error('[useMetaMonitoringCampaigns] campaigns active:', activeStatusRes.error);
+
+      const campMap = new Map<string, any>();
+      for (const c of withActivityRes.data || []) campMap.set(c.campaign_id, c);
+      for (const c of activeStatusRes.data || []) if (!campMap.has(c.campaign_id)) campMap.set(c.campaign_id, c);
+      const campaigns = Array.from(campMap.values());
 
       const currBy = new Map<string, any[]>();
       for (const r of curr || []) {
