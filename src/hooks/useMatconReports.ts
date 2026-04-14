@@ -81,12 +81,13 @@ export function useMatconReports(onlyMatCon = true) {
       // Busca clientes MatCon com conta Meta ativa
       const query = supabase
         .from('client_meta_ad_accounts')
-        .select('client_id, ad_account_id, accounts(id, name, niche, ad_monthly_budget, contact_phone, niches(name))')
+        .select('client_id, ad_account_id, accounts(id, name, niche, status, ad_monthly_budget, contact_phone, niches(name))')
         .eq('active', true);
       const { data: links } = await query;
 
       const filtered = (links || []).filter((l: any) => {
         if (!l.accounts) return false;
+        if (l.accounts.status !== 'active') return false;
         if (!onlyMatCon) return true;
         const n = l.accounts.niches?.name || l.accounts.niche;
         return n === 'Material de Construção';

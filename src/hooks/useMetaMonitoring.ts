@@ -237,7 +237,7 @@ export function useMetaMonitoring(period: Period = '7d', autoRefreshMs = 5 * 60 
       const [linksRes, bmRes, metricsRes, snapshotsRes] = await Promise.all([
         supabase
           .from('client_meta_ad_accounts')
-          .select('ad_account_id, client_id, accounts(name, niche, ad_monthly_budget, traffic_member_id, niches(name))')
+          .select('ad_account_id, client_id, accounts(name, niche, ad_monthly_budget, traffic_member_id, status, niches(name))')
           .eq('active', true),
         supabase.from('meta_bm_ad_accounts').select('ad_account_id, name'),
         supabase
@@ -277,7 +277,9 @@ export function useMetaMonitoring(period: Period = '7d', autoRefreshMs = 5 * 60 
       const currDays = daysBetween(currFrom, currTo);
       const baselineDays = 14;
 
-      const result: ClientMonitoringRow[] = links.map((l: any) => {
+      const result: ClientMonitoringRow[] = links
+        .filter((l: any) => l.accounts && l.accounts.status === 'active')
+        .map((l: any) => {
         const accMetrics = metricsByAcc.get(l.ad_account_id) || new Map();
         const rowsInRange = (from: string, to: string) => {
           const out: any[] = [];

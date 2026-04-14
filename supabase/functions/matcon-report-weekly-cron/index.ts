@@ -17,11 +17,12 @@ serve(async (req) => {
     // Clientes MatCon com conta Meta ativa
     const { data: links } = await supabase
       .from('client_meta_ad_accounts')
-      .select('client_id, accounts(id, niche, niches(name))')
+      .select('client_id, accounts(id, niche, status, niches(name))')
       .eq('active', true);
 
     const matconIds: string[] = (links || [])
       .filter((l: any) => {
+        if (l.accounts?.status !== 'active') return false;
         const n = l.accounts?.niches?.name || l.accounts?.niche;
         return n === 'Material de Construção';
       })
