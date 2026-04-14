@@ -23,7 +23,7 @@ import {
 const DEFAULT_NICHE = 'Material de Construção';
 
 function fmtBRL(v: number) {
-  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 function fmtInt(v: number) {
   return v.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
