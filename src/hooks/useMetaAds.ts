@@ -208,13 +208,38 @@ export function useMetaAds() {
       }, {
         onConflict: 'client_id,ad_account_id',
       });
-    
+
     if (error) {
       toast.error('Erro ao vincular conta');
       return { error };
     }
-    
+
     await fetchClientLinks();
+
+    // Backfill imediato dos últimos 90 dias em paralelo (assíncrono)
+    // Pra conta não aparecer zerada na Central de Monitoramento
+    const today = new Date();
+    const dateTo = today.toISOString().split('T')[0];
+    const past = new Date(today);
+    past.setDate(past.getDate() - 90);
+    const dateFrom = past.toISOString().split('T')[0];
+
+    toast.info('Conta vinculada! Buscando métricas dos últimos 90 dias em segundo plano...');
+
+    const body = { adAccountIds: [adAccountId], dateFrom, dateTo };
+    Promise.allSettled([
+      supabase.functions.invoke('meta-fetch-metrics', { body }),
+      supabase.functions.invoke('meta-fetch-campaign-metrics', { body }),
+      supabase.functions.invoke('meta-fetch-ad-metrics', { body: { ...body, batchSize: 1, batchOffset: 0 } }),
+    ]).then((results) => {
+      const ok = results.filter(r => r.status === 'fulfilled').length;
+      if (ok > 0) {
+        toast.success(`Sincronização concluída (${ok}/3 níveis). Abra a Central para ver os dados.`);
+      } else {
+        toast.error('Falha ao sincronizar métricas — o sync automático de 15min vai cobrir.');
+      }
+    });
+
     return { error: null };
   };
 
