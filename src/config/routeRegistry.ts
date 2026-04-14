@@ -518,6 +518,16 @@ export const routeRegistry: RouteDefinition[] = [
     order: 0.6,
   },
   {
+    id: 'traffic.creative',
+    path: '/traffic/creative',
+    label: 'Creative Studio',
+    category: CATEGORIES.PIPELINE,
+    module: MODULES.TRAFFIC,
+    permissions: ['view'],
+    icon: ExternalLink,
+    order: 0.9,
+  },
+  {
     id: 'traffic.overview',
     path: '/traffic/overview',
     label: 'Dashboard Multi-Contas',
