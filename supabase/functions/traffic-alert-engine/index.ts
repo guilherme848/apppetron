@@ -126,6 +126,16 @@ serve(async (req) => {
         .map(e => `${e.rule_id}|${e.ad_account_id}`)
     );
 
+    // 4b) Snoozes ativos — adiciona ao existingKeys pra bloquear disparo
+    const { data: snoozes } = await supabase
+      .from('alert_snoozes')
+      .select('rule_id, ad_account_id, kind')
+      .gt('snoozed_until', new Date().toISOString());
+    for (const s of snoozes || []) {
+      if (s.rule_id && s.ad_account_id) existingKeys.add(`${s.rule_id}|${s.ad_account_id}`);
+      if (s.kind && s.ad_account_id) existingKeys.add(`${s.kind}|${s.ad_account_id}`);
+    }
+
     // 5) Processa cada regra × conta
     const newAlerts: any[] = [];
     for (const rule of rules as AlertRule[]) {
