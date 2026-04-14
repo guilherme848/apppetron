@@ -481,6 +481,16 @@ export const routeRegistry: RouteDefinition[] = [
     order: 0.5,
   },
   {
+    id: 'traffic.reports',
+    path: '/traffic/reports',
+    label: 'Relatórios MatCon',
+    category: CATEGORIES.ANALYTICS,
+    module: MODULES.TRAFFIC,
+    permissions: ['view'],
+    icon: FileText,
+    order: 0.7,
+  },
+  {
     id: 'traffic.overview',
     path: '/traffic/overview',
     label: 'Dashboard Multi-Contas',

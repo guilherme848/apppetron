@@ -97,7 +97,7 @@ serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const { adAccountIds, dateFrom, dateTo } = await req.json().catch(() => ({}));
+    const { adAccountIds, dateFrom, dateTo, batchSize = 5, batchOffset = 0 } = await req.json().catch(() => ({}));
 
     const { data: connection } = await supabase
       .from('meta_bm_connection')
@@ -117,6 +117,10 @@ serve(async (req) => {
         .eq('active', true);
       accountsToFetch = [...new Set(linked?.map(a => a.ad_account_id) || [])];
     }
+
+    // Batching: reduz memória. batchOffset + batchSize define janela
+    const totalAccounts = accountsToFetch.length;
+    accountsToFetch = accountsToFetch.slice(batchOffset, batchOffset + batchSize);
 
     const today = new Date();
     const defaultTo = today.toISOString().split('T')[0];
@@ -194,9 +198,16 @@ serve(async (req) => {
       }
     }
 
+    const nextOffset = batchOffset + batchSize;
+    const hasMore = nextOffset < totalAccounts;
+
     return new Response(JSON.stringify({
       success: true,
-      accounts: accountsToFetch.length,
+      accounts_processed: accountsToFetch.length,
+      total_accounts: totalAccounts,
+      batchOffset,
+      nextOffset: hasMore ? nextOffset : null,
+      hasMore,
       accountsError,
       campaignsUpserted,
       metricsUpserted,

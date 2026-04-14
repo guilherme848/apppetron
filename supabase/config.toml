@@ -12,6 +12,9 @@ verify_jwt = false
 [functions.traffic-alert-engine]
 verify_jwt = false
 
+[functions.generate-matcon-report]
+verify_jwt = false
+
 [functions.meta-sync-all-cron]
 verify_jwt = false
 
