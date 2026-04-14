@@ -48,12 +48,15 @@ export interface MatconReport {
   status: 'draft' | 'generated' | 'sent' | 'viewed' | 'failed';
   sent_at: string | null;
   sent_via: string | null;
+  share_token: string;
+  viewed_at: string | null;
   created_at: string;
 }
 
 export interface MatconClientReportRow {
   client_id: string;
   client_name: string;
+  contact_phone: string | null;
   ad_account_id: string | null;
   ad_monthly_budget: number | null;
   last_report: MatconReport | null;
@@ -69,7 +72,7 @@ export function useMatconReports(onlyMatCon = true) {
       // Busca clientes MatCon com conta Meta ativa
       const query = supabase
         .from('client_meta_ad_accounts')
-        .select('client_id, ad_account_id, accounts(id, name, niche, ad_monthly_budget, niches(name))')
+        .select('client_id, ad_account_id, accounts(id, name, niche, ad_monthly_budget, contact_phone, niches(name))')
         .eq('active', true);
       const { data: links } = await query;
 
@@ -96,6 +99,7 @@ export function useMatconReports(onlyMatCon = true) {
       setRows(filtered.map((l: any) => ({
         client_id: l.accounts.id,
         client_name: l.accounts.name,
+        contact_phone: l.accounts.contact_phone || null,
         ad_account_id: l.ad_account_id,
         ad_monthly_budget: l.accounts.ad_monthly_budget,
         last_report: latestByClient.get(l.accounts.id) || null,
@@ -114,7 +118,15 @@ export function useMatconReports(onlyMatCon = true) {
     return data?.report as MatconReport;
   }, [load]);
 
+  const markAsSent = useCallback(async (report_id: string, via: string, to: string) => {
+    await supabase
+      .from('matcon_reports')
+      .update({ status: 'sent', sent_at: new Date().toISOString(), sent_via: via, sent_to: to })
+      .eq('id', report_id);
+    await load();
+  }, [load]);
+
   useEffect(() => { load(); }, [load]);
 
-  return { rows, loading, refresh: load, generate };
+  return { rows, loading, refresh: load, generate, markAsSent };
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, Send, Eye, RefreshCw, Sparkles, Clock, Check } from 'lucide-react';
+import { FileText, Send, Eye, RefreshCw, Sparkles, Clock, Check, Link as LinkIcon, MessageCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,34 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useMatconReports, type MatconClientReportRow, type MatconReport } from '@/hooks/useMatconReports';
+
+function getReportUrl(token: string) {
+  return `${window.location.origin}/r/${token}`;
+}
+
+function onlyDigits(s: string | null | undefined) {
+  return (s || '').replace(/\D/g, '');
+}
+
+function buildWhatsAppMessage(row: MatconClientReportRow, report: MatconReport): string {
+  const d = report.report_data;
+  const link = getReportUrl(report.share_token);
+  const conv = d.current.conversations;
+  const cpc = d.current.cost_per_conversation;
+  const firstName = row.client_name.split(' ')[0];
+  return [
+    `Olá${firstName ? `, ${firstName}` : ''}! 👋`,
+    '',
+    `Está disponível o seu relatório semanal da Petron.`,
+    '',
+    conv > 0 ? `💬 Foram *${conv}* conversas no WhatsApp nesta semana${cpc > 0 ? ` a R$ ${cpc.toFixed(2)} cada` : ''}.` : '✨ Esta semana ajustamos as campanhas para trazer ainda mais contatos.',
+    '',
+    `📊 Ver o relatório completo:`,
+    link,
+    '',
+    `Qualquer dúvida é só responder aqui. Bom trabalho! 💪`,
+  ].join('\n');
+}
 
 function fmtBRL(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -35,14 +63,18 @@ function StatusBadge({ report }: { report: MatconReport | null }) {
   return <Badge variant="outline" className="text-[10px]">Rascunho</Badge>;
 }
 
-function ReportPreviewDialog({ report, clientName, open, onOpenChange }: {
+function ReportPreviewDialog({ report, row, open, onOpenChange, onSendWhatsApp }: {
   report: MatconReport | null;
-  clientName: string;
+  row: MatconClientReportRow | null;
   open: boolean;
   onOpenChange: (o: boolean) => void;
+  onSendWhatsApp: () => void;
 }) {
-  if (!report) return null;
+  if (!report || !row) return null;
+  const clientName = row.client_name;
   const d = report.report_data;
+  const publicUrl = getReportUrl(report.share_token);
+  const phone = onlyDigits(row.contact_phone);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-auto">
@@ -128,11 +160,29 @@ function ReportPreviewDialog({ report, clientName, open, onOpenChange }: {
           </p>
         </div>
 
-        <div className="flex justify-end gap-2 pt-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Fechar</Button>
-          <Button disabled title="Em breve: enviar via WhatsApp">
-            <Send className="h-4 w-4 mr-2" />Enviar (em breve)
-          </Button>
+        <div className="flex flex-col gap-2 pt-2">
+          <div className="flex items-center gap-2 p-2 bg-muted/30 rounded text-xs">
+            <LinkIcon className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+            <code className="flex-1 truncate">{publicUrl}</code>
+            <Button
+              size="sm" variant="ghost" className="h-7 px-2"
+              onClick={() => { navigator.clipboard.writeText(publicUrl); toast.success('Link copiado'); }}
+            >
+              Copiar
+            </Button>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Fechar</Button>
+            <Button
+              className="bg-green-600 hover:bg-green-700 text-white"
+              disabled={!phone}
+              onClick={onSendWhatsApp}
+              title={phone ? `Enviar para ${phone}` : 'Cliente sem telefone'}
+            >
+              <MessageCircle className="h-4 w-4 mr-2" />
+              {phone ? 'Enviar WhatsApp' : 'Sem telefone'}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
@@ -167,13 +217,15 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ClientReportCard({ row, onGenerate, onPreview, generating }: {
+function ClientReportCard({ row, onGenerate, onPreview, generating, onSendWhatsApp }: {
   row: MatconClientReportRow;
   onGenerate: () => void;
   onPreview: () => void;
   generating: boolean;
+  onSendWhatsApp: () => void;
 }) {
   const r = row.last_report;
+  const phone = onlyDigits(row.contact_phone);
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -201,24 +253,36 @@ function ClientReportCard({ row, onGenerate, onPreview, generating }: {
         ) : (
           <p className="text-xs text-muted-foreground">Nenhum relatório gerado ainda.</p>
         )}
-        <div className="flex gap-1">
+        <div className="flex gap-1 flex-wrap">
           {r && (
-            <Button size="sm" variant="outline" className="flex-1 h-8 text-xs" onClick={onPreview}>
-              <Eye className="h-3 w-3 mr-1" />Visualizar
+            <Button size="sm" variant="outline" className="flex-1 h-8 text-xs min-w-[80px]" onClick={onPreview}>
+              <Eye className="h-3 w-3 mr-1" />Ver
             </Button>
           )}
-          <Button size="sm" className="flex-1 h-8 text-xs" onClick={onGenerate} disabled={generating}>
+          <Button size="sm" className="flex-1 h-8 text-xs min-w-[80px]" onClick={onGenerate} disabled={generating}>
             {generating ? <RefreshCw className="h-3 w-3 mr-1 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
             {r ? 'Regenerar' : 'Gerar'}
           </Button>
         </div>
+        {r && (
+          <Button
+            size="sm"
+            className="w-full h-8 text-xs bg-green-600 hover:bg-green-700 text-white"
+            onClick={onSendWhatsApp}
+            disabled={!phone}
+            title={phone ? `Enviar para ${phone}` : 'Cliente sem telefone cadastrado'}
+          >
+            <MessageCircle className="h-3 w-3 mr-1" />
+            {phone ? 'Enviar WhatsApp' : 'Sem telefone'}
+          </Button>
+        )}
       </CardContent>
     </Card>
   );
 }
 
 export default function TrafficReports() {
-  const { rows, loading, generate } = useMatconReports();
+  const { rows, loading, generate, markAsSent } = useMatconReports();
   const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [previewing, setPreviewing] = useState<MatconClientReportRow | null>(null);
 
@@ -232,6 +296,17 @@ export default function TrafficReports() {
     } finally {
       setGeneratingId(null);
     }
+  };
+
+  const handleSendWhatsApp = async (row: MatconClientReportRow) => {
+    if (!row.last_report || !row.contact_phone) return;
+    const phone = onlyDigits(row.contact_phone);
+    if (!phone) { toast.error('Cliente sem telefone válido'); return; }
+    const msg = buildWhatsAppMessage(row, row.last_report);
+    const url = `https://wa.me/${phone.length === 11 ? '55' + phone : phone}?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
+    await markAsSent(row.last_report.id, 'whatsapp', phone);
+    toast.success('WhatsApp aberto — clique em enviar lá. Status marcado como enviado.');
   };
 
   const withReport = rows.filter(r => r.last_report).length;
@@ -271,6 +346,7 @@ export default function TrafficReports() {
               generating={generatingId === row.client_id}
               onGenerate={() => handleGenerate(row)}
               onPreview={() => setPreviewing(row)}
+              onSendWhatsApp={() => handleSendWhatsApp(row)}
             />
           ))}
         </div>
@@ -278,9 +354,10 @@ export default function TrafficReports() {
 
       <ReportPreviewDialog
         report={previewing?.last_report ?? null}
-        clientName={previewing?.client_name || ''}
+        row={previewing}
         open={!!previewing}
         onOpenChange={(o) => !o && setPreviewing(null)}
+        onSendWhatsApp={() => previewing && handleSendWhatsApp(previewing)}
       />
     </div>
   );

@@ -129,6 +129,7 @@ const RhProfileKanban = lazy(() => import("./pages/rh/RhProfileKanban"));
 const RhCandidatesList = lazy(() => import("./pages/rh/RhCandidatesList"));
 const RhApplicationDetail = lazy(() => import("./pages/rh/RhApplicationDetail"));
 const TrabalheConoscoPage = lazy(() => import("./pages/public/TrabalheConoscoPage"));
+const ReportPublicView = lazy(() => import("./pages/public/ReportPublicView"));
 
 // Sales CRM module
 const SalesDashboard = lazy(() => import("./pages/sales/SalesDashboard"));
@@ -197,6 +198,7 @@ const App = () => (
                       {/* Public routes */}
                       <Route path="/login" element={<LoginPage />} />
                       <Route path="/trabalhe-conosco" element={<TrabalheConoscoPage />} />
+                      <Route path="/r/:token" element={<ReportPublicView />} />
 
                       {/* Auth-only routes (no AppShell) */}
                       <Route element={<AuthOnlyLayout />}>
