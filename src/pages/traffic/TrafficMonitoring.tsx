@@ -110,7 +110,6 @@ function ClientsTable({
             <SortHead label="Conversas" active={sortKey === 'conversations'} dir={sortDir} onClick={() => onSort('conversations')} />
             <SortHead label="Conv. clique→msg" active={sortKey === 'conversion_rate'} dir={sortDir} onClick={() => onSort('conversion_rate')} />
             <SortHead label="Visitas perfil" active={sortKey === 'profile_visits'} dir={sortDir} onClick={() => onSort('profile_visits')} />
-            <SortHead label="Novos seguidores" active={sortKey === 'new_followers'} dir={sortDir} onClick={() => onSort('new_followers')} />
             <SortHead label="Impressões" active={sortKey === 'impressions'} dir={sortDir} onClick={() => onSort('impressions')} />
             <SortHead label="Alcance" active={sortKey === 'reach'} dir={sortDir} onClick={() => onSort('reach')} />
             <SortHead label="CPM" active={sortKey === 'cpm'} dir={sortDir} onClick={() => onSort('cpm')} />
@@ -150,7 +149,6 @@ function ClientsTable({
                 <div className="font-medium">{fmtPct(r.current.conversion_rate)}</div>
               </TableCell>
               <TableCell className="text-right text-sm">{fmtInt(r.current.profile_visits)}</TableCell>
-              <TableCell className="text-right text-sm">{fmtInt(r.current.new_followers)}</TableCell>
               <TableCell className="text-right text-sm">{fmtInt(r.current.impressions)}</TableCell>
               <TableCell className="text-right text-sm">{fmtInt(r.current.reach)}</TableCell>
               <TableCell className="text-right text-sm">{fmtBRL(r.current.cpm)}</TableCell>
