@@ -294,7 +294,10 @@ export function useMetaMonitoring(period: Period = '7d', autoRefreshMs = 5 * 60 
           messaging_replies: baselineRaw.messaging_replies * scale,
           ctr: baselineRaw.ctr,
           cpl: baselineRaw.cpl,
+          cpm: baselineRaw.cpm,
           cost_per_conversation: baselineRaw.cost_per_conversation,
+          conversion_rate: baselineRaw.conversion_rate,
+          frequency: baselineRaw.frequency,
         };
 
         // Sparkline: últimos 14 dias
