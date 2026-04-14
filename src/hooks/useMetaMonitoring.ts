@@ -20,9 +20,33 @@ export interface CampaignMetrics {
   clicks: number;
   ctr: number;
   cpl: number;
+  cpm: number;
   whatsapp_conversations: number;
   messaging_replies: number;
   cost_per_conversation: number;
+  conversion_rate: number; // conversas / cliques
+  frequency: number;
+}
+
+export interface FunnelDecomposition {
+  curr_cpm: number;
+  curr_ctr: number;
+  curr_conv_rate: number;
+  baseline_cpm: number;
+  baseline_ctr: number;
+  baseline_conv_rate: number;
+  delta_cpm: number;
+  delta_ctr: number;
+  delta_conv_rate: number;
+}
+
+export interface PacingInfo {
+  monthly_budget: number | null;
+  month_spend: number;
+  days_elapsed: number;
+  days_in_month: number;
+  projection: number; // linear projection to end of month
+  status: 'on_track' | 'over' | 'under' | 'no_budget';
 }
 
 export interface DailyPoint {
@@ -54,6 +78,8 @@ export interface ClientMonitoringRow {
   balance: BalanceInfo;
   health: 'green' | 'yellow' | 'red';
   last_sync_at: string | null;
+  funnel: FunnelDecomposition | null;
+  pacing: PacingInfo | null;
 }
 
 export interface CampaignMonitoringRow {
@@ -71,11 +97,13 @@ export interface CampaignMonitoringRow {
 const FIXED_DAYS: Partial<Record<Period, number>> = { '1d': 1, '7d': 7, '30d': 30, '90d': 90 };
 
 function emptyMetrics(): CampaignMetrics {
-  return { spend: 0, leads: 0, impressions: 0, clicks: 0, ctr: 0, cpl: 0, whatsapp_conversations: 0, messaging_replies: 0, cost_per_conversation: 0 };
+  return { spend: 0, leads: 0, impressions: 0, clicks: 0, ctr: 0, cpl: 0, cpm: 0, whatsapp_conversations: 0, messaging_replies: 0, cost_per_conversation: 0, conversion_rate: 0, frequency: 0 };
 }
 
 function sumMetrics(rows: Array<{ metrics_json: any }>): CampaignMetrics {
   const m = emptyMetrics();
+  let freqSum = 0;
+  let freqCount = 0;
   for (const r of rows) {
     const j = r.metrics_json || {};
     m.spend += Number(j.spend) || 0;
@@ -84,10 +112,15 @@ function sumMetrics(rows: Array<{ metrics_json: any }>): CampaignMetrics {
     m.clicks += Number(j.clicks) || 0;
     m.whatsapp_conversations += Number(j.whatsapp_conversations) || 0;
     m.messaging_replies += Number(j.messaging_replies) || 0;
+    const f = Number(j.frequency) || 0;
+    if (f > 0) { freqSum += f; freqCount += 1; }
   }
   m.ctr = m.impressions > 0 ? (m.clicks / m.impressions) * 100 : 0;
   m.cpl = m.leads > 0 ? m.spend / m.leads : 0;
+  m.cpm = m.impressions > 0 ? (m.spend / m.impressions) * 1000 : 0;
   m.cost_per_conversation = m.whatsapp_conversations > 0 ? m.spend / m.whatsapp_conversations : 0;
+  m.conversion_rate = m.clicks > 0 ? (m.whatsapp_conversations / m.clicks) * 100 : 0;
+  m.frequency = freqCount > 0 ? freqSum / freqCount : 0;
   return m;
 }
 
@@ -185,13 +218,17 @@ export function useMetaMonitoring(period: Period = '7d', autoRefreshMs = 5 * 60 
       const trailing14To = isoDate(today);
 
       // Range wide enough to cover all needs in a single query
-      const minFrom = [currFrom, prevFrom, trailing14From].sort()[0];
+      const monthStartDate = isoDate(new Date(today.getFullYear(), today.getMonth(), 1));
+      const minFrom = [currFrom, prevFrom, trailing14From, monthStartDate].sort()[0];
       const maxTo = [currTo, prevTo, trailing14To].sort().slice(-1)[0];
+
+      // Estende o range pra cobrir o 1º do mês (MTD) pra pacing
+      const monthStart = isoDate(new Date(today.getFullYear(), today.getMonth(), 1));
 
       const [linksRes, bmRes, metricsRes, snapshotsRes] = await Promise.all([
         supabase
           .from('client_meta_ad_accounts')
-          .select('ad_account_id, client_id, accounts(name, niche, niches(name))')
+          .select('ad_account_id, client_id, monthly_ad_budget, accounts(name, niche, niches(name))')
           .eq('active', true),
         supabase.from('meta_bm_ad_accounts').select('ad_account_id, name'),
         supabase
@@ -285,6 +322,42 @@ export function useMetaMonitoring(period: Period = '7d', autoRefreshMs = 5 * 60 
           runway_days: available != null && last7SpendAvg > 0 ? available / last7SpendAvg : null,
         };
 
+        // Pacing: MTD spend + projection
+        const monthSpend = rowsInRange(monthStartDate, isoDate(today))
+          .reduce((a, r) => a + (Number(r.metrics_json?.spend) || 0), 0);
+        const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+        const daysElapsed = today.getDate();
+        const projection = daysElapsed > 0 ? (monthSpend / daysElapsed) * daysInMonth : 0;
+        const monthlyBudget = l.monthly_ad_budget != null ? Number(l.monthly_ad_budget) : null;
+        let pacingStatus: PacingInfo['status'] = 'no_budget';
+        if (monthlyBudget != null && monthlyBudget > 0) {
+          const pct = projection / monthlyBudget;
+          if (pct > 1.1) pacingStatus = 'over';
+          else if (pct < 0.8) pacingStatus = 'under';
+          else pacingStatus = 'on_track';
+        }
+        const pacing: PacingInfo = {
+          monthly_budget: monthlyBudget,
+          month_spend: monthSpend,
+          days_elapsed: daysElapsed,
+          days_in_month: daysInMonth,
+          projection,
+          status: pacingStatus,
+        };
+
+        // Funnel decomposition: CPM / CTR / taxa de conversa (current vs baseline)
+        const funnel: FunnelDecomposition | null = (current.impressions > 0 && baseline.impressions > 0) ? {
+          curr_cpm: current.cpm,
+          curr_ctr: current.ctr,
+          curr_conv_rate: current.conversion_rate,
+          baseline_cpm: baseline.cpm,
+          baseline_ctr: baseline.ctr,
+          baseline_conv_rate: baseline.conversion_rate,
+          delta_cpm: pctDelta(current.cpm, baseline.cpm),
+          delta_ctr: pctDelta(current.ctr, baseline.ctr),
+          delta_conv_rate: pctDelta(current.conversion_rate, baseline.conversion_rate),
+        } : null;
+
         const niche = l.accounts?.niches?.name || l.accounts?.niche || null;
         return {
           client_id: l.client_id,
@@ -293,6 +366,7 @@ export function useMetaMonitoring(period: Period = '7d', autoRefreshMs = 5 * 60 
           ad_account_name: bmNameMap.get(l.ad_account_id) || null,
           niche,
           current, previous, baseline,
+          funnel, pacing,
           delta: {
             spend: pctDelta(current.spend, previous.spend),
             leads: pctDelta(current.leads, previous.leads),
@@ -386,9 +460,12 @@ export function useCampaignMonitoringPrefetch(period: Period = '7d') {
           clicks: currClicks,
           ctr: currImpr > 0 ? (currClicks / currImpr) * 100 : 0,
           cpl: currLeads > 0 ? currSpend / currLeads : 0,
+          cpm: currImpr > 0 ? (currSpend / currImpr) * 1000 : 0,
           whatsapp_conversations: currConvs,
           messaging_replies: Number(r.curr_messaging_replies) || 0,
           cost_per_conversation: currConvs > 0 ? currSpend / currConvs : 0,
+          conversion_rate: currClicks > 0 ? (currConvs / currClicks) * 100 : 0,
+          frequency: Number(r.curr_frequency_avg) || 0,
         };
         const previous: CampaignMetrics = {
           spend: prevSpend,
@@ -397,9 +474,12 @@ export function useCampaignMonitoringPrefetch(period: Period = '7d') {
           clicks: prevClicks,
           ctr: prevImpr > 0 ? (prevClicks / prevImpr) * 100 : 0,
           cpl: prevLeads > 0 ? prevSpend / prevLeads : 0,
+          cpm: prevImpr > 0 ? (prevSpend / prevImpr) * 1000 : 0,
           whatsapp_conversations: prevConvs,
           messaging_replies: 0,
           cost_per_conversation: prevConvs > 0 ? prevSpend / prevConvs : 0,
+          conversion_rate: prevClicks > 0 ? (prevConvs / prevClicks) * 100 : 0,
+          frequency: 0,
         };
         const row: CampaignMonitoringRow = {
           campaign_id: r.campaign_id,

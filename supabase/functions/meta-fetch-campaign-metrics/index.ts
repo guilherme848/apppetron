@@ -29,6 +29,7 @@ interface MetaInsights {
   cpm?: string;
   cpc?: string;
   ctr?: string;
+  frequency?: string;
   actions?: Array<{ action_type: string; value: string }>;
   cost_per_action_type?: Array<{ action_type: string; value: string }>;
   date_start: string;
@@ -75,6 +76,7 @@ function buildMetrics(d: MetaInsights) {
     cpm: parseFloat(d.cpm || '0'),
     cpc: parseFloat(d.cpc || '0'),
     ctr: parseFloat(d.ctr || '0'),
+    frequency: parseFloat(d.frequency || '0'),
     leads,
     cost_per_lead: costPerLead,
     whatsapp_conversations: totalWhats,
@@ -163,7 +165,7 @@ serve(async (req) => {
         }
 
         // 2) Fetch insights per campaign per day
-        const insFields = 'campaign_id,impressions,clicks,spend,reach,cpm,cpc,ctr,actions,cost_per_action_type';
+        const insFields = 'campaign_id,impressions,clicks,spend,reach,cpm,cpc,ctr,frequency,actions,cost_per_action_type';
         const insUrl = `https://graph.facebook.com/v19.0/${adAccountId}/insights?level=campaign&fields=${insFields}&time_range={"since":"${since}","until":"${until}"}&time_increment=1&limit=500&access_token=${accessToken}`;
         const insRes = await fetch(insUrl);
         const insData = await insRes.json();

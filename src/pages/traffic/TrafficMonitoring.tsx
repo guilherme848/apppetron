@@ -7,7 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -71,7 +73,8 @@ function RunwayBadge({ balance }: { balance: ClientMonitoringRow['balance'] }) {
   );
 }
 
-function ClientCard({ row, onClick }: { row: ClientMonitoringRow; onClick: () => void }) {
+function ClientCard({ row, onClick, onBudgetSaved }: { row: ClientMonitoringRow; onClick: () => void; onBudgetSaved: () => void }) {
+  const [budgetOpen, setBudgetOpen] = useState(false);
   const conversationsSeries = row.sparkline.map(p => p.conversations);
   const totalSparkConvs = conversationsSeries.reduce((a, b) => a + b, 0);
   const sparkColor = row.health === 'red' ? '#dc2626' : row.health === 'yellow' ? '#d97706' : '#16a34a';
@@ -125,14 +128,164 @@ function ClientCard({ row, onClick }: { row: ClientMonitoringRow; onClick: () =>
           <Sparkline values={conversationsSeries} width={90} height={24} color={sparkColor} fillColor={sparkColor} />
         </div>
 
-        {row.current.leads > 0 && (
-          <p className="text-[10px] text-muted-foreground pt-1 border-t">
-            {fmtInt(row.current.leads)} leads · CPL {fmtBRL(row.current.cpl)}
-          </p>
+        {row.pacing?.monthly_budget != null ? (
+          <div onClick={(e) => { e.stopPropagation(); setBudgetOpen(true); }} className="cursor-pointer">
+            <PacingBar pacing={row.pacing} />
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setBudgetOpen(true); }}
+            className="w-full text-[10px] text-muted-foreground hover:text-primary pt-1 border-t text-left"
+          >
+            + Definir verba mensal
+          </button>
+        )}
+
+        {(row.current.leads > 0 || row.current.frequency > 0) && (
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-1 border-t">
+            {row.current.leads > 0 && (
+              <span>{fmtInt(row.current.leads)} leads · CPL {fmtBRL(row.current.cpl)}</span>
+            )}
+            {row.current.frequency > 0 && (
+              <FrequencyBadge freq={row.current.frequency} />
+            )}
+          </div>
         )}
       </CardContent>
+      <BudgetDialog row={row} open={budgetOpen} onOpenChange={setBudgetOpen} onSaved={onBudgetSaved} />
     </Card>
   );
+}
+
+function FrequencyBadge({ freq }: { freq: number }) {
+  const level = freq >= 5 ? 'red' : freq >= 3.5 ? 'yellow' : 'ok';
+  const cls =
+    level === 'red' ? 'text-red-600' :
+    level === 'yellow' ? 'text-amber-600' :
+    'text-muted-foreground';
+  return (
+    <span className={cn('text-[10px] font-medium', cls)} title="Frequência média dos últimos dias. >3.5 = fadiga iniciando; >5 = criativos saturados">
+      Freq {freq.toFixed(1)}
+    </span>
+  );
+}
+
+function BudgetDialog({ row, open, onOpenChange, onSaved }: {
+  row: ClientMonitoringRow;
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  onSaved: () => void;
+}) {
+  const [value, setValue] = useState<string>(row.pacing?.monthly_budget?.toString() ?? '');
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    setSaving(true);
+    const num = value.trim() === '' ? null : Number(value.replace(',', '.'));
+    if (num !== null && (!isFinite(num) || num < 0)) {
+      toast.error('Valor inválido');
+      setSaving(false);
+      return;
+    }
+    const { error } = await supabase
+      .from('client_meta_ad_accounts')
+      .update({ monthly_ad_budget: num })
+      .eq('client_id', row.client_id)
+      .eq('ad_account_id', row.ad_account_id);
+    setSaving(false);
+    if (error) {
+      toast.error(`Erro: ${error.message}`);
+      return;
+    }
+    toast.success('Orçamento atualizado');
+    onOpenChange(false);
+    onSaved();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Verba mensal — {row.client_name}</DialogTitle>
+          <DialogDescription>
+            Total mensal contratado com o cliente para investir em anúncios (R$). Deixe vazio pra limpar.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4">
+          <Input
+            type="number"
+            placeholder="Ex: 5000"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && save()}
+          />
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
+          <Button onClick={save} disabled={saving}>Salvar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function PacingBar({ pacing }: { pacing: NonNullable<ClientMonitoringRow['pacing']> }) {
+  if (!pacing.monthly_budget) return null;
+  const pct = pacing.monthly_budget > 0 ? (pacing.month_spend / pacing.monthly_budget) * 100 : 0;
+  const projPct = pacing.monthly_budget > 0 ? (pacing.projection / pacing.monthly_budget) * 100 : 0;
+  const barColor =
+    pacing.status === 'over' ? 'bg-red-500' :
+    pacing.status === 'under' ? 'bg-amber-500' :
+    'bg-green-500';
+  return (
+    <div className="pt-1 border-t space-y-1">
+      <div className="flex justify-between text-[10px] text-muted-foreground">
+        <span>Verba mensal</span>
+        <span className={cn(
+          pacing.status === 'over' && 'text-red-600',
+          pacing.status === 'under' && 'text-amber-600',
+          pacing.status === 'on_track' && 'text-green-600',
+        )}>
+          {fmtBRL(pacing.month_spend)}/{fmtBRL(pacing.monthly_budget)} · proj. {fmtBRL(pacing.projection)}
+        </span>
+      </div>
+      <div className="h-1.5 w-full rounded overflow-hidden bg-muted relative">
+        <div className={cn('h-full', barColor)} style={{ width: `${Math.min(100, pct)}%` }} />
+        {projPct > 100 && (
+          <div className="absolute top-0 h-full border-l border-red-700" style={{ left: `${Math.min(100, (projPct / projPct) * 100)}%` }} title="Projeção acima da meta" />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function FunnelStat({ label, curr, baseline, delta, fmt, betterWhenLower }: {
+  label: string; curr: number; baseline: number; delta: number; fmt: 'brl' | 'pct'; betterWhenLower: boolean;
+}) {
+  const display = fmt === 'brl' ? fmtBRL(curr) : fmtPct(curr);
+  const baseDisplay = fmt === 'brl' ? fmtBRL(baseline) : fmtPct(baseline);
+  return (
+    <div className="text-center">
+      <p className="text-[10px] text-muted-foreground">{label}</p>
+      <p className="text-base font-semibold">{display}</p>
+      <p className="text-[10px] text-muted-foreground">base {baseDisplay}</p>
+      <DeltaBadge value={delta} invert={betterWhenLower} />
+    </div>
+  );
+}
+
+function diagnoseFunnel(f: NonNullable<ClientMonitoringRow['funnel']>): string {
+  const issues: string[] = [];
+  if (f.delta_cpm > 20) issues.push(`CPM +${f.delta_cpm.toFixed(0)}% (leilão mais caro)`);
+  if (f.delta_ctr < -15) issues.push(`CTR ${f.delta_ctr.toFixed(0)}% (criativo cansando)`);
+  if (f.delta_conv_rate < -15) issues.push(`taxa de conversa ${f.delta_conv_rate.toFixed(0)}% (qualificação caindo)`);
+  if (issues.length === 0) return 'Funil saudável vs média dos últimos 14 dias.';
+  const action =
+    f.delta_ctr < -15 ? ' → ação: trocar criativo.' :
+    f.delta_cpm > 20 ? ' → ação: testar outra audiência/horário.' :
+    f.delta_conv_rate < -15 ? ' → ação: revisar headline/landing.' : '';
+  return `Problema: ${issues.join(', ')}.${action}`;
 }
 
 function CampaignDrawer({
@@ -154,6 +307,21 @@ function CampaignDrawer({
             <Badge variant="outline" className="ml-2">{client.ad_account_name || client.ad_account_id}</Badge>
           </DialogTitle>
         </DialogHeader>
+
+        {client.funnel && (
+          <div className="px-6 pb-3 border-b">
+            <p className="text-xs text-muted-foreground mb-2">Diagnóstico do funil (vs média 14 dias):</p>
+            <div className="grid grid-cols-3 gap-3">
+              <FunnelStat label="CPM" curr={client.funnel.curr_cpm} baseline={client.funnel.baseline_cpm} delta={client.funnel.delta_cpm} fmt="brl" betterWhenLower />
+              <FunnelStat label="CTR" curr={client.funnel.curr_ctr} baseline={client.funnel.baseline_ctr} delta={client.funnel.delta_ctr} fmt="pct" betterWhenLower={false} />
+              <FunnelStat label="Conversa/clique" curr={client.funnel.curr_conv_rate} baseline={client.funnel.baseline_conv_rate} delta={client.funnel.delta_conv_rate} fmt="pct" betterWhenLower={false} />
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-2">
+              {diagnoseFunnel(client.funnel)}
+            </p>
+          </div>
+        )}
+
         <div className="flex-1 overflow-auto">
           {loading && rows.length === 0 ? (
             <div className="space-y-2 p-4">
@@ -173,6 +341,7 @@ function CampaignDrawer({
                   <TableHead className="text-right">Gasto</TableHead>
                   <TableHead className="text-right">Leads</TableHead>
                   <TableHead className="text-right">CTR</TableHead>
+                  <TableHead className="text-right">Freq</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -215,6 +384,9 @@ function CampaignRow({ c }: { c: CampaignMonitoringRow }) {
         {c.current.leads > 0 && <div className="text-xs text-muted-foreground">{fmtBRL(c.current.cpl)} CPL</div>}
       </TableCell>
       <TableCell className="text-right text-sm">{fmtPct(c.current.ctr)}</TableCell>
+      <TableCell className="text-right text-sm">
+        {c.current.frequency > 0 ? <FrequencyBadge freq={c.current.frequency} /> : '—'}
+      </TableCell>
       <TableCell>
         <Badge variant={c.effective_status === 'ACTIVE' ? 'default' : 'secondary'} className="text-xs">
           {c.effective_status || '—'}
@@ -417,7 +589,7 @@ export default function TrafficMonitoring() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {filtered.map((row) => (
-            <ClientCard key={row.client_id + row.ad_account_id} row={row} onClick={() => setSelected(row)} />
+            <ClientCard key={row.client_id + row.ad_account_id} row={row} onClick={() => setSelected(row)} onBudgetSaved={refresh} />
           ))}
         </div>
       )}

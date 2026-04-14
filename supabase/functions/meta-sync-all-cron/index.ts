@@ -14,6 +14,7 @@ interface MetaInsightsData {
   cpm?: string;
   cpc?: string;
   ctr?: string;
+  frequency?: string;
   actions?: Array<{ action_type: string; value: string }>;
   website_ctr?: Array<{ action_type: string; value: string }>;
   cost_per_action_type?: Array<{ action_type: string; value: string }>;
@@ -173,7 +174,7 @@ serve(async (req) => {
       // ===== 2. FETCH METRICS =====
       try {
         const fields = [
-          'impressions', 'clicks', 'spend', 'reach', 'cpm', 'cpc', 'ctr',
+          'impressions', 'clicks', 'spend', 'reach', 'cpm', 'cpc', 'ctr', 'frequency',
           'actions', 'cost_per_action_type', 'website_ctr',
         ].join(',');
         
@@ -231,6 +232,7 @@ serve(async (req) => {
             link_clicks: parseInt(dayData.clicks || '0'),
             clicks: parseInt(dayData.clicks || '0'),
             cpm: parseFloat(dayData.cpm || '0'),
+            frequency: parseFloat(dayData.frequency || '0'),
             cpc: parseFloat(dayData.cpc || '0'),
             ctr: parseFloat(dayData.ctr || '0'),
             conversions,
