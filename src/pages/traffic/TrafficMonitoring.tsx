@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { RefreshCw, TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle2, Search, ChevronRight, Wallet } from 'lucide-react';
+import { RefreshCw, TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle2, Search, ChevronRight, Wallet, LayoutGrid, Table as TableIcon, ArrowUp, ArrowDown } from 'lucide-react';
 import { Sparkline } from '@/components/traffic/Sparkline';
 import { AlertsFeed } from '@/components/traffic/AlertsFeed';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -71,6 +71,95 @@ function RunwayBadge({ balance }: { balance: ClientMonitoringRow['balance'] }) {
       <Wallet className="h-3 w-3" />
       {days < 1 ? '<1d' : `${Math.round(days)}d`}
     </span>
+  );
+}
+
+function SortHead({ label, active, dir, onClick, align = 'right' }: {
+  label: string; active: boolean; dir: SortDir; onClick: () => void; align?: 'left' | 'right';
+}) {
+  return (
+    <TableHead className={align === 'right' ? 'text-right' : ''}>
+      <button
+        type="button"
+        onClick={onClick}
+        className={cn('inline-flex items-center gap-1 hover:text-primary transition', active && 'text-primary font-semibold')}
+      >
+        {label}
+        {active && (dir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />)}
+      </button>
+    </TableHead>
+  );
+}
+
+function ClientsTable({
+  rows, sortKey, sortDir, onSort, onClick,
+}: {
+  rows: ClientMonitoringRow[];
+  sortKey: SortKey;
+  sortDir: SortDir;
+  onSort: (k: SortKey) => void;
+  onClick: (row: ClientMonitoringRow) => void;
+}) {
+  return (
+    <div className="rounded-lg border overflow-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <SortHead label="Cliente" align="left" active={sortKey === 'client'} dir={sortDir} onClick={() => onSort('client')} />
+            <SortHead label="Custo/conv" active={sortKey === 'cost_per_conversation'} dir={sortDir} onClick={() => onSort('cost_per_conversation')} />
+            <SortHead label="Conversas" active={sortKey === 'conversations'} dir={sortDir} onClick={() => onSort('conversations')} />
+            <SortHead label="Conv. clique→msg" active={sortKey === 'conversion_rate'} dir={sortDir} onClick={() => onSort('conversion_rate')} />
+            <SortHead label="Investido" active={sortKey === 'spend'} dir={sortDir} onClick={() => onSort('spend')} />
+            <SortHead label="CTR Único" active={sortKey === 'unique_ctr'} dir={sortDir} onClick={() => onSort('unique_ctr')} />
+            <SortHead label="CPM" active={sortKey === 'cpm'} dir={sortDir} onClick={() => onSort('cpm')} />
+            <SortHead label="Alcance" active={sortKey === 'reach'} dir={sortDir} onClick={() => onSort('reach')} />
+            <SortHead label="Impressões" active={sortKey === 'impressions'} dir={sortDir} onClick={() => onSort('impressions')} />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map((r) => (
+            <TableRow
+              key={r.client_id + r.ad_account_id}
+              className={cn(
+                'cursor-pointer hover:bg-muted/50',
+                r.health === 'red' && 'bg-red-500/5',
+                r.health === 'yellow' && 'bg-amber-500/5',
+              )}
+              onClick={() => onClick(r)}
+            >
+              <TableCell>
+                <div className="flex items-center gap-2 min-w-0">
+                  <HealthDot health={r.health} />
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm truncate">{r.client_name}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{r.ad_account_name || r.ad_account_id}</p>
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell className="text-right">
+                <div className="font-semibold">{r.current.whatsapp_conversations > 0 ? fmtBRL(r.current.cost_per_conversation) : '—'}</div>
+                <DeltaBadge value={r.delta.cost_per_conversation} invert />
+              </TableCell>
+              <TableCell className="text-right">
+                <div className="font-semibold">{fmtInt(r.current.whatsapp_conversations)}</div>
+                <DeltaBadge value={r.delta.conversations} />
+              </TableCell>
+              <TableCell className="text-right">
+                <div className="font-medium">{fmtPct(r.current.conversion_rate)}</div>
+              </TableCell>
+              <TableCell className="text-right">
+                <div className="font-medium">{fmtBRL(r.current.spend)}</div>
+                <DeltaBadge value={r.delta.spend} />
+              </TableCell>
+              <TableCell className="text-right text-sm">{fmtPct(r.current.unique_ctr)}</TableCell>
+              <TableCell className="text-right text-sm">{fmtBRL(r.current.cpm)}</TableCell>
+              <TableCell className="text-right text-sm">{fmtInt(r.current.reach)}</TableCell>
+              <TableCell className="text-right text-sm">{fmtInt(r.current.impressions)}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
 
@@ -396,12 +485,18 @@ function CampaignRow({ c }: { c: CampaignMonitoringRow }) {
   );
 }
 
+type SortKey = 'client' | 'health' | 'cost_per_conversation' | 'conversations' | 'conversion_rate' | 'spend' | 'unique_ctr' | 'cpm' | 'reach' | 'impressions';
+type SortDir = 'asc' | 'desc';
+
 export default function TrafficMonitoring() {
   const [period, setPeriod] = useState<Period>('7d');
   const [search, setSearch] = useState('');
   const [healthFilter, setHealthFilter] = useState<'all' | 'red' | 'yellow' | 'green'>('all');
   const [nicheFilter, setNicheFilter] = useState<string>(DEFAULT_NICHE);
   const [selected, setSelected] = useState<ClientMonitoringRow | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [sortKey, setSortKey] = useState<SortKey>('health');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
 
   const { rows, loading, error, lastRefresh, refresh } = useMetaMonitoring(period);
   const { byAccount: campaignsByAccount, loading: campaignsLoading } = useCampaignMonitoringPrefetch(period);
@@ -424,14 +519,39 @@ export default function TrafficMonitoring() {
     if (healthFilter !== 'all') {
       r = r.filter(x => x.health === healthFilter);
     }
-    // sort: critical first, then by spend desc
+    // grid: health primeiro, depois spend desc; tabela: usa sortKey/sortDir
+    if (viewMode === 'grid') {
+      return [...r].sort((a, b) => {
+        const hOrder = { red: 0, yellow: 1, green: 2 };
+        const h = hOrder[a.health] - hOrder[b.health];
+        if (h !== 0) return h;
+        return b.current.spend - a.current.spend;
+      });
+    }
+    const mult = sortDir === 'asc' ? 1 : -1;
     return [...r].sort((a, b) => {
-      const hOrder = { red: 0, yellow: 1, green: 2 };
-      const h = hOrder[a.health] - hOrder[b.health];
-      if (h !== 0) return h;
-      return b.current.spend - a.current.spend;
+      let va: number | string = 0, vb: number | string = 0;
+      switch (sortKey) {
+        case 'client': va = a.client_name; vb = b.client_name; break;
+        case 'health': va = { red: 0, yellow: 1, green: 2 }[a.health]; vb = { red: 0, yellow: 1, green: 2 }[b.health]; break;
+        case 'cost_per_conversation': va = a.current.cost_per_conversation; vb = b.current.cost_per_conversation; break;
+        case 'conversations': va = a.current.whatsapp_conversations; vb = b.current.whatsapp_conversations; break;
+        case 'conversion_rate': va = a.current.conversion_rate; vb = b.current.conversion_rate; break;
+        case 'spend': va = a.current.spend; vb = b.current.spend; break;
+        case 'unique_ctr': va = a.current.unique_ctr; vb = b.current.unique_ctr; break;
+        case 'cpm': va = a.current.cpm; vb = b.current.cpm; break;
+        case 'reach': va = a.current.reach; vb = b.current.reach; break;
+        case 'impressions': va = a.current.impressions; vb = b.current.impressions; break;
+      }
+      if (typeof va === 'string') return va.localeCompare(vb as string) * mult;
+      return ((va as number) - (vb as number)) * mult;
     });
-  }, [rows, search, healthFilter]);
+  }, [rows, search, healthFilter, viewMode, sortKey, sortDir]);
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortKey(key); setSortDir(key === 'client' ? 'asc' : 'desc'); }
+  };
 
   const totals = useMemo(() => {
     const base = nicheFilter === 'all' ? rows : rows.filter(r => r.niche === nicheFilter);
@@ -474,6 +594,22 @@ export default function TrafficMonitoring() {
               ))}
             </SelectContent>
           </Select>
+          <div className="inline-flex rounded-md border bg-muted/20">
+            <Button
+              variant={viewMode === 'grid' ? 'secondary' : 'ghost'} size="sm"
+              className="rounded-r-none border-r" onClick={() => setViewMode('grid')}
+              title="Visualização em cards"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'table' ? 'secondary' : 'ghost'} size="sm"
+              className="rounded-l-none" onClick={() => setViewMode('table')}
+              title="Visualização em tabela"
+            >
+              <TableIcon className="h-4 w-4" />
+            </Button>
+          </div>
           <Button variant="outline" size="icon" onClick={refresh} disabled={loading} title="Atualizar agora">
             <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
           </Button>
@@ -589,6 +725,14 @@ export default function TrafficMonitoring() {
             Nenhum cliente encontrado com os filtros atuais.
           </CardContent>
         </Card>
+      ) : viewMode === 'table' ? (
+        <ClientsTable
+          rows={filtered}
+          sortKey={sortKey}
+          sortDir={sortDir}
+          onSort={toggleSort}
+          onClick={setSelected}
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {filtered.map((row) => (

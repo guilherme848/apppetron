@@ -17,8 +17,10 @@ export interface CampaignMetrics {
   spend: number;
   leads: number;
   impressions: number;
+  reach: number;
   clicks: number;
   ctr: number;
+  unique_ctr: number; // clicks / reach × 100 (aprox. CTR único)
   cpl: number;
   cpm: number;
   whatsapp_conversations: number;
@@ -97,7 +99,7 @@ export interface CampaignMonitoringRow {
 const FIXED_DAYS: Partial<Record<Period, number>> = { '1d': 1, '7d': 7, '30d': 30, '90d': 90 };
 
 function emptyMetrics(): CampaignMetrics {
-  return { spend: 0, leads: 0, impressions: 0, clicks: 0, ctr: 0, cpl: 0, cpm: 0, whatsapp_conversations: 0, messaging_replies: 0, cost_per_conversation: 0, conversion_rate: 0, frequency: 0 };
+  return { spend: 0, leads: 0, impressions: 0, reach: 0, clicks: 0, ctr: 0, unique_ctr: 0, cpl: 0, cpm: 0, whatsapp_conversations: 0, messaging_replies: 0, cost_per_conversation: 0, conversion_rate: 0, frequency: 0 };
 }
 
 function sumMetrics(rows: Array<{ metrics_json: any }>): CampaignMetrics {
@@ -109,6 +111,7 @@ function sumMetrics(rows: Array<{ metrics_json: any }>): CampaignMetrics {
     m.spend += Number(j.spend) || 0;
     m.leads += Number(j.leads) || 0;
     m.impressions += Number(j.impressions) || 0;
+    m.reach += Number(j.reach) || 0;
     m.clicks += Number(j.clicks) || 0;
     m.whatsapp_conversations += Number(j.whatsapp_conversations) || 0;
     m.messaging_replies += Number(j.messaging_replies) || 0;
@@ -116,6 +119,7 @@ function sumMetrics(rows: Array<{ metrics_json: any }>): CampaignMetrics {
     if (f > 0) { freqSum += f; freqCount += 1; }
   }
   m.ctr = m.impressions > 0 ? (m.clicks / m.impressions) * 100 : 0;
+  m.unique_ctr = m.reach > 0 ? (m.clicks / m.reach) * 100 : 0;
   m.cpl = m.leads > 0 ? m.spend / m.leads : 0;
   m.cpm = m.impressions > 0 ? (m.spend / m.impressions) * 1000 : 0;
   m.cost_per_conversation = m.whatsapp_conversations > 0 ? m.spend / m.whatsapp_conversations : 0;
@@ -289,10 +293,12 @@ export function useMetaMonitoring(period: Period = '7d', autoRefreshMs = 5 * 60 
           spend: baselineRaw.spend * scale,
           leads: baselineRaw.leads * scale,
           impressions: baselineRaw.impressions * scale,
+          reach: baselineRaw.reach * scale,
           clicks: baselineRaw.clicks * scale,
           whatsapp_conversations: baselineRaw.whatsapp_conversations * scale,
           messaging_replies: baselineRaw.messaging_replies * scale,
           ctr: baselineRaw.ctr,
+          unique_ctr: baselineRaw.unique_ctr,
           cpl: baselineRaw.cpl,
           cpm: baselineRaw.cpm,
           cost_per_conversation: baselineRaw.cost_per_conversation,
@@ -461,7 +467,9 @@ export function useCampaignMonitoringPrefetch(period: Period = '7d') {
           leads: currLeads,
           impressions: currImpr,
           clicks: currClicks,
+          reach: 0,
           ctr: currImpr > 0 ? (currClicks / currImpr) * 100 : 0,
+          unique_ctr: 0,
           cpl: currLeads > 0 ? currSpend / currLeads : 0,
           cpm: currImpr > 0 ? (currSpend / currImpr) * 1000 : 0,
           whatsapp_conversations: currConvs,
@@ -475,7 +483,9 @@ export function useCampaignMonitoringPrefetch(period: Period = '7d') {
           leads: prevLeads,
           impressions: prevImpr,
           clicks: prevClicks,
+          reach: 0,
           ctr: prevImpr > 0 ? (prevClicks / prevImpr) * 100 : 0,
+          unique_ctr: 0,
           cpl: prevLeads > 0 ? prevSpend / prevLeads : 0,
           cpm: prevImpr > 0 ? (prevSpend / prevImpr) * 1000 : 0,
           whatsapp_conversations: prevConvs,
