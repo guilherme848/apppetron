@@ -21,6 +21,9 @@ verify_jwt = false
 [functions.meta-fetch-ad-metrics]
 verify_jwt = false
 
+[functions.meta-backfill-account]
+verify_jwt = false
+
 [functions.meta-ad-metrics-cron]
 verify_jwt = false
 

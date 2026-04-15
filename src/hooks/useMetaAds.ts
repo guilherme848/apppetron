@@ -216,27 +216,26 @@ export function useMetaAds() {
 
     await fetchClientLinks();
 
-    // Backfill imediato dos últimos 90 dias em paralelo (assíncrono)
-    // Pra conta não aparecer zerada na Central de Monitoramento
-    const today = new Date();
-    const dateTo = today.toISOString().split('T')[0];
-    const past = new Date(today);
-    past.setDate(past.getDate() - 90);
-    const dateFrom = past.toISOString().split('T')[0];
+    // Backfill imediato dos últimos 90 dias via edge function orquestradora.
+    // Pra conta não aparecer zerada na Central.
+    toast.info('Conta vinculada! Sincronizando últimos 90 dias em segundo plano...');
 
-    toast.info('Conta vinculada! Buscando métricas dos últimos 90 dias em segundo plano...');
-
-    const body = { adAccountIds: [adAccountId], dateFrom, dateTo };
-    Promise.allSettled([
-      supabase.functions.invoke('meta-fetch-metrics', { body }),
-      supabase.functions.invoke('meta-fetch-campaign-metrics', { body }),
-      supabase.functions.invoke('meta-fetch-ad-metrics', { body: { ...body, batchSize: 1, batchOffset: 0 } }),
-    ]).then((results) => {
-      const ok = results.filter(r => r.status === 'fulfilled').length;
-      if (ok > 0) {
-        toast.success(`Sincronização concluída (${ok}/3 níveis). Abra a Central para ver os dados.`);
+    supabase.functions.invoke('meta-backfill-account', {
+      body: { ad_account_id: adAccountId, days: 90 },
+    }).then(({ data, error }) => {
+      if (error) {
+        console.error('[meta-backfill-account] invoke error:', error);
+        toast.error(`Falha no backfill: ${error.message}. Sync automático de 15min vai cobrir.`);
+        return;
+      }
+      if (data?.success) {
+        const cnt = (data.account_level?.successCount ?? 0)
+          + (data.campaign_level?.campaignsUpserted ?? 0)
+          + (data.ad_level?.adsUpserted ?? 0);
+        toast.success(`Sincronização concluída — ${cnt} registros gravados. Abra a Central.`);
       } else {
-        toast.error('Falha ao sincronizar métricas — o sync automático de 15min vai cobrir.');
+        console.warn('[meta-backfill-account] partial:', data);
+        toast.warning(`Backfill parcial: ${(data?.errors || []).join('; ').slice(0, 160) || 'alguns níveis falharam'}`);
       }
     });
 
