@@ -102,14 +102,18 @@ export default function CrmList() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | undefined>();
   const [sortConfig, setSortConfig] = useState<SortConfig>(getStoredSort);
-  const [showChurned, setShowChurned] = useState(false);
+  const [showChurnedParam, setShowChurnedParam] = useSearchParamState('churned', 'false');
+  const showChurned = showChurnedParam === 'true';
+  const setShowChurned = (v: boolean) => setShowChurnedParam(v ? 'true' : 'false');
   const [filterPlan, setFilterPlan] = useSearchParamState('plan', 'all');
-  const [filterTrafficManager, setFilterTrafficManager] = useState('all');
-  const [filterCs, setFilterCs] = useState('all');
-  const [filterNiche, setFilterNiche] = useState('all');
-  const [filterEntryMonth, setFilterEntryMonth] = useState('all');
-  const [filterSource, setFilterSource] = useState('all');
-  const [filterTraffic, setFilterTraffic] = useState<'all' | 'has_plan' | 'has_account' | 'no_account' | 'plan_without_account'>('all');
+  const [filterTrafficManager, setFilterTrafficManager] = useSearchParamState('tm', 'all');
+  const [filterCs, setFilterCs] = useSearchParamState('cs', 'all');
+  const [filterNiche, setFilterNiche] = useSearchParamState('niche', 'all');
+  const [filterEntryMonth, setFilterEntryMonth] = useSearchParamState('entry', 'all');
+  const [filterSource, setFilterSource] = useSearchParamState('src', 'all');
+  const [filterTrafficRaw, setFilterTrafficRaw] = useSearchParamState('traffic', 'all');
+  const filterTraffic = filterTrafficRaw as 'all' | 'has_plan' | 'has_account' | 'no_account' | 'plan_without_account';
+  const setFilterTraffic = setFilterTrafficRaw;
   const [currentPage, setCurrentPage] = useState(1);
 
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
