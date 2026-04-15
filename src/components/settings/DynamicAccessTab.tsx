@@ -396,7 +396,7 @@ function PermissionMatrix({
   togglingModule,
 }: PermissionMatrixProps) {
   return (
-    <Accordion type="multiple" defaultValue={MODULE_ORDER} className="space-y-2">
+    <Accordion type="multiple" defaultValue={[]} className="space-y-2">
       {MODULE_ORDER.map((module) => {
         const categories = groupedPermissions[module];
         if (!categories || Object.keys(categories).length === 0) return null;
@@ -509,7 +509,7 @@ function PermissionMatrixWithOverrides({
   permissions 
 }: PermissionMatrixWithOverridesProps) {
   return (
-    <Accordion type="multiple" defaultValue={MODULE_ORDER} className="space-y-2">
+    <Accordion type="multiple" defaultValue={[]} className="space-y-2">
       {MODULE_ORDER.map((module) => {
         const categories = groupedPermissions[module];
         if (!categories || Object.keys(categories).length === 0) return null;
