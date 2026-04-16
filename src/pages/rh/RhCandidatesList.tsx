@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Mail, Phone, User, BookmarkPlus } from 'lucide-react';
+import { Search, Mail, Phone, User, BookmarkPlus, MoreHorizontal, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { RhLayout } from '@/components/rh/RhLayout';
 import { useRh } from '@/contexts/RhContext';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -21,16 +23,48 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { APPLICATION_STATUS_LABEL, type HrApplicationStatus } from '@/types/rh';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { APPLICATION_STATUS_LABEL, type HrApplicationStatus, type HrCandidate } from '@/types/rh';
 
 type StatusFilter = HrApplicationStatus | 'all';
 
 export default function RhCandidatesList() {
   const navigate = useNavigate();
-  const { candidates, applications, jobs, loading } = useRh();
+  const { candidates, applications, jobs, loading, deleteCandidate } = useRh();
   const [search, setSearch] = useState('');
   const [jobFilter, setJobFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [candidateToDelete, setCandidateToDelete] = useState<HrCandidate | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleConfirmDelete = async () => {
+    if (!candidateToDelete) return;
+    setDeleting(true);
+    try {
+      await deleteCandidate(candidateToDelete.id);
+      toast.success(`Candidato ${candidateToDelete.full_name} excluído`);
+      setCandidateToDelete(null);
+    } catch (e: any) {
+      toast.error(e.message || 'Erro ao excluir candidato');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   // Mapa email -> candidate (ids únicos)
   const candidatesWithApps = useMemo(() => {
@@ -160,18 +194,19 @@ export default function RhCandidatesList() {
                   <TableHead>Inscrições</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Inscrito em</TableHead>
+                  <TableHead className="w-[50px]" />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       Carregando...
                     </TableCell>
                   </TableRow>
                 ) : filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-12">
+                    <TableCell colSpan={6} className="text-center py-12">
                       <User className="h-10 w-10 mx-auto mb-2 text-muted-foreground" />
                       <p className="text-sm text-muted-foreground">
                         Nenhum candidato ainda. Compartilhe o link de uma vaga para começar.
@@ -248,6 +283,31 @@ export default function RhCandidatesList() {
                         <TableCell className="text-xs text-muted-foreground">
                           {new Date(candidate.created_at).toLocaleDateString('pt-BR')}
                         </TableCell>
+                        <TableCell
+                          className="text-right"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Ações</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onSelect={(e) => {
+                                  e.preventDefault();
+                                  setCandidateToDelete(candidate);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Excluir candidato
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
                       </TableRow>
                     );
                   })
@@ -257,6 +317,46 @@ export default function RhCandidatesList() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Confirmação de exclusão */}
+      <AlertDialog
+        open={!!candidateToDelete}
+        onOpenChange={(open) => {
+          if (!open && !deleting) setCandidateToDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir candidato?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {candidateToDelete && (
+                <>
+                  Você está prestes a excluir <strong>{candidateToDelete.full_name}</strong>{' '}
+                  permanentemente do banco.
+                  <br />
+                  <br />
+                  Isso remove <strong>TODAS as inscrições</strong> dele em qualquer vaga, junto com
+                  respostas do formulário, currículo, análises de IA e histórico. Esta ação não
+                  pode ser desfeita.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleting}
+              onClick={(e) => {
+                e.preventDefault();
+                handleConfirmDelete();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? 'Excluindo...' : 'Excluir definitivamente'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </RhLayout>
   );
 }

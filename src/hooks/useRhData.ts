@@ -6,18 +6,19 @@ import { supabase } from '@/integrations/supabase/client';
 // regenerar o types.ts em cada alteração do schema RH.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sb: any = supabase;
-import type {
-  HrJobProfile,
-  HrJob,
-  HrPipelineStage,
-  HrForm,
-  HrFormQuestion,
-  HrCandidate,
-  HrApplication,
-  HrApplicationWithRelations,
-  HrApplicationEvent,
-  HrAiAnalysis,
-  HrFormResponse,
+import {
+  DEFAULT_FIELD_REQUIREMENTS,
+  type HrJobProfile,
+  type HrJob,
+  type HrPipelineStage,
+  type HrForm,
+  type HrFormQuestion,
+  type HrCandidate,
+  type HrApplication,
+  type HrApplicationWithRelations,
+  type HrApplicationEvent,
+  type HrAiAnalysis,
+  type HrFormResponse,
 } from '@/types/rh';
 
 // ─────────────────────────────────────────────────────────────
@@ -52,6 +53,7 @@ const mapProfile = (d: any): HrJobProfile => ({
   accepting_applications: d.accepting_applications ?? false,
   requires_experience: d.requires_experience ?? false,
   salary_range: d.salary_range ?? null,
+  field_requirements: { ...DEFAULT_FIELD_REQUIREMENTS, ...(d.field_requirements || {}) },
   created_by_member_id: d.created_by_member_id,
   created_at: d.created_at,
   updated_at: d.updated_at,

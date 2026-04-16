@@ -8,6 +8,8 @@ import {
   Copy,
   Pencil,
   KanbanSquare,
+  ClipboardList,
+  Lock,
 } from 'lucide-react';
 import { RhLayout } from '@/components/rh/RhLayout';
 import { JobKanban } from '@/components/rh/JobKanban';
@@ -28,10 +30,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import type {
-  HrJobProfile,
-  HrJobProfileSkill,
-  HrJobProfileTool,
+import {
+  DEFAULT_FIELD_REQUIREMENTS,
+  FIELD_REQUIREMENT_LABELS,
+  type HrJobProfile,
+  type HrJobProfileSkill,
+  type HrJobProfileTool,
+  type HrFieldRequirements,
+  type HrPublicFormField,
 } from '@/types/rh';
 
 const DEPARTMENTS = [
@@ -105,6 +111,7 @@ export default function RhJobProfileDetail() {
         accepting_applications: profile.accepting_applications,
         requires_experience: profile.requires_experience,
         salary_range: profile.salary_range,
+        field_requirements: profile.field_requirements,
       });
       toast.success('Vaga salva');
       setDirty(false);
@@ -249,10 +256,11 @@ export default function RhJobProfileDetail() {
             <CardContent className="p-6">
 
             <Tabs defaultValue="basico">
-              <TabsList className="grid grid-cols-3 mb-6">
+              <TabsList className="grid grid-cols-4 mb-6">
                 <TabsTrigger value="basico">Identidade</TabsTrigger>
                 <TabsTrigger value="sobre">Sobre a vaga</TabsTrigger>
                 <TabsTrigger value="skills">Skills & Ferramentas</TabsTrigger>
+                <TabsTrigger value="formulario">Formulário</TabsTrigger>
               </TabsList>
 
               {/* ═══════════════ IDENTIDADE ═══════════════ */}
@@ -438,6 +446,15 @@ export default function RhJobProfileDetail() {
                   onChange={(tools) => patch({ tools })}
                 />
               </TabsContent>
+
+              {/* ═══════════════ FORMULÁRIO (obrigatoriedade) ═══════════════ */}
+              <TabsContent value="formulario" className="space-y-4">
+                <FieldRequirementsEditor
+                  value={profile.field_requirements}
+                  onChange={(field_requirements) => patch({ field_requirements })}
+                  requiresExperience={profile.requires_experience}
+                />
+              </TabsContent>
             </Tabs>
             </CardContent>
           </Card>
@@ -591,6 +608,114 @@ function ToolsEditor({
         <Plus className="h-4 w-4 mr-2" />
         Adicionar ferramenta
       </Button>
+    </div>
+  );
+}
+
+// ─── EDITOR DE OBRIGATORIEDADE DO FORMULÁRIO PÚBLICO ──────────────
+
+const FIELD_GROUPS: { title: string; fields: HrPublicFormField[] }[] = [
+  {
+    title: 'Identificação',
+    fields: ['full_name', 'email', 'phone', 'city', 'state', 'portfolio_url'],
+  },
+  {
+    title: 'Triagem da vaga',
+    fields: ['presential_availability', 'start_availability', 'salary_expectation'],
+  },
+  {
+    title: 'Experiência',
+    fields: ['experience_years', 'experience_summary', 'tools_known', 'why_petron'],
+  },
+  {
+    title: 'Anexos & consentimento',
+    fields: ['resume', 'accept_lgpd'],
+  },
+];
+
+function FieldRequirementsEditor({
+  value,
+  onChange,
+  requiresExperience,
+}: {
+  value: HrFieldRequirements;
+  onChange: (v: HrFieldRequirements) => void;
+  requiresExperience: boolean;
+}) {
+  // Merge com defaults caso venha vazio do DB em vagas antigas
+  const effective: HrFieldRequirements = { ...DEFAULT_FIELD_REQUIREMENTS, ...(value || {}) };
+
+  const toggle = (field: HrPublicFormField, next: boolean) => {
+    onChange({ ...effective, [field]: next });
+  };
+
+  const requiredCount = Object.values(effective).filter(Boolean).length;
+  const totalCount = Object.keys(FIELD_REQUIREMENT_LABELS).length;
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-start justify-between gap-4 flex-wrap p-4 bg-muted/40 rounded-xl border border-border">
+        <div>
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <ClipboardList className="h-4 w-4 text-primary" />
+            Obrigatoriedade por pergunta
+          </div>
+          <p className="text-xs text-muted-foreground mt-1 max-w-xl">
+            Controle quais campos do formulário público de inscrição são obrigatórios.
+            Campos trancados são sempre obrigatórios por regra do sistema.
+          </p>
+        </div>
+        <Badge variant="secondary" className="h-6">
+          {requiredCount}/{totalCount} obrigatórios
+        </Badge>
+      </div>
+
+      {FIELD_GROUPS.map((group) => (
+        <div key={group.title} className="space-y-2">
+          <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold px-1">
+            {group.title}
+          </div>
+          <div className="rounded-xl border border-border bg-card divide-y divide-border">
+            {group.fields.map((field) => {
+              const meta = FIELD_REQUIREMENT_LABELS[field];
+              const isLocked = !!meta.locked;
+              const forcedByResume = field === 'resume' && requiresExperience;
+              const checked = isLocked ? true : forcedByResume ? true : !!effective[field];
+              return (
+                <div key={field} className="flex items-center justify-between gap-4 p-3">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium flex items-center gap-2">
+                      {meta.label}
+                      {isLocked && (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                          <Lock className="h-3 w-3" />
+                          Fixo
+                        </span>
+                      )}
+                    </div>
+                    {(meta.hint || forcedByResume) && (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {forcedByResume
+                          ? 'Forçado obrigatório: a vaga exige experiência comprovada (requires_experience=true).'
+                          : meta.hint}
+                      </p>
+                    )}
+                  </div>
+                  <Switch
+                    checked={checked}
+                    disabled={isLocked || forcedByResume}
+                    onCheckedChange={(v) => toggle(field, v)}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+
+      <div className="text-xs text-muted-foreground px-1">
+        As mudanças só ficam ativas após clicar em <strong>Salvar</strong> no topo.
+      </div>
     </div>
   );
 }

@@ -42,6 +42,43 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const publicClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+type PublicFormFieldKey =
+  | 'full_name'
+  | 'email'
+  | 'phone'
+  | 'city'
+  | 'state'
+  | 'portfolio_url'
+  | 'presential_availability'
+  | 'tools_known'
+  | 'salary_expectation'
+  | 'start_availability'
+  | 'experience_years'
+  | 'experience_summary'
+  | 'why_petron'
+  | 'accept_lgpd'
+  | 'resume';
+
+type PublicFieldRequirements = Partial<Record<PublicFormFieldKey, boolean>>;
+
+const DEFAULT_PUBLIC_FIELD_REQUIREMENTS: Record<PublicFormFieldKey, boolean> = {
+  full_name: true,
+  email: true,
+  phone: true,
+  city: false,
+  state: false,
+  portfolio_url: false,
+  presential_availability: true,
+  tools_known: false,
+  salary_expectation: false,
+  start_availability: true,
+  experience_years: false,
+  experience_summary: false,
+  why_petron: false,
+  accept_lgpd: true,
+  resume: false,
+};
+
 interface PublicProfile {
   id: string;
   title_public: string;
@@ -58,6 +95,19 @@ interface PublicProfile {
   requirements: string[];
   salary_range: string | null;
   requires_experience: boolean;
+  field_requirements?: PublicFieldRequirements;
+}
+
+function resolveRequirements(profile: PublicProfile | null): Record<PublicFormFieldKey, boolean> {
+  if (!profile) return { ...DEFAULT_PUBLIC_FIELD_REQUIREMENTS };
+  const merged = { ...DEFAULT_PUBLIC_FIELD_REQUIREMENTS, ...(profile.field_requirements || {}) };
+  // full_name, email, accept_lgpd sempre obrigatórios (regra do sistema)
+  merged.full_name = true;
+  merged.email = true;
+  merged.accept_lgpd = true;
+  // Se a vaga exige experiência comprovada, currículo é obrigatório
+  if (profile.requires_experience) merged.resume = true;
+  return merged;
 }
 
 const SENIORITY_LABEL: Record<string, string> = {
@@ -231,31 +281,71 @@ export default function TrabalheConoscoPage() {
     e.preventDefault();
     if (!selectedProfile) return;
 
-    if (!form.full_name || form.full_name.length < 3) {
+    const req = resolveRequirements(selectedProfile);
+
+    // Sempre validamos formato quando o campo é preenchido; só bloqueamos
+    // vazio quando o campo está marcado como obrigatório pela vaga.
+    if (req.full_name && (!form.full_name || form.full_name.length < 3)) {
       setError('Preencha seu nome completo');
       return;
     }
-    if (!form.email || !form.email.includes('@')) {
+    if (req.email && (!form.email || !form.email.includes('@'))) {
       setError('Preencha um email válido');
       return;
     }
-    if (!form.phone || form.phone.length < 10) {
+    if (form.email && !form.email.includes('@')) {
+      setError('E-mail inválido');
+      return;
+    }
+    if (req.phone && (!form.phone || form.phone.length < 10)) {
       setError('Preencha um telefone/WhatsApp válido');
       return;
     }
-    if (!form.presential_availability) {
+    if (req.city && !form.city) {
+      setError('Informe sua cidade');
+      return;
+    }
+    if (req.state && !form.state) {
+      setError('Informe seu estado (UF)');
+      return;
+    }
+    if (req.portfolio_url && !form.portfolio_url) {
+      setError('Informe o link do portfólio / LinkedIn');
+      return;
+    }
+    if (req.presential_availability && !form.presential_availability) {
       setError('Informe sua disponibilidade para trabalho presencial');
       return;
     }
-    if (!form.start_availability) {
+    if (req.tools_known && form.tools_known.length === 0) {
+      setError('Selecione ao menos uma ferramenta que você já usa');
+      return;
+    }
+    if (req.salary_expectation && !form.salary_expectation) {
+      setError('Informe sua expectativa salarial');
+      return;
+    }
+    if (req.start_availability && !form.start_availability) {
       setError('Informe quando você pode começar');
       return;
     }
-    if (!form.accept_lgpd) {
+    if (req.experience_years && !form.experience_years) {
+      setError('Informe seus anos de experiência');
+      return;
+    }
+    if (req.experience_summary && (!form.experience_summary || form.experience_summary.length < 10)) {
+      setError('Escreva um resumo breve da sua experiência');
+      return;
+    }
+    if (req.why_petron && (!form.why_petron || form.why_petron.length < 10)) {
+      setError('Conte por que você quer trabalhar aqui');
+      return;
+    }
+    if (req.accept_lgpd && !form.accept_lgpd) {
       setError('Você precisa aceitar a política de privacidade');
       return;
     }
-    if (selectedProfile.requires_experience && !resumeFile) {
+    if (req.resume && !resumeFile) {
       setError('Esta vaga exige currículo anexado');
       return;
     }
@@ -1025,6 +1115,7 @@ function FormSection({
   onBack,
   onSubmit,
 }: FormSectionProps) {
+  const req = resolveRequirements(profile);
   return (
     <>
       {/* Back + step */}
@@ -1183,14 +1274,14 @@ function FormSection({
           {/* Dados pessoais */}
           <FormGroup title="Dados pessoais">
             <div className="grid gap-4 md:grid-cols-2">
-              <FormField label="Nome completo" required>
+              <FormField label="Nome completo" required={req.full_name}>
                 <DarkInput
                   value={form.full_name}
                   onChange={(e) => patch({ full_name: e.target.value })}
                   placeholder="João da Silva"
                 />
               </FormField>
-              <FormField label="E-mail" required>
+              <FormField label="E-mail" required={req.email}>
                 <DarkInput
                   type="email"
                   value={form.email}
@@ -1198,7 +1289,7 @@ function FormSection({
                   placeholder="joao@email.com"
                 />
               </FormField>
-              <FormField label="WhatsApp" required>
+              <FormField label="WhatsApp" required={req.phone}>
                 <DarkInput
                   type="tel"
                   value={form.phone}
@@ -1207,14 +1298,14 @@ function FormSection({
                 />
               </FormField>
               <div className="grid grid-cols-2 gap-3">
-                <FormField label="Cidade">
+                <FormField label="Cidade" required={req.city}>
                   <DarkInput
                     value={form.city}
                     onChange={(e) => patch({ city: e.target.value })}
                     placeholder="Içara"
                   />
                 </FormField>
-                <FormField label="UF">
+                <FormField label="UF" required={req.state}>
                   <DarkInput
                     value={form.state}
                     onChange={(e) =>
@@ -1225,10 +1316,15 @@ function FormSection({
                   />
                 </FormField>
               </div>
-              {isDesignerRole(profile) && (
+              {(isDesignerRole(profile) || req.portfolio_url) && (
                 <FormField
-                  label="Behance"
-                  hint="Opcional. Se preferir, anexe o portfólio no currículo."
+                  label="Portfólio / LinkedIn / Behance"
+                  required={req.portfolio_url}
+                  hint={
+                    req.portfolio_url
+                      ? undefined
+                      : 'Opcional. Se preferir, anexe o portfólio no currículo.'
+                  }
                   className="md:col-span-2"
                 >
                   <DarkInput
@@ -1246,7 +1342,7 @@ function FormSection({
             <div className="grid gap-4 md:grid-cols-2">
               <FormField
                 label="Disponibilidade para trabalho presencial em Içara - SC"
-                required
+                required={req.presential_availability}
               >
                 <DarkSelect
                   value={form.presential_availability}
@@ -1260,7 +1356,7 @@ function FormSection({
                   ]}
                 />
               </FormField>
-              <FormField label="Quando pode começar?" required>
+              <FormField label="Quando pode começar?" required={req.start_availability}>
                 <DarkSelect
                   value={form.start_availability}
                   onValueChange={(v) => patch({ start_availability: v })}
@@ -1274,13 +1370,13 @@ function FormSection({
                   ]}
                 />
               </FormField>
-              <FormField label="Expectativa salarial">
+              <FormField label="Expectativa salarial" required={req.salary_expectation}>
                 <DarkInput
                   value={form.salary_expectation}
                   onChange={(e) => patch({ salary_expectation: e.target.value })}
                 />
               </FormField>
-              <FormField label="Anos de experiência na área">
+              <FormField label="Anos de experiência na área" required={req.experience_years}>
                 <DarkSelect
                   value={form.experience_years}
                   onValueChange={(v) => patch({ experience_years: v })}
@@ -1300,8 +1396,12 @@ function FormSection({
           {/* Ferramentas */}
           {toolsForSelected.length > 0 && (
             <FormGroup
-              title="Ferramentas que você sabe usar"
-              subtitle="Marque as que você já utilizou, mesmo que seja só pra estudos."
+              title={`Ferramentas que você sabe usar${req.tools_known ? ' *' : ''}`}
+              subtitle={
+                req.tools_known
+                  ? 'Marque pelo menos uma ferramenta — obrigatório para esta vaga.'
+                  : 'Marque as que você já utilizou, mesmo que seja só pra estudos.'
+              }
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                 {toolsForSelected.map((tool) => {
@@ -1338,7 +1438,10 @@ function FormSection({
           {/* Conte sua história */}
           <FormGroup title="Conte sua história">
             <div className="space-y-4">
-              <FormField label="Resumo da sua experiência profissional">
+              <FormField
+                label="Resumo da sua experiência profissional"
+                required={req.experience_summary}
+              >
                 <DarkTextarea
                   value={form.experience_summary}
                   onChange={(e) => patch({ experience_summary: e.target.value })}
@@ -1346,7 +1449,7 @@ function FormSection({
                   placeholder="Conte onde você trabalhou, o que fazia e quais resultados você gerou. Se não tem experiência, conte sobre projetos, cursos e motivação."
                 />
               </FormField>
-              <FormField label="Por que quer trabalhar na Petron?">
+              <FormField label="Por que quer trabalhar na Petron?" required={req.why_petron}>
                 <DarkTextarea
                   value={form.why_petron}
                   onChange={(e) => patch({ why_petron: e.target.value })}
@@ -1375,7 +1478,7 @@ function FormSection({
                   <>
                     <div className="text-sm font-medium text-white">
                       Clique para enviar{' '}
-                      {profile.requires_experience && (
+                      {req.resume && (
                         <span className="text-[#F97316]">(obrigatório)</span>
                       )}
                     </div>

@@ -96,6 +96,65 @@ export interface HrDefaultStage {
   is_terminal_rejection: boolean;
 }
 
+// ─── OBRIGATORIEDADE DO FORMULÁRIO PÚBLICO ───────────────────────────
+// Flags que controlam se cada campo do formulário público é obrigatório.
+// Persistido em hr_job_profiles.field_requirements (JSONB).
+
+export type HrPublicFormField =
+  | 'full_name'
+  | 'email'
+  | 'phone'
+  | 'city'
+  | 'state'
+  | 'portfolio_url'
+  | 'presential_availability'
+  | 'tools_known'
+  | 'salary_expectation'
+  | 'start_availability'
+  | 'experience_years'
+  | 'experience_summary'
+  | 'why_petron'
+  | 'accept_lgpd'
+  | 'resume';
+
+export type HrFieldRequirements = Record<HrPublicFormField, boolean>;
+
+export const DEFAULT_FIELD_REQUIREMENTS: HrFieldRequirements = {
+  full_name: true,
+  email: true,
+  phone: true,
+  city: false,
+  state: false,
+  portfolio_url: false,
+  presential_availability: true,
+  tools_known: false,
+  salary_expectation: false,
+  start_availability: true,
+  experience_years: false,
+  experience_summary: false,
+  why_petron: false,
+  accept_lgpd: true,
+  resume: false,
+};
+
+export const FIELD_REQUIREMENT_LABELS: Record<HrPublicFormField, { label: string; locked?: boolean; hint?: string }> = {
+  full_name: { label: 'Nome completo', locked: true, hint: 'Identificação — sempre obrigatório' },
+  email: { label: 'E-mail', locked: true, hint: 'Canal de contato — sempre obrigatório' },
+  phone: { label: 'WhatsApp / Telefone' },
+  city: { label: 'Cidade' },
+  state: { label: 'Estado (UF)' },
+  portfolio_url: { label: 'Link de portfólio / LinkedIn' },
+  presential_availability: { label: 'Disponibilidade presencial' },
+  tools_known: { label: 'Ferramentas que já usa' },
+  salary_expectation: { label: 'Expectativa salarial' },
+  start_availability: { label: 'Quando pode começar' },
+  experience_years: { label: 'Anos de experiência' },
+  experience_summary: { label: 'Resumo da experiência' },
+  why_petron: { label: 'Por que quer trabalhar aqui' },
+  accept_lgpd: { label: 'Aceite LGPD', locked: true, hint: 'Consentimento — sempre obrigatório' },
+  resume: { label: 'Currículo (upload)', hint: 'Independente do flag "Exige experiência comprovada"' },
+};
+
 export interface HrJobProfile {
   id: string;
   title_internal: string;
@@ -121,6 +180,7 @@ export interface HrJobProfile {
   accepting_applications: boolean;
   requires_experience: boolean;
   salary_range: string | null;
+  field_requirements: HrFieldRequirements;
   created_by_member_id: string | null;
   created_at: string;
   updated_at: string;
