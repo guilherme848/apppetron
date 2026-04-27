@@ -173,28 +173,11 @@ export default function RhApplicationDetail() {
     (c: HrCandidate, j: HrJob) => {
       const firstName = c.full_name.split(' ')[0];
       const recruiter = (member?.full_name || member?.name || '').trim();
-      const profile = j.snapshot_profile;
-      const modalityLabel: Record<string, string> = {
-        presencial: 'presencial',
-        remoto: 'remoto',
-        hibrido: 'híbrido',
-      };
-
-      const ctx: string[] = [];
-      if (profile?.modality) {
-        const mod = modalityLabel[profile.modality] || profile.modality;
-        ctx.push(profile.base_city ? `${mod} (${profile.base_city})` : mod);
-      } else if (profile?.base_city) {
-        ctx.push(profile.base_city);
-      }
-      if (profile?.contract_type) ctx.push(profile.contract_type.toUpperCase());
-
-      const ctxLine = ctx.length ? ` (${ctx.join(' · ')})` : '';
 
       return [
         `Olá, ${firstName}! Tudo bem?`,
         '',
-        `Aqui é ${recruiter || '[seu nome]'}, da Petron. Vi sua candidatura pra vaga de *${j.title}*${ctxLine} e gostei do seu perfil — gostaria de marcar uma conversa rápida (cerca de 30 min) pra te conhecer melhor e te apresentar a oportunidade.`,
+        `Aqui é ${recruiter || '[seu nome]'}, da Petron. Vi sua candidatura pra vaga de *${j.title}* e gostei do seu perfil — gostaria de marcar uma conversa rápida (cerca de 30 min) pra te conhecer melhor e te apresentar a oportunidade.`,
         '',
         'Qual período funciona melhor pra você — manhã, tarde ou noite? Pode ser por chamada de vídeo ou áudio.',
         '',
