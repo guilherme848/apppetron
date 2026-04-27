@@ -129,11 +129,11 @@ CREATE TABLE IF NOT EXISTS public.hr_job_profiles (
 
   -- Pipeline default (é copiado ao criar vaga)
   default_stages JSONB DEFAULT '[
-    {"name":"Análise de Currículo","order":0,"color":"#94a3b8","is_terminal_success":false,"is_terminal_rejection":false},
-    {"name":"Envio do Formulário","order":1,"color":"#3b82f6","is_terminal_success":false,"is_terminal_rejection":false},
-    {"name":"Entrevista 1","order":2,"color":"#f59e0b","is_terminal_success":false,"is_terminal_rejection":false},
-    {"name":"Desafio","order":3,"color":"#a855f7","is_terminal_success":false,"is_terminal_rejection":false},
-    {"name":"Entrevista 2","order":4,"color":"#f59e0b","is_terminal_success":false,"is_terminal_rejection":false},
+    {"name":"Análise do Candidato","order":0,"color":"#94a3b8","is_terminal_success":false,"is_terminal_rejection":false},
+    {"name":"Agendar Entrevista","order":1,"color":"#3b82f6","is_terminal_success":false,"is_terminal_rejection":false},
+    {"name":"Entrevista 001","order":2,"color":"#f59e0b","is_terminal_success":false,"is_terminal_rejection":false},
+    {"name":"Teste Comportamental","order":3,"color":"#a855f7","is_terminal_success":false,"is_terminal_rejection":false},
+    {"name":"Entrevista 002","order":4,"color":"#f59e0b","is_terminal_success":false,"is_terminal_rejection":false},
     {"name":"Decisão","order":5,"color":"#10b981","is_terminal_success":true,"is_terminal_rejection":false}
   ]'::jsonb,
 

@@ -16,9 +16,11 @@ import {
   BookmarkPlus,
   Trash2,
   MoreVertical,
+  Copy,
 } from 'lucide-react';
 import { RhLayout } from '@/components/rh/RhLayout';
 import { useRh } from '@/contexts/RhContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -80,12 +82,15 @@ export default function RhApplicationDetail() {
     runAiAnalysis,
     uploadResume,
   } = useRh();
+  const { member } = useAuth();
 
   const [details, setDetails] = useState<Details | null>(null);
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState('');
   const [runningAi, setRunningAi] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [whatsappOpen, setWhatsappOpen] = useState(false);
+  const [whatsappMessage, setWhatsappMessage] = useState('');
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -164,6 +169,90 @@ export default function RhApplicationDetail() {
     }
   };
 
+  const buildInterviewMessage = useCallback(
+    (c: HrCandidate, j: HrJob) => {
+      const firstName = c.full_name.split(' ')[0];
+      const recruiter = (member?.full_name || member?.name || '').trim();
+      const profile = j.snapshot_profile;
+      const modalityLabel: Record<string, string> = {
+        presencial: 'presencial',
+        remoto: 'remoto',
+        hibrido: 'híbrido',
+      };
+
+      const ctx: string[] = [];
+      if (profile?.modality) {
+        const mod = modalityLabel[profile.modality] || profile.modality;
+        ctx.push(profile.base_city ? `${mod} (${profile.base_city})` : mod);
+      } else if (profile?.base_city) {
+        ctx.push(profile.base_city);
+      }
+      if (profile?.contract_type) ctx.push(profile.contract_type.toUpperCase());
+
+      const ctxLine = ctx.length ? ` (${ctx.join(' · ')})` : '';
+      const pitch = profile?.short_pitch?.trim();
+
+      const lines = [
+        `Olá, ${firstName}! Tudo bem?`,
+        '',
+        `Aqui é ${recruiter || '[seu nome]'}, da Petron. Vi sua candidatura pra vaga de *${j.title}*${ctxLine} e gostei do seu perfil — gostaria de marcar uma conversa rápida (cerca de 30 min) pra te conhecer melhor e te apresentar a oportunidade.`,
+      ];
+
+      if (pitch) {
+        lines.push('', pitch);
+      }
+
+      lines.push(
+        '',
+        'Quais dias e horários da próxima semana funcionam melhor pra você? Pode ser por chamada de vídeo ou áudio.',
+        '',
+        'Aguardo seu retorno. 🙌',
+      );
+
+      return lines.join('\n');
+    },
+    [member],
+  );
+
+  const openWhatsapp = () => {
+    if (!details) return;
+    setWhatsappMessage(buildInterviewMessage(details.candidate, details.job));
+    setWhatsappOpen(true);
+  };
+
+  const handleSendWhatsapp = async () => {
+    if (!details) return;
+    const raw = (details.candidate.phone || '').replace(/\D/g, '');
+    if (!raw) {
+      toast.error('Candidato sem telefone cadastrado');
+      return;
+    }
+    const phone = raw.length === 10 || raw.length === 11 ? `55${raw}` : raw;
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(whatsappMessage)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+
+    try {
+      await addApplicationNote(
+        details.application.id,
+        `[WhatsApp] Convite de entrevista enviado:\n\n${whatsappMessage}`,
+      );
+    } catch {
+      // não bloqueia o fluxo se a nota falhar
+    }
+    setWhatsappOpen(false);
+    toast.success('WhatsApp aberto com a mensagem');
+    load();
+  };
+
+  const handleCopyWhatsapp = async () => {
+    try {
+      await navigator.clipboard.writeText(whatsappMessage);
+      toast.success('Mensagem copiada');
+    } catch {
+      toast.error('Não foi possível copiar');
+    }
+  };
+
   const handleResumeUpload = async (file: File) => {
     if (!details) return;
     try {
@@ -186,6 +275,8 @@ export default function RhApplicationDetail() {
   const { application, candidate, job, stages, responses, events, analyses } = details;
   const currentStage = stages.find((s) => s.id === application.current_stage_id);
   const latestAnalysis = analyses[0];
+  const isSchedulingStage =
+    !!currentStage && currentStage.name.toLowerCase().startsWith('agendar entrevista');
 
   return (
     <RhLayout>
@@ -350,6 +441,33 @@ export default function RhApplicationDetail() {
                 </div>
               )}
             </div>
+
+            {/* CTA contextual da etapa "Agendar Entrevista" */}
+            {isSchedulingStage && application.status === 'active' && (
+              <div className="mt-5 p-4 rounded-lg border border-emerald-500/30 bg-emerald-500/5 flex items-start gap-3">
+                <div className="w-9 h-9 rounded-full bg-emerald-500/15 flex items-center justify-center flex-shrink-0">
+                  <MessageSquare className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+                    Próximo passo: agendar a entrevista
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    {candidate.phone
+                      ? 'Mande a mensagem com contexto da vaga e proponha horários.'
+                      : 'Candidato sem telefone cadastrado — adicione antes de chamar no WhatsApp.'}
+                  </div>
+                </div>
+                <Button
+                  onClick={openWhatsapp}
+                  disabled={!candidate.phone}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white flex-shrink-0"
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Chamar no WhatsApp
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -554,6 +672,56 @@ export default function RhApplicationDetail() {
           </div>
         </div>
       </div>
+
+      {/* Dialog do WhatsApp pra agendamento de entrevista */}
+      <Dialog open={whatsappOpen} onOpenChange={setWhatsappOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-emerald-500" />
+              Chamar {candidate.full_name.split(' ')[0]} no WhatsApp
+            </DialogTitle>
+            <DialogDescription>
+              Mensagem padrão com o contexto da vaga já preenchido. Edite se quiser antes de
+              enviar — a mensagem vai ficar registrada no histórico do candidato.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Phone className="h-3.5 w-3.5" />
+              {candidate.phone || 'sem telefone cadastrado'}
+              <Badge variant="outline" className="ml-auto">
+                Vaga: {job.title}
+              </Badge>
+            </div>
+            <Textarea
+              value={whatsappMessage}
+              onChange={(e) => setWhatsappMessage(e.target.value)}
+              rows={12}
+              className="font-mono text-sm leading-relaxed"
+            />
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="ghost" onClick={() => setWhatsappOpen(false)}>
+              Cancelar
+            </Button>
+            <Button variant="outline" onClick={handleCopyWhatsapp}>
+              <Copy className="h-4 w-4 mr-2" />
+              Copiar
+            </Button>
+            <Button
+              onClick={handleSendWhatsapp}
+              disabled={!candidate.phone || !whatsappMessage.trim()}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Abrir WhatsApp
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog de confirmação de exclusão */}
       <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
