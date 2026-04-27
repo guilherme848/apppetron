@@ -190,26 +190,16 @@ export default function RhApplicationDetail() {
       if (profile?.contract_type) ctx.push(profile.contract_type.toUpperCase());
 
       const ctxLine = ctx.length ? ` (${ctx.join(' · ')})` : '';
-      const pitch = profile?.short_pitch?.trim();
 
-      const lines = [
+      return [
         `Olá, ${firstName}! Tudo bem?`,
         '',
         `Aqui é ${recruiter || '[seu nome]'}, da Petron. Vi sua candidatura pra vaga de *${j.title}*${ctxLine} e gostei do seu perfil — gostaria de marcar uma conversa rápida (cerca de 30 min) pra te conhecer melhor e te apresentar a oportunidade.`,
-      ];
-
-      if (pitch) {
-        lines.push('', pitch);
-      }
-
-      lines.push(
         '',
-        'Quais dias e horários da próxima semana funcionam melhor pra você? Pode ser por chamada de vídeo ou áudio.',
+        'Qual período funciona melhor pra você — manhã, tarde ou noite? Pode ser por chamada de vídeo ou áudio.',
         '',
         'Aguardo seu retorno. 🙌',
-      );
-
-      return lines.join('\n');
+      ].join('\n');
     },
     [member],
   );
