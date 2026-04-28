@@ -137,6 +137,7 @@ const TrabalheConoscoPage = lazy(() => import("./pages/public/TrabalheConoscoPag
 const ReportPublicView = lazy(() => import("./pages/public/ReportPublicView"));
 const DiscAssessmentPage = lazy(() => import("./pages/public/DiscAssessmentPage"));
 const TechnicalTestPage = lazy(() => import("./pages/public/TechnicalTestPage"));
+const HrEvalPreview = lazy(() => import("./pages/public/HrEvalPreview"));
 
 // Sales CRM module
 const SalesDashboard = lazy(() => import("./pages/sales/SalesDashboard"));
@@ -209,6 +210,7 @@ const App = () => (
                       <Route path="/r/:token" element={<ReportPublicView />} />
                       <Route path="/teste-disc/:token" element={<DiscAssessmentPage />} />
                       <Route path="/teste-tecnico/:token" element={<TechnicalTestPage />} />
+                      <Route path="/preview/hr-eval" element={<HrEvalPreview />} />
 
                       {/* Auth-only routes (no AppShell) */}
                       <Route element={<AuthOnlyLayout />}>

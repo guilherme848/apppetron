@@ -253,28 +253,39 @@ async function handleAssemblyAI(
 
   const webhookUrl = `${supabaseUrl}/functions/v1/transcribe-webhook`;
 
+  // Features que só funcionam em inglês com universal-2.
+  // Pra outros idiomas (pt, es, etc), usamos só speaker_labels + entity_detection.
+  // Summary/chapters em pt-BR vão por LeMUR (fase 2) ou LLM separado.
+  const isEnglish = languageCode.toLowerCase().startsWith("en");
+
+  const requestBody: Record<string, unknown> = {
+    audio_url: signedUrl,
+    speech_models: ["universal-2"],
+    language_code: languageCode,
+    speaker_labels: true,
+    entity_detection: true,
+    punctuate: true,
+    format_text: true,
+    webhook_url: webhookUrl,
+    webhook_auth_header_name: "x-transcription-id",
+    webhook_auth_header_value: transcriptionId,
+  };
+
+  if (isEnglish) {
+    requestBody.summarization = true;
+    requestBody.summary_model = "informative";
+    requestBody.summary_type = "bullets";
+    requestBody.auto_chapters = true;
+    requestBody.auto_highlights = true;
+  }
+
   const submitRes = await fetch(`${ASSEMBLYAI_BASE}/transcript`, {
     method: "POST",
     headers: {
       authorization: apiKey,
       "content-type": "application/json",
     },
-    body: JSON.stringify({
-      audio_url: signedUrl,
-      language_code: languageCode,
-      speaker_labels: true,
-      summarization: true,
-      summary_model: "informative",
-      summary_type: "bullets",
-      auto_chapters: true,
-      entity_detection: true,
-      auto_highlights: true,
-      punctuate: true,
-      format_text: true,
-      webhook_url: webhookUrl,
-      webhook_auth_header_name: "x-transcription-id",
-      webhook_auth_header_value: transcriptionId,
-    }),
+    body: JSON.stringify(requestBody),
   });
 
   if (!submitRes.ok) {
