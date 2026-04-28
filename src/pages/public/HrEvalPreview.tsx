@@ -2,6 +2,7 @@
 // Mostra como o sidebar e os componentes ficam quando todos os sinais existem.
 
 import { Card, CardContent } from '@/components/ui/card';
+import { InterviewEvaluationForm } from '@/components/rh/InterviewEvaluationForm';
 import { ConsolidatedScoreCard } from '@/components/rh/ConsolidatedScoreCard';
 import { DiscFitCard } from '@/components/rh/DiscFitBadge';
 import { DiscResultsCard } from '@/components/rh/DiscResultsCard';
@@ -92,7 +93,27 @@ export default function HrEvalPreview() {
           <div className="lg:col-span-2 space-y-4">
             <div>
               <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold mb-2">
-                Tab "Entrevistas"
+                Form de avaliação (aparece quando candidato está em etapa Entrevista 001/002)
+              </div>
+              <InterviewEvaluationForm
+                competencies={[
+                  { name: 'Comunicação', weight: 4, description: 'Clareza, escuta, articulação de ideias' },
+                  { name: 'Proatividade', weight: 4, description: 'Antecipa problemas, não espera comando' },
+                  { name: 'Conhecimento técnico', weight: 5, description: 'Domínio das ferramentas e métodos da vaga' },
+                  { name: 'Fit cultural', weight: 4 },
+                  { name: 'Capacidade analítica', weight: 3 },
+                ]}
+                script={[
+                  { question: 'Conta a sua trajetória em 2 minutos.', focus_competency: 'Comunicação' },
+                  { question: 'Qual seu maior resultado em 12 meses?', focus_competency: 'Conhecimento técnico' },
+                ]}
+                stageName="Entrevista 001"
+                onSubmit={async () => { /* preview only */ }}
+              />
+            </div>
+            <div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold mb-2 mt-6">
+                Histórico de avaliações
               </div>
               <InterviewEvaluationsList evaluations={evals} />
             </div>
