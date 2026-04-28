@@ -15,6 +15,8 @@ import {
   Check,
   RefreshCw,
   Users,
+  Pencil,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,8 +53,10 @@ import {
   useVideoSignedUrl,
   useDeleteTranscription,
   useStartTranscription,
+  useUpdateTranscription,
 } from '@/hooks/useTranscriptions';
 import { TranscriptViewer } from '@/components/transcriptions/TranscriptViewer';
+import { ClientCombobox } from '@/components/transcriptions/ClientCombobox';
 import {
   buildSRT,
   buildVTT,
@@ -80,6 +84,7 @@ export default function TranscriptionDetail() {
   const { data: videoUrl } = useVideoSignedUrl(tx?.video_path);
   const deleteMutation = useDeleteTranscription();
   const startMutation = useStartTranscription();
+  const updateMutation = useUpdateTranscription();
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentTimeMs, setCurrentTimeMs] = useState(0);
@@ -182,9 +187,15 @@ export default function TranscriptionDetail() {
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div className="min-w-0">
-            <h1 className="text-xl font-bold text-foreground truncate">{tx.title}</h1>
-            <div className="flex items-center gap-2 mt-1 flex-wrap">
+          <div className="min-w-0 flex-1">
+            <EditableTitle
+              title={tx.title}
+              onSave={(newTitle) =>
+                updateMutation.mutateAsync({ id: tx.id, title: newTitle })
+              }
+              saving={updateMutation.isPending}
+            />
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
               <Badge className={cn('border-0 text-[10px]', TRANSCRIPTION_STATUS_COLORS[tx.status])}>
                 {TRANSCRIPTION_STATUS_LABELS[tx.status]}
               </Badge>
@@ -213,6 +224,16 @@ export default function TranscriptionDetail() {
                   · {formatCostBRL(tx.cost_cents)}
                 </span>
               )}
+            </div>
+            <div className="mt-2 max-w-md">
+              <ClientCombobox
+                value={tx.client_id}
+                onChange={(clientId) =>
+                  updateMutation.mutate({ id: tx.id, client_id: clientId })
+                }
+                placeholder="Atrelar a um cliente..."
+                size="sm"
+              />
             </div>
             {tx.notes && (
               <p className="text-sm text-muted-foreground mt-2 max-w-2xl">{tx.notes}</p>
@@ -654,6 +675,103 @@ export default function TranscriptionDetail() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+  );
+}
+
+function EditableTitle({
+  title,
+  onSave,
+  saving,
+}: {
+  title: string;
+  onSave: (newTitle: string) => Promise<unknown>;
+  saving: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(title);
+
+  const startEdit = () => {
+    setDraft(title);
+    setEditing(true);
+  };
+
+  const cancel = () => {
+    setDraft(title);
+    setEditing(false);
+  };
+
+  const commit = async () => {
+    const trimmed = draft.trim();
+    if (!trimmed || trimmed === title) {
+      cancel();
+      return;
+    }
+    try {
+      await onSave(trimmed);
+      setEditing(false);
+    } catch {
+      // toast handled in mutation
+    }
+  };
+
+  if (!editing) {
+    return (
+      <button
+        onClick={startEdit}
+        className="group flex items-center gap-2 text-left max-w-full"
+        title="Clique para renomear"
+      >
+        <h1 className="text-xl font-bold text-foreground truncate">{title}</h1>
+        <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <Input
+        autoFocus
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            void commit();
+          }
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            cancel();
+          }
+        }}
+        disabled={saving}
+        className="h-9 text-base font-semibold"
+        maxLength={120}
+      />
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => void commit()}
+        disabled={saving}
+        className="h-8 w-8 shrink-0"
+        title="Salvar (Enter)"
+      >
+        {saving ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Check className="h-4 w-4 text-success" />
+        )}
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={cancel}
+        disabled={saving}
+        className="h-8 w-8 shrink-0"
+        title="Cancelar (Esc)"
+      >
+        <X className="h-4 w-4" />
+      </Button>
     </div>
   );
 }

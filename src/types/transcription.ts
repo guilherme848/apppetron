@@ -61,10 +61,17 @@ export interface TranscriptionHighlight {
   timestamps: Array<{ start: number; end: number }>;
 }
 
+export interface TranscriptionClient {
+  id: string;
+  name: string;
+}
+
 export interface Transcription {
   id: string;
   source_type: TranscriptionSourceType;
   source_id: string | null;
+  client_id: string | null;
+  client?: TranscriptionClient | null;
 
   title: string;
   notes: string | null;

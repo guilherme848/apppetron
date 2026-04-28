@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   Loader2,
   Trash2,
+  Building2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +37,7 @@ import {
 } from '@/components/ui/select';
 import { useTranscriptions, useDeleteTranscription } from '@/hooks/useTranscriptions';
 import { VideoUploadDialog } from '@/components/transcriptions/VideoUploadDialog';
+import { ClientCombobox } from '@/components/transcriptions/ClientCombobox';
 import {
   TRANSCRIPTION_STATUS_LABELS,
   TRANSCRIPTION_STATUS_COLORS,
@@ -62,6 +64,7 @@ export default function TranscriptionsList() {
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | TranscriptionStatus>('all');
+  const [clientFilter, setClientFilter] = useState<string | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Transcription | null>(null);
 
@@ -69,17 +72,19 @@ export default function TranscriptionsList() {
     if (!transcriptions) return [];
     let list = transcriptions;
     if (statusFilter !== 'all') list = list.filter((t) => t.status === statusFilter);
+    if (clientFilter) list = list.filter((t) => t.client_id === clientFilter);
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(
         (t) =>
           t.title.toLowerCase().includes(q) ||
           t.notes?.toLowerCase().includes(q) ||
-          t.transcript_text?.toLowerCase().includes(q),
+          t.transcript_text?.toLowerCase().includes(q) ||
+          t.client?.name?.toLowerCase().includes(q),
       );
     }
     return list;
-  }, [transcriptions, statusFilter, search]);
+  }, [transcriptions, statusFilter, clientFilter, search]);
 
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
@@ -122,12 +127,18 @@ export default function TranscriptionsList() {
         <div className="relative flex-1 min-w-[240px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por título, notas ou conteúdo..."
+            placeholder="Buscar por título, cliente, notas ou conteúdo..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
           />
         </div>
+        <ClientCombobox
+          value={clientFilter}
+          onChange={setClientFilter}
+          placeholder="Todos clientes"
+          className="w-[220px]"
+        />
         <Select
           value={statusFilter}
           onValueChange={(v) => setStatusFilter(v as 'all' | TranscriptionStatus)}
@@ -302,6 +313,14 @@ function TranscriptionCard({ tx, idx, onOpen, onDelete }: CardProps) {
 
       {/* Title */}
       <h3 className="text-sm font-semibold text-foreground line-clamp-2 mb-2">{tx.title}</h3>
+
+      {/* Cliente vinculado */}
+      {tx.client && (
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2 min-w-0">
+          <Building2 className="h-3 w-3 shrink-0" />
+          <span className="truncate">{tx.client.name}</span>
+        </div>
+      )}
 
       {/* Notes preview */}
       {tx.notes && (

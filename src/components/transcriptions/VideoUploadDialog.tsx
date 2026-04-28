@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useCreateTranscription, useStartTranscription } from '@/hooks/useTranscriptions';
 import { formatFileSize } from '@/types/transcription';
+import { ClientCombobox } from '@/components/transcriptions/ClientCombobox';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -65,6 +66,7 @@ export function VideoUploadDialog({
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
+  const [clientId, setClientId] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState<'idle' | 'uploading' | 'starting'>('idle');
   const [dragOver, setDragOver] = useState(false);
@@ -76,6 +78,7 @@ export function VideoUploadDialog({
     setFile(null);
     setTitle('');
     setNotes('');
+    setClientId(null);
     setProgress(0);
     setPhase('idle');
   };
@@ -166,6 +169,7 @@ export function VideoUploadDialog({
         video_mime_type: file.type || null,
         language_code: 'pt',
         notes: notes.trim() || null,
+        client_id: clientId,
         source_type: defaultSourceType,
         source_id: defaultSourceId,
       });
@@ -287,6 +291,16 @@ export function VideoUploadDialog({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ex: Reunião com cliente X — 27/04"
               disabled={phase !== 'idle'}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Cliente (opcional)</Label>
+            <ClientCombobox
+              value={clientId}
+              onChange={setClientId}
+              placeholder="Sem cliente vinculado"
+              className="w-full"
             />
           </div>
 

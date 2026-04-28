@@ -2,7 +2,12 @@ import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import type { Transcription, TranscriptionStatus, TranscriptionSourceType } from '@/types/transcription';
+import type {
+  Transcription,
+  TranscriptionStatus,
+  TranscriptionSourceType,
+  TranscriptionClient,
+} from '@/types/transcription';
 
 const QK = {
   list: ['transcriptions', 'list'] as const,
@@ -18,7 +23,7 @@ export function useTranscriptions() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('transcriptions' as any)
-        .select('*')
+        .select('*, client:accounts(id, name)')
         .order('created_at', { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as Transcription[];
@@ -56,7 +61,7 @@ export function useTranscription(id: string | undefined) {
       if (!id) return null;
       const { data, error } = await supabase
         .from('transcriptions' as any)
-        .select('*')
+        .select('*, client:accounts(id, name)')
         .eq('id', id)
         .maybeSingle();
       if (error) throw error;
@@ -105,6 +110,7 @@ export function useCreateTranscription() {
       video_mime_type?: string | null;
       language_code?: string;
       notes?: string | null;
+      client_id?: string | null;
       source_type?: TranscriptionSourceType;
       source_id?: string | null;
     }) => {
@@ -118,6 +124,7 @@ export function useCreateTranscription() {
           video_mime_type: input.video_mime_type ?? null,
           language_code: input.language_code ?? 'pt',
           notes: input.notes ?? null,
+          client_id: input.client_id ?? null,
           source_type: input.source_type ?? 'manual',
           source_id: input.source_id ?? null,
           status: 'queued' as TranscriptionStatus,
@@ -209,6 +216,63 @@ export function useDeleteTranscription() {
         variant: 'destructive',
       });
     },
+  });
+}
+
+// ─── Update (renomear / vincular cliente / alterar notes) ───────────────
+export function useUpdateTranscription() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (input: {
+      id: string;
+      title?: string;
+      notes?: string | null;
+      client_id?: string | null;
+    }) => {
+      const patch: Record<string, unknown> = {};
+      if (input.title !== undefined) patch.title = input.title;
+      if (input.notes !== undefined) patch.notes = input.notes;
+      if (input.client_id !== undefined) patch.client_id = input.client_id;
+
+      const { data, error } = await supabase
+        .from('transcriptions' as any)
+        .update(patch)
+        .eq('id', input.id)
+        .select('*, client:accounts(id, name)')
+        .single();
+      if (error) throw error;
+      return data as unknown as Transcription;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: QK.list });
+      queryClient.invalidateQueries({ queryKey: QK.detail(data.id) });
+    },
+    onError: (e: Error) => {
+      toast({
+        title: 'Falha ao atualizar',
+        description: e.message,
+        variant: 'destructive',
+      });
+    },
+  });
+}
+
+// ─── Lista de clientes (accounts ativos) pra Select ──────────────────────
+export function useTranscriptionClients() {
+  return useQuery({
+    queryKey: ['transcription-clients'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('accounts')
+        .select('id, name, status')
+        .in('status', ['active', 'onboarding'])
+        .order('name', { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as unknown as TranscriptionClient[];
+    },
+    staleTime: 5 * 60 * 1000, // 5min
   });
 }
 
