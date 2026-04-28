@@ -61,7 +61,21 @@ import type {
 import { APPLICATION_STATUS_LABEL, AI_RECOMMENDATION_LABEL } from '@/types/rh';
 import type { DiscAssessment } from '@/types/disc';
 import { DiscResultsCard } from '@/components/rh/DiscResultsCard';
-import { Brain } from 'lucide-react';
+import { Brain, Briefcase, ClipboardList } from 'lucide-react';
+import type {
+  HrInterviewEvaluation,
+  HrTechnicalSubmission,
+  HrCompetencyScore,
+  HrCriterionScore,
+  HrDecision,
+} from '@/types/hrEvaluations';
+import { InterviewEvaluationForm } from '@/components/rh/InterviewEvaluationForm';
+import { InterviewEvaluationsList } from '@/components/rh/InterviewEvaluationsList';
+import { TechnicalTestPanel } from '@/components/rh/TechnicalTestPanel';
+import { ConsolidatedScoreCard } from '@/components/rh/ConsolidatedScoreCard';
+import { DiscFitCard } from '@/components/rh/DiscFitBadge';
+import { calculateDiscFit } from '@/lib/discFit';
+import { averageInterviewScore, technicalEvaluationTotal } from '@/lib/evaluationScoring';
 
 interface Details {
   application: HrApplication;
@@ -86,6 +100,11 @@ export default function RhApplicationDetail() {
     uploadResume,
     createDiscInvite,
     getDiscByApplication,
+    getInterviewEvaluations,
+    saveInterviewEvaluation,
+    createTechnicalInvite,
+    getTechnicalSubmissionByApplication,
+    evaluateTechnicalSubmission,
   } = useRh();
   const { member } = useAuth();
 
@@ -101,6 +120,11 @@ export default function RhApplicationDetail() {
   const [discWhatsappOpen, setDiscWhatsappOpen] = useState(false);
   const [discWhatsappMessage, setDiscWhatsappMessage] = useState('');
   const [discInviteUrl, setDiscInviteUrl] = useState('');
+  const [interviewEvals, setInterviewEvals] = useState<HrInterviewEvaluation[]>([]);
+  const [techSubmission, setTechSubmission] = useState<HrTechnicalSubmission | null>(null);
+  const [evalBusy, setEvalBusy] = useState(false);
+  const [techWhatsappOpen, setTechWhatsappOpen] = useState(false);
+  const [techWhatsappMessage, setTechWhatsappMessage] = useState('');
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -108,15 +132,23 @@ export default function RhApplicationDetail() {
     const d = await getApplicationDetails(id);
     setDetails(d);
     if (d) {
-      try {
-        const a = await getDiscByApplication(d.application.id);
-        setDisc(a);
-      } catch {
-        setDisc(null);
-      }
+      const [a, evals, tech] = await Promise.all([
+        getDiscByApplication(d.application.id).catch(() => null),
+        getInterviewEvaluations(d.application.id).catch(() => []),
+        getTechnicalSubmissionByApplication(d.application.id).catch(() => null),
+      ]);
+      setDisc(a);
+      setInterviewEvals(evals || []);
+      setTechSubmission(tech);
     }
     setLoading(false);
-  }, [id, getApplicationDetails, getDiscByApplication]);
+  }, [
+    id,
+    getApplicationDetails,
+    getDiscByApplication,
+    getInterviewEvaluations,
+    getTechnicalSubmissionByApplication,
+  ]);
 
   useEffect(() => {
     load();
@@ -317,6 +349,90 @@ export default function RhApplicationDetail() {
     }
   };
 
+  // ─── INTERVIEW EVALUATION ─────────────────────────────
+  const handleSaveInterviewEval = async (params: {
+    scores: HrCompetencyScore[];
+    decision: HrDecision | null;
+    justification: string | null;
+  }) => {
+    if (!details) return;
+    setEvalBusy(true);
+    try {
+      await saveInterviewEvaluation({
+        application_id: details.application.id,
+        stage_id: details.application.current_stage_id,
+        stage_name: details.stages.find((s) => s.id === details.application.current_stage_id)?.name || null,
+        evaluator_member_id: member?.id || null,
+        scores: params.scores,
+        decision: params.decision,
+        justification: params.justification,
+      });
+      toast.success('Avaliação registrada');
+      await load();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Erro ao salvar');
+    } finally {
+      setEvalBusy(false);
+    }
+  };
+
+  // ─── TECHNICAL TEST ─────────────────────────────
+  const handleCreateTechnicalInvite = async (): Promise<{ access_token: string } | null> => {
+    if (!details) return null;
+    try {
+      const inv = await createTechnicalInvite(details.application.id);
+      if (!inv?.success && inv?.error) {
+        toast.error(inv.error);
+        return null;
+      }
+      const tech = await getTechnicalSubmissionByApplication(details.application.id);
+      setTechSubmission(tech);
+      return { access_token: inv.access_token };
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Erro ao gerar convite');
+      return null;
+    }
+  };
+
+  const handleSendTechWhatsapp = (message: string) => {
+    setTechWhatsappMessage(message);
+    setTechWhatsappOpen(true);
+  };
+
+  const handleSendTechWhatsappConfirm = async () => {
+    if (!details) return;
+    const raw = (details.candidate.phone || '').replace(/\D/g, '');
+    if (!raw) {
+      toast.error('Candidato sem telefone cadastrado');
+      return;
+    }
+    const phone = raw.length === 10 || raw.length === 11 ? `55${raw}` : raw;
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(techWhatsappMessage)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setTechWhatsappOpen(false);
+    toast.success('WhatsApp aberto');
+  };
+
+  const handleEvaluateTech = async (params: {
+    submission_id: string;
+    scores: HrCriterionScore[];
+    decision: HrDecision | null;
+    evaluator_notes: string | null;
+  }) => {
+    if (!details) return;
+    try {
+      await evaluateTechnicalSubmission({
+        ...params,
+        application_id: details.application.id,
+        evaluator_member_id: member?.id || null,
+      });
+      toast.success('Avaliação registrada');
+      await load();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Erro ao avaliar');
+    }
+  };
+
   const handleResumeUpload = async (file: File) => {
     if (!details) return;
     try {
@@ -343,6 +459,24 @@ export default function RhApplicationDetail() {
     !!currentStage && currentStage.name.toLowerCase().startsWith('agendar entrevista');
   const isBehavioralStage =
     !!currentStage && currentStage.name.toLowerCase().startsWith('teste comportamental');
+  const isInterviewStage =
+    !!currentStage && currentStage.name.toLowerCase().startsWith('entrevista ');
+
+  const profile = job.snapshot_profile;
+  const competencies = profile?.competencies || [];
+  const interviewScript = profile?.interview_script || [];
+  const targetDisc = profile?.target_disc || null;
+  const technicalTestConfig = profile?.technical_test || null;
+
+  const discFit = calculateDiscFit(disc, targetDisc);
+  const interviewAvg = averageInterviewScore(interviewEvals);
+  const techScore = technicalEvaluationTotal(techSubmission);
+  const consolidated = {
+    ai_score: latestAnalysis?.score_overall ?? null,
+    disc_fit: discFit,
+    interview_avg: interviewAvg,
+    technical_score: techScore,
+  };
 
   return (
     <RhLayout>
@@ -613,6 +747,15 @@ export default function RhApplicationDetail() {
                 <TabsTrigger value="curriculo">Currículo</TabsTrigger>
                 <TabsTrigger value="respostas">Respostas</TabsTrigger>
                 <TabsTrigger value="analise">Análise IA</TabsTrigger>
+                <TabsTrigger value="entrevistas">
+                  Entrevistas
+                  {interviewEvals.length > 0 && (
+                    <Badge variant="secondary" className="ml-1.5 h-4 text-[10px] px-1">
+                      {interviewEvals.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="tecnico">Teste Técnico</TabsTrigger>
                 <TabsTrigger value="timeline">Histórico</TabsTrigger>
               </TabsList>
 
@@ -726,6 +869,48 @@ export default function RhApplicationDetail() {
                 </Card>
               </TabsContent>
 
+              <TabsContent value="entrevistas" className="space-y-4">
+                {isInterviewStage && application.status === 'active' && competencies.length > 0 && (
+                  <InterviewEvaluationForm
+                    competencies={competencies}
+                    script={interviewScript}
+                    stageName={currentStage?.name || 'Entrevista'}
+                    busy={evalBusy}
+                    onSubmit={handleSaveInterviewEval}
+                  />
+                )}
+                {!isInterviewStage && interviewEvals.length === 0 && (
+                  <Card>
+                    <CardContent className="p-6 text-center text-sm text-muted-foreground">
+                      <ClipboardList className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                      Nenhuma avaliação registrada ainda. As avaliações aparecem quando o candidato
+                      está em uma etapa de entrevista.
+                    </CardContent>
+                  </Card>
+                )}
+                {interviewEvals.length > 0 && (
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                      Histórico de avaliações
+                    </div>
+                    <InterviewEvaluationsList evaluations={interviewEvals} />
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="tecnico">
+                <TechnicalTestPanel
+                  job={job}
+                  candidate={candidate}
+                  testConfig={technicalTestConfig}
+                  submission={techSubmission}
+                  recruiterName={(member?.full_name || member?.name || '').trim()}
+                  onCreateInvite={handleCreateTechnicalInvite}
+                  onSendWhatsapp={handleSendTechWhatsapp}
+                  onEvaluate={handleEvaluateTech}
+                />
+              </TabsContent>
+
               <TabsContent value="timeline">
                 <Card>
                   <CardContent className="p-6">
@@ -784,16 +969,18 @@ export default function RhApplicationDetail() {
               </CardContent>
             </Card>
 
+            <ConsolidatedScoreCard inputs={consolidated} />
+
             {latestAnalysis && (
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-primary" />
-                    Score IA
+                    Score IA · currículo
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-4xl font-bold text-primary mb-1">
+                  <div className="text-3xl font-bold text-primary mb-1">
                     {latestAnalysis.score_overall}
                   </div>
                   {latestAnalysis.recommendation && (
@@ -803,6 +990,10 @@ export default function RhApplicationDetail() {
                   )}
                 </CardContent>
               </Card>
+            )}
+
+            {disc?.status === 'completed' && targetDisc && (
+              <DiscFitCard assessment={disc} target={targetDisc} />
             )}
 
             {disc?.status === 'completed' && <DiscResultsCard assessment={disc} />}
@@ -904,6 +1095,60 @@ export default function RhApplicationDetail() {
             <Button
               onClick={handleSendDiscWhatsapp}
               disabled={!candidate.phone || !discWhatsappMessage.trim()}
+              className="bg-violet-600 hover:bg-violet-700 text-white"
+            >
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Abrir WhatsApp
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog do WhatsApp pro convite do teste técnico */}
+      <Dialog open={techWhatsappOpen} onOpenChange={setTechWhatsappOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Briefcase className="h-5 w-5 text-violet-500" />
+              Enviar mensagem do teste técnico
+            </DialogTitle>
+            <DialogDescription>
+              Mensagem com o link do briefing já preenchida — edite se quiser antes de enviar.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Phone className="h-3.5 w-3.5" />
+              {candidate.phone || 'sem telefone cadastrado'}
+            </div>
+            <Textarea
+              value={techWhatsappMessage}
+              onChange={(e) => setTechWhatsappMessage(e.target.value)}
+              rows={12}
+              className="font-mono text-sm leading-relaxed"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setTechWhatsappOpen(false)}>
+              Fechar
+            </Button>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(techWhatsappMessage);
+                  toast.success('Mensagem copiada');
+                } catch {
+                  toast.error('Não foi possível copiar');
+                }
+              }}
+            >
+              <Copy className="h-4 w-4 mr-2" />
+              Copiar
+            </Button>
+            <Button
+              onClick={handleSendTechWhatsappConfirm}
+              disabled={!candidate.phone || !techWhatsappMessage.trim()}
               className="bg-violet-600 hover:bg-violet-700 text-white"
             >
               <MessageSquare className="h-4 w-4 mr-2" />

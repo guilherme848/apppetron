@@ -21,6 +21,14 @@ import {
   type HrFormResponse,
 } from '@/types/rh';
 import type { DiscAssessment } from '@/types/disc';
+import type {
+  HrInterviewEvaluation,
+  HrTechnicalSubmission,
+  HrCompetencyScore,
+  HrCriterionScore,
+  HrDecision,
+} from '@/types/hrEvaluations';
+import { competencyTotal, rubricTotal } from '@/lib/evaluationScoring';
 
 // ─────────────────────────────────────────────────────────────
 // Helpers de mapeamento (tratam nulls + arrays JSONB)
@@ -55,6 +63,10 @@ const mapProfile = (d: any): HrJobProfile => ({
   requires_experience: d.requires_experience ?? false,
   salary_range: d.salary_range ?? null,
   field_requirements: { ...DEFAULT_FIELD_REQUIREMENTS, ...(d.field_requirements || {}) },
+  target_disc: d.target_disc || null,
+  competencies: asArray(d.competencies),
+  interview_script: asArray(d.interview_script),
+  technical_test: d.technical_test || null,
   created_by_member_id: d.created_by_member_id,
   created_at: d.created_at,
   updated_at: d.updated_at,
@@ -551,6 +563,128 @@ export function useRhData() {
     []
   );
 
+  // ─── INTERVIEW EVALUATIONS ───────────────────────────────
+
+  const getInterviewEvaluations = useCallback(
+    async (applicationId: string): Promise<HrInterviewEvaluation[]> => {
+      const { data, error } = await sb
+        .from('hr_interview_evaluations')
+        .select('*')
+        .eq('application_id', applicationId)
+        .order('completed_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as HrInterviewEvaluation[];
+    },
+    []
+  );
+
+  const saveInterviewEvaluation = useCallback(
+    async (params: {
+      application_id: string;
+      stage_id: string | null;
+      stage_name: string | null;
+      evaluator_member_id: string | null;
+      scores: HrCompetencyScore[];
+      decision: HrDecision | null;
+      justification: string | null;
+      notes?: string | null;
+    }): Promise<HrInterviewEvaluation> => {
+      const total = competencyTotal(params.scores);
+      const { data, error } = await sb
+        .from('hr_interview_evaluations')
+        .insert({
+          ...params,
+          total_score: total,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+
+      // Log de evento na timeline
+      await sb.from('hr_application_events').insert({
+        application_id: params.application_id,
+        event_type: 'note_added',
+        description: `[Entrevista${
+          params.stage_name ? ` · ${params.stage_name}` : ''
+        }] Avaliação registrada — score ${total} · decisão: ${params.decision || '—'}${
+          params.justification ? `\n\n${params.justification}` : ''
+        }`,
+      });
+
+      return data as HrInterviewEvaluation;
+    },
+    []
+  );
+
+  // ─── TECHNICAL TEST ──────────────────────────────────────
+
+  const createTechnicalInvite = useCallback(
+    async (
+      applicationId: string
+    ): Promise<{ id: string; access_token: string; status: string; reused: boolean; success: boolean; error?: string }> => {
+      const { data, error } = await sb.rpc('hr_tech_create_invite', {
+        p_application_id: applicationId,
+      });
+      if (error) throw error;
+      return data;
+    },
+    []
+  );
+
+  const getTechnicalSubmissionByApplication = useCallback(
+    async (applicationId: string): Promise<HrTechnicalSubmission | null> => {
+      const { data, error } = await sb
+        .from('hr_technical_submissions')
+        .select('*')
+        .eq('application_id', applicationId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return (data as HrTechnicalSubmission | null) || null;
+    },
+    []
+  );
+
+  const evaluateTechnicalSubmission = useCallback(
+    async (params: {
+      submission_id: string;
+      application_id: string;
+      scores: HrCriterionScore[];
+      decision: HrDecision | null;
+      evaluator_notes: string | null;
+      evaluator_member_id: string | null;
+    }): Promise<HrTechnicalSubmission> => {
+      const total = rubricTotal(params.scores);
+      const { data, error } = await sb
+        .from('hr_technical_submissions')
+        .update({
+          status: 'evaluated',
+          scores: params.scores,
+          decision: params.decision,
+          evaluator_notes: params.evaluator_notes,
+          evaluator_member_id: params.evaluator_member_id,
+          total_score: total,
+          evaluated_at: new Date().toISOString(),
+        })
+        .eq('id', params.submission_id)
+        .select()
+        .single();
+      if (error) throw error;
+
+      await sb.from('hr_application_events').insert({
+        application_id: params.application_id,
+        event_type: 'note_added',
+        description: `[Teste técnico] Avaliação registrada — score ${total} · decisão: ${
+          params.decision || '—'
+        }${params.evaluator_notes ? `\n\n${params.evaluator_notes}` : ''}`,
+      });
+
+      return data as HrTechnicalSubmission;
+    },
+    []
+  );
+
   // ─── RESUME UPLOAD ───────────────────────────────────────
 
   const uploadResume = useCallback(
@@ -720,6 +854,13 @@ export function useRhData() {
     // disc
     createDiscInvite,
     getDiscByApplication,
+    // interview evaluation
+    getInterviewEvaluations,
+    saveInterviewEvaluation,
+    // technical test
+    createTechnicalInvite,
+    getTechnicalSubmissionByApplication,
+    evaluateTechnicalSubmission,
     // forms
     getFormsByJob,
     getAllForms,

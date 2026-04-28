@@ -30,6 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { JobProfileEvaluationConfig } from '@/components/rh/JobProfileEvaluationConfig';
 import {
   DEFAULT_FIELD_REQUIREMENTS,
   FIELD_REQUIREMENT_LABELS,
@@ -256,10 +257,11 @@ export default function RhJobProfileDetail() {
             <CardContent className="p-6">
 
             <Tabs defaultValue="basico">
-              <TabsList className="grid grid-cols-4 mb-6">
+              <TabsList className="grid grid-cols-5 mb-6">
                 <TabsTrigger value="basico">Identidade</TabsTrigger>
                 <TabsTrigger value="sobre">Sobre a vaga</TabsTrigger>
                 <TabsTrigger value="skills">Skills & Ferramentas</TabsTrigger>
+                <TabsTrigger value="avaliacao">Avaliação</TabsTrigger>
                 <TabsTrigger value="formulario">Formulário</TabsTrigger>
               </TabsList>
 
@@ -444,6 +446,17 @@ export default function RhJobProfileDetail() {
                 <ToolsEditor
                   tools={profile.tools}
                   onChange={(tools) => patch({ tools })}
+                />
+              </TabsContent>
+
+              {/* ═══════════════ AVALIAÇÃO (Target DISC + competências + roteiro + teste técnico) ═══════════════ */}
+              <TabsContent value="avaliacao" className="space-y-4">
+                <JobProfileEvaluationConfig
+                  targetDisc={profile.target_disc}
+                  competencies={profile.competencies}
+                  interviewScript={profile.interview_script}
+                  technicalTest={profile.technical_test}
+                  onChange={(p) => patch(p)}
                 />
               </TabsContent>
 

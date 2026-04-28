@@ -181,6 +181,11 @@ export interface HrJobProfile {
   requires_experience: boolean;
   salary_range: string | null;
   field_requirements: HrFieldRequirements;
+  // Avaliação estruturada
+  target_disc: import('./hrEvaluations').HrTargetDisc | null;
+  competencies: import('./hrEvaluations').HrCompetency[];
+  interview_script: import('./hrEvaluations').HrInterviewQuestion[];
+  technical_test: import('./hrEvaluations').HrTechnicalTestConfig | null;
   created_by_member_id: string | null;
   created_at: string;
   updated_at: string;
