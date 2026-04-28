@@ -14,6 +14,7 @@ import {
   Copy,
   Check,
   RefreshCw,
+  Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +27,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -84,6 +86,7 @@ export default function TranscriptionDetail() {
   const [search, setSearch] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [copied, setCopied] = useState<'transcript' | 'summary' | null>(null);
+  const [transcriptView, setTranscriptView] = useState<'full' | 'utterances'>('full');
 
   // Track player time
   useEffect(() => {
@@ -484,8 +487,59 @@ export default function TranscriptionDetail() {
               </div>
             </div>
 
-            <TabsContent value="transcript" className="mt-2">
-              {utterances.length > 0 ? (
+            <TabsContent value="transcript" className="mt-2 space-y-3">
+              {/* Toggle: Completo (default) / Por falas */}
+              {utterances.length > 0 && tx.transcript_text && (
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <ToggleGroup
+                    type="single"
+                    value={transcriptView}
+                    onValueChange={(v) => v && setTranscriptView(v as 'full' | 'utterances')}
+                    size="sm"
+                    className="bg-muted/40 rounded-md p-0.5"
+                  >
+                    <ToggleGroupItem
+                      value="full"
+                      className="text-xs h-7 px-3 data-[state=on]:bg-background data-[state=on]:shadow-sm"
+                    >
+                      <FileText className="h-3 w-3 mr-1.5" />
+                      Completo
+                    </ToggleGroupItem>
+                    <ToggleGroupItem
+                      value="utterances"
+                      className="text-xs h-7 px-3 data-[state=on]:bg-background data-[state=on]:shadow-sm"
+                    >
+                      <Users className="h-3 w-3 mr-1.5" />
+                      Por falas
+                      <span className="text-[10px] text-muted-foreground ml-1.5 font-mono">
+                        {utterances.length}
+                      </span>
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleCopy('transcript')}
+                    className="gap-1.5 text-xs h-7"
+                  >
+                    {copied === 'transcript' ? (
+                      <Check className="h-3 w-3" />
+                    ) : (
+                      <Copy className="h-3 w-3" />
+                    )}
+                    Copiar tudo
+                  </Button>
+                </div>
+              )}
+
+              {/* Conteúdo: completo (default) ou por falas */}
+              {transcriptView === 'full' && tx.transcript_text ? (
+                <div className="max-h-[calc(100vh-260px)] overflow-y-auto pr-2">
+                  <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground">
+                    <Highlight text={tx.transcript_text} query={search} />
+                  </p>
+                </div>
+              ) : transcriptView === 'utterances' && utterances.length > 0 ? (
                 <TranscriptViewer
                   utterances={utterances}
                   speakers={speakers}
@@ -494,11 +548,21 @@ export default function TranscriptionDetail() {
                   onSeek={handleSeek}
                 />
               ) : tx.transcript_text ? (
+                // Fallback: tem texto mas não tem utterances (ou view=utterances sem dados)
                 <div className="max-h-[calc(100vh-260px)] overflow-y-auto pr-2">
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                  <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground">
                     <Highlight text={tx.transcript_text} query={search} />
                   </p>
                 </div>
+              ) : utterances.length > 0 ? (
+                // Fallback: tem utterances mas não tem texto plano (raro)
+                <TranscriptViewer
+                  utterances={utterances}
+                  speakers={speakers}
+                  currentTimeMs={currentTimeMs}
+                  searchQuery={search}
+                  onSeek={handleSeek}
+                />
               ) : (
                 <div className="text-center py-12 text-sm text-muted-foreground">
                   {isProcessing ? 'Aguardando transcrição...' : 'Sem transcrição disponível.'}
