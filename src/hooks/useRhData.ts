@@ -20,6 +20,7 @@ import {
   type HrAiAnalysis,
   type HrFormResponse,
 } from '@/types/rh';
+import type { DiscAssessment } from '@/types/disc';
 
 // ─────────────────────────────────────────────────────────────
 // Helpers de mapeamento (tratam nulls + arrays JSONB)
@@ -520,6 +521,36 @@ export function useRhData() {
     []
   );
 
+  // ─── DISC ────────────────────────────────────────────────
+
+  const createDiscInvite = useCallback(
+    async (
+      applicationId: string
+    ): Promise<{ id: string; access_token: string; status: string; reused: boolean }> => {
+      const { data, error } = await sb.rpc('hr_disc_create_invite', {
+        p_application_id: applicationId,
+      });
+      if (error) throw error;
+      return data;
+    },
+    []
+  );
+
+  const getDiscByApplication = useCallback(
+    async (applicationId: string): Promise<DiscAssessment | null> => {
+      const { data, error } = await sb
+        .from('hr_disc_assessments')
+        .select('*')
+        .eq('application_id', applicationId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return (data as DiscAssessment | null) || null;
+    },
+    []
+  );
+
   // ─── RESUME UPLOAD ───────────────────────────────────────
 
   const uploadResume = useCallback(
@@ -686,6 +717,9 @@ export function useRhData() {
     deleteCandidate,
     getApplicationDetails,
     uploadResume,
+    // disc
+    createDiscInvite,
+    getDiscByApplication,
     // forms
     getFormsByJob,
     getAllForms,

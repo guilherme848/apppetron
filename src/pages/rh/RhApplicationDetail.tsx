@@ -59,6 +59,9 @@ import type {
   HrAiAnalysis,
 } from '@/types/rh';
 import { APPLICATION_STATUS_LABEL, AI_RECOMMENDATION_LABEL } from '@/types/rh';
+import type { DiscAssessment } from '@/types/disc';
+import { DiscResultsCard } from '@/components/rh/DiscResultsCard';
+import { Brain } from 'lucide-react';
 
 interface Details {
   application: HrApplication;
@@ -81,6 +84,8 @@ export default function RhApplicationDetail() {
     addApplicationNote,
     runAiAnalysis,
     uploadResume,
+    createDiscInvite,
+    getDiscByApplication,
   } = useRh();
   const { member } = useAuth();
 
@@ -91,14 +96,27 @@ export default function RhApplicationDetail() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [whatsappOpen, setWhatsappOpen] = useState(false);
   const [whatsappMessage, setWhatsappMessage] = useState('');
+  const [disc, setDisc] = useState<DiscAssessment | null>(null);
+  const [discBusy, setDiscBusy] = useState(false);
+  const [discWhatsappOpen, setDiscWhatsappOpen] = useState(false);
+  const [discWhatsappMessage, setDiscWhatsappMessage] = useState('');
+  const [discInviteUrl, setDiscInviteUrl] = useState('');
 
   const load = useCallback(async () => {
     if (!id) return;
     setLoading(true);
     const d = await getApplicationDetails(id);
     setDetails(d);
+    if (d) {
+      try {
+        const a = await getDiscByApplication(d.application.id);
+        setDisc(a);
+      } catch {
+        setDisc(null);
+      }
+    }
     setLoading(false);
-  }, [id, getApplicationDetails]);
+  }, [id, getApplicationDetails, getDiscByApplication]);
 
   useEffect(() => {
     load();
@@ -226,6 +244,79 @@ export default function RhApplicationDetail() {
     }
   };
 
+  // ─── DISC ──────────────────────────────────────────────
+  const buildDiscMessage = useCallback(
+    (firstName: string, jobTitle: string, url: string) => {
+      const recruiter = (member?.full_name || member?.name || '').trim();
+      return [
+        `Olá, ${firstName}!`,
+        '',
+        `Como combinado pra próxima etapa da vaga de *${jobTitle}*, segue o link do nosso teste comportamental — leva uns 10 minutos pra responder, no celular ou no computador.`,
+        '',
+        url,
+        '',
+        'Não tem resposta certa nem errada, é só pra eu entender melhor seu jeito de trabalhar antes da próxima conversa.',
+        '',
+        recruiter ? `Qualquer dúvida me chama. — ${recruiter}` : 'Qualquer dúvida me chama.',
+      ].join('\n');
+    },
+    [member]
+  );
+
+  const handleStartDiscFlow = async () => {
+    if (!details) return;
+    setDiscBusy(true);
+    try {
+      const invite = await createDiscInvite(details.application.id);
+      const url = `${window.location.origin}/teste-disc/${invite.access_token}`;
+      const firstName = details.candidate.full_name.split(' ')[0];
+      setDiscInviteUrl(url);
+      setDiscWhatsappMessage(buildDiscMessage(firstName, details.job.title, url));
+      setDiscWhatsappOpen(true);
+      // Recarrega pra puxar o assessment recém-criado e atualizar a UI
+      const a = await getDiscByApplication(details.application.id);
+      setDisc(a);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Erro ao gerar convite DISC';
+      toast.error(msg);
+    } finally {
+      setDiscBusy(false);
+    }
+  };
+
+  const handleSendDiscWhatsapp = async () => {
+    if (!details) return;
+    const raw = (details.candidate.phone || '').replace(/\D/g, '');
+    if (!raw) {
+      toast.error('Candidato sem telefone cadastrado');
+      return;
+    }
+    const phone = raw.length === 10 || raw.length === 11 ? `55${raw}` : raw;
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(discWhatsappMessage)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setDiscWhatsappOpen(false);
+    toast.success('WhatsApp aberto com o link do teste');
+    load();
+  };
+
+  const handleCopyDiscLink = async () => {
+    try {
+      await navigator.clipboard.writeText(discInviteUrl);
+      toast.success('Link copiado');
+    } catch {
+      toast.error('Não foi possível copiar');
+    }
+  };
+
+  const handleCopyDiscMessage = async () => {
+    try {
+      await navigator.clipboard.writeText(discWhatsappMessage);
+      toast.success('Mensagem copiada');
+    } catch {
+      toast.error('Não foi possível copiar');
+    }
+  };
+
   const handleResumeUpload = async (file: File) => {
     if (!details) return;
     try {
@@ -250,6 +341,8 @@ export default function RhApplicationDetail() {
   const latestAnalysis = analyses[0];
   const isSchedulingStage =
     !!currentStage && currentStage.name.toLowerCase().startsWith('agendar entrevista');
+  const isBehavioralStage =
+    !!currentStage && currentStage.name.toLowerCase().startsWith('teste comportamental');
 
   return (
     <RhLayout>
@@ -439,6 +532,75 @@ export default function RhApplicationDetail() {
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Chamar no WhatsApp
                 </Button>
+              </div>
+            )}
+
+            {/* CTA contextual da etapa "Teste Comportamental" */}
+            {isBehavioralStage && application.status === 'active' && (
+              <div className="mt-5 p-4 rounded-lg border border-violet-500/30 bg-violet-500/5 flex items-start gap-3">
+                <div className="w-9 h-9 rounded-full bg-violet-500/15 flex items-center justify-center flex-shrink-0">
+                  <Brain className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold text-violet-700 dark:text-violet-300">
+                    {disc?.status === 'completed'
+                      ? 'Teste DISC respondido'
+                      : disc?.status === 'in_progress'
+                      ? 'Candidato começou o teste'
+                      : disc
+                      ? 'Convite DISC enviado, aguardando resposta'
+                      : 'Próximo passo: aplicar teste comportamental (DISC)'}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    {disc?.status === 'completed'
+                      ? 'Veja o resultado abaixo, na coluna lateral.'
+                      : disc
+                      ? `Link: ${window.location.origin}/teste-disc/${disc.access_token}`
+                      : 'Gera o link e manda pro candidato no WhatsApp — leva uns 10 min pra responder.'}
+                  </div>
+                </div>
+                {disc?.status === 'completed' ? null : disc ? (
+                  <div className="flex gap-2 flex-shrink-0">
+                    <Button
+                      variant="outline"
+                      onClick={async () => {
+                        const url = `${window.location.origin}/teste-disc/${disc.access_token}`;
+                        try {
+                          await navigator.clipboard.writeText(url);
+                          toast.success('Link copiado');
+                        } catch {
+                          toast.error('Não foi possível copiar');
+                        }
+                      }}
+                    >
+                      <Copy className="h-4 w-4 mr-2" />
+                      Copiar link
+                    </Button>
+                    <Button
+                      onClick={async () => {
+                        const url = `${window.location.origin}/teste-disc/${disc.access_token}`;
+                        const firstName = candidate.full_name.split(' ')[0];
+                        setDiscInviteUrl(url);
+                        setDiscWhatsappMessage(buildDiscMessage(firstName, job.title, url));
+                        setDiscWhatsappOpen(true);
+                      }}
+                      disabled={!candidate.phone}
+                      className="bg-violet-600 hover:bg-violet-700 text-white"
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Reenviar
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={handleStartDiscFlow}
+                    disabled={discBusy}
+                    className="bg-violet-600 hover:bg-violet-700 text-white flex-shrink-0"
+                  >
+                    <Brain className="h-4 w-4 mr-2" />
+                    {discBusy ? 'Gerando...' : 'Enviar teste DISC'}
+                  </Button>
+                )}
               </div>
             )}
           </CardContent>
@@ -642,6 +804,8 @@ export default function RhApplicationDetail() {
                 </CardContent>
               </Card>
             )}
+
+            {disc?.status === 'completed' && <DiscResultsCard assessment={disc} />}
           </div>
         </div>
       </div>
@@ -688,6 +852,59 @@ export default function RhApplicationDetail() {
               onClick={handleSendWhatsapp}
               disabled={!candidate.phone || !whatsappMessage.trim()}
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Abrir WhatsApp
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog do WhatsApp pro convite do teste DISC */}
+      <Dialog open={discWhatsappOpen} onOpenChange={setDiscWhatsappOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Brain className="h-5 w-5 text-violet-500" />
+              Enviar teste DISC para {candidate.full_name.split(' ')[0]}
+            </DialogTitle>
+            <DialogDescription>
+              Mensagem padrão com o link do teste. Edite se quiser antes de enviar.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+              <Phone className="h-3.5 w-3.5" />
+              {candidate.phone || 'sem telefone cadastrado'}
+              <Badge variant="outline" className="ml-auto break-all">
+                {discInviteUrl}
+              </Badge>
+            </div>
+            <Textarea
+              value={discWhatsappMessage}
+              onChange={(e) => setDiscWhatsappMessage(e.target.value)}
+              rows={12}
+              className="font-mono text-sm leading-relaxed"
+            />
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="ghost" onClick={() => setDiscWhatsappOpen(false)}>
+              Fechar
+            </Button>
+            <Button variant="outline" onClick={handleCopyDiscLink}>
+              <Copy className="h-4 w-4 mr-2" />
+              Copiar link
+            </Button>
+            <Button variant="outline" onClick={handleCopyDiscMessage}>
+              <Copy className="h-4 w-4 mr-2" />
+              Copiar mensagem
+            </Button>
+            <Button
+              onClick={handleSendDiscWhatsapp}
+              disabled={!candidate.phone || !discWhatsappMessage.trim()}
+              className="bg-violet-600 hover:bg-violet-700 text-white"
             >
               <MessageSquare className="h-4 w-4 mr-2" />
               Abrir WhatsApp

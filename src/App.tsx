@@ -123,6 +123,8 @@ const PetronOSHub = lazy(() => import("./pages/petron-os/PetronOSHub"));
 const PetronOSQuickTool = lazy(() => import("./pages/petron-os/PetronOSQuickTool"));
 const PetronOSBuilder = lazy(() => import("./pages/petron-os/PetronOSBuilder"));
 const PetronOSSettings = lazy(() => import("./pages/petron-os/PetronOSSettings"));
+const TranscriptionsList = lazy(() => import("./pages/petron-os/transcricoes/TranscriptionsList"));
+const TranscriptionDetail = lazy(() => import("./pages/petron-os/transcricoes/TranscriptionDetail"));
 
 // RH module (Recrutamento & Seleção)
 const RhDashboard = lazy(() => import("./pages/rh/RhDashboard"));
@@ -133,6 +135,7 @@ const RhCandidatesList = lazy(() => import("./pages/rh/RhCandidatesList"));
 const RhApplicationDetail = lazy(() => import("./pages/rh/RhApplicationDetail"));
 const TrabalheConoscoPage = lazy(() => import("./pages/public/TrabalheConoscoPage"));
 const ReportPublicView = lazy(() => import("./pages/public/ReportPublicView"));
+const DiscAssessmentPage = lazy(() => import("./pages/public/DiscAssessmentPage"));
 
 // Sales CRM module
 const SalesDashboard = lazy(() => import("./pages/sales/SalesDashboard"));
@@ -203,6 +206,7 @@ const App = () => (
                       <Route path="/login" element={<LoginPage />} />
                       <Route path="/trabalhe-conosco" element={<TrabalheConoscoPage />} />
                       <Route path="/r/:token" element={<ReportPublicView />} />
+                      <Route path="/teste-disc/:token" element={<DiscAssessmentPage />} />
 
                       {/* Auth-only routes (no AppShell) */}
                       <Route element={<AuthOnlyLayout />}>
@@ -285,6 +289,8 @@ const App = () => (
                         <Route path="/petron-os/builder/:slug" element={<PetronOSBuilder />} />
                         <Route path="/petron-os/builder/:slug/:id" element={<PetronOSBuilder />} />
                         <Route path="/petron-os/settings" element={<PetronOSSettings />} />
+                        <Route path="/petron-os/transcricoes" element={<TranscriptionsList />} />
+                        <Route path="/petron-os/transcricoes/:id" element={<TranscriptionDetail />} />
 
                         {/* RH routes */}
                         <Route path="/rh" element={<RhDashboard />} />
