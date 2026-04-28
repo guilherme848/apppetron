@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Settings, Sparkles, Zap } from 'lucide-react';
+import { Search, Settings, Sparkles, Zap, FileVideo, ArrowRight } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -81,6 +81,38 @@ export default function PetronOSHub() {
           onChange={e => setSearch(e.target.value)}
           className="pl-10 h-11"
         />
+      </div>
+
+      {/* Featured tools (rotas dedicadas, fora do schema petron_os_ferramentas) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <button
+          onClick={() => navigate('/petron-os/transcricoes')}
+          className={cn(
+            'group relative text-left bg-gradient-to-br from-primary/10 via-primary/5 to-card',
+            'border border-primary/20 rounded-xl p-5 overflow-hidden',
+            'hover:border-primary/50 hover:-translate-y-0.5 hover:shadow-lg',
+            'transition-all duration-200 animate-fade-in',
+          )}
+        >
+          <div className="flex items-start justify-between mb-3">
+            <div className="h-11 w-11 rounded-lg bg-primary/15 flex items-center justify-center">
+              <FileVideo className="h-6 w-6 text-primary" />
+            </div>
+            <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-primary/15 text-primary">
+              Novo
+            </span>
+          </div>
+          <h3 className="text-base font-bold text-foreground mb-1">
+            Transcrições de vídeo
+          </h3>
+          <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+            Transcreva reuniões, vídeos e áudios com identificação de falantes, resumo automático e capítulos.
+          </p>
+          <div className="flex items-center gap-1.5 text-xs font-medium text-primary group-hover:gap-2.5 transition-all">
+            Abrir
+            <ArrowRight className="h-3.5 w-3.5" />
+          </div>
+        </button>
       </div>
 
       {/* Category filter pills */}

@@ -947,6 +947,28 @@ export const routeRegistry: RouteDefinition[] = [
     parentId: 'petronos.hub',
     order: 5,
   },
+  {
+    id: 'petronos.transcricoes',
+    path: '/petron-os/transcricoes',
+    label: 'Transcrições',
+    category: CATEGORIES.DASHBOARD,
+    module: MODULES.PETRON_OS,
+    permissions: ['view', 'edit'],
+    hideInMenu: true,
+    parentId: 'petronos.hub',
+    order: 6,
+  },
+  {
+    id: 'petronos.transcricoes_detail',
+    path: '/petron-os/transcricoes/:id',
+    label: 'Transcrição',
+    category: CATEGORIES.DASHBOARD,
+    module: MODULES.PETRON_OS,
+    permissions: ['view', 'edit'],
+    hideInMenu: true,
+    parentId: 'petronos.transcricoes',
+    order: 7,
+  },
 
   // ============================================
   // SETTINGS MODULE (Admin Only - Single Menu Entry)

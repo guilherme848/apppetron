@@ -71,3 +71,7 @@ verify_jwt = false
 
 [functions.suggest-content]
 verify_jwt = false
+
+[functions.transcribe-webhook]
+verify_jwt = false
+
