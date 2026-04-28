@@ -109,8 +109,8 @@ export function VideoUploadDialog({
       }
       setFile(f);
       if (!title) {
-        // sugere título a partir do nome
-        const base = f.name.replace(/\.[^.]+$/, '');
+        // sugere título a partir do nome (truncado pra não estourar)
+        const base = f.name.replace(/\.[^.]+$/, '').slice(0, 60);
         setTitle(base);
       }
     },
@@ -198,7 +198,7 @@ export function VideoUploadDialog({
 
   return (
     <Dialog open={open} onOpenChange={closeAndReset}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-xl w-[calc(100vw-2rem)] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
@@ -206,11 +206,11 @@ export function VideoUploadDialog({
           </DialogTitle>
           <DialogDescription>
             Envie um vídeo ou áudio (até 5 GB). Vamos transcrever em pt-BR com identificação de
-            falantes, resumo e capítulos automáticos.
+            falantes (em vídeos longos) e exportar em TXT/SRT/VTT.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
+        <div className="space-y-4 py-2 px-0.5 min-w-0">
           {/* Drop zone */}
           {!file && (
             <button

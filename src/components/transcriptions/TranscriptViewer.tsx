@@ -63,7 +63,7 @@ export function TranscriptViewer({
   }
 
   return (
-    <div ref={containerRef} className="space-y-3 max-h-[calc(100vh-280px)] overflow-y-auto pr-2">
+    <div ref={containerRef} className="space-y-3 max-h-[calc(100vh-220px)] overflow-y-auto pr-2">
       {filtered.map(({ u, i }) => {
         const isActive = i === activeIdx;
         const color = getSpeakerColor(u.speaker, speakers);

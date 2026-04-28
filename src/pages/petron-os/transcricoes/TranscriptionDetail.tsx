@@ -335,18 +335,18 @@ export default function TranscriptionDetail() {
         </div>
       )}
 
-      {/* Layout principal */}
-      <div className="grid lg:grid-cols-[1fr_400px] gap-4">
-        {/* Coluna principal: player + transcript/summary/chapters */}
-        <div className="space-y-4 min-w-0">
+      {/* Layout principal: player lateral + transcrição central */}
+      <div className="grid lg:grid-cols-[340px_1fr] gap-4 items-start">
+        {/* Coluna esquerda: player + downloads + speakers + keywords (sticky) */}
+        <div className="space-y-3 lg:sticky lg:top-4">
           {/* Player */}
-          <Card className="overflow-hidden border-border bg-black">
+          <Card className="overflow-hidden border-border bg-black p-0">
             {videoUrl ? (
               <video
                 ref={videoRef}
                 src={videoUrl}
                 controls
-                className="w-full aspect-video bg-black"
+                className="w-full max-h-[60vh] object-contain bg-black block"
                 preload="metadata"
               />
             ) : (
@@ -356,151 +356,63 @@ export default function TranscriptionDetail() {
             )}
           </Card>
 
-          {/* Tabs: Transcript | Resumo | Capítulos | Entidades */}
-          <Card className="p-4">
-            <Tabs defaultValue="transcript">
-              <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                <TabsList>
-                  <TabsTrigger value="transcript" className="gap-1.5">
-                    <FileText className="h-3.5 w-3.5" />
-                    Transcrição
-                  </TabsTrigger>
-                  {tx.summary && (
-                    <TabsTrigger value="summary" className="gap-1.5">
-                      <Sparkles className="h-3.5 w-3.5" />
-                      Resumo
-                    </TabsTrigger>
+          {/* Botões de download diretos */}
+          {tx.status === 'completed' && (
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => handleExport('txt')}
+                className="gap-1.5"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Baixar TXT
+              </Button>
+              {utterances.length > 0 ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleExport('srt')}
+                  className="gap-1.5"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Baixar SRT
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleCopy('transcript')}
+                  className="gap-1.5"
+                >
+                  {copied === 'transcript' ? (
+                    <Check className="h-3.5 w-3.5" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5" />
                   )}
-                  {tx.chapters && tx.chapters.length > 0 && (
-                    <TabsTrigger value="chapters" className="gap-1.5">
-                      <ListOrdered className="h-3.5 w-3.5" />
-                      Capítulos
-                    </TabsTrigger>
-                  )}
-                  {tx.entities && tx.entities.length > 0 && (
-                    <TabsTrigger value="entities" className="gap-1.5">
-                      <Tag className="h-3.5 w-3.5" />
-                      Entidades
-                    </TabsTrigger>
-                  )}
-                </TabsList>
-
-                <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar no texto..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-9 h-8 text-sm"
-                  />
-                </div>
-              </div>
-
-              <TabsContent value="transcript" className="mt-2">
-                {utterances.length > 0 ? (
-                  <TranscriptViewer
-                    utterances={utterances}
-                    speakers={speakers}
-                    currentTimeMs={currentTimeMs}
-                    searchQuery={search}
-                    onSeek={handleSeek}
-                  />
-                ) : tx.transcript_text ? (
-                  <div className="prose prose-sm dark:prose-invert max-w-none">
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                      {tx.transcript_text}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="text-center py-12 text-sm text-muted-foreground">
-                    {isProcessing ? 'Aguardando transcrição...' : 'Sem transcrição disponível.'}
-                  </div>
-                )}
-              </TabsContent>
-
-              {tx.summary && (
-                <TabsContent value="summary" className="mt-2">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-end">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleCopy('summary')}
-                        className="gap-2 text-xs"
-                      >
-                        {copied === 'summary' ? (
-                          <Check className="h-3.5 w-3.5" />
-                        ) : (
-                          <Copy className="h-3.5 w-3.5" />
-                        )}
-                        Copiar
-                      </Button>
-                    </div>
-                    <div className="prose prose-sm dark:prose-invert max-w-none">
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed">{tx.summary}</p>
-                    </div>
-                  </div>
-                </TabsContent>
+                  Copiar tudo
+                </Button>
               )}
+            </div>
+          )}
 
-              {tx.chapters && tx.chapters.length > 0 && (
-                <TabsContent value="chapters" className="mt-2 space-y-2">
-                  {tx.chapters.map((c, i) => (
-                    <button
-                      key={i}
-                      onClick={() => handleSeek(c.start)}
-                      className="w-full text-left p-3 rounded-lg border border-border hover:bg-muted/40 hover:border-primary/40 transition-all"
-                    >
-                      <div className="flex items-baseline gap-2 mb-1">
-                        <span className="text-[10px] font-mono font-semibold text-primary">
-                          {formatTimestamp(c.start)}
-                        </span>
-                        <span className="text-sm font-semibold text-foreground">
-                          {c.headline}
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{c.gist}</p>
-                      {c.summary && (
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                          {c.summary}
-                        </p>
-                      )}
-                    </button>
-                  ))}
-                </TabsContent>
-              )}
-
-              {tx.entities && tx.entities.length > 0 && (
-                <TabsContent value="entities" className="mt-2">
-                  <EntityList entities={tx.entities} />
-                </TabsContent>
-              )}
-            </Tabs>
-          </Card>
-        </div>
-
-        {/* Coluna lateral: speakers + highlights */}
-        <div className="space-y-4">
+          {/* Speakers */}
           {speakers.length > 0 && (
-            <Card className="p-4">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+            <Card className="p-3">
+              <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                 Falantes
               </h3>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {speakers.map((s) => {
-                  const count =
-                    utterances.filter((u) => u.speaker === s).length;
+                  const count = utterances.filter((u) => u.speaker === s).length;
                   return (
-                    <div
-                      key={s}
-                      className="flex items-center gap-2 text-sm"
-                    >
+                    <div key={s} className="flex items-center gap-2 text-sm">
                       <span
-                        className="h-3 w-3 rounded-full shrink-0"
+                        className="h-2.5 w-2.5 rounded-full shrink-0"
                         style={{ backgroundColor: getSpeakerColor(s, speakers) }}
                       />
                       <span className="font-medium">{s}</span>
-                      <span className="text-xs text-muted-foreground ml-auto font-mono">
+                      <span className="text-[11px] text-muted-foreground ml-auto font-mono">
                         {count} {count === 1 ? 'fala' : 'falas'}
                       </span>
                     </div>
@@ -510,20 +422,18 @@ export default function TranscriptionDetail() {
             </Card>
           )}
 
+          {/* Highlights */}
           {tx.highlights && tx.highlights.length > 0 && (
-            <Card className="p-4">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+            <Card className="p-3">
+              <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                 Palavras-chave
               </h3>
-              <div className="flex flex-wrap gap-1.5">
-                {tx.highlights.slice(0, 20).map((h, i) => (
+              <div className="flex flex-wrap gap-1">
+                {tx.highlights.slice(0, 16).map((h, i) => (
                   <button
                     key={i}
                     onClick={() => h.timestamps[0] && handleSeek(h.timestamps[0].start)}
-                    className="text-xs px-2 py-1 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                    style={{
-                      fontSize: `${Math.max(11, Math.min(14, 11 + h.rank * 3))}px`,
-                    }}
+                    className="text-xs px-2 py-0.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
                   >
                     {h.text}
                     <span className="text-[9px] opacity-60 ml-1">×{h.count}</span>
@@ -532,33 +442,129 @@ export default function TranscriptionDetail() {
               </div>
             </Card>
           )}
-
-          {tx.transcript_text && (
-            <Card className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Texto contínuo
-                </h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleCopy('transcript')}
-                  className="h-7 gap-1.5 text-xs"
-                >
-                  {copied === 'transcript' ? (
-                    <Check className="h-3 w-3" />
-                  ) : (
-                    <Copy className="h-3 w-3" />
-                  )}
-                  Copiar tudo
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground line-clamp-6 leading-relaxed">
-                {tx.transcript_text}
-              </p>
-            </Card>
-          )}
         </div>
+
+        {/* Coluna direita: transcrição (full height, conteúdo principal) */}
+        <Card className="p-4 min-w-0">
+          <Tabs defaultValue="transcript">
+            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+              <TabsList>
+                <TabsTrigger value="transcript" className="gap-1.5">
+                  <FileText className="h-3.5 w-3.5" />
+                  Transcrição
+                </TabsTrigger>
+                {tx.summary && (
+                  <TabsTrigger value="summary" className="gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Resumo
+                  </TabsTrigger>
+                )}
+                {tx.chapters && tx.chapters.length > 0 && (
+                  <TabsTrigger value="chapters" className="gap-1.5">
+                    <ListOrdered className="h-3.5 w-3.5" />
+                    Capítulos
+                  </TabsTrigger>
+                )}
+                {tx.entities && tx.entities.length > 0 && (
+                  <TabsTrigger value="entities" className="gap-1.5">
+                    <Tag className="h-3.5 w-3.5" />
+                    Entidades
+                  </TabsTrigger>
+                )}
+              </TabsList>
+
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar no texto..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9 h-8 text-sm"
+                />
+              </div>
+            </div>
+
+            <TabsContent value="transcript" className="mt-2">
+              {utterances.length > 0 ? (
+                <TranscriptViewer
+                  utterances={utterances}
+                  speakers={speakers}
+                  currentTimeMs={currentTimeMs}
+                  searchQuery={search}
+                  onSeek={handleSeek}
+                />
+              ) : tx.transcript_text ? (
+                <div className="max-h-[calc(100vh-260px)] overflow-y-auto pr-2">
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                    <Highlight text={tx.transcript_text} query={search} />
+                  </p>
+                </div>
+              ) : (
+                <div className="text-center py-12 text-sm text-muted-foreground">
+                  {isProcessing ? 'Aguardando transcrição...' : 'Sem transcrição disponível.'}
+                </div>
+              )}
+            </TabsContent>
+
+            {tx.summary && (
+              <TabsContent value="summary" className="mt-2">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-end">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleCopy('summary')}
+                      className="gap-2 text-xs"
+                    >
+                      {copied === 'summary' ? (
+                        <Check className="h-3.5 w-3.5" />
+                      ) : (
+                        <Copy className="h-3.5 w-3.5" />
+                      )}
+                      Copiar
+                    </Button>
+                  </div>
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed">{tx.summary}</p>
+                  </div>
+                </div>
+              </TabsContent>
+            )}
+
+            {tx.chapters && tx.chapters.length > 0 && (
+              <TabsContent value="chapters" className="mt-2 space-y-2">
+                {tx.chapters.map((c, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleSeek(c.start)}
+                    className="w-full text-left p-3 rounded-lg border border-border hover:bg-muted/40 hover:border-primary/40 transition-all"
+                  >
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <span className="text-[10px] font-mono font-semibold text-primary">
+                        {formatTimestamp(c.start)}
+                      </span>
+                      <span className="text-sm font-semibold text-foreground">
+                        {c.headline}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{c.gist}</p>
+                    {c.summary && (
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                        {c.summary}
+                      </p>
+                    )}
+                  </button>
+                ))}
+              </TabsContent>
+            )}
+
+            {tx.entities && tx.entities.length > 0 && (
+              <TabsContent value="entities" className="mt-2">
+                <EntityList entities={tx.entities} />
+              </TabsContent>
+            )}
+          </Tabs>
+        </Card>
       </div>
 
       {/* Delete confirm */}
@@ -585,6 +591,26 @@ export default function TranscriptionDetail() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+function Highlight({ text, query }: { text: string; query: string }) {
+  if (!query.trim()) return <>{text}</>;
+  const q = query.trim();
+  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const parts = text.split(new RegExp(`(${escaped})`, 'gi'));
+  return (
+    <>
+      {parts.map((p, i) =>
+        p.toLowerCase() === q.toLowerCase() ? (
+          <mark key={i} className="bg-warning/30 text-foreground rounded px-0.5">
+            {p}
+          </mark>
+        ) : (
+          <span key={i}>{p}</span>
+        ),
+      )}
+    </>
   );
 }
 
